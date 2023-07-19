@@ -5,7 +5,7 @@ const void logVec4f(const vec4f v) {
 }
 
 const void logVec4i(const vec4i v) {
-    fprintf(stdout, "x: %d    y: %d    z: %d    w: %f\n", v[0], v[1], v[2], v[3]);
+    fprintf(stdout, "x: %d    y: %d    z: %d    w: %d\n", v[0], v[1], v[2], v[3]);
 }
 
 // const void logPixel(const Pixel p) {
@@ -13,8 +13,12 @@ const void logVec4i(const vec4i v) {
 // }
 
 /* Logging Triangle values.If vec = 1 loggs vec4 values, if tex Texture, if norm Normal. */
-const void logFace(const face f, const int vec, const int tex, const int norm) {
-    // if (vec) {
+const void logFace(const face f, const int vec, const int tex, const int norm, const int indexes) {
+    if (vec) {
+        fprintf(stdout, "v0 - { %f, %f, %f, %f }\n", f.v[0][0], f.v[0][1], f.v[0][2], f.v[0][3]);
+        fprintf(stdout, "v1 - { %f, %f, %f, %f }\n", f.v[1][0], f.v[1][1], f.v[1][2], f.v[1][3]);
+        fprintf(stdout, "v2 - { %f, %f, %f, %f }\n", f.v[2][0], f.v[2][1], f.v[2][2], f.v[2][3]);
+    } else if (indexes) {
         fprintf(stdout, "{ %d, %d, %d }, { %d, %d, %d }, { %d, %d, %d }\n", f.a[0], f.a[1], f.a[2], f.b[0], f.b[1], f.b[2], f.c[0], f.c[1], f.c[2]);
     // } else if (tex) {
     //     fprintf(stdout, "t.vt[0].u: %f    t.vt[0].v: %f    t.v[0].w: %f\n", t.vt[0].u, t.vt[0].v, t.vt[0].w);
@@ -22,7 +26,7 @@ const void logFace(const face f, const int vec, const int tex, const int norm) {
     //     fprintf(stdout, "t.vt[2].u: %f    t.vt[2].v: %f    t.v[2].w: %f\n\n", t.vt[2].u, t.vt[2].v, t.vt[2].w);
     // } else if (norm) {
     //     logVec4f(t.fn);
-    // }
+    }
 }
 
 const void logMatrix(const Mat4x4 m) {

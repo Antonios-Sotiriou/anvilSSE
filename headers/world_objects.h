@@ -9,6 +9,10 @@
     #include "matrices.h"
 #endif
 
+#ifndef _OBJ_PARSER_H
+    #include "obj_parser.h"
+#endif
+
 #ifndef _TEST_SHAPES_H
     #include "test_shapes.h"
 #endif

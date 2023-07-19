@@ -10,15 +10,20 @@
 #include <signal.h>
 // #include <immintrin.h>
 
+#define EDGEFUNC 0
+#define SCANLINE 1
+
 /* Project specific headers */
 #include "headers/locale.h"
 #include "headers/anvil_structs.h"
 #include "headers/matrices.h"
 #include "headers/kinetics.h"
+#include "headers/clipping.h"
 #include "headers/grfk_pipeline.h"
 #include "headers/camera.h"
 #include "headers/world_objects.h"
 #include "headers/general_functions.h"
+#include "headers/draw_functions.h"
 
 /* testing */
 #include "headers/exec_time.h"
@@ -26,7 +31,7 @@
 #include "headers/test_shapes.h"
 
 enum { Win_Close, Win_Name, Atom_Type, Atom_Last};
-enum { Pos, U, V, N, C };
+enum { Pos, U, V, N, C, newPos };
 
 #define WIDTH                     1000
 #define HEIGHT                    1000
@@ -37,6 +42,7 @@ enum { Pos, U, V, N, C };
 /* X Global Structures. */
 Display *displ;
 Window win;
+XImage *image;
 Pixmap pixmap;
 GC gc;
 XGCValues gcvalues;
@@ -46,31 +52,39 @@ Atom wmatom[Atom_Last];
 
 /* BUFFERS. */
 u_int8_t *frame_buffer;
+float *depth_buffer;
 
 /* Project Global Variables. */
+static int PROJECTIONVIEW = 0;
+static int PROJECTBUFFER  = 1;
+static int EYEPOINT       = 0;
 static float FOV          =  45.0;
 static float ZNEAR        =  0.01;
 static float ZFAR         =  1000.0;
 static float ASPECTRATIO  = 1;
-static int EYEPOINT = 0;
+static int FBSIZE         = 0;
+float NPlane              = 1.0;
+float FPlane              = 0.00001;
+float SCALE               = 1.0;
+float AmbientStrength     = 0.15;
+float SpecularStrength    = 0.5;
 
 /* Camera and Global light Source. */
 vec4f camera[N + 1] = {
-    { 0.0, 0.0, 0.0, 1.0 },
+    { 0.0, 0.0, -10.0, 1.0 },
     { 1.0, 0.0, 0.0, 0.0 },
-    { 0.0, 1.0, 0.0, 0.0 },
+    { 0.0, -1.0, 0.0, 0.0 },
     { 0.0, 0.0, 1.0, 0.0 }
 };
-vec4f light[C + 1] = {
-    { -56.215076, -47.867058, 670.036438, 1.0 },
-    { -0.907780, -0.069064, -0.413726, 0.0 },
-    { -0.178108, 0.956481, 0.231131, 0.0 },
-    { 0.379759, 0.283504, -0.880576, 0.0 },
-    { 1.0, 1.0, 1.0}
+Light sunlight = {
+    .pos = { -800.001343, 205.598007, 802.004822, 1.000000 },
+    .u = { -0.694661, 0.000000, -0.719352, 0.000000 },
+    .v = { 0.000000, -1.000000, 0.000000, 0.000000 },
+    .n = { 0.719352, 0.000000, -0.694661, 0.000000 },
 };
 
 /* Global Matrices */
-Mat4x4 perspMat, LookAt, ViewMat;
+Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat;
 
 /* Anvil global Objects Meshes and Scene. */
 Scene scene = { 0 };
@@ -80,7 +94,7 @@ static int INIT = 0;
 static int RUNNING = 1;
 int HALFW = 0; // Half width of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
 int HALFH = 0; // Half height of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
-static int DEBUG = 0;
+int DEBUG = 0;
 
 /* Display usefull measurements. */
 float			        TimeCounter, LastFrameTimeCounter, DeltaTime, prevTime = 0.0, FPS;
@@ -111,6 +125,8 @@ const static void atomsinit(void);
 const static void sigsegv_handler(const int sig);
 const static int registerSig(const int signal);
 const static void initBuffers(void);
+const static void initLightModel(Light *l);
+const static void announceReadyState(void);
 static int board(void);
 static void (*handler[LASTEvent]) (XEvent *event) = {
     [ClientMessage] = clientmessage,
@@ -129,6 +145,9 @@ const static void clientmessage(XEvent *event) {
         releaseScene(&scene);
 
         free(frame_buffer);
+        free(depth_buffer);
+
+        free(image);
         XFreeGC(displ, gc);
         XFreePixmap(displ, pixmap);
         XDestroyWindow(displ, win);
@@ -157,15 +176,14 @@ const static void configurenotify(XEvent *event) {
 
         if (INIT) {
             free(frame_buffer);
+            free(depth_buffer);
+
+            free(image);
             initBuffers();
             pixmapcreate();
 
             initDependedVariables();
-        }
-
-        if (!INIT) {
-            LookAt = lookat(camera[Pos], camera[U], camera[V], camera[N]);
-            ViewMat = inverse_mat(LookAt);
+        } else {
             INIT = 1;
         }
     }
@@ -179,103 +197,135 @@ const static void buttonpress(XEvent *event) {
 
 const static void keypress(XEvent *event) {
     
-    KeySym keysym = getKeysym(event);
+    KeySym keysym = XLookupKeysym(&event->xkey, 0);
 
     vec4f *eye;
     if (EYEPOINT)
-        eye = &light[0];
+        eye = (vec4f*)&sunlight;
     else
-        eye = &camera[0];
+        eye = (vec4f*)&camera;
 
     printf("Key Pressed: %ld\n", keysym);
     printf("\x1b[H\x1b[J");
     switch (keysym) {
-        case 119 : move_forward(eye);         /* w */
+        case 97 : look_left(eye, 0.2);       /* a */
             break;
-        case 115 : move_backward(eye);        /* s */
+        case 100 : look_right(eye, 0.2);     /* d */
             break;
-        case 65361 : move_left(eye);          /* left arrow */
+        case 119 : move_forward(eye, 2.2);         /* w */
             break;
-        case 65363 : move_right(eye);         /* right arrow */
+        case 115 : move_backward(eye, 2.2);        /* s */
             break;
-        case 65362 : move_up(eye);            /* up arror */
+        case 65361 : move_left(eye, 0.2);          /* left arrow */
             break;
-        case 65364 : move_down(eye);          /* down arrow */
+        case 65363 : move_right(eye, 0.2);         /* right arrow */
             break;
-        // case 120 : rotate_x(&scene.m[1], 1);                     /* x */
-        //     break;
+        case 65362 : move_up(eye, 0.2);            /* up arror */
+            break;
+        case 65364 : move_down(eye, 0.2);          /* down arrow */
+            break;
+        case 65451 :FPlane += 0.0001;             /* + */
+            printf("FPlane: %f\n",FPlane);
+            break;
+        case 65453 :FPlane -= 0.0001;             /* - */
+            printf("FPlane: %f\n", FPlane);
+            break;
+        case 65450 : NPlane += 0.01;             /* * */
+            printf("NPlane: %f\n", NPlane);
+            break;
+        case 65455 : NPlane -= 0.01;             /* / */
+            printf("NPlane: %f\n", NPlane);
+            break;
+        case 65430 : sunlight.pos[0] -= 10.1;                   /* Adjust Light Source */
+            break;
+        case 65432 : sunlight.pos[0] += 10.1;                   /* Adjust Light Source */
+            break;
+        case 65431 : sunlight.pos[2] += 10.1;                   /* Adjust Light Source */
+            break;
+        case 65433 : sunlight.pos[2] -= 10.1;                   /* Adjust Light Source */
+            break;
+        case 65434 : sunlight.pos[1] += 10.1;                   /* Adjust Light Source */
+            break;
+        case 65435 : sunlight.pos[1] -= 10.1;                   /* Adjust Light Source */
+            break;
+        case 120 : rotate_x(&scene.m[0], 1);                     /* x */
+            break;
         case 121 : rotate_y(&scene.m[0], 1);                     /* y */
             break;
-        // case 122 : rotate_z(&scene.m[0], 1);                     /* z */
-        //     break;
-        // case 114 : rotate_light(light, 1, 0.0, 1.0, 0.0);        /* r */
-        //     break;
-        // case 99 : rotate_origin(&scene.m[2], 1, 1.0, 0.0, 0.0);  /* c */
-        //     break;
+        case 122 : rotate_z(&scene.m[0], 1);                     /* z */
+            break;
+        case 114 : rotate_light(&sunlight, 1, 0.0, 1.0, 0.0);        /* r */
+            break;
+        case 99 : rotate_origin(&scene.m[0], 1, 1.0, 0.0, 0.0);  /* c */
+            break;
+        case 43 : SCALE += 0.01;                                    /* + */
+            orthoMat = orthographicMatrix(SCALE, SCALE, 0.0, 0.0, ZNEAR, ZFAR);
+            break;
+        case 45 : SCALE -= 0.01;                                   /* - */
+            orthoMat = orthographicMatrix(SCALE, SCALE, 0.0, 0.0, ZNEAR, ZFAR);
+            break;
+        case 112 :
+            if (PROJECTBUFFER == 3)
+                PROJECTBUFFER = 0;
+            PROJECTBUFFER++;
+            if (PROJECTBUFFER == 1) {
+                fprintf(stderr, "Projecting Pixels -- PROJECTBUFFER: %d\n", PROJECTBUFFER);
+            } else if (PROJECTBUFFER == 2) {
+                fprintf(stderr, "Projecting Depth buffer -- PROJECTBUFFER: %d\n", PROJECTBUFFER);
+            } else if (PROJECTBUFFER == 3) {
+                fprintf(stderr, "Projecting Shadow buffer -- PROJECTBUFFER: %d\n", PROJECTBUFFER);
+            }
+            break;
+        case 108 :                                    /* l */
+            if (EYEPOINT == 0)
+                EYEPOINT = 1;
+            else
+                EYEPOINT = 0;
+            announceReadyState();
+            return;
+        case 118 :
+            if (!PROJECTIONVIEW)               /* v */
+                PROJECTIONVIEW++;
+            else
+                PROJECTIONVIEW = 0;
+            break;
     }
-    LookAt = lookat(eye[Pos], eye[U], eye[V], eye[N]);
-    ViewMat = inverse_mat(LookAt);
-    // project();
+    lookAt = lookat(eye[Pos], eye[U], eye[V], eye[N]);
+    viewMat = inverse_mat(lookAt);
+    sunlight.newPos = vecxm(sunlight.pos, viewMat);
+
+    logVec4f(sunlight.pos);
+    logVec4f(sunlight.u);
+    logVec4f(sunlight.v);
+    logVec4f(sunlight.n);
+
+    if (!PROJECTIONVIEW)
+        worldMat = mxm(viewMat, perspMat);
+    else
+        worldMat = mxm(viewMat, orthoMat);
 }
 // ##############################################################################################################################################
 /* Starts the Projection Pipeline. */ // ########################################################################################################
 const static void project() {
-
-    Mesh cache;
-    initMesh(&cache, scene.m[0]);
-    Mat4x4 WorldMat = mxm(ViewMat, perspMat);
-
-    cache.v = meshxm(scene.m[0].v, scene.m[0].v_indexes, WorldMat);
-    ppdiv(cache.v, cache.v_indexes);
-    cache = bfculling(cache);
-    viewtoscreen(cache.v, cache.v_indexes);
-
+    grfkPipeline(scene);
     drawFrame();
-
-    for (int i = 0; i < cache.f_indexes; i++) {
-        XDrawLine(displ, win, gc, cache.v[cache.f[i].a[0]][0], cache.v[cache.f[i].a[0]][1], cache.v[cache.f[i].b[0]][0], cache.v[cache.f[i].b[0]][1]);
-        XDrawLine(displ, win, gc, cache.v[cache.f[i].b[0]][0], cache.v[cache.f[i].b[0]][1], cache.v[cache.f[i].c[0]][0], cache.v[cache.f[i].c[0]][1]);
-        XDrawLine(displ, win, gc, cache.v[cache.f[i].c[0]][0], cache.v[cache.f[i].c[0]][1], cache.v[cache.f[i].a[0]][0], cache.v[cache.f[i].a[0]][1]);
-    }
-
-    releaseMesh(&cache);
 }
 /* Writes the final Pixel values on screen. */
 const static void drawFrame(void) {
-
-    XImage *image = XCreateImage(displ, wa.visual, wa.depth, ZPixmap, 0, frame_buffer, wa.width, wa.height, 32, (wa.width * 4));
+    if (PROJECTBUFFER <= 1)
+        image->data = frame_buffer;
+    else if (PROJECTBUFFER == 2)
+        image->data = (u_int8_t*)depth_buffer;
+    else if (PROJECTBUFFER == 3)
+        // image->data = (u_int8_t*)shadow_buffer;
+    image->data = frame_buffer;
     XPutImage(displ, pixmap, gc, image, 0, 0, 0, 0, wa.width, wa.height);
-    free(image);
 
     pixmapdisplay();
+    memset(frame_buffer, 0, FBSIZE);
+    memset(depth_buffer, 0, FBSIZE);
 }
-/* Starts the Projection Pipeline. */ // ########################################################################################################
 // ##############################################################################################################################################
-const static KeySym getKeysym(XEvent *event) {
-
-    /* Get Keyboard UTF-8 input */
-    XIM xim = { 0 };
-    xim = XOpenIM(displ, NULL, NULL, NULL);
-    if (xim == NULL) {
-        perror("keypress() - XOpenIM()");
-    }
-
-    XIC xic = { 0 };
-    xic = XCreateIC(xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow, win, NULL);
-    if (xic == NULL) {
-        perror("keypress() - XreateIC()");
-    }
-    XSetICFocus(xic);
-
-    KeySym keysym = 0;
-    char buffer[32];
-    Status status = 0;
-    Xutf8LookupString(xic, &event->xkey, buffer, 32, &keysym, &status);
-    if (status == XBufferOverflow) {
-        perror("Buffer Overflow...\n");
-    }
-    return keysym;
-}
 const static void initMainWindow(void) {
     sa.event_mask = EXPOSEMASKS | KEYBOARDMASKS | POINTERMASKS;
     sa.background_pixel = 0x000000;
@@ -356,16 +406,43 @@ const static int registerSig(const int signal) {
     return EXIT_SUCCESS;
 }
 const static void initDependedVariables(void) {
+    image = XCreateImage(displ, wa.visual, wa.depth, ZPixmap, 0, frame_buffer, wa.width, wa.height, 32, (wa.width * 4));
+
     ASPECTRATIO = ((float)wa.width / (float)wa.height);
     HALFH = wa.height >> 1;
     HALFW = wa.width >> 1;
 
+    FBSIZE = wa.width * wa.height * 4;
+
     /* Matrices initialization. */
     perspMat = perspectiveMatrix(FOV, ASPECTRATIO, ZNEAR, ZFAR);
+    reperspMat = reperspectiveMatrix(FOV, ASPECTRATIO);
+    orthoMat = orthographicMatrix(SCALE, SCALE, 0.0, 0.0, ZNEAR, ZFAR);
 }
 /* Creates and Initializes the importand buffers. (frame, depth, shadow). */
 const static void initBuffers(void) {
     frame_buffer = calloc(wa.width * wa.height * 4, 1);
+    depth_buffer = calloc(wa.width * wa.height, 4);
+}
+const static void initLightModel(Light *l) {
+    vec4f lightColor = { 1.0, 1.0, 1.0, 0.0 };
+    Material mt = {
+        .ambient = lightColor * AmbientStrength,
+        .specular = lightColor,
+        .diffuse = lightColor,
+        .basecolor = lightColor
+    };
+    l->material = mt;
+}
+const static void announceReadyState(void) {
+    printf("Announcing ready process state event\n");
+    XEvent event = { 0 };
+    event.xkey.type = KeyPress;
+    event.xkey.keycode = 49;
+    event.xkey.display = displ;
+
+    /* Send the signal to our event dispatcher for further processing. */
+    handler[event.type](&event);
 }
 /* General initialization and event handling. */
 static int board(void) {
@@ -392,18 +469,22 @@ static int board(void) {
 
     initDependedVariables();
     initBuffers();
+    initLightModel(&sunlight);
 
     createScene(&scene);
     posWorldObjects(&scene);
 
+    /* Announcing to event despatcher that starting initialization is done. We send a Keyress event to Despatcher to awake Projection. */
+    announceReadyState();
+
     while (RUNNING) {
 
-        clock_t start_time = start();
+        // clock_t start_time = start();
         UpdateTimeCounter();
         CalculateFPS();
         displayInfo();
         project();
-        end(start_time);
+        // end(start_time);
 
         while(XPending(displ)) {
 
@@ -418,10 +499,6 @@ static int board(void) {
     return EXIT_SUCCESS;
 }
 const int main(int argc, char *argv[]) {
-
-    if (locale_init())
-        fprintf(stderr, "Warning: main() -locale()\n");
-
     if (argc > 1) {
         printf("argc: %d\n", argc);
         if (strcasecmp(argv[1], "Debug") == 0) {

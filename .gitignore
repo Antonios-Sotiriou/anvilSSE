@@ -1,7 +1,7 @@
 anvil
 *.s
-header_files/code_cache.h
-header_files/bmp.h
+headers/code_cache.h
+headers/bmp.h
 textures/*
 objects/*
 gmon.*

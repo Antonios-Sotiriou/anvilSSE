@@ -23,7 +23,20 @@ typedef union {
     vec4f f;
 } v128f;
 
+/* Material struct to hold the specific for each material values. */
 typedef struct {
+    vec4f basecolor;
+    vec4f ambient;
+    vec4f diffuse;
+    vec4f specular;
+    float shinniness;
+} Material;
+
+typedef struct {
+    vec4f v[3];
+    vec4f vn[3];
+    vec4f vt[3];
+    vec4f fn;
     int a[3], b[3], c[3];
 } face;
 
@@ -36,11 +49,13 @@ typedef struct {
 typedef struct {
     char texture_file[50];
     vec4f *v;
+    vec4f *n;
+    vec4f *t;
     face *f;
-    signed int texture_height;
-    signed int texture_width;
-    int v_indexes;
-    int f_indexes;
+    // void (*drawMesh)(void *args);
+    signed int texture_height, texture_width;
+    int v_indexes, f_indexes, n_indexes, t_indexes;
+    Material material;
 } Mesh;
 
 /* Scene structs which teams all the meshes into an objects array. */
@@ -48,6 +63,12 @@ typedef struct {
     Mesh *m;
     int m_indexes;
 } Scene;
+
+/* Light struct to create different kind of light sources. */
+typedef struct {
+    vec4f pos, u, v, n, newPos;
+    Material material;
+} Light;
 
 #endif /* _ANVIL_STRUCTS_H */
 

@@ -1,74 +1,15 @@
 #include "headers/draw_functions.h"
 
-const void checkQuad(int xa, int xb, int xc, 
-                     int y10, int y21, int y02, 
-                     float area, 
-                     float z0, float z1, float z2, 
-                     float w0, float w1, float w2, 
-                     int x, int y, 
-                     int tpA, int tpB, int tpC, 
-                     int modulo,
-                     Triangle t)
-{
-    v128i edgesi[modulo], step_x;
-    step_x.mm = _mm_set_epi32(0, y02, y21, y10);
-    edgesi[0].mm = _mm_set_epi32(0, xc, xb, xa);
-    int masks[modulo];
+extern u_int8_t *frame_buffer;
+extern float *depth_buffer;
+extern XWindowAttributes wa;
+extern const float winding(const face f);
 
-    for (int i = 0; i < modulo; i++) {
-        if (i > 0)
-            edgesi[i].mm = _mm_add_epi32(edgesi[i - 1].mm, step_x.mm);
+const void drawLine(float x1, float y1, float x2, float y2, vec4f color) {
+    color *= 255;
+    /* Reversing rgb values here because it is like this in XLIB. (bgr) */
+    u_int8_t rgba[4] = { color[2], color[1], color[0], color[3] };
 
-        edgesi[i].i32[0] = (tpA && !edgesi[i].i32[0]) ? -1 : edgesi[i].i32[0];
-        edgesi[i].i32[1] = (tpB && !edgesi[i].i32[1]) ? -1 : edgesi[i].i32[1];
-        edgesi[i].i32[2] = (tpC && !edgesi[i].i32[2]) ? -1 : edgesi[i].i32[2];
-
-        masks[i] = (edgesi[i].i32[0] | edgesi[i].i32[1] | edgesi[i].i32[2]) < 0 ? -1 : 1;
-    }
-
-    if ( masks[0] < 0 && masks[1] < 0 && masks[2] < 0 && masks[3] < 0 )
-        return;
-
-    v128f ar = { .mm = _mm_set1_ps(area) };
-    v128f edgesf[modulo];
-
-    for (int i = 0; i < modulo; i++){
-
-        if ( (edgesi[i].i32[0] | edgesi[i].i32[1] | edgesi[i].i32[2]) > 0 ) {
-            edgesf[i].mm = _mm_div_ps(_mm_cvtepi32_ps(edgesi[i].mm), ar.mm);
-
-            v128f az = { .mm = _mm_mul_ps(edgesf[i].mm, _mm_set_ps(0.0, z1, z0, z2)) };
-            v128f aw = { .mm = _mm_mul_ps(edgesf[i].mm, _mm_set_ps(0.0, w1, w0, w2)) };
-
-            const float depthZ = az.f32[0] + az.f32[1] + az.f32[2];
-            const float depthW = aw.f32[0] + aw.f32[1] + aw.f32[2];
-
-            if ( depthW > depth_buffer[y][x] ) {
-                v128f normx = { .mm = _mm_mul_ps(_mm_set_ps(0.0, t.vn[1].x, t.vn[0].x, t.vn[2].x), edgesf[i].mm) };
-                v128f normy = { .mm = _mm_mul_ps(_mm_set_ps(0.0, t.vn[1].y, t.vn[0].y, t.vn[2].y), edgesf[i].mm) };
-                v128f normz = { .mm = _mm_mul_ps(_mm_set_ps(0.0, t.vn[1].z, t.vn[0].z, t.vn[2].z), edgesf[i].mm) };
-                model.normal.x = normx.f32[0] + normx.f32[1] + normx.f32[2];
-                model.normal.y = normy.f32[0] + normy.f32[1] + normy.f32[2];
-                model.normal.z = normz.f32[0] + normz.f32[1] + normz.f32[2];
-
-                depth_buffer[y][x] = phong(model, x, y, depthZ, depthW);
-            }
-        }
-        x++;
-    }
-}
-const Pixel antialliasing(const Pixel a, const Pixel b) {
-    Pixel r = { 0 };
-    r.Red = (a.Red + b.Red) * 0.5;
-    r.Green = (a.Green + b.Green) * 0.5;
-    r.Blue = (a.Blue + b.Blue) * 0.5;
-    return r;
-}
-
-const void drawLine(float x1, float y1, float x2, float y2, const float red, const float green, const float blue) {
-    Pixel pix = { blue, green, red }, s1, s2;
-    Pixel test1 = { 255, 255, 255 };
-    Pixel test2 = { 255, 0, 0 };
     float delta_y = y2 - y1;
     float delta_x = x2 - x1;
 
@@ -80,48 +21,36 @@ const void drawLine(float x1, float y1, float x2, float y2, const float red, con
     int start_x = x1 + 0.5;
     int end_x = x2 + 0.5;
 
+    const int pad = wa.width * 4;
     int step_y, step_x;
-    int step_cache = start_y;
     if ( (delta_x == 0) && (delta_y == 0) ) {
-        memcpy(&pixels[start_y][start_x], &pix, sizeof(Pixel));
+        return;
     } else if ( fabsdx >= fabsdy ) {
         float slope = delta_y / delta_x;
 
         if (delta_x < 0) {
-
             for (int x = start_x; x > end_x; x--) {
-                step_y = (slope * (x - start_x)) + y1;
-                memcpy(&pixels[step_y][x], &pix, sizeof(Pixel));
-                if ( step_cache != step_y) {
-                    s1 = antialliasing(pixels[step_y][x], pixels[step_cache][x]);
-                    s2 = antialliasing(pixels[step_y][x], pixels[step_y][x + 1]);
-                    memcpy(&pixels[step_cache][x], &test1, sizeof(Pixel));
-                    memcpy(&pixels[step_y][x + 1], &test2, sizeof(Pixel));
-                }
-                step_cache = step_y;
+                step_y = ((slope * (x - start_x)) + y1);
+                memcpy(&frame_buffer[(step_y * pad) + (x * 4)], &rgba, 4);
             }
         } else {
-            int step_cache;
             for (int x = start_x; x < end_x; x++) {
-                step_y = (slope * (x - start_x)) + y1;
-                memcpy(&pixels[step_y][x], &pix, sizeof(Pixel));
-                step_cache = step_y;
+                step_y = ((slope * (x - start_x)) + y1);
+                memcpy(&frame_buffer[(step_y * pad) + (x * 4)], &rgba, 4);
             }
         }
     } else if ( fabsdx < fabsdy ) {
         float slope = delta_x / delta_y;
 
         if (delta_y < 0) {
-
             for (int y = start_y; y > end_y; y--) {
-                step_x = (slope * (y - start_y)) + x1;
-                memcpy(&pixels[y][step_x], &pix, sizeof(Pixel));
+                step_x = ((slope * (y - start_y)) + x1);
+                memcpy(&frame_buffer[(y * pad) + (step_x * 4)], &rgba, 4);
             }
         } else {
-
             for (int y = start_y; y < end_y; y++) {
-                step_x = (slope * (y - start_y)) + x1;
-                memcpy(&pixels[y][step_x], &pix, sizeof(Pixel));
+                step_x = ((slope * (y - start_y)) + x1);
+                memcpy(&frame_buffer[(y * pad) + (step_x * 4)], &rgba, 4);
             }
         }
     } else {
@@ -129,10 +58,16 @@ const void drawLine(float x1, float y1, float x2, float y2, const float red, con
         exit(EXIT_FAILURE);
     }
 }
-const void fillTriangle(const Triangle t) {
+/* Fills given mesh with color according to mesh material. */
+const void fillMesh(const Mesh m) {
+    for (int i = 0; i < m.f_indexes; i++) {
+        fillface(m.f[i], m.material);
+    }
+}
+const void fillface(const face f, const Material mtr) {
     /* Creating 2Arrays for X and Y values to sort them. */
-    float Ys[3] = { t.v[0].y, t.v[1].y, t.v[2].y };
-    float Xs[3] = { t.v[0].x, t.v[1].x, t.v[2].x };
+    int Ys[3] = { f.v[0][1], f.v[1][1], f.v[2][1] };
+    int Xs[3] = { f.v[0][0], f.v[1][0], f.v[2][0] };
     /* Sorting the values from smaller to larger. Those values are the triangle bounding box. */
     float temp;
     for (int i = 0; i < 3; i++)
@@ -151,46 +86,57 @@ const void fillTriangle(const Triangle t) {
             }
         }
 
-    model.normal = t.fn;
-    float winding = 1 / winding3D(t);
-    model.bias = (winding <= 0.000026 && winding >= 0.0) ? 0.0017 : 0.0009;
-    fillGeneral(t, Xs[0] + 0.5, Xs[2] + 0.5, Ys[0] + 0.5, Ys[2] + 0.5);
+    fillGeneral(f, mtr, Xs[0], Xs[2], Ys[0], Ys[2]);
 }
-const void fillGeneral(const Triangle t, int minX, int maxX, int minY, int maxY) {
-    const int maxHeight = wa.height - 1;
-    const int maxWidth = wa.width - 1;
-    const int x0 = t.v[0].x + 0.5,    x1 = t.v[1].x + 0.5,    x2 = t.v[2].x + 0.5;
-    const int y0 = t.v[0].y + 0.5,    y1 = t.v[1].y + 0.5,    y2 = t.v[2].y + 0.5;
-    const float z0 = t.v[0].z,    z1 = t.v[1].z,     z2 = t.v[2].z;
-    const float w0 = t.v[0].w,    w1 = t.v[1].w,     w2 = t.v[2].w;
-    int x10 = x0 - x1,    x20 = x2 - x0,    x02 = x2 - x0,    x21 = x1 - x2;
-    int y10 = y0 - y1,    y20 = y2 - y0,    y02 = y2 - y0,    y21 = y1 - y2;
+const static void fillGeneral(const face f, const Material mtr, int minX, int maxX, int minY, int maxY) {
+    vec4i xs = { f.v[0][0],  f.v[1][0], f.v[2][0], 0};
+    vec4i ys = { f.v[0][1],  f.v[1][1], f.v[2][1], 0};
 
-    const int tpA = ((y10 == 0) && (t.v[2].y > t.v[1].y)) || (y10 < 0) ? 1 : 0;
-    const int tpB = ((y21 == 0) && (t.v[0].y > t.v[2].y)) || (y21 < 0) ? 1 : 0;
-    const int tpC = ((y02 == 0) && (t.v[1].y > t.v[0].y)) || (y02 < 0) ? 1 : 0;
+    vec4i mask = { 1, 2, 0, 3 };
+    vec4i sflx = __builtin_shuffle(xs, mask);
+    vec4i sfly = __builtin_shuffle(ys, mask);
 
-    const int area = ((x0 - x1) * y21) - ((y0 - y1) * x21);
-    int ya = ((minX - x0) * y10) - ((minY - y0) * x10);
-    int yb = ((minX - x1) * y21) - ((minY - y1) * x21);
-    int yc = ((minX - x2) * y02) - ((minY - y2) * x02);
+    vec4i xmx = xs - sflx;
+    vec4i ymy = ys - sfly;
 
-    const int modulo = maxX % 4;
-    const int limit = maxX - modulo;
+    vec4i tps = { 0 };
+    tps[0] = ((ymy[0] == 0) && (ys[2] > ys[1])) || (ymy[0] < 0) ? 1 : 0;
+    tps[1] = ((ymy[1] == 0) && (ys[0] > ys[2])) || (ymy[1] < 0) ? 1 : 0;
+    tps[2] = ((ymy[2] == 0) && (ys[1] > ys[0])) || (ymy[2] < 0) ? 1 : 0;
+
+    const float area = ((xs[0] - xs[1]) * ymy[1]) - ((ys[0] - ys[1]) * xmx[1]);
+    vec4i ya = ((minX - xs) * ymy) - ((minY - ys) * xmx);
+
     for (int y = minY; y <= maxY; y++) {
-        int xa = ya;
-        int xb = yb;
-        int xc = yc;
-        for (int x = minX; x <= maxX; x += 4) {
-            int incX = 4;
-            if (x == limit)
-                incX = modulo;
 
-            checkQuad(xa, xb, xc, y10, y21, y02, area, z0, z1, z2, w0, w1, w2, x, y, tpA, tpB, tpC, incX, t);
+        vec4i xa = ya;
+        int xflag = 0;
+        const int padyDB = y * wa.width;
+        const int padyFB = padyDB * 4;
+        for (int x = minX; x <= maxX; x++) {
 
-            xa += y10 << 2,    xb += y21 << 2,    xc += y02 << 2;
+            const int xa0 = ( (tps[0]) && (!xa[0]) ) ? -1 : xa[0];
+            const int xa1 = ( (tps[1]) && (!xa[1]) ) ? -1 : xa[1];
+            const int xa2 = ( (tps[2]) && (!xa[2]) ) ? -1 : xa[2];
+
+            if ( (xa0 | xa1 | xa2) > 0 ) {
+                vec4f a = __builtin_convertvector(xa, vec4f);
+                a /= area;
+
+                const vec4f frag = a[0] * f.v[2] + a[1] * f.v[0] + a[2] * f.v[1];
+
+                if (frag[3] > depth_buffer[padyDB + x]) {
+
+                    const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
+
+                    depth_buffer[padyDB + x] = phong(normal, mtr, x, y, frag[2], frag[3]);
+                }
+                xflag++;
+            } else if (xflag) break;
+            xa += ymy;
         }
-        ya += -x10,    yb += -x21,    yc += -x02;
+        ya += -xmx;
     }
 }
+
 
