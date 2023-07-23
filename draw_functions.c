@@ -5,6 +5,13 @@ extern float *depth_buffer;
 extern XWindowAttributes wa;
 extern const float winding(const face f);
 
+#include <pthread.h>
+extern pthread_mutex_t mutexQueue;
+extern pthread_cond_t condQueue;
+extern Task TaskQueue[];
+extern int TASKCOUNT;
+extern void submitTask(Task task);
+
 const void drawLine(float x1, float y1, float x2, float y2, vec4f color) {
     color *= 255;
     /* Reversing rgb values here because it is like this in XLIB. (bgr) */
@@ -129,7 +136,19 @@ const static void fillGeneral(const face f, const Material mtr, int minX, int ma
 
                     const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
 
-                    depth_buffer[padyDB + x] = phong(normal, mtr, x, y, frag[2], frag[3]);
+                    // depth_buffer[padyDB + x] = phong(normal, mtr, x, y, frag[2], frag[3]);
+
+                    depth_buffer[padyDB + x] = frag[3];
+                    Task task = {
+                        .taskFunction = &phong,
+                        .nm = normal,
+                        .mt = mtr,
+                        .arg1 = x,
+                        .arg2 = y,
+                        .arg3 = frag[2],
+                        .arg4 = frag[3]
+                    };
+                    submitTask(task);
                 }
                 xflag++;
             } else if (xflag) break;

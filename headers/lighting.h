@@ -18,7 +18,7 @@
     #include "vectors_math.h"
 #endif
 
-const float phong(vec4f nm, const Material mtr, const int pixX, const int pixY, const float pixZ, const float pixW);
+void phong(vec4f nm, const Material mtr, const float pixX, const float pixY, const float pixZ, const float pixW);
 
 #endif /* _LIGHTING_H */
 

@@ -8,15 +8,15 @@ extern u_int8_t *frame_buffer;
 extern float *shadow_buffer;
 extern Light sunlight;
 
-const float phong(vec4f nm, const Material mtr, const int pixX, const int pixY, const float pixZ, const float pixW) {
+void phong(vec4f nm, const Material mtr, const float pixX, const float pixY, const float pixZ, const float pixW) {
     vec4f diffuse = { 0 }, specular = { 0 };
     vec4f ambient = sunlight.material.ambient * mtr.ambient;
     vec4f r = { 0 };
 
     float w = 1 / pixW;
     vec4f pixel;
-    pixel[0] = (((float)pixX / HALFW) - 1.0) * w;
-    pixel[1] = (((float)pixY / HALFH) - 1.0) * w;
+    pixel[0] = ((pixX / HALFW) - 1.0) * w;
+    pixel[1] = ((pixY / HALFH) - 1.0) * w;
     pixel[2] = (pixZ / 0.5) * w;
     pixel[3] = w;
 
@@ -43,7 +43,7 @@ const float phong(vec4f nm, const Material mtr, const int pixX, const int pixY, 
     r = ((specular + diffuse + ambient) * mtr.basecolor) * 255;
     u_int8_t fragcolor[4] = { r[2], r[1], r[0], 0 };
 
-    memcpy(&frame_buffer[(pixY * wa.width * 4) + (pixX * 4)], &fragcolor, 4);
-    return pixW;
+    memcpy(&frame_buffer[(int)((pixY * wa.width * 4) + (pixX * 4))], &fragcolor, 4);
+    // return pixW;
 }
 

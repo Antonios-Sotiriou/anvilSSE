@@ -30,6 +30,21 @@
 #include "headers/logging.h"
 #include "headers/test_shapes.h"
 
+/* ############################################## THREAD POOL ################################################################### */
+/* Multithreading, Thread Pool Global variables. */
+#include <pthread.h>
+#define THREADS 4
+pthread_mutex_t mutexQueue;
+pthread_cond_t condQueue;
+
+pthread_t threads[THREADS];
+Task TaskQueue[256];
+int TASKCOUNT = 0;
+
+void submitTask(Task task);
+void printTask(vec4f nm, Material mt, float a, float b, float c, float d);
+/* ############################################## THREAD POOL ################################################################### */
+
 enum { Win_Close, Win_Name, Atom_Type, Atom_Last};
 enum { Pos, U, V, N, C, newPos };
 
@@ -58,9 +73,9 @@ float *depth_buffer;
 static int PROJECTIONVIEW = 0;
 static int PROJECTBUFFER  = 1;
 static int EYEPOINT       = 0;
-static float FOV          =  45.0;
-static float ZNEAR        =  0.01;
-static float ZFAR         =  1000.0;
+static float FOV          = 45.0;
+static float ZNEAR        = 0.01;
+static float ZFAR         = 1000.0;
 static float ASPECTRATIO  = 1;
 static int FBSIZE         = 0;
 float NPlane              = 1.0;
@@ -116,18 +131,22 @@ const static void drawFrame(void);
 
 /* Xlib relative functions and event dispatcher. */
 const static KeySym getKeysym(XEvent *event);
-const static void initMainWindow();
-const static void initGlobalGC();
+const static void initMainWindow(void);
+const static void initGlobalGC(void);
 const static void initDependedVariables(void);
-const static void pixmapcreate(void);
-const static void pixmapdisplay(void);
-const static void atomsinit(void);
-const static void sigsegv_handler(const int sig);
-const static int registerSig(const int signal);
+const static void initAtoms(void);
 const static void initBuffers(void);
 const static void initLightModel(Light *l);
+const static void pixmapcreate(void);
+const static void pixmapdisplay(void);
 const static void announceReadyState(void);
-static int board(void);
+const static void InitTimeCounter(void);
+const static void UpdateTimeCounter(void);
+const static void CalculateFPS(void);
+const static void displayInfo(void);
+const static void sigsegv_handler(const int sig);
+const static int registerSig(const int signal);
+static void *board(void *args);
 static void (*handler[LASTEvent]) (XEvent *event) = {
     [ClientMessage] = clientmessage,
     [ReparentNotify] = reparentnotify,
@@ -151,6 +170,11 @@ const static void clientmessage(XEvent *event) {
         XFreeGC(displ, gc);
         XFreePixmap(displ, pixmap);
         XDestroyWindow(displ, win);
+
+        int i = 0;
+        for (i = 1; i < THREADS; i++)
+            if (pthread_cancel(threads[i]));
+                fprintf(stderr, "Thread Cancelation of thead[%d] returned an error.\n", i);
 
         RUNNING = 0;
     }
@@ -193,6 +217,17 @@ const static void buttonpress(XEvent *event) {
     printf("buttonpress event received\n");
     printf("X: %f\n", ((event->xbutton.x - (WIDTH / 2.00)) / (WIDTH / 2.00)));
     printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
+    for (int i = 0; i < 256; i++) {
+        Task task = {
+            .taskFunction = &printTask,
+            .nm = camera[Pos],
+            .arg1 = 1.0,
+            .arg2 = 2.0,
+            .arg3 = 3.0,
+            .arg4 = 4.0
+        };
+        submitTask(task);
+    }
 }
 
 const static void keypress(XEvent *event) {
@@ -317,8 +352,8 @@ const static void drawFrame(void) {
     else if (PROJECTBUFFER == 2)
         image->data = (u_int8_t*)depth_buffer;
     else if (PROJECTBUFFER == 3)
-        // image->data = (u_int8_t*)shadow_buffer;
-    image->data = frame_buffer;
+        image->data = frame_buffer;
+
     XPutImage(displ, pixmap, gc, image, 0, 0, 0, 0, wa.width, wa.height);
 
     pixmapdisplay();
@@ -333,17 +368,77 @@ const static void initMainWindow(void) {
     XMapWindow(displ, win);
     XGetWindowAttributes(displ, win, &wa);
 }
-void InitTimeCounter() {
+const static void initGlobalGC(void) {
+    gcvalues.foreground = 0xffffff;
+    gcvalues.background = 0x000000;
+    gcvalues.graphics_exposures = False;
+    gc = XCreateGC(displ, win, GCBackground | GCForeground | GCGraphicsExposures, &gcvalues);
+}
+const static void initDependedVariables(void) {
+    image = XCreateImage(displ, wa.visual, wa.depth, ZPixmap, 0, frame_buffer, wa.width, wa.height, 32, (wa.width * 4));
+
+    ASPECTRATIO = ((float)wa.width / (float)wa.height);
+    HALFH = wa.height >> 1;
+    HALFW = wa.width >> 1;
+
+    FBSIZE = wa.width * wa.height * 4;
+
+    /* Matrices initialization. */
+    perspMat = perspectiveMatrix(FOV, ASPECTRATIO, ZNEAR, ZFAR);
+    reperspMat = reperspectiveMatrix(FOV, ASPECTRATIO);
+    orthoMat = orthographicMatrix(SCALE, SCALE, 0.0, 0.0, ZNEAR, ZFAR);
+}
+const static void initAtoms(void) {
+
+    wmatom[Win_Close] = XInternAtom(displ, "WM_DELETE_WINDOW", False);
+    XSetWMProtocols(displ, win, &wmatom[Win_Close], 1);
+
+    wmatom[Win_Name] = XInternAtom(displ, "WM_NAME", False);
+    wmatom[Atom_Type] =  XInternAtom(displ, "STRING", False);
+    XChangeProperty(displ, win, wmatom[Win_Name], wmatom[Atom_Type], 8, PropModeReplace, (unsigned char*)"Anvil", 5);
+}
+/* Creates and Initializes the importand buffers. (frame, depth, shadow). */
+const static void initBuffers(void) {
+    frame_buffer = calloc(wa.width * wa.height * 4, 1);
+    depth_buffer = calloc(wa.width * wa.height, 4);
+}
+const static void initLightModel(Light *l) {
+    vec4f lightColor = { 1.0, 1.0, 1.0, 0.0 };
+    Material mt = {
+        .ambient = lightColor * AmbientStrength,
+        .specular = lightColor,
+        .diffuse = lightColor,
+        .basecolor = lightColor
+    };
+    l->material = mt;
+}
+const static void pixmapcreate(void) {
+    pixmap = XCreatePixmap(displ, win, wa.width, wa.height, wa.depth);
+}
+const static void pixmapdisplay(void) {
+    XCopyArea(displ, pixmap, win, gc, 0, 0, wa.width, wa.height, 0, 0);
+}
+const static void announceReadyState(void) {
+    printf("Announcing ready process state event\n");
+    XEvent event = { 0 };
+    event.xkey.type = KeyPress;
+    event.xkey.keycode = 49;
+    event.xkey.display = displ;
+
+    /* Send the signal to our event dispatcher for further processing. */
+    handler[event.type](&event);
+}
+const static void InitTimeCounter(void) {
     gettimeofday(&tv0, NULL);
     FramesPerFPS = 30;
 }
-void UpdateTimeCounter() {
+const static void UpdateTimeCounter(void) {
     LastFrameTimeCounter = TimeCounter;
     gettimeofday(&tv, NULL);
     TimeCounter = (float)(tv.tv_sec - tv0.tv_sec) + 0.000001 * ((float)(tv.tv_usec - tv0.tv_usec));
     DeltaTime = TimeCounter - LastFrameTimeCounter;
 }
-void CalculateFPS() {
+const static void CalculateFPS(void) {
     Frame ++;
 
     if ( (Frame % FramesPerFPS) == 0 ) {
@@ -351,7 +446,7 @@ void CalculateFPS() {
         prevTime = TimeCounter;
     }
 }
-void displayInfo() {
+const static void displayInfo(void) {
     char info_string[30];
     sprintf(info_string, "Resolution: %d x %d\0", wa.width, wa.height);
     XDrawString(displ ,win ,gc, 5, 12, info_string, strlen(info_string));
@@ -361,27 +456,6 @@ void displayInfo() {
 
     sprintf(info_string, "%4.1f fps\0", FPS);
     XDrawString(displ ,win ,gc, 5, 36, info_string, strlen(info_string));
-}
-const static void initGlobalGC(void) {
-    gcvalues.foreground = 0xffffff;
-    gcvalues.background = 0x000000;
-    gcvalues.graphics_exposures = False;
-    gc = XCreateGC(displ, win, GCBackground | GCForeground | GCGraphicsExposures, &gcvalues);
-}
-const static void pixmapcreate(void) {
-    pixmap = XCreatePixmap(displ, win, wa.width, wa.height, wa.depth);
-}
-const static void pixmapdisplay(void) {
-    XCopyArea(displ, pixmap, win, gc, 0, 0, wa.width, wa.height, 0, 0);
-}
-const static void atomsinit(void) {
-
-    wmatom[Win_Close] = XInternAtom(displ, "WM_DELETE_WINDOW", False);
-    XSetWMProtocols(displ, win, &wmatom[Win_Close], 1);
-
-    wmatom[Win_Name] = XInternAtom(displ, "WM_NAME", False);
-    wmatom[Atom_Type] =  XInternAtom(displ, "STRING", False);
-    XChangeProperty(displ, win, wmatom[Win_Name], wmatom[Atom_Type], 8, PropModeReplace, (unsigned char*)"Anvil", 5);
 }
 /* Signal handler to clean memory before exit, after receiving a given signal. */
 const static void sigsegv_handler(const int sig) {
@@ -405,51 +479,12 @@ const static int registerSig(const int signal) {
     }
     return EXIT_SUCCESS;
 }
-const static void initDependedVariables(void) {
-    image = XCreateImage(displ, wa.visual, wa.depth, ZPixmap, 0, frame_buffer, wa.width, wa.height, 32, (wa.width * 4));
-
-    ASPECTRATIO = ((float)wa.width / (float)wa.height);
-    HALFH = wa.height >> 1;
-    HALFW = wa.width >> 1;
-
-    FBSIZE = wa.width * wa.height * 4;
-
-    /* Matrices initialization. */
-    perspMat = perspectiveMatrix(FOV, ASPECTRATIO, ZNEAR, ZFAR);
-    reperspMat = reperspectiveMatrix(FOV, ASPECTRATIO);
-    orthoMat = orthographicMatrix(SCALE, SCALE, 0.0, 0.0, ZNEAR, ZFAR);
-}
-/* Creates and Initializes the importand buffers. (frame, depth, shadow). */
-const static void initBuffers(void) {
-    frame_buffer = calloc(wa.width * wa.height * 4, 1);
-    depth_buffer = calloc(wa.width * wa.height, 4);
-}
-const static void initLightModel(Light *l) {
-    vec4f lightColor = { 1.0, 1.0, 1.0, 0.0 };
-    Material mt = {
-        .ambient = lightColor * AmbientStrength,
-        .specular = lightColor,
-        .diffuse = lightColor,
-        .basecolor = lightColor
-    };
-    l->material = mt;
-}
-const static void announceReadyState(void) {
-    printf("Announcing ready process state event\n");
-    XEvent event = { 0 };
-    event.xkey.type = KeyPress;
-    event.xkey.keycode = 49;
-    event.xkey.display = displ;
-
-    /* Send the signal to our event dispatcher for further processing. */
-    handler[event.type](&event);
-}
 /* General initialization and event handling. */
-static int board(void) {
+static void *board(void *args) {
 
     if (!XInitThreads()) {
         fprintf(stderr, "Warning: board() -- XInitThreads()\n");
-        return EXIT_FAILURE;
+        // return EXIT_FAILURE;
     }
 
     XEvent event;
@@ -457,14 +492,14 @@ static int board(void) {
     displ = XOpenDisplay(NULL);
     if (displ == NULL) {
         fprintf(stderr, "Warning: board() -- XOpenDisplay()\n");
-        return EXIT_FAILURE;
+        // return EXIT_FAILURE;
     }
 
     initMainWindow();
     InitTimeCounter();
     initGlobalGC();
     pixmapcreate();
-    atomsinit();
+    initAtoms();
     registerSig(SIGSEGV);
 
     initDependedVariables();
@@ -496,8 +531,44 @@ static int board(void) {
         usleep(0);
     }
 
-    return EXIT_SUCCESS;
+    // return EXIT_SUCCESS;
 }
+/* ############################################## THREAD POOL ################################################################### */
+const void executeTask(Task *task) {
+    task->taskFunction(task->nm, task->mt, task->arg1, task->arg2, task->arg3, task->arg4);
+}
+void *startThread(void *args) {
+    Task task;
+    while (1) {
+
+        pthread_mutex_lock(&mutexQueue);
+        while (TASKCOUNT == 0) {
+            pthread_cond_wait(&condQueue, &mutexQueue);
+        }
+
+        task = TaskQueue[0];
+        for (int i = 0; i < TASKCOUNT; i++) {
+            TaskQueue[i] = TaskQueue[i + 1];
+        }
+        TASKCOUNT--;
+
+        pthread_mutex_unlock(&mutexQueue);
+
+        executeTask(&task);
+    }
+}
+void submitTask(Task task) {
+    pthread_mutex_lock(&mutexQueue);
+    TaskQueue[TASKCOUNT] = task;
+    TASKCOUNT++;
+    pthread_mutex_unlock(&mutexQueue);
+    pthread_cond_broadcast(&condQueue);
+}
+void printTask(vec4f nm, Material mt, float a, float b, float c, float d) {
+    logVec4f(nm);
+    printf("a: %f,    b: %f,    c: %f,    d: %f\n", a, b, c, d);
+}
+/* ############################################## THREAD POOL ################################################################### */
 const int main(int argc, char *argv[]) {
     if (argc > 1) {
         printf("argc: %d\n", argc);
@@ -512,10 +583,44 @@ const int main(int argc, char *argv[]) {
         }
     }
 
-    if (board()) {
-        fprintf(stderr, "ERROR: main() -- board()\n");
-        return EXIT_FAILURE;
+    // if (board()) {
+    //     fprintf(stderr, "ERROR: main() -- board()\n");
+    //     return EXIT_FAILURE;
+    // }
+
+    /* ############################################## THREAD POOL ################################################################### */
+    pthread_mutex_init(&mutexQueue, NULL);
+    pthread_cond_init(&condQueue, NULL);
+
+    for (int i = 0; i < THREADS; i++) {
+        if (i == 0)
+            if (pthread_create(&threads[i], NULL, &board, NULL) != 0);
+        else 
+            if (pthread_create(&threads[i], NULL, &startThread, NULL) != 0) {
+                fprintf(stderr, "Failed to create thread [ %d ]\n", i);
+            }
     }
+
+    // for (int i = 0; i < 100; i++) {
+    //     Task task = {
+    //         .taskFunction = &printTask,
+    //         .nm = camera[Pos],
+    //         .arg1 = 1.0,
+    //         .arg2 = 2.0,
+    //         .arg3 = 3.0,
+    //         .arg4 = 4.0
+    //     };
+    //     submitTask(task);
+    // }
+
+    for (int i = 0; i < THREADS; i++) {
+        if (pthread_join(threads[i], NULL) != 0) {
+            fprintf(stderr, "Failed to join thread [ %d ]\n", i);
+        }
+    }
+    pthread_mutex_destroy(&mutexQueue);
+    pthread_cond_destroy(&condQueue);
+    /* ############################################## THREAD POOL ################################################################### */
 
     XCloseDisplay(displ);
     
