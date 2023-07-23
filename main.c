@@ -30,21 +30,6 @@
 #include "headers/logging.h"
 #include "headers/test_shapes.h"
 
-/* ############################################## THREAD POOL ################################################################### */
-/* Multithreading, Thread Pool Global variables. */
-#include <pthread.h>
-#define THREADS 4
-pthread_mutex_t mutexQueue;
-pthread_cond_t condQueue;
-
-pthread_t threads[THREADS];
-Task TaskQueue[256];
-int TASKCOUNT = 0;
-
-void submitTask(Task task);
-void printTask(vec4f nm, Material mt, float a, float b, float c, float d);
-/* ############################################## THREAD POOL ################################################################### */
-
 enum { Win_Close, Win_Name, Atom_Type, Atom_Last};
 enum { Pos, U, V, N, C, newPos };
 
@@ -146,7 +131,7 @@ const static void CalculateFPS(void);
 const static void displayInfo(void);
 const static void sigsegv_handler(const int sig);
 const static int registerSig(const int signal);
-static void *board(void *args);
+const static int board(void);
 static void (*handler[LASTEvent]) (XEvent *event) = {
     [ClientMessage] = clientmessage,
     [ReparentNotify] = reparentnotify,
@@ -170,11 +155,6 @@ const static void clientmessage(XEvent *event) {
         XFreeGC(displ, gc);
         XFreePixmap(displ, pixmap);
         XDestroyWindow(displ, win);
-
-        int i = 0;
-        for (i = 1; i < THREADS; i++)
-            if (pthread_cancel(threads[i]));
-                fprintf(stderr, "Thread Cancelation of thead[%d] returned an error.\n", i);
 
         RUNNING = 0;
     }
@@ -217,17 +197,6 @@ const static void buttonpress(XEvent *event) {
     printf("buttonpress event received\n");
     printf("X: %f\n", ((event->xbutton.x - (WIDTH / 2.00)) / (WIDTH / 2.00)));
     printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
-    for (int i = 0; i < 256; i++) {
-        Task task = {
-            .taskFunction = &printTask,
-            .nm = camera[Pos],
-            .arg1 = 1.0,
-            .arg2 = 2.0,
-            .arg3 = 3.0,
-            .arg4 = 4.0
-        };
-        submitTask(task);
-    }
 }
 
 const static void keypress(XEvent *event) {
@@ -328,11 +297,6 @@ const static void keypress(XEvent *event) {
     lookAt = lookat(eye[Pos], eye[U], eye[V], eye[N]);
     viewMat = inverse_mat(lookAt);
     sunlight.newPos = vecxm(sunlight.pos, viewMat);
-
-    logVec4f(sunlight.pos);
-    logVec4f(sunlight.u);
-    logVec4f(sunlight.v);
-    logVec4f(sunlight.n);
 
     if (!PROJECTIONVIEW)
         worldMat = mxm(viewMat, perspMat);
@@ -480,11 +444,11 @@ const static int registerSig(const int signal) {
     return EXIT_SUCCESS;
 }
 /* General initialization and event handling. */
-static void *board(void *args) {
+const static int board(void) {
 
     if (!XInitThreads()) {
         fprintf(stderr, "Warning: board() -- XInitThreads()\n");
-        // return EXIT_FAILURE;
+        return EXIT_FAILURE;
     }
 
     XEvent event;
@@ -492,7 +456,7 @@ static void *board(void *args) {
     displ = XOpenDisplay(NULL);
     if (displ == NULL) {
         fprintf(stderr, "Warning: board() -- XOpenDisplay()\n");
-        // return EXIT_FAILURE;
+        return EXIT_FAILURE;
     }
 
     initMainWindow();
@@ -531,44 +495,8 @@ static void *board(void *args) {
         usleep(0);
     }
 
-    // return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
-/* ############################################## THREAD POOL ################################################################### */
-const void executeTask(Task *task) {
-    task->taskFunction(task->nm, task->mt, task->arg1, task->arg2, task->arg3, task->arg4);
-}
-void *startThread(void *args) {
-    Task task;
-    while (1) {
-
-        pthread_mutex_lock(&mutexQueue);
-        while (TASKCOUNT == 0) {
-            pthread_cond_wait(&condQueue, &mutexQueue);
-        }
-
-        task = TaskQueue[0];
-        for (int i = 0; i < TASKCOUNT; i++) {
-            TaskQueue[i] = TaskQueue[i + 1];
-        }
-        TASKCOUNT--;
-
-        pthread_mutex_unlock(&mutexQueue);
-
-        executeTask(&task);
-    }
-}
-void submitTask(Task task) {
-    pthread_mutex_lock(&mutexQueue);
-    TaskQueue[TASKCOUNT] = task;
-    TASKCOUNT++;
-    pthread_mutex_unlock(&mutexQueue);
-    pthread_cond_broadcast(&condQueue);
-}
-void printTask(vec4f nm, Material mt, float a, float b, float c, float d) {
-    logVec4f(nm);
-    printf("a: %f,    b: %f,    c: %f,    d: %f\n", a, b, c, d);
-}
-/* ############################################## THREAD POOL ################################################################### */
 const int main(int argc, char *argv[]) {
     if (argc > 1) {
         printf("argc: %d\n", argc);
@@ -583,44 +511,10 @@ const int main(int argc, char *argv[]) {
         }
     }
 
-    // if (board()) {
-    //     fprintf(stderr, "ERROR: main() -- board()\n");
-    //     return EXIT_FAILURE;
-    // }
-
-    /* ############################################## THREAD POOL ################################################################### */
-    pthread_mutex_init(&mutexQueue, NULL);
-    pthread_cond_init(&condQueue, NULL);
-
-    for (int i = 0; i < THREADS; i++) {
-        if (i == 0)
-            if (pthread_create(&threads[i], NULL, &board, NULL) != 0);
-        else 
-            if (pthread_create(&threads[i], NULL, &startThread, NULL) != 0) {
-                fprintf(stderr, "Failed to create thread [ %d ]\n", i);
-            }
+    if (board()) {
+        fprintf(stderr, "ERROR: main() -- board()\n");
+        return EXIT_FAILURE;
     }
-
-    // for (int i = 0; i < 100; i++) {
-    //     Task task = {
-    //         .taskFunction = &printTask,
-    //         .nm = camera[Pos],
-    //         .arg1 = 1.0,
-    //         .arg2 = 2.0,
-    //         .arg3 = 3.0,
-    //         .arg4 = 4.0
-    //     };
-    //     submitTask(task);
-    // }
-
-    for (int i = 0; i < THREADS; i++) {
-        if (pthread_join(threads[i], NULL) != 0) {
-            fprintf(stderr, "Failed to join thread [ %d ]\n", i);
-        }
-    }
-    pthread_mutex_destroy(&mutexQueue);
-    pthread_cond_destroy(&condQueue);
-    /* ############################################## THREAD POOL ################################################################### */
 
     XCloseDisplay(displ);
     

@@ -141,9 +141,6 @@ const Mat4x4 inverse_mat(const Mat4x4 m) {
     rm.m[0][0] =   m.m[0][0];    rm.m[0][1] = m.m[1][0];    rm.m[0][2] = m.m[2][0];    rm.m[0][3] = 0.0;
     rm.m[1][0] =   m.m[0][1];    rm.m[1][1] = m.m[1][1];    rm.m[1][2] = m.m[2][1];    rm.m[1][3] = 0.0;
     rm.m[2][0] =   m.m[0][2];    rm.m[2][1] = m.m[1][2];    rm.m[2][2] = m.m[2][2];    rm.m[2][3] = 0.0;
-    // rm.m[3][0] = -(m.m[3][0] * rm.m[0][0] + m.m[3][1] * rm.m[1][0] + m.m[3][2] * rm.m[2][0]);
-    // rm.m[3][1] = -(m.m[3][0] * rm.m[0][1] + m.m[3][1] * rm.m[1][1] + m.m[3][2] * rm.m[2][1]);
-    // rm.m[3][2] = -(m.m[3][0] * rm.m[0][2] + m.m[3][1] * rm.m[1][2] + m.m[3][2] * rm.m[2][2]);
     rm.m[3] = -(__builtin_shuffle(m.m[3], xmask) * rm.m[0] + __builtin_shuffle(m.m[3], ymask) * rm.m[1] + __builtin_shuffle(m.m[3], zmask) * rm.m[2] + __builtin_shuffle(m.m[3], wmask) * rm.m[3]);
     rm.m[3][3] = 1.0;
     return rm;
@@ -162,9 +159,6 @@ const Mat4x4 mxm(const Mat4x4 m1, const Mat4x4 m2) {
     Mat4x4 r = { 0 };
     for (int i = 0; i < 4; i++)
         r.m[i] = __builtin_shuffle(m1.m[i], xmask) * m2.m[0] + __builtin_shuffle(m1.m[i], ymask) * m2.m[1] + __builtin_shuffle(m1.m[i], zmask) * m2.m[2] + __builtin_shuffle(m1.m[i], wmask) * m2.m[3];
-        // for (int j = 0; j < 4; j++) {
-        //     r.m[j][i] = m1.m[j][0] * m2.m[0][i] + m1.m[j][1] * m2.m[1][i] + m1.m[j][2] * m2.m[2][i] + m1.m[j][3] * m2.m[3][i];
-        // }
     return r;
 }
 

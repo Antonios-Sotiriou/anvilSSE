@@ -70,12 +70,5 @@ typedef struct {
     Material material;
 } Light;
 
-typedef struct {
-    void (*taskFunction)(vec4f, Material, float, float, float, float);
-    float arg1, arg2, arg3, arg4;
-    vec4f nm;
-    Material mt;
-} Task;
-
 #endif /* _ANVIL_STRUCTS_H */
 
