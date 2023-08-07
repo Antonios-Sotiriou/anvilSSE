@@ -21,11 +21,22 @@
     #include <string.h>
 #endif
 
+/* This struct here is usefull for sorting array elements without affecting them and also saving their original array indexes. */
+typedef struct {
+    float y;
+    int index;
+} Srt;
+
 const void drawLine(float x1, float y1, float x2, float y2, vec4f color);
 
+const void edgeMesh(const Mesh m, const vec4f color);
+
 const void fillMesh(const Mesh m);
-const void fillface(const face f, const Material mtr);
-const static void fillGeneral(const face f, const Material mtr, const int minX, const int maxX, const int minY, const int maxY);
+const void edgefillface(const face f, const Material mtr);
+const static void edgefillGeneral(const face f, const Material mtr, const int minX, const int maxX, const int minY, const int maxY);
+
+const void scanlinefillface(const face f, const Material mtr);
+const static void scanlinefillGeneral(const face f, const Material mtr, const Srt srt[]);
 
 #endif /* _DRAW_FUNCTIONS_H */
 

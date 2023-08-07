@@ -4,11 +4,11 @@ extern float AmbientStrength, SpecularStrength;
 
 /* This function is responsible to position the objects in world space. */
 const void posWorldObjects(Scene *s) {
-    Mesh cube = loadmesh("objfiles/terrain.obj");
+    Mesh cube = loadmesh("objfiles/smallterrain.obj");
     // createCube(&cube);
     Mat4x4 sclMatrix, trMatrix, posMatrix;
     
-    sclMatrix = scaleMatrix(10.0);
+    sclMatrix = scaleMatrix(100.0);
     trMatrix = translationMatrix(0.0, 0.0, 0.0);
     posMatrix = mxm(sclMatrix, trMatrix);
 

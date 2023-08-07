@@ -10,8 +10,8 @@
 #include <signal.h>
 // #include <immintrin.h>
 
-#define EDGEFUNC 0
-#define SCANLINE 1
+int EDGEFUNC = 0;
+int SCANLINE = 1;
 
 /* Project specific headers */
 #include "headers/locale.h"
@@ -303,8 +303,6 @@ const static void keypress(XEvent *event) {
     else
         worldMat = mxm(viewMat, orthoMat);
 }
-// ##############################################################################################################################################
-/* Starts the Projection Pipeline. */ // ########################################################################################################
 const static void project() {
     grfkPipeline(scene);
     drawFrame();
@@ -324,7 +322,6 @@ const static void drawFrame(void) {
     memset(frame_buffer, 0, FBSIZE);
     memset(depth_buffer, 0, FBSIZE);
 }
-// ##############################################################################################################################################
 const static void initMainWindow(void) {
     sa.event_mask = EXPOSEMASKS | KEYBOARDMASKS | POINTERMASKS;
     sa.background_pixel = 0x000000;
@@ -367,7 +364,7 @@ const static void initBuffers(void) {
     depth_buffer = calloc(wa.width * wa.height, 4);
 }
 const static void initLightModel(Light *l) {
-    vec4f lightColor = { 1.0, 1.0, 1.0, 0.0 };
+    vec4f lightColor = { 1.0, 1.0, 1.0, 1.0 };
     Material mt = {
         .ambient = lightColor * AmbientStrength,
         .specular = lightColor,

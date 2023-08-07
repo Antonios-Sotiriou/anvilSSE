@@ -125,12 +125,11 @@ const static void viewtoscreen(Mesh *m, const int len) {
 }
 /* Rasterize given Mesh by passing them to the appropriate function. */
 const static void rasterize(const Mesh m) {
-
-    // if (DEBUG == 1) {
-    //     edgeMesh(m);
-    // } else if (DEBUG == 2) {
+    if (DEBUG == 1) {
+        edgeMesh(m, m.material.basecolor);
+    } else {
         fillMesh(m);
-    // } else {
+    } //else {
     //     texMesh(m);
     // }
 }
