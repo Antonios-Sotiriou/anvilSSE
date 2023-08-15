@@ -53,7 +53,8 @@ static face *loadfaces(const char path[]) {
         fclose(fp);
         return NULL;
     }
-    int dynamic_inc = 2;
+    int va, vb, vc, vd, ve, vf, vg, vh, vi;
+    int dynamic_inc = 1;
     int index = 0;
 
     char ch;
@@ -61,9 +62,7 @@ static face *loadfaces(const char path[]) {
         if ( (ch = getc(fp)) == 'f' )
             if ( (ch = getc(fp)) == ' ' )
                 if (fscanf(fp, "%d/%d/%d %d/%d/%d %d/%d/%d",
-                    &f[index].a[0], &f[index].a[1], &f[index].a[2], 
-                    &f[index].b[0], &f[index].b[1], &f[index].b[2], 
-                    &f[index].c[0], &f[index].c[1], &f[index].c[2] ) == 9){
+                    &va, &vb, &vc, &vd, &ve, &vf, &vg, &vh, &vi ) == 9){
 
                     f = realloc(f, facesize * dynamic_inc);
                     if (!f) {
@@ -72,6 +71,10 @@ static face *loadfaces(const char path[]) {
                         free(f);
                         return NULL;
                     }
+                    f[index].a[0] = va - 1, f[index].a[1] = vb - 1, f[index].a[2] = vc - 1,
+                    f[index].b[0] = vd - 1, f[index].b[1] = ve - 1, f[index].b[2] = vf - 1,
+                    f[index].c[0] = vg - 1, f[index].c[1] = vh - 1, f[index].c[2] = vi - 1;
+
                     index++;
                     dynamic_inc++;
                 }
@@ -95,15 +98,15 @@ static vec4f *loadvectors(const char path[]) {
         fclose(fp);
         return NULL;
     }
-
-    int dynamic_inc = 2;
+    float va, vb, vc;
+    int dynamic_inc = 1;
     int index = 0;
 
     char ch;
     while (!feof(fp)) {
         if ( (ch = getc(fp)) == 'v' )
             if ( (ch = getc(fp)) == ' ' )
-                if (fscanf(fp, "%f %f %f", &v[index][0], &v[index][1], &v[index][2]) == 3) {
+                if (fscanf(fp, "%f %f %f", &va, &vb, &vc) == 3) {
 
                     v = realloc(v, vecsize * dynamic_inc);
                     if (!v) {
@@ -112,6 +115,9 @@ static vec4f *loadvectors(const char path[]) {
                         free(v);
                         return NULL;
                     }
+                    v[index][0] = va;
+                    v[index][1] = vb;
+                    v[index][2] = vc;
                     v[index][3] = 1.00;
 
                     index++;
@@ -136,8 +142,8 @@ static vec4f *loadtextors(const char path[]) {
         fclose(fp);
         return NULL;
     }
-
-    int dynamic_inc = 2;
+    float va, vb;
+    int dynamic_inc = 1;
     int index = 0;
 
     char ch;
@@ -145,7 +151,7 @@ static vec4f *loadtextors(const char path[]) {
         if ( (ch = getc(fp)) == 'v' )
             if ( (ch = getc(fp)) == 't' )
                 if ( (ch = getc(fp)) == ' ' )
-                    if (fscanf(fp, "%f %f", &t[index][0], &t[index][1]) == 2) {
+                    if (fscanf(fp, "%f %f", &va, &vb) == 2) {
 
                         t = realloc(t, vecsize * dynamic_inc);
                         if (!t) {
@@ -154,6 +160,8 @@ static vec4f *loadtextors(const char path[]) {
                             free(t);
                             return NULL;
                         }
+                        t[index][0] = va;
+                        t[index][1] = vb;
                         t[index][2] = 0.0;
                         t[index][3] = 0.0;
 
@@ -180,7 +188,8 @@ static vec4f *loadnormals(const char path[]) {
         return NULL;
     }
 
-    int dynamic_inc = 2;
+    float va, vb, vc;
+    int dynamic_inc = 1;
     int index = 0;
 
     char ch;
@@ -188,7 +197,7 @@ static vec4f *loadnormals(const char path[]) {
         if ( (ch = getc(fp)) == 'v' )
             if ( (ch = getc(fp)) == 'n' )
                 if ( (ch = getc(fp)) == ' ' )
-                    if (fscanf(fp, "%f %f %f", &n[index][0], &n[index][1], &n[index][2]) == 3) {
+                    if (fscanf(fp, "%f %f %f", &va, &vb, &vc) == 3) {
 
                         n = realloc(n, sizeof(vec4f) * dynamic_inc);
                         if (!n) {
@@ -197,6 +206,9 @@ static vec4f *loadnormals(const char path[]) {
                             free(n);
                             return NULL;
                         }
+                        n[index][0] = va;
+                        n[index][1] = vb;
+                        n[index][2] = vc;
                         n[index][3] = 0.0f;
 
                         index++;

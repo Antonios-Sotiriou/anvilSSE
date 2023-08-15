@@ -2,9 +2,50 @@
 
 extern int HALFH, HALFW, DEBUG;
 extern float FPlane, NPlane;;
+extern Light sunlight;
 extern XWindowAttributes wa;
-extern Mat4x4 viewMat, worldMat;
+extern Mat4x4 viewMat, worldMat, orthoMat, lightMat;
 
+const void shadowPipeline(Scene s) {
+    Mesh cache = { 0 };
+    Mat4x4 lm = lookat(sunlight.newPos, sunlight.u, sunlight.v, sunlight.n);
+    Mat4x4 Lview = inverse_mat(lm);
+    lightMat = mxm(Lview, orthoMat);
+
+    for (int i = 0; i < s.m_indexes; i++) {
+        initMesh(&cache, s.m[i]);
+
+        cache.v = meshxm(s.m[i].v, s.m[i].v_indexes, lightMat);
+        cache.n = malloc(1);
+
+        initfaceVerticesShadow(&cache, cache.f_indexes);
+
+        /* At this Point triangles must be clipped against near plane. */
+        vec4f plane_near_p = { 0.0, 0.0, NPlane, 0.0 },
+              plane_near_n = { 0.0, 0.0, 1.0, 0.0 };
+        cache = clipp(cache, plane_near_p, plane_near_n);
+    
+        /* Applying perspective division. */
+        if (cache.f_indexes) {
+
+            /* Applying Backface culling before we proceed to full frustum clipping. */
+            cache = bfculling(cache, cache.f_indexes);
+
+            /* Sending to translation from NDC to Screen Coordinates. */
+            viewtoscreen(&cache, cache.f_indexes);
+            createShadowmap(cache);
+        }
+        releaseMesh(&cache);
+    }
+}
+/* Assosiates vertices coordinate values from vector array through indexes. */
+const static void initfaceVerticesShadow(Mesh *m, const int len) {
+    for (int i = 0; i < len; i++) {
+        m->f[i].v[0] = m->v[m->f[i].a[0]];
+        m->f[i].v[1] = m->v[m->f[i].b[0]];
+        m->f[i].v[2] = m->v[m->f[i].c[0]];
+    }
+}
 /* Passes the scene Meshes throught the graphic pipeline. */
 const void grfkPipeline(Scene s) {
     Mesh cache = { 0 };
@@ -30,29 +71,26 @@ const void grfkPipeline(Scene s) {
             cache = bfculling(cache, cache.f_indexes);
 
             /* Sending to translation from NDC to Screen Coordinates. */
-            // if (cache.f_indexes)
-                viewtoscreen(&cache, cache.f_indexes);
-
-                // if (cache.f_indexes)
-                    rasterize(cache);
+            viewtoscreen(&cache, cache.f_indexes);
+            rasterize(cache);
         }
         releaseMesh(&cache);
     }
-} 
+}
 /* Assosiates vertices coordinate values from vector array through indexes. */
 const static void initfaceVertices(Mesh *m, const int len) {
     for (int i = 0; i < len; i++) {
-        m->f[i].v[0] = m->v[m->f[i].a[0] - 1];
-        m->f[i].v[1] = m->v[m->f[i].b[0] - 1];
-        m->f[i].v[2] = m->v[m->f[i].c[0] - 1];
+        m->f[i].v[0] = m->v[m->f[i].a[0]];
+        m->f[i].v[1] = m->v[m->f[i].b[0]];
+        m->f[i].v[2] = m->v[m->f[i].c[0]];
 
-        m->f[i].vt[0] = m->t[m->f[i].a[1] - 1];
-        m->f[i].vt[1] = m->t[m->f[i].b[1] - 1];
-        m->f[i].vt[2] = m->t[m->f[i].c[1] - 1];
+        m->f[i].vt[0] = m->t[m->f[i].a[1]];
+        m->f[i].vt[1] = m->t[m->f[i].b[1]];
+        m->f[i].vt[2] = m->t[m->f[i].c[1]];
 
-        m->f[i].vn[0] = m->n[m->f[i].a[2] - 1];
-        m->f[i].vn[1] = m->n[m->f[i].b[2] - 1];
-        m->f[i].vn[2] = m->n[m->f[i].c[2] - 1];
+        m->f[i].vn[0] = m->n[m->f[i].a[2]];
+        m->f[i].vn[1] = m->n[m->f[i].b[2]];
+        m->f[i].vn[2] = m->n[m->f[i].c[2]];
     }
 }
 /* Perspective division. */

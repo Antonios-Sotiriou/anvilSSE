@@ -15,6 +15,8 @@
 
 const void look_left(vec4f *g, const float angle);
 const void look_right(vec4f *g, const float angle);
+const void look_up(vec4f *g, const float angle);
+const void look_down(vec4f *g, const float angle);
 const void move_forward(vec4f *g, const float vel);
 const void move_backward(vec4f *g, const float vel);
 const void move_left(vec4f *g, const float vel);

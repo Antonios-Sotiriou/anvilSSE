@@ -30,6 +30,7 @@ typedef struct {
     vec4f diffuse;
     vec4f specular;
     float shinniness;
+    int reflect;
 } Material;
 
 typedef struct {
@@ -69,6 +70,12 @@ typedef struct {
     vec4f pos, u, v, n, newPos;
     Material material;
 } Light;
+
+/* This struct here is usefull for sorting array elements without affecting them and also saving their original array indexes. */
+typedef struct {
+    float y;
+    int index;
+} Srt;
 
 #endif /* _ANVIL_STRUCTS_H */
 

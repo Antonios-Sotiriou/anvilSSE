@@ -21,12 +21,6 @@
     #include <string.h>
 #endif
 
-/* This struct here is usefull for sorting array elements without affecting them and also saving their original array indexes. */
-typedef struct {
-    float y;
-    int index;
-} Srt;
-
 const void drawLine(float x1, float y1, float x2, float y2, vec4f color);
 
 const void edgeMesh(const Mesh m, const vec4f color);

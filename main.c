@@ -23,6 +23,7 @@ int SCANLINE = 1;
 #include "headers/camera.h"
 #include "headers/world_objects.h"
 #include "headers/general_functions.h"
+#include "headers/shadowmap.h"
 #include "headers/draw_functions.h"
 
 /* testing */
@@ -52,11 +53,12 @@ Atom wmatom[Atom_Last];
 
 /* BUFFERS. */
 u_int8_t *frame_buffer;
-float *depth_buffer;
+float *depth_buffer, *shadow_buffer;
 
 /* Project Global Variables. */
 static int PROJECTIONVIEW = 0;
 static int PROJECTBUFFER  = 1;
+static int AdjustShadow   = 1;
 static int EYEPOINT       = 0;
 static float FOV          = 45.0;
 static float ZNEAR        = 0.01;
@@ -65,7 +67,7 @@ static float ASPECTRATIO  = 1;
 static int FBSIZE         = 0;
 float NPlane              = 1.0;
 float FPlane              = 0.00001;
-float SCALE               = 1.0;
+float SCALE               = 0.003;
 float AmbientStrength     = 0.15;
 float SpecularStrength    = 0.5;
 
@@ -77,14 +79,14 @@ vec4f camera[N + 1] = {
     { 0.0, 0.0, 1.0, 0.0 }
 };
 Light sunlight = {
-    .pos = { -800.001343, 205.598007, 802.004822, 1.000000 },
+    .pos = { -800.001343, 205.598007, 802.004822, 0.000000 },
     .u = { -0.694661, 0.000000, -0.719352, 0.000000 },
     .v = { 0.000000, -1.000000, 0.000000, 0.000000 },
     .n = { 0.719352, 0.000000, -0.694661, 0.000000 },
 };
 
 /* Global Matrices */
-Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat;
+Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, lightMat;
 
 /* Anvil global Objects Meshes and Scene. */
 Scene scene = { 0 };
@@ -150,6 +152,7 @@ const static void clientmessage(XEvent *event) {
 
         free(frame_buffer);
         free(depth_buffer);
+        free(shadow_buffer);
 
         free(image);
         XFreeGC(displ, gc);
@@ -181,6 +184,7 @@ const static void configurenotify(XEvent *event) {
         if (INIT) {
             free(frame_buffer);
             free(depth_buffer);
+            free(shadow_buffer);
 
             free(image);
             initBuffers();
@@ -215,6 +219,10 @@ const static void keypress(XEvent *event) {
         case 97 : look_left(eye, 0.2);       /* a */
             break;
         case 100 : look_right(eye, 0.2);     /* d */
+            break;
+        case 113 : look_up(eye, 2.2);       /* q */
+            break;
+        case 101 : look_down(eye, 2.2);     /* e */
             break;
         case 119 : move_forward(eye, 2.2);         /* w */
             break;
@@ -260,7 +268,7 @@ const static void keypress(XEvent *event) {
             break;
         case 114 : rotate_light(&sunlight, 1, 0.0, 1.0, 0.0);        /* r */
             break;
-        case 99 : rotate_origin(&scene.m[0], 1, 1.0, 0.0, 0.0);  /* c */
+        case 99 : rotate_origin(&scene.m[1], 1, 1.0, 0.0, 0.0);  /* c */
             break;
         case 43 : SCALE += 0.01;                                    /* + */
             orthoMat = orthographicMatrix(SCALE, SCALE, 0.0, 0.0, ZNEAR, ZFAR);
@@ -297,6 +305,7 @@ const static void keypress(XEvent *event) {
     lookAt = lookat(eye[Pos], eye[U], eye[V], eye[N]);
     viewMat = inverse_mat(lookAt);
     sunlight.newPos = vecxm(sunlight.pos, viewMat);
+    AdjustShadow = 1;
 
     if (!PROJECTIONVIEW)
         worldMat = mxm(viewMat, perspMat);
@@ -304,6 +313,11 @@ const static void keypress(XEvent *event) {
         worldMat = mxm(viewMat, orthoMat);
 }
 const static void project() {
+    if (AdjustShadow) {
+        memset(shadow_buffer, 1, FBSIZE);
+        shadowPipeline(scene);
+        AdjustShadow = 0;
+    }
     grfkPipeline(scene);
     drawFrame();
 }
@@ -314,7 +328,7 @@ const static void drawFrame(void) {
     else if (PROJECTBUFFER == 2)
         image->data = (u_int8_t*)depth_buffer;
     else if (PROJECTBUFFER == 3)
-        image->data = frame_buffer;
+        image->data = (u_int8_t*)shadow_buffer;
 
     XPutImage(displ, pixmap, gc, image, 0, 0, 0, 0, wa.width, wa.height);
 
@@ -362,6 +376,7 @@ const static void initAtoms(void) {
 const static void initBuffers(void) {
     frame_buffer = calloc(wa.width * wa.height * 4, 1);
     depth_buffer = calloc(wa.width * wa.height, 4);
+    shadow_buffer = calloc(wa.width * wa.height, 4);
 }
 const static void initLightModel(Light *l) {
     vec4f lightColor = { 1.0, 1.0, 1.0, 1.0 };

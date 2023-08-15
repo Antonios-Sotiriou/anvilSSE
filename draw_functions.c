@@ -67,7 +67,7 @@ const void edgeMesh(const Mesh m, const vec4f color) {
         drawLine(m.f[i].v[2][0], m.f[i].v[2][1], m.f[i].v[0][0], m.f[i].v[0][1], color);
     }
 }
-/* Fills given mesh with color according to mesh material. */
+/* Fills given mesh with color according to mesh material und with the appropriate fill method. */
 const void fillMesh(const Mesh m) {
     struct fillDispatch {
         void (*fillfunction)(face, Material);
@@ -175,19 +175,6 @@ const void scanlinefillface(const face f, const Material mtr) {
             }
 
     scanlinefillGeneral(f, mtr, srt);
-    // vec4f lc = { 1.0f, 0.0f, 0.0f, 0.0f };
-    // float wind = winding(f);
-    // if (wind > 0) {
-    //     drawLine(f.v[0][0], f.v[0][1], f.v[1][0], f.v[1][1], lc);
-    //     drawLine(f.v[1][0], f.v[1][1], f.v[2][0], f.v[2][1], lc);
-    //     drawLine(f.v[2][0], f.v[2][1], f.v[0][0], f.v[0][1], lc);
-    // } else {
-    //     lc[0] = 0.0f;
-    //     lc[1] = 1.0f;
-    //     drawLine(f.v[0][0], f.v[0][1], f.v[1][0], f.v[1][1], lc);
-    //     drawLine(f.v[1][0], f.v[1][1], f.v[2][0], f.v[2][1], lc);
-    //     drawLine(f.v[2][0], f.v[2][1], f.v[0][0], f.v[0][1], lc);
-    // }
 }
 const static void scanlinefillGeneral(const face f, const Material mtr, const Srt srt[]) {
     vec4i mask = { 1, 2, 0, 3 };

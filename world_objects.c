@@ -4,7 +4,7 @@ extern float AmbientStrength, SpecularStrength;
 
 /* This function is responsible to position the objects in world space. */
 const void posWorldObjects(Scene *s) {
-    Mesh cube = loadmesh("objfiles/smallterrain.obj");
+    Mesh cube = loadmesh("objfiles/terrain.obj");
     // createCube(&cube);
     Mat4x4 sclMatrix, trMatrix, posMatrix;
     
@@ -17,7 +17,8 @@ const void posWorldObjects(Scene *s) {
         .ambient = { 0.24725f, 0.1995f, 0.0745f, 0.0f },
         .specular = { 0.628281f, 0.555802f, 0.366065f, 0.0f },
         .diffuse = { 0.75164f, 0.60648f, 0.22648f, 0.0f },
-        .shinniness = 0.4 * 128
+        .shinniness = 0.4 * 128,
+        .reflect = 0
     };
     cube.material = mat;
 
@@ -33,6 +34,7 @@ const void posWorldObjects(Scene *s) {
     posMatrix = mxm(sclMatrix, trMatrix);
 
     jupiter.material = mat;
+    jupiter.material.reflect = 1;
 
     initMesh(&s->m[1], jupiter);
     s->m[1].v = meshxm(jupiter.v, jupiter.v_indexes, posMatrix);

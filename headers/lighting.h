@@ -13,9 +13,12 @@
     #include "matrices.h"
 #endif
 
-
 #ifndef _VECTORS_MATH_H
     #include "vectors_math.h"
+#endif
+
+#ifndef _SHADOWMAP_H
+    #include "shadowmap.h"
 #endif
 
 const float phong(vec4f nm, const Material mtr, const float pixX, const float pixY, const float pixZ, const float pixW);

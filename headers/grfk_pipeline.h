@@ -29,6 +29,8 @@
     #include <stdio.h>
 #endif
 
+const void shadowPipeline(Scene s);
+const static void initfaceVerticesShadow(Mesh *m, const int len);
 const void grfkPipeline(Scene s);
 const static void initfaceVertices(Mesh *m, const int len);
 const static void ppdiv(Mesh *m, const int len);
