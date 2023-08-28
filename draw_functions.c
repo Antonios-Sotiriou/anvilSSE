@@ -1,9 +1,12 @@
 #include "headers/draw_functions.h"
+#include "headers/logging.h"
 
 extern int EDGEFUNC, SCANLINE;
 extern u_int8_t *frame_buffer;
 extern float *depth_buffer;
 extern XWindowAttributes wa;
+const static void edgefillGeneral(const face f, const Material mtr, const int minX, const int maxX, const int minY, const int maxY);
+const static void scanlinefillGeneral(const face f, const Material mtr, const Srt srt[]);
 extern const float winding(const face f);
 extern const void swap(void *a, void *b, unsigned long size);
 
@@ -130,7 +133,6 @@ const static void edgefillGeneral(const face f, const Material mtr, int minX, in
         vec4i xa = ya;
         int xflag = 0;
         const int padyDB = y * wa.width;
-        const int padyFB = padyDB * 4;
         for (int x = minX; x <= maxX; x++) {
 
             const int xa0 = ( (tps[0]) && (!xa[0]) ) ? -1 : xa[0];

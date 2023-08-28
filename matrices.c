@@ -61,14 +61,14 @@ const Mat4x4 rotateZMatrix(const float angle) {
     return m;
 }
 /* Orthographic Projection Matrix. */
-const Mat4x4 orthographicMatrix(const float scaleX, const float scaleY, const float transX, const float transY, const float zn, const float zf) {
+const Mat4x4 orthographicMatrix(const float l, const float r, const float t, const float b, const float n, const float f) {
     Mat4x4 m = { 0 };
-    m.m[0][0] = scaleX;
-    m.m[1][1] = scaleY;
-    m.m[2][2] = 1.00 / (zf - zn);
-    m.m[3][0] = transX;
-    m.m[3][1] = transY;
-    m.m[3][2] = ( (zf + zn) / (zf - zn) );
+    m.m[0][0] = l;//2 / (r - l);
+    m.m[1][1] = r;//2 / (b - t);
+    m.m[2][2] = (1.00 / (f - n));
+    m.m[3][0] = 0;//( (r + l) / (r - l) );
+    m.m[3][1] = 0;//( (t + b) / (b - t) );
+    m.m[3][2] = ( f / (f - n) );
     m.m[3][3] = 1.0;
     return m;
 }

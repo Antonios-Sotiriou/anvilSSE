@@ -1,5 +1,14 @@
 #include "headers/grfk_pipeline.h"
 
+#include "headers/logging.h"
+
+const static void initfaceVerticesShadow(Mesh *m, const int len);
+const static void initfaceVertices(Mesh *m, const int len);
+const static void ppdiv(Mesh *m, const int len);
+const static Mesh bfculling(const Mesh c, const int len);
+const static void viewtoscreen(Mesh *m, const int len);
+const static void rasterize(const Mesh m);
+
 extern int HALFH, HALFW, DEBUG;
 extern float FPlane, NPlane;;
 extern Light sunlight;
@@ -8,7 +17,7 @@ extern Mat4x4 viewMat, worldMat, orthoMat, lightMat;
 
 const void shadowPipeline(Scene s) {
     Mesh cache = { 0 };
-    Mat4x4 lm = lookat(sunlight.newPos, sunlight.u, sunlight.v, sunlight.n);
+    Mat4x4 lm = lookat(sunlight.pos, sunlight.u, sunlight.v, sunlight.n);
     Mat4x4 Lview = inverse_mat(lm);
     lightMat = mxm(Lview, orthoMat);
 
@@ -33,6 +42,7 @@ const void shadowPipeline(Scene s) {
 
             /* Sending to translation from NDC to Screen Coordinates. */
             viewtoscreen(&cache, cache.f_indexes);
+
             createShadowmap(cache);
         }
         releaseMesh(&cache);
@@ -72,6 +82,7 @@ const void grfkPipeline(Scene s) {
 
             /* Sending to translation from NDC to Screen Coordinates. */
             viewtoscreen(&cache, cache.f_indexes);
+
             rasterize(cache);
         }
         releaseMesh(&cache);
@@ -134,10 +145,10 @@ const static Mesh bfculling(const Mesh m, const int len) {
 const static void viewtoscreen(Mesh *m, const int len) {
     for (int i = 0; i < len; i++) {
         for (int j = 0; j < 3; j++) {
-            m->f[i].v[j][0] = ((++m->f[i].v[j][0]) * HALFW) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
-            m->f[i].v[j][1] = ((++m->f[i].v[j][1]) * HALFH) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
-            m->f[i].v[j][2] *= 0.5;
-            m->f[i].v[j][3] = 1 / m->f[i].v[j][3];
+            m->f[i].v[j][0] = ((1 + m->f[i].v[j][0]) * HALFW) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
+            m->f[i].v[j][1] = ((1 + m->f[i].v[j][1]) * HALFH) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
+            m->f[i].v[j][2] *= 0.5;//1.f / m->f[i].v[j][2];
+            m->f[i].v[j][3] = 1.f / m->f[i].v[j][3];
         }
     }
     /* Far Plane clipping and side clipping. */
@@ -145,9 +156,9 @@ const static void viewtoscreen(Mesh *m, const int len) {
           plane_far_n = { 0.0, 0.0, 1.0 };
     *m = clipp(*m, plane_far_p, plane_far_n);
 
-    vec4f plane_right_p = { wa.width - 1.0, 0.0, 0.0 },
-          plane_right_n = { -1.0, 0.0, 0.0 };
-    *m = clipp(*m, plane_right_p, plane_right_n);
+    vec4f plane_up_p = { 0.0, 0.0, 0.0 },
+          plane_up_n = { 0.0, 1.0, 0.0 };
+    *m = clipp(*m, plane_up_p, plane_up_n);
 
     vec4f plane_down_p = { 0.0, wa.height - 1.0, 0.0 },
           plane_down_n = { 0.0, -1.0, 0.0 };
@@ -157,9 +168,9 @@ const static void viewtoscreen(Mesh *m, const int len) {
           plane_left_n = { 1.0, 0.0, 0.0 };
     *m = clipp(*m, plane_left_p, plane_left_n);
 
-    vec4f plane_up_p = { 0.0, 0.0, 0.0 },
-          plane_up_n = { 0.0, 1.0, 0.0 };
-    *m = clipp(*m, plane_up_p, plane_up_n);
+    vec4f plane_right_p = { wa.width - 1.0, 0.0, 0.0 },
+          plane_right_n = { -1.0, 0.0, 0.0 };
+    *m = clipp(*m, plane_right_p, plane_right_n);
 }
 /* Rasterize given Mesh by passing them to the appropriate function. */
 const static void rasterize(const Mesh m) {

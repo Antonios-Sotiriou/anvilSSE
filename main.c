@@ -59,30 +59,36 @@ float *depth_buffer, *shadow_buffer;
 static int PROJECTIONVIEW = 0;
 static int PROJECTBUFFER  = 1;
 static int AdjustShadow   = 1;
+static int AdjustScene    = 1;
 static int EYEPOINT       = 0;
-static float FOV          = 45.0;
-static float ZNEAR        = 0.01;
-static float ZFAR         = 1000.0;
+static float FOV          = 45.0f;
+static float ZNEAR        = 0.01f;
+static float ZFAR         = 1000.0f;
 static float ASPECTRATIO  = 1;
 static int FBSIZE         = 0;
-float NPlane              = 1.0;
-float FPlane              = 0.00001;
-float SCALE               = 0.003;
-float AmbientStrength     = 0.15;
-float SpecularStrength    = 0.5;
+float NPlane              = 1.0f;
+float FPlane              = 0.00001f;
+float SCALE               = 0.003f;
+float AmbientStrength     = 0.15f;
+float SpecularStrength    = 0.5f;
+float shadow_bias         = 0.0f;
 
 /* Camera and Global light Source. */
 vec4f camera[N + 1] = {
-    { 0.0, 0.0, -10.0, 1.0 },
-    { 1.0, 0.0, 0.0, 0.0 },
-    { 0.0, -1.0, 0.0, 0.0 },
-    { 0.0, 0.0, 1.0, 0.0 }
+    { 0.0f, 0.0f, -10.0f, 1.0f },
+    { 1.0f, 0.0f, 0.0f, 0.0f },
+    { 0.0f, -1.0f, 0.0f, 0.0f },
+    { 0.0f, 0.0f, 1.0f, 0.0f }
 };
 Light sunlight = {
-    .pos = { -800.001343, 205.598007, 802.004822, 0.000000 },
-    .u = { -0.694661, 0.000000, -0.719352, 0.000000 },
-    .v = { 0.000000, -1.000000, 0.000000, 0.000000 },
-    .n = { 0.719352, 0.000000, -0.694661, 0.000000 },
+    // .pos = { -800.001343f, 205.598007f, 802.004822f, 1.000000f },
+    // .u = { -0.694661f, 0.000000f, -0.719352f, 0.000000f },
+    // .v = { 0.000000f, -1.000000f, 0.000000f, 0.000000f },
+    // .n = { 0.719352f, 0.000000f, -0.694661f, 0.000000f },
+    .pos = { 0.f, 0.0f, 0.f, 1.f },
+    .u = { 1.f, 0.f, 0.f, 0.f },
+    .v = { 0.f, 0.f, -1.f, 0.f },
+    .n = { 0.f, -1.f, 0.f, 0.f },
 };
 
 /* Global Matrices */
@@ -117,7 +123,6 @@ const static void project(void);
 const static void drawFrame(void);
 
 /* Xlib relative functions and event dispatcher. */
-const static KeySym getKeysym(XEvent *event);
 const static void initMainWindow(void);
 const static void initGlobalGC(void);
 const static void initDependedVariables(void);
@@ -178,7 +183,7 @@ const static void configurenotify(XEvent *event) {
 
     if (!event->xconfigure.send_event) {
         printf("configurenotify event received\n");
-        int old_height = wa.height;
+        // int old_height = wa.height;
         XGetWindowAttributes(displ, win, &wa);
 
         if (INIT) {
@@ -202,7 +207,6 @@ const static void buttonpress(XEvent *event) {
     printf("X: %f\n", ((event->xbutton.x - (WIDTH / 2.00)) / (WIDTH / 2.00)));
     printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
 }
-
 const static void keypress(XEvent *event) {
     
     KeySym keysym = XLookupKeysym(&event->xkey, 0);
@@ -214,7 +218,8 @@ const static void keypress(XEvent *event) {
         eye = (vec4f*)&camera;
 
     printf("Key Pressed: %ld\n", keysym);
-    printf("\x1b[H\x1b[J");
+    // printf("\x1b[H\x1b[J");
+    system("clear\n");
     switch (keysym) {
         case 97 : look_left(eye, 0.2);       /* a */
             break;
@@ -228,19 +233,19 @@ const static void keypress(XEvent *event) {
             break;
         case 115 : move_backward(eye, 2.2);        /* s */
             break;
-        case 65361 : move_left(eye, 0.2);          /* left arrow */
+        case 65361 : move_left(eye, 2.2);          /* left arrow */
             break;
-        case 65363 : move_right(eye, 0.2);         /* right arrow */
+        case 65363 : move_right(eye, 2.2);         /* right arrow */
             break;
         case 65362 : move_up(eye, 0.2);            /* up arror */
             break;
         case 65364 : move_down(eye, 0.2);          /* down arrow */
             break;
-        case 65451 :FPlane += 0.0001;             /* + */
-            printf("FPlane: %f\n",FPlane);
+        case 65451 :shadow_bias += 0.0001;             /* + */
+            printf("shadow_bias: %f\n",shadow_bias);
             break;
-        case 65453 :FPlane -= 0.0001;             /* - */
-            printf("FPlane: %f\n", FPlane);
+        case 65453 :shadow_bias -= 0.0001;             /* - */
+            printf("shadow_bias: %f\n", shadow_bias);
             break;
         case 65450 : NPlane += 0.01;             /* * */
             printf("NPlane: %f\n", NPlane);
@@ -271,10 +276,10 @@ const static void keypress(XEvent *event) {
         case 99 : rotate_origin(&scene.m[1], 1, 1.0, 0.0, 0.0);  /* c */
             break;
         case 43 : SCALE += 0.01;                                    /* + */
-            orthoMat = orthographicMatrix(SCALE, SCALE, 0.0, 0.0, ZNEAR, ZFAR);
+            orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, ZNEAR, ZFAR);
             break;
         case 45 : SCALE -= 0.01;                                   /* - */
-            orthoMat = orthographicMatrix(SCALE, SCALE, 0.0, 0.0, ZNEAR, ZFAR);
+            orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, ZNEAR, ZFAR);
             break;
         case 112 :
             if (PROJECTBUFFER == 3)
@@ -306,35 +311,47 @@ const static void keypress(XEvent *event) {
     viewMat = inverse_mat(lookAt);
     sunlight.newPos = vecxm(sunlight.pos, viewMat);
     AdjustShadow = 1;
+    AdjustScene = 1;
 
     if (!PROJECTIONVIEW)
         worldMat = mxm(viewMat, perspMat);
     else
         worldMat = mxm(viewMat, orthoMat);
+    // logMatrix(worldMat);
+    // project();
+    // logVec4f(eye[Pos]);
+    // logVec4f(eye[U]);
+    // logVec4f(eye[V]);
+    // logVec4f(eye[N]);
 }
 const static void project() {
     if (AdjustShadow) {
-        memset(shadow_buffer, 1, FBSIZE);
+        memset(shadow_buffer, '@', FBSIZE);
         shadowPipeline(scene);
         AdjustShadow = 0;
     }
-    grfkPipeline(scene);
+    if (AdjustScene) {
+        memset(frame_buffer, 0, FBSIZE);
+        memset(depth_buffer, 0, FBSIZE);
+        grfkPipeline(scene);
+        AdjustScene = 0;
+    }
     drawFrame();
 }
 /* Writes the final Pixel values on screen. */
 const static void drawFrame(void) {
     if (PROJECTBUFFER <= 1)
-        image->data = frame_buffer;
+        image->data = (char*)frame_buffer;
     else if (PROJECTBUFFER == 2)
-        image->data = (u_int8_t*)depth_buffer;
+        image->data = (char*)depth_buffer;
     else if (PROJECTBUFFER == 3)
-        image->data = (u_int8_t*)shadow_buffer;
+        image->data = (char*)shadow_buffer;
 
     XPutImage(displ, pixmap, gc, image, 0, 0, 0, 0, wa.width, wa.height);
 
+    // memset(frame_buffer, '@', FBSIZE);
+    // memset(depth_buffer, 0, FBSIZE);
     pixmapdisplay();
-    memset(frame_buffer, 0, FBSIZE);
-    memset(depth_buffer, 0, FBSIZE);
 }
 const static void initMainWindow(void) {
     sa.event_mask = EXPOSEMASKS | KEYBOARDMASKS | POINTERMASKS;
@@ -350,7 +367,7 @@ const static void initGlobalGC(void) {
     gc = XCreateGC(displ, win, GCBackground | GCForeground | GCGraphicsExposures, &gcvalues);
 }
 const static void initDependedVariables(void) {
-    image = XCreateImage(displ, wa.visual, wa.depth, ZPixmap, 0, frame_buffer, wa.width, wa.height, 32, (wa.width * 4));
+    image = XCreateImage(displ, wa.visual, wa.depth, ZPixmap, 0, (char*)frame_buffer, wa.width, wa.height, 32, (wa.width * 4));
 
     ASPECTRATIO = ((float)wa.width / (float)wa.height);
     HALFH = wa.height >> 1;
@@ -361,7 +378,10 @@ const static void initDependedVariables(void) {
     /* Matrices initialization. */
     perspMat = perspectiveMatrix(FOV, ASPECTRATIO, ZNEAR, ZFAR);
     reperspMat = reperspectiveMatrix(FOV, ASPECTRATIO);
-    orthoMat = orthographicMatrix(SCALE, SCALE, 0.0, 0.0, ZNEAR, ZFAR);
+    orthoMat = orthographicMatrix(SCALE, SCALE, 0.f, 0.0, ZNEAR, ZFAR);
+
+    AdjustShadow = 1;
+    AdjustScene = 1;
 }
 const static void initAtoms(void) {
 
@@ -424,13 +444,13 @@ const static void CalculateFPS(void) {
 }
 const static void displayInfo(void) {
     char info_string[30];
-    sprintf(info_string, "Resolution: %d x %d\0", wa.width, wa.height);
+    sprintf(info_string, "Resolution: %d x %d", wa.width, wa.height);
     XDrawString(displ ,win ,gc, 5, 12, info_string, strlen(info_string));
 
-    sprintf(info_string, "Running Time: %4.1f\0", TimeCounter);
+    sprintf(info_string, "Running Time: %4.1f", TimeCounter);
     XDrawString(displ ,win ,gc, 5, 24, info_string, strlen(info_string));
 
-    sprintf(info_string, "%4.1f fps\0", FPS);
+    sprintf(info_string, "%4.1f fps", FPS);
     XDrawString(displ ,win ,gc, 5, 36, info_string, strlen(info_string));
 }
 /* Signal handler to clean memory before exit, after receiving a given signal. */
@@ -476,7 +496,7 @@ const static int board(void) {
     initGlobalGC();
     pixmapcreate();
     initAtoms();
-    registerSig(SIGSEGV);
+    // registerSig(SIGSEGV);
 
     initDependedVariables();
     initBuffers();

@@ -8,7 +8,7 @@ const void posWorldObjects(Scene *s) {
     // createCube(&cube);
     Mat4x4 sclMatrix, trMatrix, posMatrix;
     
-    sclMatrix = scaleMatrix(100.0);
+    sclMatrix = scaleMatrix(1000.0);
     trMatrix = translationMatrix(0.0, 0.0, 0.0);
     posMatrix = mxm(sclMatrix, trMatrix);
 

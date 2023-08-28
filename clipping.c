@@ -1,5 +1,7 @@
 #include "headers/clipping.h"
-#include "headers/logging.h"
+
+extern const void swap(void *a, void *b, unsigned long size);
+
 const Mesh clipp(const Mesh c, vec4f plane_p, vec4f plane_n) {
 
     Mesh r = c;
@@ -47,7 +49,7 @@ const vec4f plane_intersect(vec4f plane_p, vec4f plane_n, vec4f line_start, vec4
     float bd = dot_product(line_end, plane_n);
     *t = ((-plane_d - ad) / (bd - ad));
     vec4f line_ste = line_end - line_start;
-    vec4f line_ti = line_ste * *t;
+    vec4f line_ti = line_ste * (*t);
 
     return line_start + line_ti;
 }
@@ -58,13 +60,8 @@ float dist(vec4f plane_p, vec4f plane_n, vec4f v) {
 }
 
 int clipp_triangle(vec4f plane_p, vec4f plane_n, face in_t, face *out_t1, face *out_t2) {
-
-    vec4f inside_points[3];     int inside_count = 0;
-    vec4f outside_points[3];    int outside_count = 0;
-    vec4f inside_vn[3];
-    vec4f outside_vn[3];
-    vec4f inside_vt[3];
-    vec4f outside_vt[3];
+    int inside_points[3];     int inside_count = 0;
+    int outside_points[3];    int outside_count = 0;
 
     // Get signed distance of each point in triangle to plane.
     float d0 = dist(plane_p, plane_n, in_t.v[0]);
@@ -72,36 +69,24 @@ int clipp_triangle(vec4f plane_p, vec4f plane_n, face in_t, face *out_t1, face *
     float d2 = dist(plane_p, plane_n, in_t.v[2]);
 
     if (d0 >= 0) {
-        inside_points[inside_count] = in_t.v[0];
-        inside_vt[inside_count] = in_t.vt[0];
-        inside_vn[inside_count] = in_t.vn[0];
+        inside_points[inside_count] = 0;
         inside_count++;
     } else {
-        outside_points[outside_count] = in_t.v[0];
-        outside_vt[outside_count] = in_t.vt[0];
-        outside_vn[outside_count] = in_t.vn[0];
+        outside_points[outside_count] = 0;
         outside_count++;
     }
     if (d1 >= 0) {
-        inside_points[inside_count] = in_t.v[1];
-        inside_vt[inside_count] = in_t.vt[1];
-        inside_vn[inside_count] = in_t.vn[1];
+        inside_points[inside_count] = 1;
         inside_count++;
     } else {
-        outside_points[outside_count] = in_t.v[1];
-        outside_vt[outside_count] = in_t.vt[1];
-        outside_vn[outside_count] = in_t.vn[1];
+        outside_points[outside_count] = 1;
         outside_count++;
     }
     if (d2 >= 0) {
-        inside_points[inside_count] = in_t.v[2];
-        inside_vt[inside_count] = in_t.vt[2];
-        inside_vn[inside_count] = in_t.vn[2];
+        inside_points[inside_count] = 2;
         inside_count++;
     } else {
-        outside_points[outside_count] = in_t.v[2];
-        outside_vt[outside_count] = in_t.vt[2];
-        outside_vn[outside_count] = in_t.vn[2];
+        outside_points[outside_count] = 2;
         outside_count++;
     }
 
@@ -111,78 +96,48 @@ int clipp_triangle(vec4f plane_p, vec4f plane_n, face in_t, face *out_t1, face *
     } else if (inside_count == 3) {
         return 3; /* face is inside and it needs no clipping. */
     } else if (inside_count == 1 && outside_count == 2) {
-        out_t1->v[0] = inside_points[0];
-        out_t1->vt[0] = inside_vt[0];
-        out_t1->vn[0] = inside_vn[0];
+        out_t1->v[0] = in_t.v[inside_points[0]];
+        out_t1->vt[0] = in_t.vt[inside_points[0]];
+        out_t1->vn[0] = in_t.vn[inside_points[0]];
 
-        if ( len_vec(inside_points[0]) == len_vec(in_t.v[1]) ) {
-            out_t1->v[1] = plane_intersect(plane_p, plane_n, inside_points[0], outside_points[1], &t);
-            out_t1->vt[1] = inside_vt[0] + (t * (outside_vt[1] - inside_vt[0]));
-            out_t1->vn[1] = inside_vn[0] + (t * (outside_vn[1] - inside_vn[0]));
+        if ( inside_points[0] != 1 )
+            swap(&outside_points[0], &outside_points[1], sizeof(int));
 
-            out_t1->v[2] = plane_intersect(plane_p, plane_n, inside_points[0], outside_points[0], &t);
-            out_t1->vt[2] = inside_vt[0] + (t * (outside_vt[0] - inside_vt[0]));
-            out_t1->vn[2] = inside_vn[0] + (t * (outside_vn[0] - inside_vn[0]));
-        } else {
-            out_t1->v[1] = plane_intersect(plane_p, plane_n, inside_points[0], outside_points[0], &t);
-            out_t1->vt[1] = inside_vt[0] + (t * (outside_vt[0] - inside_vt[0]));
-            out_t1->vn[1] = inside_vn[0] + (t * (outside_vn[0] - inside_vn[0]));
+        out_t1->v[1] = plane_intersect(plane_p, plane_n, in_t.v[inside_points[0]], in_t.v[outside_points[1]], &t);
+        out_t1->vt[1] = in_t.vt[inside_points[0]] + (t * (in_t.vt[outside_points[1]] - in_t.vt[outside_points[0]]));
+        out_t1->vn[1] = in_t.vn[inside_points[0]] + (t * (in_t.vn[outside_points[1]] - in_t.vn[inside_points[0]]));
 
-            out_t1->v[2] = plane_intersect(plane_p, plane_n, inside_points[0], outside_points[1], &t);
-            out_t1->vt[2] = inside_vt[0] + (t * (outside_vt[1] - inside_vt[0]));
-            out_t1->vn[2] = inside_vn[0] + (t * (outside_vn[1] - inside_vn[0]));
-        }
+        out_t1->v[2] = plane_intersect(plane_p, plane_n, in_t.v[inside_points[0]], in_t.v[outside_points[0]], &t);
+        out_t1->vt[2] = in_t.vt[inside_points[0]] + (t * (in_t.vt[outside_points[0]] - in_t.vt[inside_points[0]]));
+        out_t1->vn[2] = in_t.vn[inside_points[0]] + (t * (in_t.vn[outside_points[0]] - in_t.vn[inside_points[0]]));
         return 1; /* A new face is created. */
     } else if (inside_count == 2 && outside_count == 1) {
-        if ( len_vec(outside_points[0]) == len_vec(in_t.v[1]) ) {
-            out_t1->v[0] = inside_points[1];
-            out_t1->vt[0] = inside_vt[1];
-            out_t1->vn[0] = inside_vn[1];
+        if ( outside_points[0] != 1 )
+            swap(&inside_points[0], &inside_points[1], sizeof(int));
 
-            out_t1->v[1] = inside_points[0];
-            out_t1->vt[1] = inside_vt[0];
-            out_t1->vn[1] = inside_vn[0];
+        out_t1->v[0] = in_t.v[inside_points[0]];
+        out_t1->vt[0] = in_t.vt[inside_points[0]];
+        out_t1->vn[0] = in_t.vn[inside_points[0]];
 
-            out_t1->v[2] = plane_intersect(plane_p, plane_n, inside_points[0], outside_points[0], &t);
-            out_t1->vt[2] = inside_vt[0] + (t * (outside_vt[0] - inside_vt[0]));
-            out_t1->vn[2] = inside_vn[0] + (t * (outside_vn[0] - inside_vn[0]));
+        out_t1->v[1] = plane_intersect(plane_p, plane_n, in_t.v[inside_points[0]], in_t.v[outside_points[0]], &t);
+        out_t1->vt[1] = in_t.vt[inside_points[0]] + (t * (in_t.vt[outside_points[0]] - in_t.vt[inside_points[0]]));
+        out_t1->vn[1] = in_t.vn[inside_points[0]] + (t * (in_t.vn[outside_points[0]] - in_t.vn[inside_points[0]]));
 
-            out_t2->v[0] = plane_intersect(plane_p, plane_n, inside_points[1], outside_points[0], &t);
-            out_t2->vt[0] = inside_vt[1] + (t * (outside_vt[0] - inside_vt[1]));
-            out_t2->vn[0] = inside_vn[1] + (t * (outside_vn[0] - inside_vn[1]));
+        out_t1->v[2] = in_t.v[inside_points[1]];
+        out_t1->vt[2] = in_t.vt[inside_points[1]];
+        out_t1->vn[2] = in_t.vn[inside_points[1]];
+        /* ------------------------------------------------------------------------------------ */
+        out_t2->v[0] = out_t1->v[1];
+        out_t2->vt[0] = out_t1->vt[1];
+        out_t2->vn[0] = out_t1->vn[1];
 
-            out_t2->v[1] = inside_points[1];
-            out_t2->vt[1] = inside_vt[1];
-            out_t2->vn[1] = inside_vn[1];
+        out_t2->v[1] = plane_intersect(plane_p, plane_n, in_t.v[inside_points[1]], in_t.v[outside_points[0]], &t);
+        out_t2->vt[1] = in_t.vt[inside_points[1]] + (t * (in_t.vt[outside_points[0]] - in_t.vt[inside_points[1]]));
+        out_t2->vn[1] = in_t.vn[inside_points[1]] + (t * (in_t.vn[outside_points[0]] - in_t.vn[inside_points[1]]));
 
-            out_t2->v[2] = out_t1->v[2];
-            out_t2->vt[2] = out_t1->vt[2];
-            out_t2->vn[2] = out_t1->vn[2];
-        } else {
-            out_t1->v[0] = inside_points[0];
-            out_t1->vt[0] = inside_vt[0];
-            out_t1->vn[0] = inside_vn[0];
-
-            out_t1->v[1] = inside_points[1];
-            out_t1->vt[1] = inside_vt[1];
-            out_t1->vn[1] = inside_vn[1];
-
-            out_t1->v[2] = plane_intersect(plane_p, plane_n, inside_points[1], outside_points[0], &t);
-            out_t1->vt[2] = inside_vt[1] + (t * (outside_vt[0] - inside_vt[1]));
-            out_t1->vn[2] = inside_vn[1] + (t * (outside_vn[0] - inside_vn[1]));
-
-            out_t2->v[0] = plane_intersect(plane_p, plane_n, inside_points[0], outside_points[0], &t);
-            out_t2->vt[0] = inside_vt[0] + (t * (outside_vt[0] - inside_vt[0]));
-            out_t2->vn[0] = inside_vn[0] + (t * (outside_vn[0] - inside_vn[0]));
-
-            out_t2->v[1] = inside_points[0];
-            out_t2->vt[1] = inside_vt[0];
-            out_t2->vn[1] = inside_vn[0];
-
-            out_t2->v[2] = out_t1->v[2];
-            out_t2->vt[2] = out_t1->vt[2];
-            out_t2->vn[2] = out_t1->vn[2];
-        }
+        out_t2->v[2] = in_t.v[inside_points[1]];
+        out_t2->vt[2] = in_t.vt[inside_points[1]];
+        out_t2->vn[2] = in_t.vn[inside_points[1]];
         return 2; /* Two new faces are created. */
     }
     return 0;

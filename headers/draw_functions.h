@@ -27,10 +27,8 @@ const void edgeMesh(const Mesh m, const vec4f color);
 
 const void fillMesh(const Mesh m);
 const void edgefillface(const face f, const Material mtr);
-const static void edgefillGeneral(const face f, const Material mtr, const int minX, const int maxX, const int minY, const int maxY);
 
 const void scanlinefillface(const face f, const Material mtr);
-const static void scanlinefillGeneral(const face f, const Material mtr, const Srt srt[]);
 
 #endif /* _DRAW_FUNCTIONS_H */
 

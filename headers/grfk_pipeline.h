@@ -30,12 +30,6 @@
 #endif
 
 const void shadowPipeline(Scene s);
-const static void initfaceVerticesShadow(Mesh *m, const int len);
 const void grfkPipeline(Scene s);
-const static void initfaceVertices(Mesh *m, const int len);
-const static void ppdiv(Mesh *m, const int len);
-const static Mesh bfculling(const Mesh c, const int len);
-const static void viewtoscreen(Mesh *m, const int len);
-const static void rasterize(const Mesh m);
 
 #endif /* _GRFK_PIPELINE_H */
