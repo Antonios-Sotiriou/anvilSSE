@@ -1,6 +1,4 @@
-#include "headers/grfk_pipeline.h"
-
-#include "headers/logging.h"
+#include "headers/grafik_pipeline.h"
 
 const static void initfaceVerticesShadow(Mesh *m, const int len);
 const static void initfaceVertices(Mesh *m, const int len);
@@ -57,7 +55,7 @@ const static void initfaceVerticesShadow(Mesh *m, const int len) {
     }
 }
 /* Passes the scene Meshes throught the graphic pipeline. */
-const void grfkPipeline(Scene s) {
+const void grafikPipeline(Scene s) {
     Mesh cache = { 0 };
 
     for (int i = 0; i < s.m_indexes; i++) {
@@ -109,7 +107,7 @@ const static void ppdiv(Mesh *m, const int len) {
     for (int i = 0; i < len; i++) {
         for (int j = 0; j < 3; j++) {
             float w = m->f[i].v[j][3];
-            m->f[i].v[j] = m->f[i].v[j] / w;
+            m->f[i].v[j] /= w;
             m->f[i].v[j][3] = w;
         }
     }
@@ -145,6 +143,9 @@ const static Mesh bfculling(const Mesh m, const int len) {
 const static void viewtoscreen(Mesh *m, const int len) {
     for (int i = 0; i < len; i++) {
         for (int j = 0; j < 3; j++) {
+
+            m->f[i].vt[j] /= m->f[i].v[j][3];
+
             m->f[i].v[j][0] = ((1 + m->f[i].v[j][0]) * HALFW) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
             m->f[i].v[j][1] = ((1 + m->f[i].v[j][1]) * HALFH) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
             m->f[i].v[j][2] *= 0.5;//1.f / m->f[i].v[j][2];
@@ -176,10 +177,10 @@ const static void viewtoscreen(Mesh *m, const int len) {
 const static void rasterize(const Mesh m) {
     if (DEBUG == 1) {
         edgeMesh(m, m.material.basecolor);
-    } else {
+    } else if (DEBUG == 2) {
         fillMesh(m);
-    } //else {
-    //     texMesh(m);
-    // }
+    } else {
+        texMesh(m);
+    }
 }
 

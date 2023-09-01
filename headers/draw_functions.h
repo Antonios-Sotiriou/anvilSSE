@@ -27,8 +27,11 @@ const void edgeMesh(const Mesh m, const vec4f color);
 
 const void fillMesh(const Mesh m);
 const void edgefillface(const face f, const Material mtr);
-
 const void scanlinefillface(const face f, const Material mtr);
+
+const void texMesh(const Mesh m);
+const void edgetexface(const face f, const Material mtr);
+const void scanlinetexface(const face f, const Material mtr);
 
 #endif /* _DRAW_FUNCTIONS_H */
 

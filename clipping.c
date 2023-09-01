@@ -104,7 +104,7 @@ int clipp_triangle(vec4f plane_p, vec4f plane_n, face in_t, face *out_t1, face *
             swap(&outside_points[0], &outside_points[1], sizeof(int));
 
         out_t1->v[1] = plane_intersect(plane_p, plane_n, in_t.v[inside_points[0]], in_t.v[outside_points[1]], &t);
-        out_t1->vt[1] = in_t.vt[inside_points[0]] + (t * (in_t.vt[outside_points[1]] - in_t.vt[outside_points[0]]));
+        out_t1->vt[1] = in_t.vt[inside_points[0]] + (t * (in_t.vt[outside_points[1]] - in_t.vt[inside_points[0]]));
         out_t1->vn[1] = in_t.vn[inside_points[0]] + (t * (in_t.vn[outside_points[1]] - in_t.vn[inside_points[0]]));
 
         out_t1->v[2] = plane_intersect(plane_p, plane_n, in_t.v[inside_points[0]], in_t.v[outside_points[0]], &t);

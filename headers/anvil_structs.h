@@ -9,6 +9,9 @@
     #include <immintrin.h>
 #endif
 
+/* Primitive struct vec4 with 4 x 8bits unsigned char as members */
+typedef unsigned char vec4c __attribute__((vector_size(4)));
+
 /* Primitive struct vec4 with 4 x 32bits integers as members */
 typedef int vec4i __attribute__((vector_size(16)));
 typedef union {
@@ -25,12 +28,15 @@ typedef union {
 
 /* Material struct to hold the specific for each material values. */
 typedef struct {
+    char texture_file[50];
     vec4f basecolor;
     vec4f ambient;
     vec4f diffuse;
     vec4f specular;
     float shinniness;
     int reflect;
+    signed int texture_height, texture_width;
+    vec4c *texture;
 } Material;
 
 typedef struct {
@@ -48,13 +54,11 @@ typedef struct {
 
 /* Mesh struct which teams all the primitives like faces, vector arrays and textures. */
 typedef struct {
-    char texture_file[50];
     vec4f *v;
     vec4f *n;
     vec4f *t;
     face *f;
     // void (*drawMesh)(void *args);
-    signed int texture_height, texture_width;
     int v_indexes, f_indexes, n_indexes, t_indexes;
     Material material;
 } Mesh;

@@ -30,6 +30,6 @@
 #endif
 
 const void shadowPipeline(Scene s);
-const void grfkPipeline(Scene s);
+const void grafikPipeline(Scene s);
 
 #endif /* _GRFK_PIPELINE_H */

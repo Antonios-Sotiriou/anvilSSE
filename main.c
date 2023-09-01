@@ -14,12 +14,11 @@ int EDGEFUNC = 0;
 int SCANLINE = 1;
 
 /* Project specific headers */
-#include "headers/locale.h"
 #include "headers/anvil_structs.h"
 #include "headers/matrices.h"
 #include "headers/kinetics.h"
 #include "headers/clipping.h"
-#include "headers/grfk_pipeline.h"
+#include "headers/grafik_pipeline.h"
 #include "headers/camera.h"
 #include "headers/world_objects.h"
 #include "headers/general_functions.h"
@@ -317,12 +316,6 @@ const static void keypress(XEvent *event) {
         worldMat = mxm(viewMat, perspMat);
     else
         worldMat = mxm(viewMat, orthoMat);
-    // logMatrix(worldMat);
-    // project();
-    // logVec4f(eye[Pos]);
-    // logVec4f(eye[U]);
-    // logVec4f(eye[V]);
-    // logVec4f(eye[N]);
 }
 const static void project() {
     if (AdjustShadow) {
@@ -330,12 +323,12 @@ const static void project() {
         shadowPipeline(scene);
         AdjustShadow = 0;
     }
-    if (AdjustScene) {
-        memset(frame_buffer, 0, FBSIZE);
-        memset(depth_buffer, 0, FBSIZE);
-        grfkPipeline(scene);
-        AdjustScene = 0;
-    }
+    // if (AdjustScene) {
+    //     memset(frame_buffer, 0, FBSIZE);
+    //     memset(depth_buffer, 0, FBSIZE);
+        grafikPipeline(scene);
+    //     AdjustScene = 0;
+    // }
     drawFrame();
 }
 /* Writes the final Pixel values on screen. */
@@ -349,8 +342,8 @@ const static void drawFrame(void) {
 
     XPutImage(displ, pixmap, gc, image, 0, 0, 0, 0, wa.width, wa.height);
 
-    // memset(frame_buffer, '@', FBSIZE);
-    // memset(depth_buffer, 0, FBSIZE);
+    memset(frame_buffer, 0, FBSIZE);
+    memset(depth_buffer, 0, FBSIZE);
     pixmapdisplay();
 }
 const static void initMainWindow(void) {

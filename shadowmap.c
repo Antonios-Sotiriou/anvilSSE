@@ -1,7 +1,5 @@
 #include "headers/shadowmap.h"
 
-#include "headers/logging.h"
-
 extern XWindowAttributes wa;
 extern int HALFW;
 extern int HALFH;
@@ -32,37 +30,37 @@ const void createShadowmap(Mesh m) {
 }
 const void shadowface(const face f, const Srt srt[]) {
     vec4i mask = { 1, 2, 0, 3 };
-    vec4i txs = { f.v[srt[0].index][0], f.v[srt[1].index][0], f.v[srt[2].index][0], 0 };
-    vec4i tys = { f.v[srt[0].index][1], f.v[srt[1].index][1], f.v[srt[2].index][1], 0 };
-    vec4f tzs = { f.v[srt[0].index][2], f.v[srt[1].index][2], f.v[srt[2].index][2], 0 };
-    vec4i txmx = __builtin_shuffle(txs, mask) - txs;
-    vec4i tymy = __builtin_shuffle(tys, mask) - tys;
-    vec4f tzmz = __builtin_shuffle(tzs, mask) - tzs;
+    vec4i xs = { f.v[srt[0].index][0], f.v[srt[1].index][0], f.v[srt[2].index][0], 0 };
+    vec4i ys = { f.v[srt[0].index][1], f.v[srt[1].index][1], f.v[srt[2].index][1], 0 };
+    vec4f zs = { f.v[srt[0].index][2], f.v[srt[1].index][2], f.v[srt[2].index][2], 0 };
+    vec4i xmx = __builtin_shuffle(xs, mask) - xs;
+    vec4i ymy = __builtin_shuffle(ys, mask) - ys;
+    vec4f zmz = __builtin_shuffle(zs, mask) - zs;
 
-    const int orient = (txmx[0] * tymy[2]) - (tymy[0] * txmx[2]);
-    float ma = (float)txmx[0] / tymy[0];
-    float mb = (float)txmx[2] / tymy[2];
-    float za = tzmz[0] / tymy[0];
-    float zb = tzmz[2] / tymy[2];
+    const int orient = (xmx[0] * ymy[2]) - (ymy[0] * xmx[2]);
+    float ma = (float)xmx[0] / ymy[0];
+    float mb = (float)xmx[2] / ymy[2];
+    float za = zmz[0] / ymy[0];
+    float zb = zmz[2] / ymy[2];
     if (orient < 0) {
         swap(&ma, &mb, sizeof(float));
         swap(&za, &zb, sizeof(float));
     }
 
-    const int y_start = tys[0];
-    const int y_end1 = tys[1];
-    const int y_end2 = tys[2];
+    const int y_start = ys[0];
+    const int y_end1 = ys[1];
+    const int y_end2 = ys[2];
 
     int yA = 0;
-    if (tymy[0] != 0)
+    if (ymy[0] != 0)
         for (int y = y_start; y < y_end1; y++) {
             const int padySB = y * wa.width;
 
-            int x_start = (ma * yA) + txs[0];
-            int x_end = (mb * yA) + txs[0];
+            int x_start = (ma * yA) + xs[0];
+            int x_end = (mb * yA) + xs[0];
 
-            const float z1 = (za * yA) + tzs[0];
-            const float z2 = (zb * yA) + tzs[0];
+            const float z1 = (za * yA) + zs[0];
+            const float z2 = (zb * yA) + zs[0];
 
             const float xexs = x_end - x_start;
             const float z2z1 = z2 - z1;
@@ -76,33 +74,35 @@ const void shadowface(const face f, const Srt srt[]) {
                 if ( depthZ < shadow_buffer[padxSB] ) {
 
                     shadow_buffer[padxSB] = depthZ;
+                } else if (depthZ == shadow_buffer[padxSB]) {
+                    shadow_buffer[padxSB] = 0.f;
                 }
                 xxs += 1.0;
             }
             yA++;
         }
 
-    if (tymy[1] == 0)
+    if (ymy[1] == 0)
         return;
 
-    ma = (float)txmx[1] / tymy[1];
-    mb = (float)txmx[2] / tymy[2];
-    za = tzmz[1] / tymy[1];
-    zb = tzmz[2] / tymy[2];
+    ma = (float)xmx[1] / ymy[1];
+    mb = (float)xmx[2] / ymy[2];
+    za = zmz[1] / ymy[1];
+    zb = zmz[2] / ymy[2];
     if (orient < 0) {
         swap(&ma, &mb, sizeof(float));
         swap(&za, &zb, sizeof(float));
     }
 
-    int yB = -tymy[1];
+    int yB = -ymy[1];
     for (int y = y_end1; y < y_end2; y++) {
         const int padySB = y * wa.width;
 
-        int x_start = (ma * yB) + txs[2];
-        int x_end = (mb * yB) + txs[2];
+        int x_start = (ma * yB) + xs[2];
+        int x_end = (mb * yB) + xs[2];
 
-        const float z1 = (za * yB) + tzs[2];
-        const float z2 = (zb * yB) + tzs[2];
+        const float z1 = (za * yB) + zs[2];
+        const float z2 = (zb * yB) + zs[2];
 
         const float xexs = x_end - x_start;
         const float z2z1 = z2 - z1;
@@ -116,6 +116,8 @@ const void shadowface(const face f, const Srt srt[]) {
             if ( depthZ < shadow_buffer[padxSB] ) {
 
                 shadow_buffer[padxSB] = depthZ;
+            } else if (depthZ == shadow_buffer[padxSB]) {
+                shadow_buffer[padxSB] = 0.f;
             }
             xxs += 1.0;
         }
@@ -124,7 +126,7 @@ const void shadowface(const face f, const Srt srt[]) {
 }
 const int shadowTest(vec4f pixel) {
     vec4f r = pixel;
-    r[3] = 1;
+    r[3] = 1.f;
     /* Transform to Model space coordinates. */
     r = vecxm(r, lookAt);
 
@@ -141,9 +143,7 @@ const int shadowTest(vec4f pixel) {
         return 0;
 
     r[2] *= 0.5;
-    // printf("Shadow_buffer: %f    ", shadow_buffer[(int)((r[1] * wa.width) + r[0])]);
-    // logVec4f(r);
-    if ( r[2] > shadow_buffer[(int)((r[1] * wa.width) + r[0])] + shadow_bias)
+    if ( r[2] > shadow_buffer[((int)(r[1]) * wa.width) + (int)(r[0])] + shadow_bias)
         return 1;
 
     return 0;
