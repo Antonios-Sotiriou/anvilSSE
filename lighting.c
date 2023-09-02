@@ -45,11 +45,9 @@ const float phong(vec4f nm, const Material mtr, const float pixX, const float pi
     } else
         r = (ambient * mtr.basecolor) * 255;
 
-        
-
     u_int8_t fragcolor[4] = { r[2], r[1], r[0], 0 };
-
     memcpy(&frame_buffer[(int)((pixY * wa.width * 4) + (pixX * 4))], &fragcolor, 4);
     return pixW;
 }
+
 

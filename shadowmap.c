@@ -65,7 +65,7 @@ const void shadowface(const face f, const Srt srt[]) {
             const float xexs = x_end - x_start;
             const float z2z1 = z2 - z1;
             float xxs = 0.0;
-            for (int x = x_start; x <= x_end; x++) {
+            for (int x = x_start; x < x_end; x++) {
 
                 const float barycentric = xxs / xexs;
                 const float depthZ = z1 + (barycentric * z2z1);
@@ -107,7 +107,7 @@ const void shadowface(const face f, const Srt srt[]) {
         const float xexs = x_end - x_start;
         const float z2z1 = z2 - z1;
         float xxs = 0.0;
-        for (int x = x_start; x <= x_end; x++) {
+        for (int x = x_start; x < x_end; x++) {
 
             const float barycentric = xxs / xexs;
             const float depthZ = z1 + (barycentric * z2z1);

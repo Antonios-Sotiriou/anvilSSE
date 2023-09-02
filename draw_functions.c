@@ -121,11 +121,8 @@ const static void edgefillGeneral(const face f, const Material mtr, int minX, in
     vec4i ys = { f.v[0][1],  f.v[1][1], f.v[2][1], 0};
 
     vec4i mask = { 1, 2, 0, 3 };
-    vec4i sflx = __builtin_shuffle(xs, mask);
-    vec4i sfly = __builtin_shuffle(ys, mask);
-
-    vec4i xmx = xs - sflx;
-    vec4i ymy = ys - sfly;
+    vec4i xmx = xs - __builtin_shuffle(xs, mask);
+    vec4i ymy = ys - __builtin_shuffle(ys, mask);
 
     vec4i tps = { 0 };
     tps[0] = ((ymy[0] == 0) && (ys[2] > ys[1])) || (ymy[0] < 0) ? 1 : 0;
@@ -147,8 +144,7 @@ const static void edgefillGeneral(const face f, const Material mtr, int minX, in
             const int xa2 = ( (tps[2]) && (!xa[2]) ) ? -1 : xa[2];
 
             if ( (xa0 | xa1 | xa2) > 0 ) {
-                vec4f a = __builtin_convertvector(xa, vec4f);
-                a /= area;
+                vec4f a = __builtin_convertvector(xa, vec4f) / area;
 
                 const vec4f frag = a[0] * f.v[2] + a[1] * f.v[0] + a[2] * f.v[1];
 
@@ -335,11 +331,8 @@ const static void edgetexGeneral(const face f, Material mtr, int minX, int maxX,
     vec4i ys = { f.v[0][1],  f.v[1][1], f.v[2][1], 0};
 
     vec4i mask = { 1, 2, 0, 3 };
-    vec4i sflx = __builtin_shuffle(xs, mask);
-    vec4i sfly = __builtin_shuffle(ys, mask);
-
-    vec4i xmx = xs - sflx;
-    vec4i ymy = ys - sfly;
+    vec4i xmx = xs - __builtin_shuffle(xs, mask);
+    vec4i ymy = ys - __builtin_shuffle(ys, mask);
 
     vec4i tps = { 0 };
     tps[0] = ((ymy[0] == 0) && (ys[2] > ys[1])) || (ymy[0] < 0) ? 1 : 0;
@@ -361,15 +354,14 @@ const static void edgetexGeneral(const face f, Material mtr, int minX, int maxX,
             const int xa2 = ( (tps[2]) && (!xa[2]) ) ? -1 : xa[2];
 
             if ( (xa0 | xa1 | xa2) > 0 ) {
-                vec4f a = __builtin_convertvector(xa, vec4f);
-                a /= area;
+                vec4f a = __builtin_convertvector(xa, vec4f) / area;
 
                 const vec4f frag = a[0] * f.v[2] + a[1] * f.v[0] + a[2] * f.v[1];
 
                 if (frag[3] > depth_buffer[padyDB + x]) {
 
                     const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
-                    const vec4f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
+                    const vec2f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
 
                     const int tex_y = (texel[1] * mtr.texture_height) / frag[3];
                     const int tex_x = (texel[0] * mtr.texture_width) / frag[3];
@@ -458,7 +450,7 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
                     if ( frag[3] > depth_buffer[padxDB] ) {
 
                         const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
-                        const vec4f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
+                        const vec2f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
 
                         const int tex_y = (texel[1] * mtr.texture_height) / frag[3];
                         const int tex_x = (texel[0] * mtr.texture_width) / frag[3];
@@ -505,7 +497,7 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
                 if ( frag[3] > depth_buffer[padxDB] ) {
 
                     const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
-                    const vec4f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
+                    const vec2f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
 
                     const int tex_y = (texel[1] * mtr.texture_height) / frag[3];
                     const int tex_x = (texel[0] * mtr.texture_width) / frag[3];

@@ -34,9 +34,8 @@ const void rotate_z(Mesh *c, const float angle) {
 }
 /* Rotates object according to own axis. */
 const void rotate_origin(Mesh *c, const float angle, float x, float y, float z) {
-    vec4f pos = { 0.0, 0.0, 0.0 };
     vec4f axis = { x, y, z };
-    Quat n = setQuat(0, pos);
+    Quat n = setQuat(0, c->pivot);
 
     Quat xrot = rotationQuat(angle, axis);
     Mat4x4 m = MatfromQuat(xrot, n.v);

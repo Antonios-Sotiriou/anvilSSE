@@ -182,7 +182,6 @@ const static void configurenotify(XEvent *event) {
 
     if (!event->xconfigure.send_event) {
         printf("configurenotify event received\n");
-        // int old_height = wa.height;
         XGetWindowAttributes(displ, win, &wa);
 
         if (INIT) {
@@ -316,6 +315,9 @@ const static void keypress(XEvent *event) {
         worldMat = mxm(viewMat, perspMat);
     else
         worldMat = mxm(viewMat, orthoMat);
+
+    printf("length: %f\n", len_vec(scene.m[1].pivot - camera[Pos]));
+    logVec4f(scene.m[1].pivot - camera[Pos]);
 }
 const static void project() {
     if (AdjustShadow) {
@@ -334,11 +336,11 @@ const static void project() {
 /* Writes the final Pixel values on screen. */
 const static void drawFrame(void) {
     if (PROJECTBUFFER <= 1)
-        image->data = (char*)frame_buffer;
+        image->data = (unsigned char*)frame_buffer;
     else if (PROJECTBUFFER == 2)
-        image->data = (char*)depth_buffer;
+        image->data = (unsigned char*)depth_buffer;
     else if (PROJECTBUFFER == 3)
-        image->data = (char*)shadow_buffer;
+        image->data = (unsigned char*)shadow_buffer;
 
     XPutImage(displ, pixmap, gc, image, 0, 0, 0, 0, wa.width, wa.height);
 

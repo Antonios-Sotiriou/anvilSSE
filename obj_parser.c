@@ -1,7 +1,7 @@
 #include "headers/obj_parser.h"
 
 static vec4f *loadvectors(const char path[]);
-static vec4f *loadtextors(const char path[]);
+static vec2f *loadtextors(const char path[]);
 static vec4f *loadnormals(const char path[]);
 static face *loadfaces(const char path[]);
 
@@ -128,15 +128,15 @@ static vec4f *loadvectors(const char path[]) {
     fclose(fp);
     return v;
 }
-static vec4f *loadtextors(const char path[]) {
-    size_t vecsize = sizeof(vec4f);
+static vec2f *loadtextors(const char path[]) {
+    size_t vecsize = sizeof(vec2f);
     FILE *fp = fopen(path, "r");
     if (!fp) {
         fprintf(stderr, "Could not open file : %s.\n", path);
         return NULL;
     }
 
-    vec4f *t = malloc(vecsize);
+    vec2f *t = malloc(vecsize);
     if (!t) {
         fprintf(stderr, "Could not allocate memory for Textor struct. get_textors() -- calloc().\n");
         fclose(fp);
@@ -162,8 +162,6 @@ static vec4f *loadtextors(const char path[]) {
                         }
                         t[index][0] = va;
                         t[index][1] = vb;
-                        t[index][2] = 0.0;
-                        t[index][3] = 0.0;
 
                         index++;
                         dynamic_inc++;

@@ -24,6 +24,7 @@ const void posWorldObjects(Scene *s) {
     };
 
     cube.material = mat;
+    cube.pivot = trMatrix.m[3];
     loadTexture(&cube);
 
     initMesh(&s->m[0], cube);
@@ -31,13 +32,16 @@ const void posWorldObjects(Scene *s) {
     s->m[0].n = meshxm(cube.n, cube.n_indexes, posMatrix);
 
     releaseMesh(&cube);
+
     /* ######################################################################################################## */
+    memcpy(&mat.texture_file, "textures/Earth.bmp", 19);
     Mesh jupiter = loadmesh("objfiles/earth.obj");
     sclMatrix = scaleMatrix(10.0);
-    trMatrix = translationMatrix(0.0, 0.0, 80.0);
+    trMatrix = translationMatrix(0.0, 10.0, 80.0);
     posMatrix = mxm(sclMatrix, trMatrix);
 
     jupiter.material = mat;
+    jupiter.pivot = trMatrix.m[3];
     loadTexture(&jupiter);
     jupiter.material.reflect = 1;
 
@@ -49,9 +53,8 @@ const void posWorldObjects(Scene *s) {
 }
 /* Loads the appropriate Textures and importand Texture infos. */
 const static void loadTexture(Mesh *c) {
-
     BMP_Header bmp_header;
-    BMP_Info texture;
+    BMP_Info info;
 
     FILE *fp;
     fp = fopen(c->material.texture_file, "rb");
@@ -62,15 +65,18 @@ const static void loadTexture(Mesh *c) {
     } else {
         fread(&bmp_header, sizeof(BMP_Header), 1, fp);
         fseek(fp, 14, SEEK_SET);
-        fread(&texture, sizeof(BMP_Info), 1, fp);
-        fseek(fp, (14 + texture.Size), SEEK_SET);
+        fread(&info, sizeof(BMP_Info), 1, fp);
+        fseek(fp, (14 + info.Size), SEEK_SET);
 
-        c->material.texture_height = texture.Height;
-        c->material.texture_width = texture.Width;
-        const int texSize = texture.Height * texture.Width;
+        c->material.texture_height = info.Height;
+        c->material.texture_width = info.Width;
+        const int texSize = info.Height * info.Width;
+
         c->material.texture = malloc(texSize * 4);
+        if (!c->material.texture)
+            fprintf(stderr, "Could not allocate memmory for texture: %s. loadTexture()\n", c->material.texture_file);
 
-        for (int i = texSize; i >= 0; i--) {
+        for (int i = (texSize - 1); i >= 0; i--) {
             fread(&c->material.texture[i], 3, 1, fp);
             c->material.texture[i][3] = (unsigned char)255;
         }
@@ -101,9 +107,9 @@ const void releaseMesh(Mesh *c) {
 const void initMesh(Mesh *a, const Mesh b) {
     *a = b;
     // size_t nsize = sizeof(vec4f) * b.n_indexes;
-    size_t tsize = sizeof(vec4f) * b.t_indexes;
+    size_t tsize = sizeof(vec2f) * b.t_indexes;
     size_t fsize = sizeof(face) * b.f_indexes;
-    size_t texsize = b.material.texture_height * b.material.texture_height * 4;
+    size_t texsize = b.material.texture_height * b.material.texture_width * 4;
 
     // a->n = malloc(nsize);
     // memcpy(a->n, b.n, nsize);

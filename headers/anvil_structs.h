@@ -12,8 +12,12 @@
 /* Primitive struct vec4 with 4 x 8bits unsigned char as members */
 typedef unsigned char vec4c __attribute__((vector_size(4)));
 
+/* Primitive struct vec4 with 2 x 32bits floats as members */
+typedef float vec2f __attribute__((vector_size(8)));
+
 /* Primitive struct vec4 with 4 x 32bits integers as members */
 typedef int vec4i __attribute__((vector_size(16)));
+
 typedef union {
     __m128i mm;
     vec4i i;
@@ -42,7 +46,7 @@ typedef struct {
 typedef struct {
     vec4f v[3];
     vec4f vn[3];
-    vec4f vt[3];
+    vec2f vt[3];
     vec4f fn;
     int a[3], b[3], c[3];
 } face;
@@ -54,9 +58,10 @@ typedef struct {
 
 /* Mesh struct which teams all the primitives like faces, vector arrays and textures. */
 typedef struct {
+    vec4f pivot;
     vec4f *v;
     vec4f *n;
-    vec4f *t;
+    vec2f *t;
     face *f;
     // void (*drawMesh)(void *args);
     int v_indexes, f_indexes, n_indexes, t_indexes;
