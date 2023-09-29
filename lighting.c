@@ -22,11 +22,11 @@ const float phong(vec4f nm, const Material mtr, const float pixX, const float pi
     };
 
     pixel = vecxm(pixel, reperspMat);
+    vec4f lightdir = norm_vec(sunlight.newPos - pixel);
     nm = norm_vec(nm);
 
     /* Applying shadow test by transforming View Space coordinates to light Space. */
-    if (!shadowTest(pixel)) {
-        vec4f lightdir = norm_vec(sunlight.newPos - pixel);
+    if (!shadowTest(pixel, nm, lightdir)) {
         float diff = dot_product(lightdir, nm);
         if ( diff > 0 ) {
             diffuse = sunlight.material.diffuse * (diff * mtr.diffuse);

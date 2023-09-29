@@ -41,7 +41,7 @@ enum { Pos, U, V, N, C, newPos };
 
 /* X Global Structures. */
 Display *displ;
-Window win;
+Window mainwin;
 XImage *image;
 Pixmap pixmap;
 GC gc;
@@ -70,7 +70,7 @@ float FPlane              = 0.00001f;
 float SCALE               = 0.003f;
 float AmbientStrength     = 0.15f;
 float SpecularStrength    = 0.5f;
-float shadow_bias         = 0.0f;
+float shadow_bias         = 0.002138;//0.000487f;
 
 /* Camera and Global light Source. */
 vec4f camera[N + 1] = {
@@ -84,7 +84,7 @@ Light sunlight = {
     // .u = { -0.694661f, 0.000000f, -0.719352f, 0.000000f },
     // .v = { 0.000000f, -1.000000f, 0.000000f, 0.000000f },
     // .n = { 0.719352f, 0.000000f, -0.694661f, 0.000000f },
-    .pos = { 0.f, 0.0f, 0.f, 1.f },
+    .pos = { 0.f, 100.0f, 0.f, 1.f },
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
@@ -96,7 +96,7 @@ Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, lightMat;
 /* Anvil global Objects Meshes and Scene. */
 Scene scene = { 0 };
 
-/* X11 and window Global variables. */
+/* X11 and mainwindow Global variables. */
 static int INIT = 0;
 static int RUNNING = 1;
 int HALFW = 0; // Half width of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
@@ -161,7 +161,7 @@ const static void clientmessage(XEvent *event) {
         free(image);
         XFreeGC(displ, gc);
         XFreePixmap(displ, pixmap);
-        XDestroyWindow(displ, win);
+        XDestroyWindow(displ, mainwin);
 
         RUNNING = 0;
     }
@@ -182,7 +182,7 @@ const static void configurenotify(XEvent *event) {
 
     if (!event->xconfigure.send_event) {
         printf("configurenotify event received\n");
-        XGetWindowAttributes(displ, win, &wa);
+        XGetWindowAttributes(displ, mainwin, &wa);
 
         if (INIT) {
             free(frame_buffer);
@@ -239,10 +239,10 @@ const static void keypress(XEvent *event) {
             break;
         case 65364 : move_down(eye, 0.2);          /* down arrow */
             break;
-        case 65451 :shadow_bias += 0.0001;             /* + */
+        case 65451 :shadow_bias += 0.000001;             /* + */
             printf("shadow_bias: %f\n",shadow_bias);
             break;
-        case 65453 :shadow_bias -= 0.0001;             /* - */
+        case 65453 :shadow_bias -= 0.000001;             /* - */
             printf("shadow_bias: %f\n", shadow_bias);
             break;
         case 65450 : NPlane += 0.01;             /* * */
@@ -317,7 +317,12 @@ const static void keypress(XEvent *event) {
         worldMat = mxm(viewMat, orthoMat);
 
     printf("length: %f\n", len_vec(scene.m[1].pivot - camera[Pos]));
-    logVec4f(scene.m[1].pivot - camera[Pos]);
+    /* At this point must be implemented probably the model and textures resolution reformation. */
+    if (len_vec(scene.m[1].pivot - camera[Pos]) > 200) {
+        free(scene.m[1].material.texture);
+        memcpy(&scene.m[1].material.texture_file, "textures/stones.bmp", 20);
+        loadTexture(&scene.m[1]);
+    }
 }
 const static void project() {
     if (AdjustShadow) {
@@ -351,15 +356,15 @@ const static void drawFrame(void) {
 const static void initMainWindow(void) {
     sa.event_mask = EXPOSEMASKS | KEYBOARDMASKS | POINTERMASKS;
     sa.background_pixel = 0x000000;
-    win = XCreateWindow(displ, XRootWindow(displ, XDefaultScreen(displ)), 0, 0, WIDTH, HEIGHT, 0, CopyFromParent, InputOutput, CopyFromParent, CWBackPixel | CWEventMask, &sa);
-    XMapWindow(displ, win);
-    XGetWindowAttributes(displ, win, &wa);
+    mainwin = XCreateWindow(displ, XRootWindow(displ, XDefaultScreen(displ)), 0, 0, WIDTH, HEIGHT, 0, CopyFromParent, InputOutput, CopyFromParent, CWBackPixel | CWEventMask, &sa);
+    XMapWindow(displ, mainwin);
+    XGetWindowAttributes(displ, mainwin, &wa);
 }
 const static void initGlobalGC(void) {
     gcvalues.foreground = 0xffffff;
     gcvalues.background = 0x000000;
     gcvalues.graphics_exposures = False;
-    gc = XCreateGC(displ, win, GCBackground | GCForeground | GCGraphicsExposures, &gcvalues);
+    gc = XCreateGC(displ, mainwin, GCBackground | GCForeground | GCGraphicsExposures, &gcvalues);
 }
 const static void initDependedVariables(void) {
     image = XCreateImage(displ, wa.visual, wa.depth, ZPixmap, 0, (char*)frame_buffer, wa.width, wa.height, 32, (wa.width * 4));
@@ -381,11 +386,11 @@ const static void initDependedVariables(void) {
 const static void initAtoms(void) {
 
     wmatom[Win_Close] = XInternAtom(displ, "WM_DELETE_WINDOW", False);
-    XSetWMProtocols(displ, win, &wmatom[Win_Close], 1);
+    XSetWMProtocols(displ, mainwin, &wmatom[Win_Close], 1);
 
     wmatom[Win_Name] = XInternAtom(displ, "WM_NAME", False);
     wmatom[Atom_Type] =  XInternAtom(displ, "STRING", False);
-    XChangeProperty(displ, win, wmatom[Win_Name], wmatom[Atom_Type], 8, PropModeReplace, (unsigned char*)"Anvil", 5);
+    XChangeProperty(displ, mainwin, wmatom[Win_Name], wmatom[Atom_Type], 8, PropModeReplace, (unsigned char*)"Anvil", 5);
 }
 /* Creates and Initializes the importand buffers. (frame, depth, shadow). */
 const static void initBuffers(void) {
@@ -404,10 +409,10 @@ const static void initLightModel(Light *l) {
     l->material = mt;
 }
 const static void pixmapcreate(void) {
-    pixmap = XCreatePixmap(displ, win, wa.width, wa.height, wa.depth);
+    pixmap = XCreatePixmap(displ, mainwin, wa.width, wa.height, wa.depth);
 }
 const static void pixmapdisplay(void) {
-    XCopyArea(displ, pixmap, win, gc, 0, 0, wa.width, wa.height, 0, 0);
+    XCopyArea(displ, pixmap, mainwin, gc, 0, 0, wa.width, wa.height, 0, 0);
 }
 const static void announceReadyState(void) {
     printf("Announcing ready process state event\n");
@@ -440,13 +445,13 @@ const static void CalculateFPS(void) {
 const static void displayInfo(void) {
     char info_string[30];
     sprintf(info_string, "Resolution: %d x %d", wa.width, wa.height);
-    XDrawString(displ ,win ,gc, 5, 12, info_string, strlen(info_string));
+    XDrawString(displ ,mainwin ,gc, 5, 12, info_string, strlen(info_string));
 
     sprintf(info_string, "Running Time: %4.1f", TimeCounter);
-    XDrawString(displ ,win ,gc, 5, 24, info_string, strlen(info_string));
+    XDrawString(displ ,mainwin ,gc, 5, 24, info_string, strlen(info_string));
 
     sprintf(info_string, "%4.1f fps", FPS);
-    XDrawString(displ ,win ,gc, 5, 36, info_string, strlen(info_string));
+    XDrawString(displ ,mainwin ,gc, 5, 36, info_string, strlen(info_string));
 }
 /* Signal handler to clean memory before exit, after receiving a given signal. */
 const static void sigsegv_handler(const int sig) {

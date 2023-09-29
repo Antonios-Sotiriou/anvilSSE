@@ -1,5 +1,9 @@
 #include "headers/draw_functions.h"
 
+#include "headers/logging.h"
+extern Light sunlight;
+extern Mat4x4 viewMat, lookAt, reperspMat;
+
 extern int EDGEFUNC, SCANLINE;
 extern u_int8_t *frame_buffer;
 extern float *depth_buffer;

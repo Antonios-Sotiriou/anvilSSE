@@ -19,7 +19,7 @@
 
 const void createShadowmap(Mesh m);
 const void shadowface(const face f, const Srt srt[]);
-const int shadowTest(vec4f frag);
+const int shadowTest(const vec4f frag, const vec4f nm, vec4f lightdir);
 
 #endif /* _SHADOWMAP_H */
 

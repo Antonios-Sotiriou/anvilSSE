@@ -74,6 +74,7 @@ typedef struct {
 } BMP_Info ;
 
 const void posWorldObjects(Scene *s);
+const void loadTexture(Mesh *c);
 const void createScene(Scene *s);
 const void releaseScene(Scene *s);
 const void releaseMesh(Mesh *c);

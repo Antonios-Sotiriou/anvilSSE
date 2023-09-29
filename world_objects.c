@@ -1,7 +1,7 @@
 #include "headers/world_objects.h"
 
 extern float AmbientStrength, SpecularStrength;
-const static void loadTexture(Mesh *c);
+// const static void loadTexture(Mesh *c);
 
 /* This function is responsible to position the objects in world space. */
 const void posWorldObjects(Scene *s) {
@@ -35,9 +35,9 @@ const void posWorldObjects(Scene *s) {
 
     /* ######################################################################################################## */
     memcpy(&mat.texture_file, "textures/Earth.bmp", 19);
-    Mesh jupiter = loadmesh("objfiles/earth.obj");
+    Mesh jupiter = loadmesh("objfiles/cube.obj");
     sclMatrix = scaleMatrix(10.0);
-    trMatrix = translationMatrix(0.0, 10.0, 80.0);
+    trMatrix = translationMatrix(0.0, 12.0, 0.0);
     posMatrix = mxm(sclMatrix, trMatrix);
 
     jupiter.material = mat;
@@ -52,7 +52,7 @@ const void posWorldObjects(Scene *s) {
     releaseMesh(&jupiter);
 }
 /* Loads the appropriate Textures and importand Texture infos. */
-const static void loadTexture(Mesh *c) {
+const void loadTexture(Mesh *c) {
     BMP_Header bmp_header;
     BMP_Info info;
 

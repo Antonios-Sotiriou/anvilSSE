@@ -5,6 +5,7 @@ extern int HALFW;
 extern int HALFH;
 extern float *shadow_buffer, shadow_bias;
 extern Mat4x4 lookAt, lightMat, reperspMat;
+float cache = 0.f;
 
 const void createShadowmap(Mesh m) {
     for (int c = 0; c < m.f_indexes; c++) {
@@ -74,8 +75,6 @@ const void shadowface(const face f, const Srt srt[]) {
                 if ( depthZ < shadow_buffer[padxSB] ) {
 
                     shadow_buffer[padxSB] = depthZ;
-                } else if (depthZ == shadow_buffer[padxSB]) {
-                    shadow_buffer[padxSB] = 0.f;
                 }
                 xxs += 1.0;
             }
@@ -116,22 +115,22 @@ const void shadowface(const face f, const Srt srt[]) {
             if ( depthZ < shadow_buffer[padxSB] ) {
 
                 shadow_buffer[padxSB] = depthZ;
-            } else if (depthZ == shadow_buffer[padxSB]) {
-                shadow_buffer[padxSB] = 0.f;
             }
             xxs += 1.0;
         }
         yB++;
     }
 }
-const int shadowTest(vec4f pixel) {
-    vec4f r = pixel;
+const int shadowTest(const vec4f frag, const vec4f nm, vec4f lightdir) {
+    vec4f r = frag;
     r[3] = 1.f;
     /* Transform to Model space coordinates. */
     r = vecxm(r, lookAt);
 
     /* Transform to Light space coordinates. */
     r = vecxm(r, lightMat);
+
+    float bias = 0.005 * (1 - dot_product(lightdir, nm)) + shadow_bias;
 
     /* Transform to Screen space coordinates. */
     r[0] = (1.0 + r[0]) * HALFW;
@@ -143,7 +142,7 @@ const int shadowTest(vec4f pixel) {
         return 0;
 
     r[2] *= 0.5;
-    if ( r[2] > shadow_buffer[((int)(r[1]) * wa.width) + (int)(r[0])] + shadow_bias)
+    if ( r[2] > shadow_buffer[((int)(r[1]) * wa.width) + (int)(r[0])] + bias)
         return 1;
 
     return 0;

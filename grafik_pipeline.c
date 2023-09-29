@@ -8,14 +8,14 @@ const static void viewtoscreen(Mesh *m, const int len);
 const static void rasterize(const Mesh m);
 
 extern int HALFH, HALFW, DEBUG;
-extern float FPlane, NPlane;;
+extern float FPlane, NPlane;
 extern Light sunlight;
 extern XWindowAttributes wa;
 extern Mat4x4 viewMat, worldMat, orthoMat, lightMat;
 
 const void shadowPipeline(Scene s) {
     Mesh cache = { 0 };
-    Mat4x4 lm = lookat(sunlight.pos, sunlight.u, sunlight.v, sunlight.n);
+    Mat4x4 lm = lookat(sunlight.newPos, sunlight.u, sunlight.v, sunlight.n);
     Mat4x4 Lview = inverse_mat(lm);
     lightMat = mxm(Lview, orthoMat);
 
@@ -28,8 +28,8 @@ const void shadowPipeline(Scene s) {
         initfaceVerticesShadow(&cache, cache.f_indexes);
 
         /* At this Point triangles must be clipped against near plane. */
-        vec4f plane_near_p = { 0.0, 0.0, NPlane, 0.0 },
-              plane_near_n = { 0.0, 0.0, 1.0, 0.0 };
+        vec4f plane_near_p = { 0.f, 0.f, 0.01f, 0.f },
+              plane_near_n = { 0.f, 0.f, 1.f, 0.f };
         cache = clipp(cache, plane_near_p, plane_near_n);
     
         /* Applying perspective division. */
