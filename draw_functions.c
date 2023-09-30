@@ -205,7 +205,7 @@ const static void scanlinefillGeneral(const face f, const Material mtr, const Sr
     float ma = (float)txmx[0] / tymy[0];
     float mb = (float)txmx[2] / tymy[2];
     if (orient < 0)
-        swap(&ma, &mb, sizeof(float));
+        swap(&ma, &mb, 4);
 
     const int y_start = tys[0];
     const int y_end1 = tys[1];
@@ -254,7 +254,7 @@ const static void scanlinefillGeneral(const face f, const Material mtr, const Sr
     ma = (float)txmx[1] / tymy[1];
     mb = (float)txmx[2] / tymy[2];
     if (orient < 0)
-        swap(&ma, &mb, sizeof(float));
+        swap(&ma, &mb, 4);
 
     int yB = -tymy[1];
     for (int y = y_end1; y < y_end2; y++) {
@@ -421,7 +421,7 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
     float ma = (float)txmx[0] / tymy[0];
     float mb = (float)txmx[2] / tymy[2];
     if (orient < 0)
-        swap(&ma, &mb, sizeof(float));
+        swap(&ma, &mb, 4);
 
     const int y_start = tys[0];
     const int y_end1 = tys[1];
@@ -476,7 +476,7 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
     ma = (float)txmx[1] / tymy[1];
     mb = (float)txmx[2] / tymy[2];
     if (orient < 0)
-        swap(&ma, &mb, sizeof(float));
+        swap(&ma, &mb, 4);
 
     int yB = -tymy[1];
     for (int y = y_end1; y < y_end2; y++) {

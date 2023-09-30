@@ -10,6 +10,11 @@
 #include <signal.h>
 // #include <immintrin.h>
 
+/* testing */
+#include "headers/exec_time.h"
+#include "headers/logging.h"
+#include "headers/test_shapes.h"
+
 int EDGEFUNC = 0;
 int SCANLINE = 1;
 
@@ -18,17 +23,13 @@ int SCANLINE = 1;
 #include "headers/matrices.h"
 #include "headers/kinetics.h"
 #include "headers/clipping.h"
+#include "headers/shadow_pipeline.h"
 #include "headers/grafik_pipeline.h"
 #include "headers/camera.h"
 #include "headers/world_objects.h"
 #include "headers/general_functions.h"
 #include "headers/shadowmap.h"
 #include "headers/draw_functions.h"
-
-/* testing */
-#include "headers/exec_time.h"
-#include "headers/logging.h"
-#include "headers/test_shapes.h"
 
 enum { Win_Close, Win_Name, Atom_Type, Atom_Last};
 enum { Pos, U, V, N, C, newPos };
@@ -74,7 +75,7 @@ float shadow_bias         = 0.002138;//0.000487f;
 
 /* Camera and Global light Source. */
 vec4f camera[N + 1] = {
-    { 0.0f, 0.0f, -10.0f, 1.0f },
+    { 0.0f, 0.0f, -1500.0f, 1.0f },
     { 1.0f, 0.0f, 0.0f, 0.0f },
     { 0.0f, -1.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 1.0f, 0.0f }
@@ -219,25 +220,25 @@ const static void keypress(XEvent *event) {
     // printf("\x1b[H\x1b[J");
     system("clear\n");
     switch (keysym) {
-        case 97 : look_left(eye, 0.2);       /* a */
+        case 97 : look_left(eye, 0.2);             /* a */
             break;
-        case 100 : look_right(eye, 0.2);     /* d */
+        case 100 : look_right(eye, 0.2);           /* d */
             break;
-        case 113 : look_up(eye, 2.2);       /* q */
+        case 113 : look_up(eye, 2.2);              /* q */
             break;
-        case 101 : look_down(eye, 2.2);     /* e */
+        case 101 : look_down(eye, 2.2);            /* e */
             break;
-        case 119 : move_forward(eye, 2.2);         /* w */
+        case 119 : move_forward(eye, 12.2);         /* w */
             break;
-        case 115 : move_backward(eye, 2.2);        /* s */
+        case 115 : move_backward(eye, 12.2);        /* s */
             break;
-        case 65361 : move_left(eye, 2.2);          /* left arrow */
+        case 65361 : move_left(eye, 12.2);          /* left arrow */
             break;
-        case 65363 : move_right(eye, 2.2);         /* right arrow */
+        case 65363 : move_right(eye, 12.2);         /* right arrow */
             break;
-        case 65362 : move_up(eye, 0.2);            /* up arror */
+        case 65362 : move_up(eye, 10.2);            /* up arror */
             break;
-        case 65364 : move_down(eye, 0.2);          /* down arrow */
+        case 65364 : move_down(eye, 10.2);          /* down arrow */
             break;
         case 65451 :shadow_bias += 0.000001;             /* + */
             printf("shadow_bias: %f\n",shadow_bias);
@@ -252,8 +253,16 @@ const static void keypress(XEvent *event) {
             printf("NPlane: %f\n", NPlane);
             break;
         case 65430 : sunlight.pos[0] -= 10.1;                   /* Adjust Light Source */
+            Mat4x4 ar = translationMatrix(sunlight.pos[0], 0.0f, 0.0f);
+            printf("pos: %f\n", sunlight.pos[0]);
+            scene.m[2].v = meshxm(scene.m[2].v, scene.m[2].v_indexes, ar);
+            logVec4f(ar.m[3]);
             break;
         case 65432 : sunlight.pos[0] += 10.1;                   /* Adjust Light Source */
+            Mat4x4 br = translationMatrix(sunlight.pos[0], 0.0f, 0.0f);
+            printf("pos: %f\n", sunlight.pos[0]);
+            scene.m[2].v = meshxm(scene.m[2].v, scene.m[2].v_indexes, br);
+            logVec4f(br.m[3]);
             break;
         case 65431 : sunlight.pos[2] += 10.1;                   /* Adjust Light Source */
             break;
@@ -291,6 +300,16 @@ const static void keypress(XEvent *event) {
                 fprintf(stderr, "Projecting Shadow buffer -- PROJECTBUFFER: %d\n", PROJECTBUFFER);
             }
             break;
+        case 65507 :
+            if (DEBUG == 2)
+                DEBUG = -1;
+            DEBUG++;
+            if (DEBUG == 1) {
+                fprintf(stderr, "Debug level 1 Enabled!: %d\n", DEBUG);
+            } else if (DEBUG == 2) {
+                fprintf(stderr, "Debug level 2 Enabled!: %d\n", DEBUG);
+            }
+            break;
         case 108 :                                    /* l */
             if (EYEPOINT == 0)
                 EYEPOINT = 1;
@@ -323,6 +342,7 @@ const static void keypress(XEvent *event) {
         memcpy(&scene.m[1].material.texture_file, "textures/stones.bmp", 20);
         loadTexture(&scene.m[1]);
     }
+    project();
 }
 const static void project() {
     if (AdjustShadow) {
@@ -514,7 +534,7 @@ const static int board(void) {
         UpdateTimeCounter();
         CalculateFPS();
         displayInfo();
-        project();
+        // project();
         // end(start_time);
 
         while(XPending(displ)) {

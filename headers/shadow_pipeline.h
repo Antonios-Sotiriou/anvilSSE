@@ -1,5 +1,5 @@
-#ifndef _GRAFIK_PIPELINE_H
-#define _GRAFIK_PIPELINE_H 1
+#ifndef _SHADOW_PIPELINE_H
+#define _SHADOW_PIPELINE_H 1
 
 #ifndef _ANVIL_STRUCTS_H
     #include "anvil_structs.h"
@@ -17,16 +17,16 @@
     #include "world_objects.h"
 #endif
 
-#ifndef _DRAW_FUNCTIONS_H
-    #include "draw_functions.h"
+#ifndef _SHADOWMAP_H
+    #include "shadowmap.h"
 #endif
 
 #ifndef _STDIO_H
     #include <stdio.h>
 #endif
 
-const void grafikPipeline(Scene s);
+const void shadowPipeline(Scene s);
 
-#endif /* _GRAFIK_PIPELINE_H */
+#endif /* _SHADOW_PIPELINE_H */
 
 

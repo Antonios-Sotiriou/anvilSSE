@@ -1,5 +1,8 @@
 #include "headers/matrices.h"
 
+#include "headers/logging.h"
+#include <stdio.h>
+
 /* Some usefull masks to shuffle vectors with builtins SSE gcc. */
 const static vec4i xmask = { 0, 0, 0, 0 };
 const static vec4i ymask = { 1, 1, 1, 1 };
@@ -93,11 +96,13 @@ const Mat4x4 reperspectiveMatrix(const float fov, const float aspectratio) {
     m.m[3][3] = 1.0;
     return m;
 }
-/* Multiplies a Mesh c with the given Matrix and returns a new Mesh, leaving the original unmodified. */
+/* Multiplies a vec4f array with the given Matrix and returns a new array, which includes the original array information, leaving the original unmodified. */
 vec4f *meshxm(vec4f vecs[], const int len, const Mat4x4 m) {
     vec4f *r = malloc(16 * len);
     for (int i = 0; i < len; i++) {
+        printf("before: "); logVec4f(vecs[i]);
         r[i] = __builtin_shuffle(vecs[i], xmask) * m.m[0] + __builtin_shuffle(vecs[i], ymask) * m.m[1] + __builtin_shuffle(vecs[i], zmask) * m.m[2] + __builtin_shuffle(vecs[i], wmask) * m.m[3];
+        printf("after : "); logVec4f(r[i]);
     }
     return r;
 }
@@ -125,7 +130,7 @@ const Mat4x4 lookat(const vec4f P, const vec4f U, const vec4f V, const vec4f N) 
 /* The Camera Matrix or as used to called the View Matrix.Returns a new 4x4 Matrix. */
 const Mat4x4 pointat(const vec4f P, const vec4f T, const vec4f Up) {
     Mat4x4 m = { 0 };
-    vec4f N = norm_vec(sub_vecs(P, T));
+    vec4f N = norm_vec(P - T);
     vec4f U = norm_vec(cross_product(Up, N));
     vec4f V = cross_product(N, U);
 

@@ -44,8 +44,8 @@ const void shadowface(const face f, const Srt srt[]) {
     float za = zmz[0] / ymy[0];
     float zb = zmz[2] / ymy[2];
     if (orient < 0) {
-        swap(&ma, &mb, sizeof(float));
-        swap(&za, &zb, sizeof(float));
+        swap(&ma, &mb, 4);
+        swap(&za, &zb, 4);
     }
 
     const int y_start = ys[0];
@@ -89,8 +89,8 @@ const void shadowface(const face f, const Srt srt[]) {
     za = zmz[1] / ymy[1];
     zb = zmz[2] / ymy[2];
     if (orient < 0) {
-        swap(&ma, &mb, sizeof(float));
-        swap(&za, &zb, sizeof(float));
+        swap(&ma, &mb, 4);
+        swap(&za, &zb, 4);
     }
 
     int yB = -ymy[1];

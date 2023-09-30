@@ -5,13 +5,13 @@ extern float AmbientStrength, SpecularStrength;
 
 /* This function is responsible to position the objects in world space. */
 const void posWorldObjects(Scene *s) {
-    Mesh cube = loadmesh("objfiles/terrain.obj");
-    // createCube(&cube);
     Mat4x4 sclMatrix, trMatrix, posMatrix;
-    
-    sclMatrix = scaleMatrix(1000.0);
-    trMatrix = translationMatrix(0.0, 0.0, 0.0);
-    posMatrix = mxm(sclMatrix, trMatrix);
+
+    // Mesh cube = loadmesh("objfiles/terrain.obj");
+    // createCube(&cube);
+    // sclMatrix = scaleMatrix(1000.0f);
+    // trMatrix = translationMatrix(0.0f, 0.0f, 0.0f);
+    // posMatrix = mxm(sclMatrix, trMatrix);
 
     Material mat = {
         .texture_file = "textures/stones.bmp",
@@ -23,33 +23,54 @@ const void posWorldObjects(Scene *s) {
         .reflect = 0
     };
 
-    cube.material = mat;
-    cube.pivot = trMatrix.m[3];
-    loadTexture(&cube);
+    // cube.material = mat;
+    // loadTexture(&cube);
 
-    initMesh(&s->m[0], cube);
-    s->m[0].v = meshxm(cube.v, cube.v_indexes, posMatrix);
-    s->m[0].n = meshxm(cube.n, cube.n_indexes, posMatrix);
+    // cube.pivot = trMatrix.m[3];
 
-    releaseMesh(&cube);
+    // initMesh(&s->m[0], cube);
+    // s->m[0].v = meshxm(cube.v, cube.v_indexes, posMatrix);
+    // s->m[0].n = meshxm(cube.n, cube.n_indexes, posMatrix);
+
+    // releaseMesh(&cube);
+
+    // /* ######################################################################################################## */
+    // Mesh jupiter = loadmesh("objfiles/cube.obj");
+    // sclMatrix = scaleMatrix(10.0f);
+    // trMatrix = translationMatrix(0.0f, 12.0f, 0.0f);
+    // posMatrix = mxm(sclMatrix, trMatrix);
+
+    // jupiter.material = mat;
+    // memcpy(&mat.texture_file, "textures/Earth.bmp", 19);
+    // loadTexture(&jupiter);
+    // jupiter.material.reflect = 1;
+
+    // jupiter.pivot = trMatrix.m[3];
+
+    // initMesh(&s->m[1], jupiter);
+    // s->m[1].v = meshxm(jupiter.v, jupiter.v_indexes, posMatrix);
+    // s->m[1].n = meshxm(jupiter.n, jupiter.n_indexes, posMatrix);
+
+    // releaseMesh(&jupiter);
 
     /* ######################################################################################################## */
-    memcpy(&mat.texture_file, "textures/Earth.bmp", 19);
-    Mesh jupiter = loadmesh("objfiles/cube.obj");
-    sclMatrix = scaleMatrix(10.0);
-    trMatrix = translationMatrix(0.0, 12.0, 0.0);
+    Mesh lightsource = loadmesh("objfiles/earth.obj");
+    sclMatrix = scaleMatrix(100.0f);
+    trMatrix = translationMatrix(0.0f, 100.0f, 0.0f);
     posMatrix = mxm(sclMatrix, trMatrix);
 
-    jupiter.material = mat;
-    jupiter.pivot = trMatrix.m[3];
-    loadTexture(&jupiter);
-    jupiter.material.reflect = 1;
+    lightsource.material = mat;
+    memcpy(&mat.texture_file, "textures/light.bmp", 19);
+    loadTexture(&lightsource);
+    lightsource.material.reflect = 1;
 
-    initMesh(&s->m[1], jupiter);
-    s->m[1].v = meshxm(jupiter.v, jupiter.v_indexes, posMatrix);
-    s->m[1].n = meshxm(jupiter.n, jupiter.n_indexes, posMatrix);
+    lightsource.pivot = trMatrix.m[3];
 
-    releaseMesh(&jupiter);
+    initMesh(&s->m[2], lightsource);
+    s->m[2].v = meshxm(lightsource.v, lightsource.v_indexes, posMatrix);
+    s->m[2].n = meshxm(lightsource.n, lightsource.n_indexes, posMatrix);
+
+    releaseMesh(&lightsource);
 }
 /* Loads the appropriate Textures and importand Texture infos. */
 const void loadTexture(Mesh *c) {
@@ -85,8 +106,8 @@ const void loadTexture(Mesh *c) {
 }
 /* Teams all objects of the the world in a scene for further procesing. */
 const void createScene(Scene *s) {
-    s->m = malloc(sizeof(Mesh) * 2);
-    s->m_indexes = 2;
+    s->m = malloc(sizeof(Mesh) * 3);
+    s->m_indexes = 3;
 }
 /* Releases all Meshes that form a scene. */
 const void releaseScene(Scene *s) {
