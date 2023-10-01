@@ -252,25 +252,35 @@ const static void keypress(XEvent *event) {
         case 65455 : NPlane -= 0.01;             /* / */
             printf("NPlane: %f\n", NPlane);
             break;
-        case 65430 : sunlight.pos[0] -= 10.1;                   /* Adjust Light Source */
-            Mat4x4 ar = translationMatrix(sunlight.pos[0], 0.0f, 0.0f);
-            printf("pos: %f\n", sunlight.pos[0]);
-            scene.m[2].v = meshxm(scene.m[2].v, scene.m[2].v_indexes, ar);
-            logVec4f(ar.m[3]);
+        case 65430 : sunlight.pos[0] -= 10.0f;                   /* Adjust Light Source */
+            Mat4x4 ar = translationMatrix(-10.0f, 0.0f, 0.0f);
+            scene.m[2].v = setmeshxm(scene.m[2].v, scene.m[2].v_indexes, ar);
+            scene.m[2].pivot[0] -= 10.0f;
             break;
-        case 65432 : sunlight.pos[0] += 10.1;                   /* Adjust Light Source */
-            Mat4x4 br = translationMatrix(sunlight.pos[0], 0.0f, 0.0f);
-            printf("pos: %f\n", sunlight.pos[0]);
-            scene.m[2].v = meshxm(scene.m[2].v, scene.m[2].v_indexes, br);
-            logVec4f(br.m[3]);
+        case 65432 : sunlight.pos[0] += 10.0f;                   /* Adjust Light Source */
+            Mat4x4 br = translationMatrix(10.0f, 0.0f, 0.0f);
+            scene.m[2].v = setmeshxm(scene.m[2].v, scene.m[2].v_indexes, br);
+            scene.m[2].pivot[0] += 10.0f;
             break;
-        case 65431 : sunlight.pos[2] += 10.1;                   /* Adjust Light Source */
+        case 65431 : sunlight.pos[2] += 10.0f;                   /* Adjust Light Source */
+            Mat4x4 cr = translationMatrix(0.0f, 0.0f, 10.0f);
+            scene.m[2].v = setmeshxm(scene.m[2].v, scene.m[2].v_indexes, cr);
+            scene.m[2].pivot[2] += 10.0f;
             break;
-        case 65433 : sunlight.pos[2] -= 10.1;                   /* Adjust Light Source */
+        case 65433 : sunlight.pos[2] -= 10.0f;                   /* Adjust Light Source */
+            Mat4x4 dr = translationMatrix(0.0f, 0.0f, -10.0f);
+            scene.m[2].v = setmeshxm(scene.m[2].v, scene.m[2].v_indexes, dr);
+            scene.m[2].pivot[2] -= 10.0f;
             break;
-        case 65434 : sunlight.pos[1] += 10.1;                   /* Adjust Light Source */
+        case 65434 : sunlight.pos[1] += 10.0f;                   /* Adjust Light Source */
+            Mat4x4 er = translationMatrix(0.0f, 10.0f, 0.0f);
+            scene.m[2].v = setmeshxm(scene.m[2].v, scene.m[2].v_indexes, er);
+            scene.m[2].pivot[1] += 10.0f;
             break;
-        case 65435 : sunlight.pos[1] -= 10.1;                   /* Adjust Light Source */
+        case 65435 : sunlight.pos[1] -= 10.0f;                   /* Adjust Light Source */
+            Mat4x4 fr = translationMatrix(0.0f, -10.0f, 0.0f);
+            scene.m[2].v = setmeshxm(scene.m[2].v, scene.m[2].v_indexes, fr);
+            scene.m[2].pivot[1] -= 10.0f;
             break;
         case 120 : rotate_x(&scene.m[0], 1);                     /* x */
             break;
@@ -280,7 +290,7 @@ const static void keypress(XEvent *event) {
             break;
         case 114 : rotate_light(&sunlight, 1, 0.0, 1.0, 0.0);        /* r */
             break;
-        case 99 : rotate_origin(&scene.m[1], 1, 1.0, 0.0, 0.0);  /* c */
+        case 99 : rotate_origin(&scene.m[2], 1, 1.0, 0.0, 0.0);  /* c */
             break;
         case 43 : SCALE += 0.01;                                    /* + */
             orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, ZNEAR, ZFAR);
@@ -342,7 +352,6 @@ const static void keypress(XEvent *event) {
         memcpy(&scene.m[1].material.texture_file, "textures/stones.bmp", 20);
         loadTexture(&scene.m[1]);
     }
-    project();
 }
 const static void project() {
     if (AdjustShadow) {
@@ -534,7 +543,7 @@ const static int board(void) {
         UpdateTimeCounter();
         CalculateFPS();
         displayInfo();
-        // project();
+        project();
         // end(start_time);
 
         while(XPending(displ)) {

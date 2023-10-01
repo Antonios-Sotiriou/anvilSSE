@@ -23,6 +23,7 @@ const Mat4x4 orthographicMatrix(const float scaleX, const float scaleY, const fl
 const Mat4x4 perspectiveMatrix(const float fov, const float aspectratio, const float zn, const float zf);
 const Mat4x4 reperspectiveMatrix(const float fov, const float aspectratio);
 vec4f *meshxm(vec4f vecs[], const int len, const Mat4x4 m);
+vec4f *setmeshxm(vec4f vecs[], const int len, const Mat4x4 m);
 vec4f *normalsxm(vec4f vecs[], const int len, const Mat4x4 m);
 const vec4f vecxm(const vec4f v, const Mat4x4 m);
 const Mat4x4 lookat(const vec4f P, const vec4f U, const vec4f V, const vec4f N);

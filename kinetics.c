@@ -1,5 +1,7 @@
 #include "headers/kinetics.h"
 
+#include "headers/logging.h"
+
 extern Light sunlight;
 extern const void initMesh(Mesh *a, const Mesh b);
 extern const void releaseMesh(Mesh *c);
@@ -36,7 +38,7 @@ const void rotate_z(Mesh *c, const float angle) {
 const void rotate_origin(Mesh *c, const float angle, float x, float y, float z) {
     vec4f axis = { x, y, z };
     Quat n = setQuat(0, c->pivot);
-
+    logVec4f(c->pivot);
     Quat xrot = rotationQuat(angle, axis);
     Mat4x4 m = MatfromQuat(xrot, n.v);
 

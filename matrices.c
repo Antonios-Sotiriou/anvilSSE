@@ -1,8 +1,5 @@
 #include "headers/matrices.h"
 
-#include "headers/logging.h"
-#include <stdio.h>
-
 /* Some usefull masks to shuffle vectors with builtins SSE gcc. */
 const static vec4i xmask = { 0, 0, 0, 0 };
 const static vec4i ymask = { 1, 1, 1, 1 };
@@ -100,10 +97,17 @@ const Mat4x4 reperspectiveMatrix(const float fov, const float aspectratio) {
 vec4f *meshxm(vec4f vecs[], const int len, const Mat4x4 m) {
     vec4f *r = malloc(16 * len);
     for (int i = 0; i < len; i++) {
-        printf("before: "); logVec4f(vecs[i]);
         r[i] = __builtin_shuffle(vecs[i], xmask) * m.m[0] + __builtin_shuffle(vecs[i], ymask) * m.m[1] + __builtin_shuffle(vecs[i], zmask) * m.m[2] + __builtin_shuffle(vecs[i], wmask) * m.m[3];
-        printf("after : "); logVec4f(r[i]);
     }
+    return r;
+}
+/* Multiplies a vec4f with the given Matrix and returns a new Mesh . */
+vec4f *setmeshxm(vec4f vecs[], const int len, const Mat4x4 m) {
+    vec4f *r = malloc(16 * len);
+    for (int i = 0; i < len; i++) {
+        r[i] = __builtin_shuffle(vecs[i], xmask) * m.m[0] + __builtin_shuffle(vecs[i], ymask) * m.m[1] + __builtin_shuffle(vecs[i], zmask) * m.m[2] + __builtin_shuffle(vecs[i], wmask) * m.m[3];
+    }
+    free(vecs);
     return r;
 }
 /* Multiplies a Mesh normals with the given Matrix. */

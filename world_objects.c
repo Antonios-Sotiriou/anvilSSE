@@ -7,11 +7,11 @@ extern float AmbientStrength, SpecularStrength;
 const void posWorldObjects(Scene *s) {
     Mat4x4 sclMatrix, trMatrix, posMatrix;
 
-    // Mesh cube = loadmesh("objfiles/terrain.obj");
+    Mesh cube = loadmesh("objfiles/terrain.obj");
     // createCube(&cube);
-    // sclMatrix = scaleMatrix(1000.0f);
-    // trMatrix = translationMatrix(0.0f, 0.0f, 0.0f);
-    // posMatrix = mxm(sclMatrix, trMatrix);
+    sclMatrix = scaleMatrix(1000.0f);
+    trMatrix = translationMatrix(0.0f, 0.0f, 0.0f);
+    posMatrix = mxm(sclMatrix, trMatrix);
 
     Material mat = {
         .texture_file = "textures/stones.bmp",
@@ -23,44 +23,44 @@ const void posWorldObjects(Scene *s) {
         .reflect = 0
     };
 
-    // cube.material = mat;
-    // loadTexture(&cube);
+    cube.material = mat;
+    loadTexture(&cube);
 
-    // cube.pivot = trMatrix.m[3];
+    cube.pivot = trMatrix.m[3];
 
-    // initMesh(&s->m[0], cube);
-    // s->m[0].v = meshxm(cube.v, cube.v_indexes, posMatrix);
-    // s->m[0].n = meshxm(cube.n, cube.n_indexes, posMatrix);
+    initMesh(&s->m[0], cube);
+    s->m[0].v = meshxm(cube.v, cube.v_indexes, posMatrix);
+    s->m[0].n = meshxm(cube.n, cube.n_indexes, posMatrix);
 
-    // releaseMesh(&cube);
+    releaseMesh(&cube);
 
     // /* ######################################################################################################## */
-    // Mesh jupiter = loadmesh("objfiles/cube.obj");
-    // sclMatrix = scaleMatrix(10.0f);
-    // trMatrix = translationMatrix(0.0f, 12.0f, 0.0f);
-    // posMatrix = mxm(sclMatrix, trMatrix);
+    Mesh jupiter = loadmesh("objfiles/cube.obj");
+    sclMatrix = scaleMatrix(10.0f);
+    trMatrix = translationMatrix(0.0f, 12.0f, 0.0f);
+    posMatrix = mxm(sclMatrix, trMatrix);
 
-    // jupiter.material = mat;
-    // memcpy(&mat.texture_file, "textures/Earth.bmp", 19);
-    // loadTexture(&jupiter);
-    // jupiter.material.reflect = 1;
+    jupiter.material = mat;
+    memcpy(&jupiter.material.texture_file, "textures/Earth.bmp", 19);
+    loadTexture(&jupiter);
+    jupiter.material.reflect = 1;
 
-    // jupiter.pivot = trMatrix.m[3];
+    jupiter.pivot = trMatrix.m[3];
 
-    // initMesh(&s->m[1], jupiter);
-    // s->m[1].v = meshxm(jupiter.v, jupiter.v_indexes, posMatrix);
-    // s->m[1].n = meshxm(jupiter.n, jupiter.n_indexes, posMatrix);
+    initMesh(&s->m[1], jupiter);
+    s->m[1].v = meshxm(jupiter.v, jupiter.v_indexes, posMatrix);
+    s->m[1].n = meshxm(jupiter.n, jupiter.n_indexes, posMatrix);
 
-    // releaseMesh(&jupiter);
+    releaseMesh(&jupiter);
 
     /* ######################################################################################################## */
-    Mesh lightsource = loadmesh("objfiles/earth.obj");
-    sclMatrix = scaleMatrix(100.0f);
+    Mesh lightsource = loadmesh("objfiles/spacedom.obj");
+    sclMatrix = scaleMatrix(10.0f);
     trMatrix = translationMatrix(0.0f, 100.0f, 0.0f);
     posMatrix = mxm(sclMatrix, trMatrix);
 
     lightsource.material = mat;
-    memcpy(&mat.texture_file, "textures/light.bmp", 19);
+    memcpy(&lightsource.material.texture_file, "textures/light.bmp", 19);
     loadTexture(&lightsource);
     lightsource.material.reflect = 1;
 
