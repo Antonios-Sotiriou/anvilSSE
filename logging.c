@@ -8,10 +8,6 @@ const void logVec4i(const vec4i v) {
     fprintf(stdout, "x: %d    y: %d    z: %d    w: %d\n", v[0], v[1], v[2], v[3]);
 }
 
-// const void logPixel(const Pixel p) {
-//     fprintf(stdout, "Red: %u    Green: %u    Blue: %u\n", p.Red, p.Green, p.Blue);
-// }
-
 /* Logging Triangle values.If vec = 1 loggs vec4 values, if tex Texture, if norm Normal. */
 const void logFace(const face f, const int vec, const int tex, const int norm, const int indexes) {
     if (vec) {
@@ -40,9 +36,9 @@ const void logMatrix(const Mat4x4 m) {
     }
 }
 
-// const void logQuat(const Quat q) {
-//     fprintf(stdout, "w: %f  v[x: %f, y: %f, z: %f]\n", q.w, q.v.x, q.v.y, q.v.z);
-// }
+const void logQuat(const Quat q) {
+    fprintf(stdout, "w: %f  v[x: %f, y: %f, z: %f]\n", q.w, q.v[0], q.v[1], q.v[2]);
+}
 
 const void logEvent(const XEvent e) {
     fprintf(stdout, "event.type: %d\n", e.type);

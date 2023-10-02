@@ -12,7 +12,7 @@ extern Mat4x4 orthoMat, lightMat;
 
 const void shadowPipeline(Scene s) {
     Mesh cache = { 0 };
-    Mat4x4 lm = lookat(sunlight.newPos, sunlight.u, sunlight.v, sunlight.n);
+    Mat4x4 lm = lookat(sunlight.pos, sunlight.u, sunlight.v, sunlight.n);
     Mat4x4 Lview = inverse_mat(lm);
     lightMat = mxm(Lview, orthoMat);
 

@@ -217,3 +217,5 @@ static vec4f *loadnormals(const char path[]) {
     fclose(fp);
     return n;
 }
+
+

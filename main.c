@@ -71,7 +71,7 @@ float FPlane              = 0.00001f;
 float SCALE               = 0.003f;
 float AmbientStrength     = 0.15f;
 float SpecularStrength    = 0.5f;
-float shadow_bias         = 0.002138;//0.000487f;
+float shadow_bias         = 0.003105;//0.002138;//0.000487f;
 
 /* Camera and Global light Source. */
 vec4f camera[N + 1] = {
@@ -288,9 +288,9 @@ const static void keypress(XEvent *event) {
             break;
         case 122 : rotate_z(&scene.m[0], 1);                     /* z */
             break;
-        case 114 : rotate_light(&sunlight, 1, 0.0, 1.0, 0.0);        /* r */
+        case 114 : rotate_light(&sunlight, 1, 0.0f, 1.0f, 0.0f);        /* r */
             break;
-        case 99 : rotate_origin(&scene.m[2], 1, 1.0, 0.0, 0.0);  /* c */
+        case 99 : rotate_origin(&scene.m[2], 1, 1.0f, 0.0f, 0.0f);  /* c */
             break;
         case 43 : SCALE += 0.01;                                    /* + */
             orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, ZNEAR, ZFAR);

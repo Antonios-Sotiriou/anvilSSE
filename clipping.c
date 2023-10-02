@@ -18,7 +18,7 @@ const Mesh clipp(const Mesh c, vec4f plane_p, vec4f plane_n) {
         clipped_count = clipp_triangle(plane_p, plane_n, c.f[i], &clipped[0], &clipped[1]);
 
         if (clipped_count) {
-            
+
             if (clipped_count == 1) {
                 r.f = realloc(r.f, face_size * dynamic_inc);
                 r.f[index] = clipped[0];
@@ -159,7 +159,7 @@ const Mesh shadowclipp(const Mesh c, vec4f plane_p, vec4f plane_n) {
         clipped_count = shadowclipp_triangle(plane_p, plane_n, c.f[i], &clipped[0], &clipped[1]);
 
         if (clipped_count) {
-            
+
             if (clipped_count == 1) {
                 r.f = realloc(r.f, face_size * dynamic_inc);
                 r.f[index] = clipped[0];

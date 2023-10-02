@@ -139,6 +139,7 @@ const static void rasterize(const Mesh m) {
     } else {
         texMesh(m);
     }
+    /* Here is the place at which Frustum Meshes must be rasterized on map Window. */
 }
 
 

@@ -5,14 +5,6 @@ extern float AmbientStrength, SpecularStrength;
 
 /* This function is responsible to position the objects in world space. */
 const void posWorldObjects(Scene *s) {
-    Mat4x4 sclMatrix, trMatrix, posMatrix;
-
-    Mesh cube = loadmesh("objfiles/terrain.obj");
-    // createCube(&cube);
-    sclMatrix = scaleMatrix(1000.0f);
-    trMatrix = translationMatrix(0.0f, 0.0f, 0.0f);
-    posMatrix = mxm(sclMatrix, trMatrix);
-
     Material mat = {
         .texture_file = "textures/stones.bmp",
         .basecolor = { 1.0f, 0.8f, 0.0f, 0.0f },
@@ -22,6 +14,12 @@ const void posWorldObjects(Scene *s) {
         .shinniness = 0.4 * 128,
         .reflect = 0
     };
+
+    Mesh cube = loadmesh("objfiles/terrain.obj");
+    // createCube(&cube);
+    Mat4x4 sclMatrix = scaleMatrix(1000.0f);
+    Mat4x4 trMatrix = translationMatrix(0.0f, 0.0f, 0.0f);
+    Mat4x4 posMatrix = mxm(sclMatrix, trMatrix);
 
     cube.material = mat;
     loadTexture(&cube);
@@ -37,7 +35,7 @@ const void posWorldObjects(Scene *s) {
     // /* ######################################################################################################## */
     Mesh jupiter = loadmesh("objfiles/cube.obj");
     sclMatrix = scaleMatrix(10.0f);
-    trMatrix = translationMatrix(0.0f, 12.0f, 0.0f);
+    trMatrix = translationMatrix(0.0f, 10.0f, 0.0f);
     posMatrix = mxm(sclMatrix, trMatrix);
 
     jupiter.material = mat;

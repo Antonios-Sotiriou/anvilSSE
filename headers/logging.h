@@ -5,9 +5,9 @@
     #include "anvil_structs.h"
 #endif
 
-// #ifndef _QUATERNIONS_H
-//     #include "quaternions.h"
-// #endif
+#ifndef _QUATERNIONS_H
+    #include "quaternions.h"
+#endif
 
 #ifndef _STDIO_H
     #include <stdio.h>
