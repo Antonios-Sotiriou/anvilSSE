@@ -1,3 +1,6 @@
+/* General Macro definitions */
+#define _GNU_SOURCE /* Importand to counter sigaction struct < incomplete type error >. */
+
 /* general headers */
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,11 +55,11 @@ XSetWindowAttributes sa;
 Atom wmatom[Atom_Last];
 
 /* BUFFERS. */
-u_int8_t *frame_buffer;
+u_int8_t *frame_buffer, *map_buffer;
 float *depth_buffer, *shadow_buffer;
 
 /* Project Global Variables. */
-static int PROJECTIONVIEW = 0;
+int PROJECTIONVIEW = 0;
 static int PROJECTBUFFER  = 1;
 static int AdjustShadow   = 1;
 static int AdjustScene    = 1;
@@ -75,7 +78,7 @@ float shadow_bias         = 0.003105;//0.002138;//0.000487f;
 
 /* Camera and Global light Source. */
 vec4f camera[N + 1] = {
-    { 0.0f, 0.0f, -1500.0f, 1.0f },
+    { 0.0f, 0.0f, 0.0f, 1.0f },
     { 1.0f, 0.0f, 0.0f, 0.0f },
     { 0.0f, -1.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 1.0f, 0.0f }
@@ -254,32 +257,32 @@ const static void keypress(XEvent *event) {
             break;
         case 65430 : sunlight.pos[0] -= 10.0f;                   /* Adjust Light Source */
             Mat4x4 ar = translationMatrix(-10.0f, 0.0f, 0.0f);
-            scene.m[2].v = setmeshxm(scene.m[2].v, scene.m[2].v_indexes, ar);
+            scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, ar);
             scene.m[2].pivot[0] -= 10.0f;
             break;
         case 65432 : sunlight.pos[0] += 10.0f;                   /* Adjust Light Source */
             Mat4x4 br = translationMatrix(10.0f, 0.0f, 0.0f);
-            scene.m[2].v = setmeshxm(scene.m[2].v, scene.m[2].v_indexes, br);
+            scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, br);
             scene.m[2].pivot[0] += 10.0f;
             break;
         case 65431 : sunlight.pos[2] += 10.0f;                   /* Adjust Light Source */
             Mat4x4 cr = translationMatrix(0.0f, 0.0f, 10.0f);
-            scene.m[2].v = setmeshxm(scene.m[2].v, scene.m[2].v_indexes, cr);
+            scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, cr);
             scene.m[2].pivot[2] += 10.0f;
             break;
         case 65433 : sunlight.pos[2] -= 10.0f;                   /* Adjust Light Source */
             Mat4x4 dr = translationMatrix(0.0f, 0.0f, -10.0f);
-            scene.m[2].v = setmeshxm(scene.m[2].v, scene.m[2].v_indexes, dr);
+            scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, dr);
             scene.m[2].pivot[2] -= 10.0f;
             break;
         case 65434 : sunlight.pos[1] += 10.0f;                   /* Adjust Light Source */
             Mat4x4 er = translationMatrix(0.0f, 10.0f, 0.0f);
-            scene.m[2].v = setmeshxm(scene.m[2].v, scene.m[2].v_indexes, er);
+            scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, er);
             scene.m[2].pivot[1] += 10.0f;
             break;
         case 65435 : sunlight.pos[1] -= 10.0f;                   /* Adjust Light Source */
             Mat4x4 fr = translationMatrix(0.0f, -10.0f, 0.0f);
-            scene.m[2].v = setmeshxm(scene.m[2].v, scene.m[2].v_indexes, fr);
+            scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, fr);
             scene.m[2].pivot[1] -= 10.0f;
             break;
         case 120 : rotate_x(&scene.m[0], 1);                     /* x */
@@ -290,7 +293,7 @@ const static void keypress(XEvent *event) {
             break;
         case 114 : rotate_light(&sunlight, 1, 0.0f, 1.0f, 0.0f);        /* r */
             break;
-        case 99 : rotate_origin(&scene.m[2], 1, 1.0f, 0.0f, 0.0f);  /* c */
+        case 99 : rotate_origin(&scene.m[1], 1, 1.0f, 0.0f, 0.0f);  /* c */
             break;
         case 43 : SCALE += 0.01;                                    /* + */
             orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, ZNEAR, ZFAR);

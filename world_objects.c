@@ -5,6 +5,7 @@ extern float AmbientStrength, SpecularStrength;
 
 /* This function is responsible to position the objects in world space. */
 const void posWorldObjects(Scene *s) {
+    Mat4x4 sclMatrix, trMatrix, posMatrix;
     Material mat = {
         .texture_file = "textures/stones.bmp",
         .basecolor = { 1.0f, 0.8f, 0.0f, 0.0f },
@@ -15,60 +16,51 @@ const void posWorldObjects(Scene *s) {
         .reflect = 0
     };
 
-    Mesh cube = loadmesh("objfiles/terrain.obj");
-    // createCube(&cube);
-    Mat4x4 sclMatrix = scaleMatrix(1000.0f);
-    Mat4x4 trMatrix = translationMatrix(0.0f, 0.0f, 0.0f);
-    Mat4x4 posMatrix = mxm(sclMatrix, trMatrix);
-
-    cube.material = mat;
-    loadTexture(&cube);
-
-    cube.pivot = trMatrix.m[3];
-
-    initMesh(&s->m[0], cube);
-    s->m[0].v = meshxm(cube.v, cube.v_indexes, posMatrix);
-    s->m[0].n = meshxm(cube.n, cube.n_indexes, posMatrix);
-
-    releaseMesh(&cube);
-
-    // /* ######################################################################################################## */
-    Mesh jupiter = loadmesh("objfiles/cube.obj");
-    sclMatrix = scaleMatrix(10.0f);
-    trMatrix = translationMatrix(0.0f, 10.0f, 0.0f);
+    s->m[0] = loadmesh("objfiles/terrain.obj");
+    // createCube(&s->m[0]);
+    sclMatrix = scaleMatrix(1000.0f);
+    trMatrix = translationMatrix(0.0f, 0.0f, 0.0f);
     posMatrix = mxm(sclMatrix, trMatrix);
 
-    jupiter.material = mat;
-    memcpy(&jupiter.material.texture_file, "textures/Earth.bmp", 19);
-    loadTexture(&jupiter);
-    jupiter.material.reflect = 1;
+    s->m[0].material = mat;
+    loadTexture(&s->m[0]);
 
-    jupiter.pivot = trMatrix.m[3];
+    s->m[0].pivot = trMatrix.m[3];
 
-    initMesh(&s->m[1], jupiter);
-    s->m[1].v = meshxm(jupiter.v, jupiter.v_indexes, posMatrix);
-    s->m[1].n = meshxm(jupiter.n, jupiter.n_indexes, posMatrix);
-
-    releaseMesh(&jupiter);
+    s->m[0].v = setvecsarrayxm(s->m[0].v, s->m[0].v_indexes, posMatrix);
+    s->m[0].n = setvecsarrayxm(s->m[0].n, s->m[0].n_indexes, posMatrix);
 
     /* ######################################################################################################## */
-    Mesh lightsource = loadmesh("objfiles/spacedom.obj");
+    s->m[1] = loadmesh("objfiles/cube.obj");
+    sclMatrix = scaleMatrix(10.0f);
+    trMatrix = translationMatrix(0.0f, 15.0f, 0.0f);
+    posMatrix = mxm(sclMatrix, trMatrix);
+
+    s->m[1].material = mat;
+    memcpy(&s->m[1].material.texture_file, "textures/Earth.bmp", 19);
+    loadTexture(&s->m[1]);
+    s->m[1].material.reflect = 1;
+
+    s->m[1].pivot = trMatrix.m[3];
+
+    s->m[1].v = setvecsarrayxm(s->m[1].v, s->m[1].v_indexes, posMatrix);
+    s->m[1].n = setvecsarrayxm(s->m[1].n, s->m[1].n_indexes, posMatrix);
+
+    /* ######################################################################################################## */
+    s->m[2] = loadmesh("objfiles/spacedom.obj");
     sclMatrix = scaleMatrix(10.0f);
     trMatrix = translationMatrix(0.0f, 100.0f, 0.0f);
     posMatrix = mxm(sclMatrix, trMatrix);
 
-    lightsource.material = mat;
-    memcpy(&lightsource.material.texture_file, "textures/light.bmp", 19);
-    loadTexture(&lightsource);
-    lightsource.material.reflect = 1;
+    s->m[2].material = mat;
+    memcpy(&s->m[2].material.texture_file, "textures/light.bmp", 19);
+    loadTexture(&s->m[2]);
+    s->m[2].material.reflect = 1;
 
-    lightsource.pivot = trMatrix.m[3];
+    s->m[2].pivot = trMatrix.m[3];
 
-    initMesh(&s->m[2], lightsource);
-    s->m[2].v = meshxm(lightsource.v, lightsource.v_indexes, posMatrix);
-    s->m[2].n = meshxm(lightsource.n, lightsource.n_indexes, posMatrix);
-
-    releaseMesh(&lightsource);
+    s->m[2].v = setvecsarrayxm(s->m[2].v, s->m[2].v_indexes, posMatrix);
+    s->m[2].n = setvecsarrayxm(s->m[2].n, s->m[2].n_indexes, posMatrix);
 }
 /* Loads the appropriate Textures and importand Texture infos. */
 const void loadTexture(Mesh *c) {
@@ -87,6 +79,7 @@ const void loadTexture(Mesh *c) {
         fread(&info, sizeof(BMP_Info), 1, fp);
         fseek(fp, (14 + info.Size), SEEK_SET);
 
+        /* Subtract 1 from Texture width and height because counting starts from 0; */
         c->material.texture_height = info.Height;
         c->material.texture_width = info.Width;
         const int texSize = info.Height * info.Width;
@@ -125,13 +118,11 @@ const void releaseMesh(Mesh *c) {
 /* Initializing Mesh a from Mesh b. */
 const void initMesh(Mesh *a, const Mesh b) {
     *a = b;
-    // size_t nsize = sizeof(vec4f) * b.n_indexes;
+
     size_t tsize = sizeof(vec2f) * b.t_indexes;
     size_t fsize = sizeof(face) * b.f_indexes;
+    /* To get the proper size, add 1 to width and height, because we subtracted when created the Texture. */
     size_t texsize = b.material.texture_height * b.material.texture_width * 4;
-
-    // a->n = malloc(nsize);
-    // memcpy(a->n, b.n, nsize);
 
     a->t = malloc(tsize);
     memcpy(a->t, b.t, tsize);

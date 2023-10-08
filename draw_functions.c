@@ -367,8 +367,8 @@ const static void edgetexGeneral(const face f, Material mtr, int minX, int maxX,
                     const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
                     const vec2f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
 
-                    const int tex_y = (texel[1] * mtr.texture_height) / frag[3];
-                    const int tex_x = (texel[0] * mtr.texture_width) / frag[3];
+                    const int tex_y = (texel[1] * (mtr.texture_height - 1)) / frag[3];
+                    const int tex_x = (texel[0] * (mtr.texture_width - 1)) / frag[3];
 
                     mtr.basecolor = __builtin_convertvector(mtr.texture[(tex_y * mtr.texture_width) + tex_x], vec4f) / 255.0f;
 
@@ -456,8 +456,8 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
                         const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
                         const vec2f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
 
-                        const int tex_y = (texel[1] * mtr.texture_height) / frag[3];
-                        const int tex_x = (texel[0] * mtr.texture_width) / frag[3];
+                        const int tex_y = (texel[1] * (mtr.texture_height - 1)) / frag[3];
+                        const int tex_x = (texel[0] * (mtr.texture_width - 1)) / frag[3];
 
                         mtr.basecolor = __builtin_convertvector(mtr.texture[(tex_y * mtr.texture_width) + tex_x], vec4f) / 255.0f;
 
@@ -503,8 +503,8 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
                     const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
                     const vec2f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
 
-                    const int tex_y = (texel[1] * mtr.texture_height) / frag[3];
-                    const int tex_x = (texel[0] * mtr.texture_width) / frag[3];
+                    const int tex_y = (texel[1] * (mtr.texture_height - 1)) / frag[3];
+                    const int tex_x = (texel[0] * (mtr.texture_width - 1)) / frag[3];
 
                     mtr.basecolor = __builtin_convertvector(mtr.texture[(tex_y * mtr.texture_width) + tex_x], vec4f) / 255.0f;
 

@@ -57,8 +57,8 @@ const void shadowface(const face f, const Srt srt[]) {
         for (int y = y_start; y < y_end1; y++) {
             const int padySB = y * wa.width;
 
-            int x_start = (ma * yA) + xs[0];
-            int x_end = (mb * yA) + xs[0];
+            const int x_start = (ma * yA) + xs[0];
+            const int x_end = (mb * yA) + xs[0];
 
             const float z1 = (za * yA) + zs[0];
             const float z2 = (zb * yA) + zs[0];
@@ -97,8 +97,8 @@ const void shadowface(const face f, const Srt srt[]) {
     for (int y = y_end1; y < y_end2; y++) {
         const int padySB = y * wa.width;
 
-        int x_start = (ma * yB) + xs[2];
-        int x_end = (mb * yB) + xs[2];
+        const int x_start = (ma * yB) + xs[2];
+        const int x_end = (mb * yB) + xs[2];
 
         const float z1 = (za * yB) + zs[2];
         const float z2 = (zb * yB) + zs[2];
@@ -130,7 +130,7 @@ const int shadowTest(const vec4f frag, const vec4f nm, vec4f lightdir) {
     /* Transform to Light space coordinates. */
     r = vecxm(r, lightMat);
 
-    float bias = 0.005 * (1 - dot_product(lightdir, nm)) + shadow_bias;
+    float bias = 0.005 * (1 - dot_product(lightMat.m[3], nm)) + shadow_bias;
 
     /* Transform to Screen space coordinates. */
     r[0] = (1.0 + r[0]) * HALFW;

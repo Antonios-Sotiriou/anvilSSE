@@ -1,5 +1,7 @@
 #include "headers/grafik_pipeline.h"
 
+#include "headers/frustum_map.h"
+
 const static void initfaceVertices(Mesh *m, const int len);
 const static void ppdiv(Mesh *m, const int len);
 const static Mesh bfculling(const Mesh c, const int len);
@@ -18,14 +20,14 @@ const void grafikPipeline(Scene s) {
     for (int i = 0; i < s.m_indexes; i++) {
         initMesh(&cache, s.m[i]);
 
-        cache.v = meshxm(s.m[i].v, s.m[i].v_indexes, worldMat);
-        cache.n = normalsxm(s.m[i].n, s.m[i].n_indexes, viewMat);
+        cache.v = vecsarrayxm(s.m[i].v, s.m[i].v_indexes, worldMat);
+        cache.n = vecsarrayxm(s.m[i].n, s.m[i].n_indexes, viewMat);
 
         initfaceVertices(&cache, cache.f_indexes);
 
         /* At this Point triangles must be clipped against near plane. */
-        vec4f plane_near_p = { 0.0, 0.0, NPlane, 0.0 },
-              plane_near_n = { 0.0, 0.0, 1.0, 0.0 };
+        vec4f plane_near_p = { 0.0f, 0.0f, NPlane },
+              plane_near_n = { 0.0f, 0.0f, 1.0f };
         cache = clipp(cache, plane_near_p, plane_near_n);
     
         /* Applying perspective division. */
@@ -36,11 +38,18 @@ const void grafikPipeline(Scene s) {
             cache = bfculling(cache, cache.f_indexes);
 
             /* Sending to translation from NDC to Screen Coordinates. */
-            viewtoscreen(&cache, cache.f_indexes);
+            if (cache.f_indexes) {
+                viewtoscreen(&cache, cache.f_indexes);
 
-            rasterize(cache);
+                // mapPipeline(cache);
+                rasterize(cache);
+                releaseMesh(&cache);
+            } else {
+               releaseMesh(&cache);
+            }
+        } else {
+            releaseMesh(&cache);
         }
-        releaseMesh(&cache);
     }
 }
 /* Assosiates vertices coordinate values from vector array through indexes. */
@@ -109,26 +118,37 @@ const static void viewtoscreen(Mesh *m, const int len) {
             m->f[i].v[j][3] = 1.f / m->f[i].v[j][3];
         }
     }
+
     /* Far Plane clipping and side clipping. */
     vec4f plane_far_p = { 0.0, 0.0,  FPlane},
           plane_far_n = { 0.0, 0.0, 1.0 };
     *m = clipp(*m, plane_far_p, plane_far_n);
+    if(!m->f_indexes)
+        return;
 
     vec4f plane_up_p = { 0.0, 0.0, 0.0 },
           plane_up_n = { 0.0, 1.0, 0.0 };
     *m = clipp(*m, plane_up_p, plane_up_n);
+    if(!m->f_indexes)
+        return;
 
     vec4f plane_down_p = { 0.0, wa.height - 1.0, 0.0 },
           plane_down_n = { 0.0, -1.0, 0.0 };
     *m = clipp(*m, plane_down_p, plane_down_n);
+    if(!m->f_indexes)
+        return;
 
     vec4f plane_left_p = { 0.0, 0.0, 0.0 },
           plane_left_n = { 1.0, 0.0, 0.0 };
     *m = clipp(*m, plane_left_p, plane_left_n);
+    if(!m->f_indexes)
+        return;
 
     vec4f plane_right_p = { wa.width - 1.0, 0.0, 0.0 },
           plane_right_n = { -1.0, 0.0, 0.0 };
     *m = clipp(*m, plane_right_p, plane_right_n);
+    if(!m->f_indexes)
+        return;
 }
 /* Rasterize given Mesh by passing them to the appropriate function. */
 const static void rasterize(const Mesh m) {
@@ -139,7 +159,6 @@ const static void rasterize(const Mesh m) {
     } else {
         texMesh(m);
     }
-    /* Here is the place at which Frustum Meshes must be rasterized on map Window. */
 }
 
 

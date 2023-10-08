@@ -12,14 +12,14 @@ extern Mat4x4 orthoMat, lightMat;
 
 const void shadowPipeline(Scene s) {
     Mesh cache = { 0 };
-    Mat4x4 lm = lookat(sunlight.pos, sunlight.u, sunlight.v, sunlight.n);
+    Mat4x4 lm = lookat(sunlight.newPos, sunlight.u, sunlight.v, sunlight.n);
     Mat4x4 Lview = inverse_mat(lm);
     lightMat = mxm(Lview, orthoMat);
 
     for (int i = 0; i < s.m_indexes; i++) {
         initMesh(&cache, s.m[i]);
 
-        cache.v = meshxm(s.m[i].v, s.m[i].v_indexes, lightMat);
+        cache.v = vecsarrayxm(s.m[i].v, s.m[i].v_indexes, lightMat);
         cache.n = malloc(1);
 
         initfaceVerticesShadow(&cache, cache.f_indexes);
@@ -36,11 +36,17 @@ const void shadowPipeline(Scene s) {
             cache = shadowculling(cache, cache.f_indexes);
 
             /* Sending to translation from NDC to Screen Coordinates. */
-            shadowtoscreen(&cache, cache.f_indexes);
+            if (cache.f_indexes) {
+                shadowtoscreen(&cache, cache.f_indexes);
 
-            createShadowmap(cache);
+                createShadowmap(cache);
+                releaseMesh(&cache);
+            } else {
+                releaseMesh(&cache);
+            }
+        } else {
+            releaseMesh(&cache);
         }
-        releaseMesh(&cache);
     }
 }
 /* Assosiates vertices coordinate values from vector array through indexes. */
@@ -62,7 +68,7 @@ const static Mesh shadowculling(const Mesh m, const int len) {
         fprintf(stderr, "Could not allocate memory - bfculling() - malloc\n");
 
     for (int i = 0; i < len; i++) {
-        if (winding(m.f[i]) > 0.00) {
+        if (winding(m.f[i]) > 0.0f) {
             r.f = realloc(r.f, size * counter);
 
             if (!r.f)
@@ -95,22 +101,32 @@ const static void shadowtoscreen(Mesh *m, const int len) {
     vec4f plane_far_p = { 0.0, 0.0,  FPlane},
           plane_far_n = { 0.0, 0.0, 1.0 };
     *m = shadowclipp(*m, plane_far_p, plane_far_n);
+    if (!m->f_indexes)
+        return;
 
     vec4f plane_up_p = { 0.0, 0.0, 0.0 },
           plane_up_n = { 0.0, 1.0, 0.0 };
     *m = shadowclipp(*m, plane_up_p, plane_up_n);
+    if (!m->f_indexes)
+        return;
 
     vec4f plane_down_p = { 0.0, wa.height - 1.0, 0.0 },
           plane_down_n = { 0.0, -1.0, 0.0 };
     *m = shadowclipp(*m, plane_down_p, plane_down_n);
+    if (!m->f_indexes)
+        return;
 
     vec4f plane_left_p = { 0.0, 0.0, 0.0 },
           plane_left_n = { 1.0, 0.0, 0.0 };
     *m = shadowclipp(*m, plane_left_p, plane_left_n);
+    if (!m->f_indexes)
+        return;
 
     vec4f plane_right_p = { wa.width - 1.0, 0.0, 0.0 },
           plane_right_n = { -1.0, 0.0, 0.0 };
     *m = shadowclipp(*m, plane_right_p, plane_right_n);
+    if (!m->f_indexes)
+        return;
 }
 
 

@@ -94,15 +94,15 @@ const Mat4x4 reperspectiveMatrix(const float fov, const float aspectratio) {
     return m;
 }
 /* Multiplies a vec4f array with the given Matrix and returns a new array, which includes the original array information, leaving the original unmodified. */
-vec4f *meshxm(vec4f vecs[], const int len, const Mat4x4 m) {
+vec4f *vecsarrayxm(vec4f vecs[], const int len, const Mat4x4 m) {
     vec4f *r = malloc(16 * len);
     for (int i = 0; i < len; i++) {
         r[i] = __builtin_shuffle(vecs[i], xmask) * m.m[0] + __builtin_shuffle(vecs[i], ymask) * m.m[1] + __builtin_shuffle(vecs[i], zmask) * m.m[2] + __builtin_shuffle(vecs[i], wmask) * m.m[3];
     }
     return r;
 }
-/* Multiplies a vec4f with the given Matrix and returns a new Mesh . */
-vec4f *setmeshxm(vec4f vecs[], const int len, const Mat4x4 m) {
+/* Multiplies a vec4f array with the given Matrix and returns a new array. Frees the original array resources. */
+vec4f *setvecsarrayxm(vec4f vecs[], const int len, const Mat4x4 m) {
     vec4f *r = malloc(16 * len);
     for (int i = 0; i < len; i++) {
         r[i] = __builtin_shuffle(vecs[i], xmask) * m.m[0] + __builtin_shuffle(vecs[i], ymask) * m.m[1] + __builtin_shuffle(vecs[i], zmask) * m.m[2] + __builtin_shuffle(vecs[i], wmask) * m.m[3];
@@ -110,12 +110,15 @@ vec4f *setmeshxm(vec4f vecs[], const int len, const Mat4x4 m) {
     free(vecs);
     return r;
 }
-/* Multiplies a Mesh normals with the given Matrix. */
-vec4f *normalsxm(vec4f vecs[], const int len, const Mat4x4 m) {
-    vec4f *r = malloc(16 * len);
+/* Multiplies a vec4f array with the given Matrix and returns a new array. Frees the original array resources. */
+face *setfacesarrayxm(face fs[], const int len, const Mat4x4 m) {
+    face *r = malloc(sizeof(face) * len);
     for (int i = 0; i < len; i++) {
-        r[i] = __builtin_shuffle(vecs[i], xmask) * m.m[0] + __builtin_shuffle(vecs[i], ymask) * m.m[1] + __builtin_shuffle(vecs[i], zmask) * m.m[2] + __builtin_shuffle(vecs[i], wmask) * m.m[3];
+        r[i].v[0] = __builtin_shuffle(fs[i].v[0], xmask) * m.m[0] + __builtin_shuffle(fs[i].v[0], ymask) * m.m[1] + __builtin_shuffle(fs[i].v[0], zmask) * m.m[2] + __builtin_shuffle(fs[i].v[0], wmask) * m.m[3];
+        r[i].v[1] = __builtin_shuffle(fs[i].v[1], xmask) * m.m[0] + __builtin_shuffle(fs[i].v[1], ymask) * m.m[1] + __builtin_shuffle(fs[i].v[1], zmask) * m.m[2] + __builtin_shuffle(fs[i].v[1], wmask) * m.m[3];
+        r[i].v[2] = __builtin_shuffle(fs[i].v[2], xmask) * m.m[0] + __builtin_shuffle(fs[i].v[2], ymask) * m.m[1] + __builtin_shuffle(fs[i].v[2], zmask) * m.m[2] + __builtin_shuffle(fs[i].v[2], wmask) * m.m[3];
     }
+    free(fs);
     return r;
 }
 /* Multiplies a vec4 with the given Matrix and returns a new vec4, leaving the original unmodified. */
