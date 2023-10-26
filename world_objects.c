@@ -1,31 +1,27 @@
 #include "headers/world_objects.h"
 
-extern float AmbientStrength, SpecularStrength;
-// const static void loadTexture(Mesh *c);
+// extern float AmbientStrength, SpecularStrength;
+// const static void loadtexture(Mesh *m);
+const Material loadmaterial(const char name[]);
+extern const float radians(const float value);
 
 /* This function is responsible to position the objects in world space. */
 const void posWorldObjects(Scene *s) {
     Mat4x4 sclMatrix, trMatrix, posMatrix;
-    Material mat = {
-        .texture_file = "textures/stones.bmp",
-        .basecolor = { 1.0f, 0.8f, 0.0f, 0.0f },
-        .ambient = { 0.24725f, 0.1995f, 0.0745f, 0.0f },
-        .specular = { 0.628281f, 0.555802f, 0.366065f, 0.0f },
-        .diffuse = { 0.75164f, 0.60648f, 0.22648f, 0.0f },
-        .shinniness = 0.4 * 128,
-        .reflect = 0
-    };
 
-    s->m[0] = loadmesh("objfiles/terrain.obj");
+    /* ######################################################################################################## */
+    s->m[0] = loadmesh("objfiles/triangle.obj");
     // createCube(&s->m[0]);
+    // viewFrustum(&s->m[0]);
     sclMatrix = scaleMatrix(1000.0f);
     trMatrix = translationMatrix(0.0f, 0.0f, 0.0f);
     posMatrix = mxm(sclMatrix, trMatrix);
 
-    s->m[0].material = mat;
-    loadTexture(&s->m[0]);
+    s->m[0].material = loadmaterial("pearl");
+    loadtexture(&s->m[0]);
 
     s->m[0].pivot = trMatrix.m[3];
+    s->m[0].cull = 1;
 
     s->m[0].v = setvecsarrayxm(s->m[0].v, s->m[0].v_indexes, posMatrix);
     s->m[0].n = setvecsarrayxm(s->m[0].n, s->m[0].n_indexes, posMatrix);
@@ -36,12 +32,11 @@ const void posWorldObjects(Scene *s) {
     trMatrix = translationMatrix(0.0f, 15.0f, 0.0f);
     posMatrix = mxm(sclMatrix, trMatrix);
 
-    s->m[1].material = mat;
-    memcpy(&s->m[1].material.texture_file, "textures/Earth.bmp", 19);
-    loadTexture(&s->m[1]);
-    s->m[1].material.reflect = 1;
+    s->m[1].material = loadmaterial("stones");
+    loadtexture(&s->m[1]);
 
     s->m[1].pivot = trMatrix.m[3];
+    s->m[1].cull = 1;
 
     s->m[1].v = setvecsarrayxm(s->m[1].v, s->m[1].v_indexes, posMatrix);
     s->m[1].n = setvecsarrayxm(s->m[1].n, s->m[1].n_indexes, posMatrix);
@@ -52,27 +47,37 @@ const void posWorldObjects(Scene *s) {
     trMatrix = translationMatrix(0.0f, 100.0f, 0.0f);
     posMatrix = mxm(sclMatrix, trMatrix);
 
-    s->m[2].material = mat;
-    memcpy(&s->m[2].material.texture_file, "textures/light.bmp", 19);
-    loadTexture(&s->m[2]);
-    s->m[2].material.reflect = 1;
+    s->m[2].material = loadmaterial("light");
+    loadtexture(&s->m[2]);
 
     s->m[2].pivot = trMatrix.m[3];
+    s->m[2].cull = 1;
 
     s->m[2].v = setvecsarrayxm(s->m[2].v, s->m[2].v_indexes, posMatrix);
     s->m[2].n = setvecsarrayxm(s->m[2].n, s->m[2].n_indexes, posMatrix);
 }
 /* Loads the appropriate Textures and importand Texture infos. */
-const void loadTexture(Mesh *c) {
+const void loadtexture(Mesh *m) {
+    if (!m->material.tex_levels)
+        return;
+
     BMP_Header bmp_header;
     BMP_Info info;
 
-    FILE *fp;
-    fp = fopen(c->material.texture_file, "rb");
+    /* Free the previous allocated texture if exists. */
+    if (m->material.texture)
+        free(m->material.texture);
 
-    if (fp == NULL){
+    size_t len = 11 + (strlen(m->material.name) * 2) + strlen(m->material.texlvl[m->lvlofdetail]);
+    char texpath[len];
+    snprintf(texpath, len, "textures/%s/%s%s", m->material.name, m->material.name, m->material.texlvl[m->lvlofdetail]);
+
+    FILE *fp;
+    fp = fopen(texpath, "rb");
+
+    if (!fp){
         fclose(fp);
-        fprintf(stderr, "Could not open file < %s >! loadTexture() -- fopen().\n", c->material.texture_file);
+        fprintf(stderr, "Could not open file < %s >! loadtexture() -- fopen().\n", texpath);
     } else {
         fread(&bmp_header, sizeof(BMP_Header), 1, fp);
         fseek(fp, 14, SEEK_SET);
@@ -80,20 +85,44 @@ const void loadTexture(Mesh *c) {
         fseek(fp, (14 + info.Size), SEEK_SET);
 
         /* Subtract 1 from Texture width and height because counting starts from 0; */
-        c->material.texture_height = info.Height;
-        c->material.texture_width = info.Width;
+        m->material.texture_height = info.Height;
+        m->material.texture_width = info.Width;
         const int texSize = info.Height * info.Width;
 
-        c->material.texture = malloc(texSize * 4);
-        if (!c->material.texture)
-            fprintf(stderr, "Could not allocate memmory for texture: %s. loadTexture()\n", c->material.texture_file);
+        m->material.texture = malloc(texSize * 4);
+        if (!m->material.texture)
+            fprintf(stderr, "Could not allocate memmory for texture: %s. loadtexture()\n", texpath);
 
         for (int i = (texSize - 1); i >= 0; i--) {
-            fread(&c->material.texture[i], 3, 1, fp);
-            c->material.texture[i][3] = (unsigned char)255;
+            fread(&m->material.texture[i], 3, 1, fp);
+            m->material.texture[i][3] = (unsigned char)255;
         }
     }
     fclose(fp);
+}
+/* Loads the appropriate Material with given name and importand Material infos. */
+const Material loadmaterial(const char name[]) {
+    FILE *fp;
+    fp = fopen("tables/materials.dat", "rb");
+    Material mat = { 0 };
+    if (!fp){
+        fclose(fp);
+        fprintf(stderr, "Could not open material files < tables/%s >! loadmaterial() -- fopen().\n", name);
+    } else {
+        while (!feof(fp)) {
+
+            fread(&mat, sizeof(Material), 1, fp);
+
+            if ( strncmp(mat.name, name, strlen(name)) == 0 ) {
+                fclose(fp);
+                fprintf(stderr, "Material < %s > found... Loading!\n", name);
+                return mat;
+            }
+        }
+    }
+    fclose(fp);
+    fprintf(stderr, "Material < %s > not found!\n", name);
+    return mat;
 }
 /* Teams all objects of the the world in a scene for further procesing. */
 const void createScene(Scene *s) {

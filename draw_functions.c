@@ -21,7 +21,8 @@ extern const void swap(void *a, void *b, unsigned long size);
 const void drawLine(float x1, float y1, float x2, float y2, vec4f color) {
     color *= 255;
     /* Reversing rgb values here because it is like this in XLIB. (bgr) */
-    u_int8_t rgba[4] = { color[2], color[1], color[0], color[3] };
+    vec4i mask = { 2, 1, 0, 3 };
+    vec4c rgba = __builtin_convertvector(__builtin_shuffle(color, mask), vec4c);
 
     float delta_y = y2 - y1;
     float delta_x = x2 - x1;
@@ -365,12 +366,15 @@ const static void edgetexGeneral(const face f, Material mtr, int minX, int maxX,
                 if (frag[3] > depth_buffer[padyDB + x]) {
 
                     const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
-                    const vec2f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
 
-                    const int tex_y = (texel[1] * (mtr.texture_height - 1)) / frag[3];
-                    const int tex_x = (texel[0] * (mtr.texture_width - 1)) / frag[3];
+                    if (mtr.tex_levels) {
+                        const vec2f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
 
-                    mtr.basecolor = __builtin_convertvector(mtr.texture[(tex_y * mtr.texture_width) + tex_x], vec4f) / 255.0f;
+                        const int tex_y = (texel[1] * (mtr.texture_height - 1)) / frag[3];
+                        const int tex_x = (texel[0] * (mtr.texture_width - 1)) / frag[3];
+
+                        mtr.basecolor = __builtin_convertvector(mtr.texture[(tex_y * mtr.texture_width) + tex_x], vec4f) / 255.0f;
+                    }
 
                     depth_buffer[padyDB + x] = phong(normal, mtr, x, y, frag[2], frag[3]);
                 }
@@ -454,12 +458,15 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
                     if ( frag[3] > depth_buffer[padxDB] ) {
 
                         const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
-                        const vec2f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
 
-                        const int tex_y = (texel[1] * (mtr.texture_height - 1)) / frag[3];
-                        const int tex_x = (texel[0] * (mtr.texture_width - 1)) / frag[3];
+                        if (mtr.tex_levels) {
+                            const vec2f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
 
-                        mtr.basecolor = __builtin_convertvector(mtr.texture[(tex_y * mtr.texture_width) + tex_x], vec4f) / 255.0f;
+                            const int tex_y = (texel[1] * (mtr.texture_height - 1)) / frag[3];
+                            const int tex_x = (texel[0] * (mtr.texture_width - 1)) / frag[3];
+
+                            mtr.basecolor = __builtin_convertvector(mtr.texture[(tex_y * mtr.texture_width) + tex_x], vec4f) / 255.0f;
+                        }
 
                         depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
                     }
@@ -501,12 +508,15 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
                 if ( frag[3] > depth_buffer[padxDB] ) {
 
                     const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
-                    const vec2f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
 
-                    const int tex_y = (texel[1] * (mtr.texture_height - 1)) / frag[3];
-                    const int tex_x = (texel[0] * (mtr.texture_width - 1)) / frag[3];
+                    if (mtr.tex_levels) {
+                        const vec2f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
 
-                    mtr.basecolor = __builtin_convertvector(mtr.texture[(tex_y * mtr.texture_width) + tex_x], vec4f) / 255.0f;
+                        const int tex_y = (texel[1] * (mtr.texture_height - 1)) / frag[3];
+                        const int tex_x = (texel[0] * (mtr.texture_width - 1)) / frag[3];
+
+                        mtr.basecolor = __builtin_convertvector(mtr.texture[(tex_y * mtr.texture_width) + tex_x], vec4f) / 255.0f;
+                    }
 
                     depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
                 }

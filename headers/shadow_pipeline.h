@@ -17,15 +17,12 @@
     #include "world_objects.h"
 #endif
 
-#ifndef _SHADOWMAP_H
-    #include "shadowmap.h"
-#endif
-
 #ifndef _STDIO_H
     #include <stdio.h>
 #endif
 
 const void shadowPipeline(Scene s);
+const int shadowTest(const vec4f frag, const vec4f nm, vec4f lightdir);
 
 #endif /* _SHADOW_PIPELINE_H */
 

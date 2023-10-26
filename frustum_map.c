@@ -3,7 +3,6 @@
 #include "headers/world_objects.h"
 #include "headers/draw_functions.h"
 #include "headers/clipping.h"
-#include "headers/logging.h"
 
 extern u_int8_t map_buffer;
 extern int HALFW, HALFH, DEBUG, PROJECTIONVIEW;
@@ -18,7 +17,7 @@ const static void maprasterize(const Mesh m);
 
 /* Camera and Global light Source. */
 vec4f mapcam[4] = {
-    { 0.0f, 10000.0f, 0.0f, 0.0f },
+    { 0.0f, 1000.0f, 0.0f, 0.0f },
     { 1.0f, 0.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, -1.0f, 0.0f },
     { 0.0f, -1.0f, 0.0f, 0.0f }
@@ -66,10 +65,15 @@ const static void screentondc(Mesh *m, const int len) {
         }
     }
 
-    /* At this Point triangles must be clipped against near plane. */
+    /* At this Point triangles must be clipped against near and far plane. */
     vec4f plane_near_p = { 0.0f, 0.0f, NPlane },
-          plane_near_n = { 0.0f, 0.0f, 1.0f };
+        plane_near_n = { 0.0f, 0.0f, 1.0f };
     *m = clipp(*m, plane_near_p, plane_near_n);
+    // if(m->f_indexes) {
+    //     vec4f plane_far_p = { 0.0f, 0.0f, 10000},
+    //         plane_far_n = { 0.0f, 0.0f, -1.0f };
+    //     *m = clipp(*m, plane_far_p, plane_far_n);
+    // }
 
     for (int i = 0; i < m->f_indexes; i++) {
         for (int j = 0; j < 3; j++) {
@@ -83,16 +87,10 @@ const static void screentondc(Mesh *m, const int len) {
 
             m->f[i].v[j][0] = ((1.0 + m->f[i].v[j][0]) * HALFW) + 0.5;
             m->f[i].v[j][1] = ((1.0 + m->f[i].v[j][1]) * HALFH) + 0.5;
-            m->f[i].v[j][2] *= 0.5;
+            m->f[i].v[j][2] = 1.0f / m->f[i].v[j][2];
             m->f[i].v[j][3] = 1.0f / m->f[i].v[j][3];
         }
     }
-    /* Far Plane clipping and side clipping. */
-    vec4f plane_far_p = { 0.0, 0.0,  FPlane},
-          plane_far_n = { 0.0, 0.0, 1.0 };
-    *m = clipp(*m, plane_far_p, plane_far_n);
-    if (!m->f_indexes)
-        return;
 
     vec4f plane_up_p = { 0.0, 0.0, 0.0 },
           plane_up_n = { 0.0, 1.0, 0.0 };

@@ -32,15 +32,17 @@ typedef union {
 
 /* Material struct to hold the specific for each material values. */
 typedef struct {
-    char texture_file[50];
+    // char texture_file[50];
+    char name[25];
     vec4f basecolor;
     vec4f ambient;
     vec4f diffuse;
     vec4f specular;
     float shinniness;
-    int reflect;
+    int reflect, tex_levels;
     signed int texture_height, texture_width;
     vec4c *texture;
+    char texlvl[9][50];
 } Material;
 
 typedef struct {
@@ -64,7 +66,7 @@ typedef struct {
     vec2f *t;
     face *f;
     // void (*drawMesh)(void *args);
-    int v_indexes, f_indexes, n_indexes, t_indexes;
+    int v_indexes, f_indexes, n_indexes, t_indexes, cull, lvlofdetail;
     Material material;
 } Mesh;
 

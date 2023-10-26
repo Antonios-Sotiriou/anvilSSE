@@ -68,7 +68,7 @@ const Mat4x4 orthographicMatrix(const float l, const float r, const float t, con
     m.m[2][2] = (1.00 / (f - n));
     m.m[3][0] = 0;//( (r + l) / (r - l) );
     m.m[3][1] = 0;//( (t + b) / (b - t) );
-    m.m[3][2] = ( f / (f - n) );
+    m.m[3][2] = -( f / (f - n) );
     m.m[3][3] = 1.0;
     return m;
 }

@@ -22,6 +22,7 @@ int EDGEFUNC = 0;
 int SCANLINE = 1;
 
 /* Project specific headers */
+#include "headers/database.h"
 #include "headers/anvil_structs.h"
 #include "headers/matrices.h"
 #include "headers/kinetics.h"
@@ -31,7 +32,6 @@ int SCANLINE = 1;
 #include "headers/camera.h"
 #include "headers/world_objects.h"
 #include "headers/general_functions.h"
-#include "headers/shadowmap.h"
 #include "headers/draw_functions.h"
 
 enum { Win_Close, Win_Name, Atom_Type, Atom_Last};
@@ -65,16 +65,16 @@ static int AdjustShadow   = 1;
 static int AdjustScene    = 1;
 static int EYEPOINT       = 0;
 static float FOV          = 45.0f;
-static float ZNEAR        = 0.01f;
-static float ZFAR         = 1000.0f;
+static float ZNEAR        = 0.1f;
+static float ZFAR         = 1.0f;
 static float ASPECTRATIO  = 1;
 static int FBSIZE         = 0;
 float NPlane              = 1.0f;
-float FPlane              = 0.00001f;
+float FPlane              = 20000.0f;
 float SCALE               = 0.003f;
-float AmbientStrength     = 0.15f;
-float SpecularStrength    = 0.5f;
-float shadow_bias         = 0.003105;//0.002138;//0.000487f;
+float AmbientStrength     = 0.5f;
+float SpecularStrength    = 0.75f;
+float shadow_bias         = 0.f;//0.003105;//0.002138;//0.000487f;
 
 /* Camera and Global light Source. */
 vec4f camera[N + 1] = {
@@ -243,16 +243,16 @@ const static void keypress(XEvent *event) {
             break;
         case 65364 : move_down(eye, 10.2);          /* down arrow */
             break;
-        case 65451 :shadow_bias += 0.000001;             /* + */
+        case 65451 :shadow_bias += 0.00001f;             /* + */
             printf("shadow_bias: %f\n",shadow_bias);
             break;
-        case 65453 :shadow_bias -= 0.000001;             /* - */
+        case 65453 :shadow_bias -= 0.00001f;             /* - */
             printf("shadow_bias: %f\n", shadow_bias);
             break;
-        case 65450 : NPlane += 0.01;             /* * */
+        case 65450 : NPlane += 1.f;             /* * */
             printf("NPlane: %f\n", NPlane);
             break;
-        case 65455 : NPlane -= 0.01;             /* / */
+        case 65455 : NPlane -= 1.f;             /* / */
             printf("NPlane: %f\n", NPlane);
             break;
         case 65430 : sunlight.pos[0] -= 10.0f;                   /* Adjust Light Source */
@@ -295,11 +295,11 @@ const static void keypress(XEvent *event) {
             break;
         case 99 : rotate_origin(&scene.m[1], 1, 1.0f, 0.0f, 0.0f);  /* c */
             break;
-        case 43 : SCALE += 0.01;                                    /* + */
-            orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, ZNEAR, ZFAR);
+        case 43 : SCALE += 0.1001;                                    /* + */
+            orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, 0.01f, 0.1f);
             break;
-        case 45 : SCALE -= 0.01;                                   /* - */
-            orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, ZNEAR, ZFAR);
+        case 45 : SCALE -= 0.1001;                                   /* - */
+            orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, 0.01f, 0.1f);
             break;
         case 112 :
             if (PROJECTBUFFER == 3)
@@ -347,18 +347,10 @@ const static void keypress(XEvent *event) {
         worldMat = mxm(viewMat, perspMat);
     else
         worldMat = mxm(viewMat, orthoMat);
-
-    printf("length: %f\n", len_vec(scene.m[1].pivot - camera[Pos]));
-    /* At this point must be implemented probably the model and textures resolution reformation. */
-    if (len_vec(scene.m[1].pivot - camera[Pos]) > 200) {
-        free(scene.m[1].material.texture);
-        memcpy(&scene.m[1].material.texture_file, "textures/stones.bmp", 20);
-        loadTexture(&scene.m[1]);
-    }
 }
 const static void project() {
     if (AdjustShadow) {
-        memset(shadow_buffer, '@', FBSIZE);
+        memset(shadow_buffer, 0, FBSIZE);
         shadowPipeline(scene);
         AdjustShadow = 0;
     }
@@ -373,11 +365,11 @@ const static void project() {
 /* Writes the final Pixel values on screen. */
 const static void drawFrame(void) {
     if (PROJECTBUFFER <= 1)
-        image->data = (unsigned char*)frame_buffer;
+        image->data = (char*)frame_buffer;
     else if (PROJECTBUFFER == 2)
-        image->data = (unsigned char*)depth_buffer;
+        image->data = (char*)depth_buffer;
     else if (PROJECTBUFFER == 3)
-        image->data = (unsigned char*)shadow_buffer;
+        image->data = (char*)shadow_buffer;
 
     XPutImage(displ, pixmap, gc, image, 0, 0, 0, 0, wa.width, wa.height);
 
@@ -410,7 +402,7 @@ const static void initDependedVariables(void) {
     /* Matrices initialization. */
     perspMat = perspectiveMatrix(FOV, ASPECTRATIO, ZNEAR, ZFAR);
     reperspMat = reperspectiveMatrix(FOV, ASPECTRATIO);
-    orthoMat = orthographicMatrix(SCALE, SCALE, 0.f, 0.0, ZNEAR, ZFAR);
+    orthoMat = orthographicMatrix(SCALE, SCALE, 0.f, 0.f, 0.01f, 0.1f);
 
     AdjustShadow = 1;
     AdjustScene = 1;
@@ -434,7 +426,7 @@ const static void initLightModel(Light *l) {
     vec4f lightColor = { 1.0, 1.0, 1.0, 1.0 };
     Material mt = {
         .ambient = lightColor * AmbientStrength,
-        .specular = lightColor,
+        .specular = lightColor * SpecularStrength,
         .diffuse = lightColor,
         .basecolor = lightColor
     };
@@ -528,7 +520,7 @@ const static int board(void) {
     initGlobalGC();
     pixmapcreate();
     initAtoms();
-    // registerSig(SIGSEGV);
+    registerSig(SIGSEGV);
 
     initDependedVariables();
     initBuffers();
@@ -574,6 +566,8 @@ const int main(int argc, char *argv[]) {
             }
         }
     }
+
+    createMaterialDatabase();
 
     if (board()) {
         fprintf(stderr, "ERROR: main() -- board()\n");

@@ -7,6 +7,7 @@ extern Mat4x4 reperspMat;
 extern u_int8_t *frame_buffer;
 extern float *shadow_buffer;
 extern Light sunlight;
+extern const int shadowTest(const vec4f frag, const vec4f nm, vec4f lightdir);
 
 const float phong(vec4f nm, const Material mtr, const float pixX, const float pixY, const float pixZ, const float pixW) {
     vec4f diffuse = { 0 }, specular = { 0 };
@@ -17,7 +18,7 @@ const float phong(vec4f nm, const Material mtr, const float pixX, const float pi
     vec4f pixel = {
         ((pixX / HALFW) - 1.0) * w,
         ((pixY / HALFH) - 1.0) * w,
-        (pixZ / 0.5) * w,
+        (1.f / pixZ) * w,
         w
     };
 
@@ -45,7 +46,12 @@ const float phong(vec4f nm, const Material mtr, const float pixX, const float pi
     } else
         r = (ambient * mtr.basecolor) * 255;
 
-    u_int8_t fragcolor[4] = { r[2], r[1], r[0], 0 };
+    // r = mtr.basecolor * 255;
+    // u_int8_t fragcolor[4] = { r[2], r[1], r[0], 0 };
+
+    vec4i mask = { 2, 1, 0, 3 };
+    vec4c fragcolor = __builtin_convertvector(__builtin_shuffle(r, mask), vec4c);
+
     memcpy(&frame_buffer[(int)((pixY * wa.width * 4) + (pixX * 4))], &fragcolor, 4);
     return pixW;
 }

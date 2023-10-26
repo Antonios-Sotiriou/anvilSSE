@@ -1,7 +1,7 @@
 # Compile all c files to anvil executable!
 
 CC = gcc
-CFLAGS = -Werror -g# -pg -O2 -Os -Og -O0
+CFLAGS = -Wall -Werror -g# -pg -O2 -Os -Og -O0
 OBJ = anvil
 RM = rm
 LINKS = -lX11 -lm
@@ -16,7 +16,7 @@ uninstall:
 	sudo apt remove libx11-dev;
 
 all:
-	$(CC) $(CFLAGS) $(INTRINSICS) main.c locale.c matrices.c quaternions.c kinetics.c clipping.c grafik_pipeline.c shadow_pipeline.c frustum_map.c camera.c vectors_math.c world_objects.c general_functions.c draw_functions.c shadowmap.c lighting.c obj_parser.c exec_time.c test_shapes.c logging.c -o $(OBJ) $(LINKS);
+	$(CC) $(CFLAGS) $(INTRINSICS) main.c locale.c matrices.c quaternions.c kinetics.c clipping.c grafik_pipeline.c shadow_pipeline.c frustum_map.c camera.c vectors_math.c world_objects.c general_functions.c draw_functions.c lighting.c obj_parser.c database.c exec_time.c test_shapes.c logging.c -o $(OBJ) $(LINKS);
 
 exec:
 	./$(OBJ)
