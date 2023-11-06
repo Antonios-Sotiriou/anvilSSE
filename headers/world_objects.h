@@ -17,6 +17,9 @@
     #include "test_shapes.h"
 #endif
 
+/* Defined in general_functions.c. */
+extern const float radians(const float value);
+
 typedef struct {
     unsigned short Type;
     unsigned int Size;
@@ -75,6 +78,7 @@ typedef struct {
 
 const void posWorldObjects(Scene *s);
 const void loadtexture(Mesh *c);
+const Material loadmaterial(const char name[]);
 const void createScene(Scene *s);
 const void releaseScene(Scene *s);
 const void releaseMesh(Mesh *c);

@@ -1,10 +1,5 @@
 #include "headers/kinetics.h"
 
-extern Light sunlight;
-extern const void initMesh(Mesh *a, const Mesh b);
-extern const void releaseMesh(Mesh *c);
-extern const float radians(const float value);
-
 /* Rotates object according to World X axis. */
 const void rotate_x(Mesh *c, const float angle) {
     Mat4x4 m = rotateXMatrix(radians(angle));

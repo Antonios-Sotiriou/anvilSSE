@@ -13,9 +13,15 @@
     #include "quaternions.h"
 #endif
 
-// #ifndef _GENERAL_FUNCTIONS_H
-//     #include "general_functions.h"
-// #endif
+/* Defined in main.c. */
+extern Light sunlight;
+
+/* Defined in world_objects.c. */
+extern const void initMesh(Mesh *a, const Mesh b);
+extern const void releaseMesh(Mesh *c);
+
+/* Defined in general_functions.c. */
+extern const float radians(const float value);
 
 /* Objects Rotation functions */
 const void rotate_x(Mesh *c, const float angle);

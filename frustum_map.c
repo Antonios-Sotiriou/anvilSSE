@@ -10,9 +10,9 @@ extern Mat4x4 lookAt, reperspMat, perspMat, orthoMat;
 Mat4x4 mapLook, mapView, mapWorld;
 extern float FPlane, NPlane;
 extern XWindowAttributes wa;
-extern vec4f camera[4];
+extern vec4f *eye, camera[4];
 
-const static void screentondc(Mesh *m, const int len);
+const static int screentondc(Mesh *m, const int len);
 const static void maprasterize(const Mesh m);
 
 /* Camera and Global light Source. */
@@ -31,11 +31,15 @@ const void mapPipeline(const Mesh m) {
     cache.n = malloc(m.n_indexes * sizeof(vec4f));
     cache.n = memcpy(cache.n, m.n, m.n_indexes * sizeof(vec4f));
 
-    screentondc(&cache, cache.f_indexes);
+    if (!screentondc(&cache, cache.f_indexes)) {
+        releaseMesh(&cache);
+        return;
+    }
+
     maprasterize(cache);
     releaseMesh(&cache);
 }
-const static void screentondc(Mesh *m, const int len) {
+const static int screentondc(Mesh *m, const int len) {
     mapcam[0][0] = camera[0][0];
     mapcam[0][2] = camera[0][2];
     mapLook = lookat(mapcam[0], mapcam[1], mapcam[2], mapcam[3]);
@@ -53,7 +57,7 @@ const static void screentondc(Mesh *m, const int len) {
 
             m->f[i].v[j][0] = ((m->f[i].v[j][0] / HALFW) - 1.0) * m->f[i].v[j][3];
             m->f[i].v[j][1] = ((m->f[i].v[j][1] / HALFH) - 1.0) * m->f[i].v[j][3];
-            m->f[i].v[j][2] = (m->f[i].v[j][2] / 0.5) * m->f[i].v[j][3];
+            m->f[i].v[j][2] = (m->f[i].v[j][2] / 1.f) * m->f[i].v[j][3];
 
             m->f[i].v[j] = vecxm(m->f[i].v[j], reperspMat);
             m->f[i].v[j][3] = 1.0f;
@@ -69,11 +73,16 @@ const static void screentondc(Mesh *m, const int len) {
     vec4f plane_near_p = { 0.0f, 0.0f, NPlane },
         plane_near_n = { 0.0f, 0.0f, 1.0f };
     *m = clipp(*m, plane_near_p, plane_near_n);
-    // if(m->f_indexes) {
-    //     vec4f plane_far_p = { 0.0f, 0.0f, 10000},
-    //         plane_far_n = { 0.0f, 0.0f, -1.0f };
-    //     *m = clipp(*m, plane_far_p, plane_far_n);
-    // }
+    if (!m->f_indexes) {
+        return 0;
+    }
+
+    vec4f plane_far_p = { 0.0f, 0.0f, 10000},
+        plane_far_n = { 0.0f, 0.0f, -1.0f };
+    *m = clipp(*m, plane_far_p, plane_far_n);
+    if (!m->f_indexes) {
+        return 0;
+    }
 
     for (int i = 0; i < m->f_indexes; i++) {
         for (int j = 0; j < 3; j++) {
@@ -96,25 +105,27 @@ const static void screentondc(Mesh *m, const int len) {
           plane_up_n = { 0.0, 1.0, 0.0 };
     *m = clipp(*m, plane_up_p, plane_up_n);
     if (!m->f_indexes)
-        return;
+        return 0;
 
     vec4f plane_down_p = { 0.0, wa.height - 1.0, 0.0 },
           plane_down_n = { 0.0, -1.0, 0.0 };
     *m = clipp(*m, plane_down_p, plane_down_n);
     if (!m->f_indexes)
-        return;
+        return 0;
 
     vec4f plane_left_p = { 0.0, 0.0, 0.0 },
           plane_left_n = { 1.0, 0.0, 0.0 };
     *m = clipp(*m, plane_left_p, plane_left_n);
     if (!m->f_indexes)
-        return;
+        return 0;
 
     vec4f plane_right_p = { wa.width - 1.0, 0.0, 0.0 },
           plane_right_n = { -1.0, 0.0, 0.0 };
     *m = clipp(*m, plane_right_p, plane_right_n);
     if (!m->f_indexes)
-        return;
+        return 0;
+
+    return 1;
 }
 /* Rasterize given Mesh by passing them to the appropriate function. */
 const static void maprasterize(const Mesh m) {

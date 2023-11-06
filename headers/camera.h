@@ -13,6 +13,9 @@
     #include "vectors_math.h"
 #endif
 
+/* Defined in main.c. */
+extern float DeltaTime;
+
 const void look_left(vec4f *g, const float angle);
 const void look_right(vec4f *g, const float angle);
 const void look_up(vec4f *g, const float angle);

@@ -22,7 +22,7 @@ const int createMaterialDatabase(void) {
             .shinniness = 0.4f * intensity,
             .reflect = 0,
             .tex_levels = 1,
-            .texlvl = { "2048x2048.bmp", "2048x2048.bmp", "2048x2048.bmp", "256x256.bmp", "128x128.bmp", "64x64.bmp", "32x32.bmp", "16x16.bmp", "8x8.bmp" }
+            .texlvl = { "2048x2048", "1024x1024", "512x512", "256x256", "128x128", "64x64", "32x32", "16x16", "8x8" }
         },
         {
             .name = "earth",
@@ -33,7 +33,7 @@ const int createMaterialDatabase(void) {
             .shinniness = 0.4f * intensity,
             .reflect = 0,
             .tex_levels = 1,
-            .texlvl = { "4096x2048.bmp", "2048x1024.bmp", "1024x512.bmp", "512x256.bmp", "256x128.bmp", "128x64.bmp", "64x32.bmp", "32x16.bmp", "16x8.bmp" }
+            .texlvl = { "4096x2048", "2048x1024", "1024x512", "512x256", "256x128", "128x64", "64x32", "32x16", "16x8" }
         },
         {
             .name = "light",
@@ -44,7 +44,7 @@ const int createMaterialDatabase(void) {
             .shinniness = 0.4f * intensity,
             .reflect = 0,
             .tex_levels = 1,
-            .texlvl = { "1080x562.bmp", "1080x562.bmp", "1080x562.bmp", "540x281.bmp", "270x140.bmp", "135x70.bmp", "68x35.bmp", "34x17.bmp", "17x8.bmp" }
+            .texlvl = { "1080x562", "1080x562", "1080x562", "540x281", "270x140", "135x70", "68x35", "34x17", "17x8" }
         },
         {
             .name = "gold",

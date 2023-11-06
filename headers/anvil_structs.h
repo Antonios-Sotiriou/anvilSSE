@@ -42,7 +42,7 @@ typedef struct {
     int reflect, tex_levels;
     signed int texture_height, texture_width;
     vec4c *texture;
-    char texlvl[9][50];
+    char texlvl[9][10];
 } Material;
 
 typedef struct {

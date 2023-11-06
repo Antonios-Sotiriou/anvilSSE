@@ -77,6 +77,7 @@ float SpecularStrength    = 0.75f;
 float shadow_bias         = 0.f;//0.003105;//0.002138;//0.000487f;
 
 /* Camera and Global light Source. */
+vec4f *eye;
 vec4f camera[N + 1] = {
     { 0.0f, 0.0f, 0.0f, 1.0f },
     { 1.0f, 0.0f, 0.0f, 0.0f },
@@ -213,7 +214,6 @@ const static void keypress(XEvent *event) {
     
     KeySym keysym = XLookupKeysym(&event->xkey, 0);
 
-    vec4f *eye;
     if (EYEPOINT)
         eye = (vec4f*)&sunlight;
     else
@@ -243,11 +243,11 @@ const static void keypress(XEvent *event) {
             break;
         case 65364 : move_down(eye, 10.2);          /* down arrow */
             break;
-        case 65451 :shadow_bias += 0.00001f;             /* + */
-            printf("shadow_bias: %f\n",shadow_bias);
+        case 65451 :FPlane += 1.f;             /* + */
+            printf("FPlane: %f\n",FPlane);
             break;
-        case 65453 :shadow_bias -= 0.00001f;             /* - */
-            printf("shadow_bias: %f\n", shadow_bias);
+        case 65453 :FPlane -= 1.f;             /* - */
+            printf("FPlane: %f\n", FPlane);
             break;
         case 65450 : NPlane += 1.f;             /* * */
             printf("NPlane: %f\n", NPlane);
@@ -265,16 +265,6 @@ const static void keypress(XEvent *event) {
             scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, br);
             scene.m[2].pivot[0] += 10.0f;
             break;
-        case 65431 : sunlight.pos[2] += 10.0f;                   /* Adjust Light Source */
-            Mat4x4 cr = translationMatrix(0.0f, 0.0f, 10.0f);
-            scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, cr);
-            scene.m[2].pivot[2] += 10.0f;
-            break;
-        case 65433 : sunlight.pos[2] -= 10.0f;                   /* Adjust Light Source */
-            Mat4x4 dr = translationMatrix(0.0f, 0.0f, -10.0f);
-            scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, dr);
-            scene.m[2].pivot[2] -= 10.0f;
-            break;
         case 65434 : sunlight.pos[1] += 10.0f;                   /* Adjust Light Source */
             Mat4x4 er = translationMatrix(0.0f, 10.0f, 0.0f);
             scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, er);
@@ -284,6 +274,16 @@ const static void keypress(XEvent *event) {
             Mat4x4 fr = translationMatrix(0.0f, -10.0f, 0.0f);
             scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, fr);
             scene.m[2].pivot[1] -= 10.0f;
+            break;
+        case 65431 : sunlight.pos[2] += 10.0f;                   /* Adjust Light Source */
+            Mat4x4 cr = translationMatrix(0.0f, 0.0f, 10.0f);
+            scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, cr);
+            scene.m[2].pivot[2] += 10.0f;
+            break;
+        case 65433 : sunlight.pos[2] -= 10.0f;                   /* Adjust Light Source */
+            Mat4x4 dr = translationMatrix(0.0f, 0.0f, -10.0f);
+            scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, dr);
+            scene.m[2].pivot[2] -= 10.0f;
             break;
         case 120 : rotate_x(&scene.m[0], 1);                     /* x */
             break;
@@ -295,10 +295,10 @@ const static void keypress(XEvent *event) {
             break;
         case 99 : rotate_origin(&scene.m[1], 1, 1.0f, 0.0f, 0.0f);  /* c */
             break;
-        case 43 : SCALE += 0.1001;                                    /* + */
+        case 43 : SCALE += 0.0101;                                    /* + */
             orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, 0.01f, 0.1f);
             break;
-        case 45 : SCALE -= 0.1001;                                   /* - */
+        case 45 : SCALE -= 0.0101;                                   /* - */
             orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, 0.01f, 0.1f);
             break;
         case 112 :
@@ -520,7 +520,7 @@ const static int board(void) {
     initGlobalGC();
     pixmapcreate();
     initAtoms();
-    registerSig(SIGSEGV);
+    // registerSig(SIGSEGV);
 
     initDependedVariables();
     initBuffers();

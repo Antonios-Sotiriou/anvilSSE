@@ -1,10 +1,5 @@
 #include "headers/world_objects.h"
 
-// extern float AmbientStrength, SpecularStrength;
-// const static void loadtexture(Mesh *m);
-const Material loadmaterial(const char name[]);
-extern const float radians(const float value);
-
 /* This function is responsible to position the objects in world space. */
 const void posWorldObjects(Scene *s) {
     Mat4x4 sclMatrix, trMatrix, posMatrix;
@@ -68,9 +63,9 @@ const void loadtexture(Mesh *m) {
     if (m->material.texture)
         free(m->material.texture);
 
-    size_t len = 11 + (strlen(m->material.name) * 2) + strlen(m->material.texlvl[m->lvlofdetail]);
+    size_t len = 15 + (strlen(m->material.name) * 2) + strlen(m->material.texlvl[m->lvlofdetail]);
     char texpath[len];
-    snprintf(texpath, len, "textures/%s/%s%s", m->material.name, m->material.name, m->material.texlvl[m->lvlofdetail]);
+    snprintf(texpath, len, "textures/%s/%s%s.bmp", m->material.name, m->material.name, m->material.texlvl[m->lvlofdetail]);
 
     FILE *fp;
     fp = fopen(texpath, "rb");

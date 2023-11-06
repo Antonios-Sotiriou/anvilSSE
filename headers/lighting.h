@@ -17,6 +17,21 @@
     #include "vectors_math.h"
 #endif
 
+/* Defined in main.c. */
+extern XWindowAttributes wa;
+extern int HALFW;
+extern int HALFH;
+extern Mat4x4 reperspMat;
+extern u_int8_t *frame_buffer;
+extern float *shadow_buffer;
+extern Light sunlight;
+
+/* Defined in shadow_pipeline.c. */
+extern const int shadowTest(vec4f frag);
+
+/* Defined in draw_functions.c. */
+extern const vec4i rgbmask;
+
 const float phong(vec4f nm, const Material mtr, const float pixX, const float pixY, const float pixZ, const float pixW);
 
 #endif /* _LIGHTING_H */

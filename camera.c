@@ -1,6 +1,5 @@
 #include "headers/camera.h"
 
-extern float DeltaTime;
 enum { Pos, U, V, N, C };
 
 /* Rotates the camera to look left. */
@@ -93,11 +92,11 @@ const void move_right(vec4f *g, const float vel) {
 }
 /* Moves camera position Up. */
 const void move_up(vec4f *g, const float vel) {
-    // g[Pos] = sub_vecs(g[Pos], multiply_vec(g->V, 0.1));
+    // g[Pos] = sub_vecs(g[Pos], mul_vec(g[V], vel));
     g[Pos][1] += vel;
 }
 /* Moves camera position Down. */
 const void move_down(vec4f *g, const float vel) {
-    // g[Pos] = add_vecs(g[Pos], multiply_vec(g->V, 0.1));
+    // g[Pos] = add_vecs(g[Pos], mul_vec(g[V], vel));
     g[Pos][1] -= vel;
 }

@@ -1,13 +1,8 @@
 #include "headers/draw_functions.h"
 
-#include "headers/logging.h"
-extern Light sunlight;
-extern Mat4x4 viewMat, lookAt, reperspMat;
-
-extern int EDGEFUNC, SCANLINE;
-extern u_int8_t *frame_buffer;
-extern float *depth_buffer;
-extern XWindowAttributes wa;
+/* Global masks. Probably must be moved to a global variables file. */
+const vec4i edgemask = { 1, 2, 0, 3 };
+const vec4i rgbmask = { 2, 1, 0, 3 };
 
 const static void edgefillGeneral(const face f, const Material mtr, const int minX, const int maxX, const int minY, const int maxY);
 const static void scanlinefillGeneral(const face f, const Material mtr, const Srt srt[]);
@@ -15,14 +10,10 @@ const static void scanlinefillGeneral(const face f, const Material mtr, const Sr
 const static void edgetexGeneral(const face f, Material mtr, const int minX, const int maxX, const int minY, const int maxY);
 const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]);
 
-extern const float winding(const face f);
-extern const void swap(void *a, void *b, unsigned long size);
 
 const void drawLine(float x1, float y1, float x2, float y2, vec4f color) {
-    color *= 255;
     /* Reversing rgb values here because it is like this in XLIB. (bgr) */
-    vec4i mask = { 2, 1, 0, 3 };
-    vec4c rgba = __builtin_convertvector(__builtin_shuffle(color, mask), vec4c);
+    vec4c rgba = __builtin_convertvector(__builtin_shuffle(color * 255, rgbmask), vec4c);
 
     float delta_y = y2 - y1;
     float delta_x = x2 - x1;
@@ -122,12 +113,11 @@ const void edgefillface(const face f, const Material mtr) {
     edgefillGeneral(f, mtr, Xs[0], Xs[2], Ys[0], Ys[2]);
 }
 const static void edgefillGeneral(const face f, const Material mtr, int minX, int maxX, int minY, int maxY) {
-    vec4i xs = { f.v[0][0],  f.v[1][0], f.v[2][0], 0};
-    vec4i ys = { f.v[0][1],  f.v[1][1], f.v[2][1], 0};
+    const vec4i xs = { f.v[0][0],  f.v[1][0], f.v[2][0], 0};
+    const vec4i ys = { f.v[0][1],  f.v[1][1], f.v[2][1], 0};
 
-    vec4i mask = { 1, 2, 0, 3 };
-    vec4i xmx = xs - __builtin_shuffle(xs, mask);
-    vec4i ymy = ys - __builtin_shuffle(ys, mask);
+    const vec4i xmx = xs - __builtin_shuffle(xs, edgemask);
+    const vec4i ymy = ys - __builtin_shuffle(ys, edgemask);
 
     vec4i tps = { 0 };
     tps[0] = ((ymy[0] == 0) && (ys[2] > ys[1])) || (ymy[0] < 0) ? 1 : 0;
@@ -187,16 +177,15 @@ const void scanlinefillface(const face f, const Material mtr) {
     scanlinefillGeneral(f, mtr, srt);
 }
 const static void scanlinefillGeneral(const face f, const Material mtr, const Srt srt[]) {
-    vec4i mask = { 1, 2, 0, 3 };
-    vec4i xs = { f.v[0][0],  f.v[1][0], f.v[2][0], 0};
-    vec4i ys = { f.v[0][1],  f.v[1][1], f.v[2][1], 0};
-    vec4i xmx = xs - __builtin_shuffle(xs, mask);
-    vec4i ymy = ys - __builtin_shuffle(ys, mask);
+    const vec4i xs = { f.v[0][0],  f.v[1][0], f.v[2][0], 0};
+    const vec4i ys = { f.v[0][1],  f.v[1][1], f.v[2][1], 0};
+    const vec4i xmx = xs - __builtin_shuffle(xs, edgemask);
+    const vec4i ymy = ys - __builtin_shuffle(ys, edgemask);
 
-    vec4i txs = { f.v[srt[0].index][0], f.v[srt[1].index][0], f.v[srt[2].index][0], 0 };
-    vec4i tys = { f.v[srt[0].index][1], f.v[srt[1].index][1], f.v[srt[2].index][1], 0 };
-    vec4i txmx = __builtin_shuffle(txs, mask) - txs;
-    vec4i tymy = __builtin_shuffle(tys, mask) - tys;
+    const vec4i txs = { f.v[srt[0].index][0], f.v[srt[1].index][0], f.v[srt[2].index][0], 0 };
+    const vec4i tys = { f.v[srt[0].index][1], f.v[srt[1].index][1], f.v[srt[2].index][1], 0 };
+    const vec4i txmx = __builtin_shuffle(txs, edgemask) - txs;
+    const vec4i tymy = __builtin_shuffle(tys, edgemask) - tys;
 
     const int tps0 = ((ymy[0] == 0) && (ys[2] < ys[1])) || (ymy[0] < 0) ? 1 : 0;
     const int tps1 = ((ymy[1] == 0) && (ys[0] < ys[2])) || (ymy[1] < 0) ? 1 : 0;
@@ -220,8 +209,8 @@ const static void scanlinefillGeneral(const face f, const Material mtr, const Sr
         for (int y = y_start; y < y_end1; y++) {
             const int padyDB = y * wa.width;
 
-            int x_start = (ma * yA) + txs[0];
-            int x_end = (mb * yA) + txs[0];
+            const int x_start = (ma * yA) + txs[0];
+            const int x_end = (mb * yA) + txs[0];
 
             vec4i xa = ((x_start - xs) * ymy) - ya;
 
@@ -261,8 +250,8 @@ const static void scanlinefillGeneral(const face f, const Material mtr, const Sr
     for (int y = y_end1; y < y_end2; y++) {
         const int padyDB = y * wa.width;
 
-        int x_start = (ma * yB) + txs[2];
-        int x_end = (mb * yB) + txs[2];
+        const int x_start = (ma * yB) + txs[2];
+        const int x_end = (mb * yB) + txs[2];
 
         vec4i xa = ((x_start - xs) * ymy) - ya;
 
@@ -332,12 +321,11 @@ const void edgetexface(const face f, const Material mtr) {
     edgetexGeneral(f, mtr, Xs[0], Xs[2], Ys[0], Ys[2]);
 }
 const static void edgetexGeneral(const face f, Material mtr, int minX, int maxX, int minY, int maxY) {
-    vec4i xs = { f.v[0][0],  f.v[1][0], f.v[2][0], 0};
-    vec4i ys = { f.v[0][1],  f.v[1][1], f.v[2][1], 0};
+    const vec4i xs = { f.v[0][0],  f.v[1][0], f.v[2][0], 0};
+    const vec4i ys = { f.v[0][1],  f.v[1][1], f.v[2][1], 0};
 
-    vec4i mask = { 1, 2, 0, 3 };
-    vec4i xmx = xs - __builtin_shuffle(xs, mask);
-    vec4i ymy = ys - __builtin_shuffle(ys, mask);
+    const vec4i xmx = xs - __builtin_shuffle(xs, edgemask);
+    const vec4i ymy = ys - __builtin_shuffle(ys, edgemask);
 
     vec4i tps = { 0 };
     tps[0] = ((ymy[0] == 0) && (ys[2] > ys[1])) || (ymy[0] < 0) ? 1 : 0;
@@ -406,26 +394,38 @@ const void scanlinetexface(const face f, const Material mtr) {
     scanlinetexGeneral(f, mtr, srt);
 }
 const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]) {
-    vec4i mask = { 1, 2, 0, 3 };
-    vec4i xs = { f.v[0][0],  f.v[1][0], f.v[2][0], 0};
-    vec4i ys = { f.v[0][1],  f.v[1][1], f.v[2][1], 0};
-    vec4i xmx = xs - __builtin_shuffle(xs, mask);
-    vec4i ymy = ys - __builtin_shuffle(ys, mask);
+    const vec4i xs = { f.v[0][0],  f.v[1][0], f.v[2][0], 0};
+    const vec4i ys = { f.v[0][1],  f.v[1][1], f.v[2][1], 0};
+    const vec4i xmx = xs - __builtin_shuffle(xs, edgemask);
+    const vec4i ymy = ys - __builtin_shuffle(ys, edgemask);
 
-    vec4i txs = { f.v[srt[0].index][0], f.v[srt[1].index][0], f.v[srt[2].index][0], 0 };
-    vec4i tys = { f.v[srt[0].index][1], f.v[srt[1].index][1], f.v[srt[2].index][1], 0 };
-    vec4i txmx = __builtin_shuffle(txs, mask) - txs;
-    vec4i tymy = __builtin_shuffle(tys, mask) - tys;
+    const vec4i txs = { f.v[srt[0].index][0], f.v[srt[1].index][0], f.v[srt[2].index][0], 0 };
+    const vec4i tys = { f.v[srt[0].index][1], f.v[srt[1].index][1], f.v[srt[2].index][1], 0 };
+    const vec4i txmx = __builtin_shuffle(txs, edgemask) - txs;
+    const vec4i tymy = __builtin_shuffle(tys, edgemask) - tys;
 
     const int tps0 = ((ymy[0] == 0) && (ys[2] < ys[1])) || (ymy[0] < 0) ? 1 : 0;
     const int tps1 = ((ymy[1] == 0) && (ys[0] < ys[2])) || (ymy[1] < 0) ? 1 : 0;
     const int tps2 = ((ymy[2] == 0) && (ys[1] < ys[0])) || (ymy[2] < 0) ? 1 : 0;
 
     const int orient = (txmx[0] * tymy[2]) - (tymy[0] * txmx[2]);
+    // vec4f mslopes = __builtin_convertvector(txmx, vec4f) / __builtin_convertvector(tymy, vec4f);
+    vec4i a = { 8, 8, 8, 8 }, b = { 2, 2, 0, 2 }, c = { 5, 6, 7, 8 };
+    // printf("before: ");
+    // logVec4i(b > a);
+    // mslopes[0] = ( __isinff(mslopes[0]) || __isnanf(mslopes[0])) ? 0 : mslopes[0];
+    // mslopes[1] = ( __isinff(mslopes[1]) || __isnanf(mslopes[1])) ? 0 : mslopes[1];
+    // mslopes[2] = ( __isinff(mslopes[2]) || __isnanf(mslopes[2])) ? 0 : mslopes[2];
+    // mslopes[3] = ( __isinff(mslopes[3]) || __isnanf(mslopes[3])) ? 0 : mslopes[3];
+    // printf("after: ");
+    // logVec4f(mslopes);
     float ma = (float)txmx[0] / tymy[0];
     float mb = (float)txmx[2] / tymy[2];
-    if (orient < 0)
+    if (orient < 0) {
+        // vec4i sledgemask = { 2, 1, 0, 3 };
+        // mslopes = __builtin_shuffle(mslopes, sledgemask);
         swap(&ma, &mb, 4);
+    }
 
     const int y_start = tys[0];
     const int y_end1 = tys[1];
@@ -439,8 +439,8 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
         for (int y = y_start; y < y_end1; y++) {
             const int padyDB = y * wa.width;
 
-            int x_start = (ma * yA) + txs[0];
-            int x_end = (mb * yA) + txs[0];
+            const int x_start = (ma * yA) + txs[0];
+            const int x_end = (mb * yA) + txs[0];
 
             vec4i xa = ((x_start - xs) * ymy) - ya;
 
@@ -482,15 +482,18 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
 
     ma = (float)txmx[1] / tymy[1];
     mb = (float)txmx[2] / tymy[2];
-    if (orient < 0)
+    if (orient < 0) {
+        // vec4i sledgemask = { 0, 2, 1, 3 };
+        // mslopes = __builtin_shuffle(mslopes, sledgemask);
         swap(&ma, &mb, 4);
+    }
 
     int yB = -tymy[1];
     for (int y = y_end1; y < y_end2; y++) {
         const int padyDB = y * wa.width;
 
-        int x_start = (ma * yB) + txs[2];
-        int x_end = (mb * yB) + txs[2];
+        const int x_start = (ma * yB) + txs[2];
+        const int x_end = (mb * yB) + txs[2];
 
         vec4i xa = ((x_start - xs) * ymy) - ya;
 

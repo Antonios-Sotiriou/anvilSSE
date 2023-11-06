@@ -1,12 +1,12 @@
 # Compile all c files to anvil executable!
 
 CC = gcc
-CFLAGS = -Wall -Werror -g# -pg -O2 -Os -Og -O0
+CFLAGS = -Werror -g# -pg -O2 -Os -Og -O0
 OBJ = anvil
 RM = rm
 LINKS = -lX11 -lm
 INTRINSICS = #-msse4.2 #-mavx2 #-mavx512f #-msse4.2 #-msse #-msse2 #-msse2avx #-msse3 -msse4 #-msse4.1 -msse4a -msse5 -msseregparm -mssse3 -msse-check=warning -msse2avx -march=CPU,i7 
-FILENAME = kinetics.c
+FILENAME = draw_functions.c
 
 # install depended libraries.
 install:

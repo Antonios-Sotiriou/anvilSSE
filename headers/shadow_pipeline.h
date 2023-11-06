@@ -21,8 +21,19 @@
     #include <stdio.h>
 #endif
 
+/* Defined in main.c. */
+extern int HALFH, HALFW, PROJECTIONVIEW;
+extern float FPlane, NPlane;
+extern XWindowAttributes wa;
+extern Mat4x4 orthoMat, lightMat, lookAt;
+extern float *shadow_buffer, shadow_bias;
+extern Light sunlight;
+
+/* Defined in general_functions.c. */
+extern const void swap(void *a, void *b, unsigned long size);
+
 const void shadowPipeline(Scene s);
-const int shadowTest(const vec4f frag, const vec4f nm, vec4f lightdir);
+const int shadowTest(vec4f frag);
 
 #endif /* _SHADOW_PIPELINE_H */
 

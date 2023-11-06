@@ -25,6 +25,11 @@
     #include <stdio.h>
 #endif
 
+extern int HALFH, HALFW, PROJECTIONVIEW, DEBUG;
+extern float FPlane, NPlane;
+extern XWindowAttributes wa;
+extern Mat4x4 viewMat, worldMat, lookAt;
+
 const void grafikPipeline(Scene s);
 
 #endif /* _GRAFIK_PIPELINE_H */

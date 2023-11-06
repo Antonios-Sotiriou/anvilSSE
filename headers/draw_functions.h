@@ -21,6 +21,16 @@
     #include <string.h>
 #endif
 
+/* Defined in main.c file. */
+extern int EDGEFUNC, SCANLINE;
+extern u_int8_t *frame_buffer;
+extern float *depth_buffer;
+extern XWindowAttributes wa;
+
+/* Defined in general_functions.c. */
+extern const void swap(void *a, void *b, unsigned long size);
+
+
 const void drawLine(float x1, float y1, float x2, float y2, vec4f color);
 
 const void edgeMesh(const Mesh m, const vec4f color);

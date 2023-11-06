@@ -1,24 +1,95 @@
 #include "headers/shadow_pipeline.h"
 
 const static void assemblyfacesShadow(Mesh *m, const int len);
+const static void shadowppdiv(Mesh *m, const int len);
 const static Mesh shadowculling(const Mesh c, const int len);
 const static int shadowtoscreen(Mesh *m, const int len);
 const static void createShadowmap(Mesh m);
 const static void shadowface(const face f, const Srt srt[]);
+const static vec4i sdmask = { 1, 2, 0, 3 };
 
-extern int HALFH, HALFW;
-extern float FPlane, NPlane;
-extern XWindowAttributes wa;
-extern Mat4x4 orthoMat, lightMat, reperspMat, lookAt;
-extern float *shadow_buffer, shadow_bias;
-extern Light sunlight;
-extern const void swap(void *a, void *b, unsigned long size);
+#include "headers/logging.h"
+Mat4x4 ortho, lview, lm;
+
+vec4f viewFr[8] = {
+    { 0.f, 0.f, 0.f, 1.f },
+    { 0.f, 0.f, 0.f, 1.f },
+    { 0.f, 0.f, 0.f, 1.f },
+    { 0.f, 0.f, 0.f, 1.f },
+    { 0.f, 0.f, 0.f, 1.f },
+    { 0.f, 0.f, 0.f, 1.f },
+    { 0.f, 0.f, 0.f, 1.f },
+    { 0.f, 0.f, 0.f, 1.f },
+};
+
+void vfvertices(void) {
+    float aspectRatio = (float)wa.width / (float)wa.height;
+    float fovRadius = 1.f / tanf(45.f * 0.5f / 180.0f * 3.14159f);
+
+    vec4f nearcenter = (lookAt.m[3] + lookAt.m[2]) * NPlane;
+    vec4f farcenter = (lookAt.m[3] + lookAt.m[2]) * 10;
+
+    float nearHeight = 2.f * tan(fovRadius / 2.f) * NPlane;
+    float farHeight = 2.f * tan(fovRadius / 2.f) * 10;
+    float nearWidth = nearHeight * aspectRatio;
+    float farWidth = farHeight * aspectRatio;
+
+    viewFr[2] = nearcenter + (lookAt.m[1] * (nearHeight * 0.5f)) + (lookAt.m[0] * (nearWidth * 0.5f));
+    viewFr[3] = nearcenter - (lookAt.m[1] * (nearHeight * 0.5f)) + (lookAt.m[0] * (nearWidth * 0.5f));
+    viewFr[6] = nearcenter + (lookAt.m[1] * (nearHeight * 0.5f)) - (lookAt.m[0] * (nearWidth * 0.5f));
+    viewFr[7] = nearcenter - (lookAt.m[1] * (nearHeight * 0.5f)) - (lookAt.m[0] * (nearWidth * 0.5f));
+
+    viewFr[0] = farcenter + (lookAt.m[1] * (farHeight * 0.5f)) + (lookAt.m[0] * (farWidth * 0.5f));
+    viewFr[1] = farcenter - (lookAt.m[1] * (farHeight * 0.5f)) + (lookAt.m[0] * (farWidth * 0.5f));
+    viewFr[4] = farcenter + (lookAt.m[1] * (farHeight * 0.5f)) - (lookAt.m[0] * (farWidth * 0.5f));
+    viewFr[5] = farcenter - (lookAt.m[1] * (farHeight * 0.5f)) - (lookAt.m[0] * (farWidth * 0.5f));
+
+    for (int i = 0; i < 8; i++)
+        viewFr[i] = vecxm(viewFr[i], lview);
+}
+/* Finds the minX, maxX, minYm´, maxY values of given vectors array. AKA (bounding box). */
+const void vfsortvertices(vec4f vf[]) {
+    float minX, maxX, minY, maxY, minZ, maxZ;
+    minX = vf[0][0];
+    maxX = vf[0][0];
+    minY = vf[0][1];
+    maxY = vf[0][1];
+    for (int i = 0; i < 8; i++) {
+            /* Get min and max x values. */
+        if ( vf[i][0] <= minX) {
+            minX = vf[i][0];
+        } else if ( vf[i][0] > maxX) {
+            maxX = vf[i][0];             
+        }
+        /* Get min and max y values. */
+        if ( vf[i][1] <= minY) {
+            minY = vf[i][1];
+        } else if ( vf[i][1] > maxY) {
+            maxY = vf[i][1];             
+        }
+        /* Get min and max z values. */
+        if ( vf[i][2] <= minZ) {
+            minZ = vf[i][2];
+        } else if ( vf[i][2] > maxZ) {
+            maxZ = vf[i][2];             
+        }
+
+        logVec4f(vf[i]);
+    }
+    printf("minX: %f,    maxX: %f,    minY: %f,    maxY: %f,    minZ: %f,    maxZ: %f\n", minX, maxX, minY, maxY, minZ, maxZ);
+    ortho = orthographicMatrix(minX, maxX, minY, maxY, minZ, maxZ);
+}
 
 const void shadowPipeline(Scene s) {
     Mesh cache = { 0 };
-    Mat4x4 lm = lookat(sunlight.pos, sunlight.u, sunlight.v, sunlight.n);
-    Mat4x4 Lview = inverse_mat(lm);
-    lightMat = mxm(Lview, orthoMat);
+    lm = lookat(sunlight.pos, sunlight.u, sunlight.v, sunlight.n);
+    lview = inverse_mat(lm);
+
+    vfvertices();
+    vfsortvertices(viewFr);
+    logMatrix(orthoMat);
+
+    lightMat = mxm(lview, ortho);
 
     for (int i = 0; i < s.m_indexes; i++) {
         initMesh(&cache, s.m[i]);
@@ -46,6 +117,10 @@ const void shadowPipeline(Scene s) {
             continue;
         }
 
+        /* Applying perspective division. */
+        if (!PROJECTIONVIEW)
+            shadowppdiv(&cache, cache.f_indexes);
+
         /* Applying Backface culling before we proceed to full frustum shadowclipping. */
         if (cache.cull)
             cache = shadowculling(cache, cache.f_indexes);
@@ -70,6 +145,16 @@ const static void assemblyfacesShadow(Mesh *m, const int len) {
         m->f[i].v[0] = m->v[m->f[i].a[0]];
         m->f[i].v[1] = m->v[m->f[i].b[0]];
         m->f[i].v[2] = m->v[m->f[i].c[0]];
+    }
+}
+/* Perspective division. */
+const static void shadowppdiv(Mesh *m, const int len) {
+    for (int i = 0; i < len; i++) {
+        for (int j = 0; j < 3; j++) {
+            float w = m->f[i].v[j][3];
+            m->f[i].v[j] /= w;
+            m->f[i].v[j][3] = w;
+        }
     }
 }
 /* Backface culling.Discarding Triangles that should not be painted.Creating a new dynamic Mesh stucture Triangles array. */
@@ -159,13 +244,12 @@ const void createShadowmap(Mesh m) {
     }
 }
 const void shadowface(const face f, const Srt srt[]) {
-    vec4i mask = { 1, 2, 0, 3 };
     vec4i xs = { f.v[srt[0].index][0], f.v[srt[1].index][0], f.v[srt[2].index][0], 0 };
     vec4i ys = { f.v[srt[0].index][1], f.v[srt[1].index][1], f.v[srt[2].index][1], 0 };
     vec4f zs = { f.v[srt[0].index][2], f.v[srt[1].index][2], f.v[srt[2].index][2], 0 };
-    vec4i xmx = __builtin_shuffle(xs, mask) - xs;
-    vec4i ymy = __builtin_shuffle(ys, mask) - ys;
-    vec4f zmz = __builtin_shuffle(zs, mask) - zs;
+    vec4i xmx = __builtin_shuffle(xs, sdmask) - xs;
+    vec4i ymy = __builtin_shuffle(ys, sdmask) - ys;
+    vec4f zmz = __builtin_shuffle(zs, sdmask) - zs;
 
     const int orient = (xmx[0] * ymy[2]) - (ymy[0] * xmx[2]);
     float ma = (float)xmx[0] / ymy[0];
@@ -179,8 +263,8 @@ const void shadowface(const face f, const Srt srt[]) {
 
     // vec4f lightpos = norm_vec(vecxm(sunlight.pos, lightMat));
     // float dot = dot_product(lightpos, f.fn);
-    // printf("dot: %f\n", dot);
-    // if (dot < 0.00005 && dot > 0)
+    // printf("dot_product: %f\n", dot);
+    // if (dot > 0 && dot < 0.00025)
     //     return;
 
     const int y_start = ys[0];
@@ -256,35 +340,29 @@ const void shadowface(const face f, const Srt srt[]) {
         yB++;
     }
 }
-const int shadowTest(const vec4f frag, const vec4f nm, vec4f lightdir) {
-    vec4f r = frag;
-    r[3] = 1.f;
+const int shadowTest(vec4f frag) {
+    frag[3] = 1.f;
     /* Transform to Model space coordinates. */
-    r = vecxm(r, lookAt);
+    frag = vecxm(frag, lookAt);
 
     /* Transform to Light space coordinates. */
-    r = vecxm(r, lightMat);
+    frag = vecxm(frag, lightMat);
 
-    float dot = dot_product(lightdir, nm);
-    if (dot < 0.65) {
-        return 0;
-    }
-    // else
-    //     shadow_bias = 0.003 * (1 - dot);
-    // printf("dot: %f\n", dot);
-    // float bias = 0.0005 * (1 - dot) + shadow_bias;
+    float x = frag[0];
+    float y = frag[1];
+    float z = frag[2];
 
     /* Transform to Screen space coordinates. */
-    r[0] = (1.0 + r[0]) * HALFW;
-    if ( (r[0] < 0) || (r[0] >= wa.width) )
+    x = (1.0 + x) * HALFW;
+    if ( (x < 0) || (x >= wa.width) )
         return 0;
 
-    r[1] = (1.0 + r[1]) * HALFH;
-    if ( (r[1] < 0) || (r[1] >= wa.height) )
+    y = (1.0 + y) * HALFH;
+    if ( (y < 0) || (y >= wa.height) )
         return 0;
 
-    r[2] = 1.f / r[2];
-    if ( r[2] < shadow_buffer[((int)(r[1]) * wa.width) + (int)(r[0])] + shadow_bias)
+    z = 1.f / z;
+    if ( z < shadow_buffer[((int)y * wa.width) + (int)x] + shadow_bias)
         return 1;
 
     return 0;

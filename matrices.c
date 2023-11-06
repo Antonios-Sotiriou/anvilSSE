@@ -1,10 +1,10 @@
 #include "headers/matrices.h"
 
 /* Some usefull masks to shuffle vectors with builtins SSE gcc. */
-const static vec4i xmask = { 0, 0, 0, 0 };
-const static vec4i ymask = { 1, 1, 1, 1 };
-const static vec4i zmask = { 2, 2, 2, 2 };
-const static vec4i wmask = { 3, 3, 3, 3 };
+const const static vec4i xmask = { 0, 0, 0, 0 };
+const const static vec4i ymask = { 1, 1, 1, 1 };
+const const static vec4i zmask = { 2, 2, 2, 2 };
+const const static vec4i wmask = { 3, 3, 3, 3 };
 
 /* Scale Matrix. */
 const Mat4x4 scaleMatrix(const float scale) {
@@ -63,12 +63,12 @@ const Mat4x4 rotateZMatrix(const float angle) {
 /* Orthographic Projection Matrix. */
 const Mat4x4 orthographicMatrix(const float l, const float r, const float t, const float b, const float n, const float f) {
     Mat4x4 m = { 0 };
-    m.m[0][0] = l;//2 / (r - l);
-    m.m[1][1] = r;//2 / (b - t);
+    m.m[0][0] = 2.f / (r - l);
+    m.m[1][1] = 2.f / (b - t);
     m.m[2][2] = (1.00 / (f - n));
-    m.m[3][0] = 0;//( (r + l) / (r - l) );
-    m.m[3][1] = 0;//( (t + b) / (b - t) );
-    m.m[3][2] = -( f / (f - n) );
+    m.m[3][0] = ( (r + l) / (r - l) );
+    m.m[3][1] = ( (b + t) / (b - t) );
+    m.m[3][2] = -( (f + n) / (f - n) );
     m.m[3][3] = 1.0;
     return m;
 }

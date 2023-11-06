@@ -1,7 +1,7 @@
 #include "headers/grafik_pipeline.h"
 
-#include "headers/frustum_map.h"
-#include "headers/logging.h"
+// #include "headers/frustum_map.h"
+// #include "headers/logging.h"
 
 const static void adoptdetail(Mesh *m);
 const static void assemblyfaces(Mesh *m, const int len);
@@ -10,92 +10,69 @@ const static Mesh bfculling(const Mesh m, const int len);
 const static int viewtoscreen(Mesh *m, const int len);
 const static void rasterize(const Mesh m);
 
-extern int HALFH, HALFW, DEBUG;
-extern float FPlane, NPlane;
-extern XWindowAttributes wa;
-extern Mat4x4 viewMat, worldMat, reperspMat, lookAt, lightMat, perspMat;
+// vec4f viewFr[8] = {
+//     { -0.5f, -0.5f, 0.001f, 1.f },
+//     { 0.5f, -0.5f, 0.001f, 1.f },
+//     { 0.5f, 0.5f, 0.001f, 1.f },
+//     { -0.5f, 0.5f, 0.001f, 1.f },
+//     { -0.5f, -0.5f, 1.f, 1.f },
+//     { 0.5f, -0.5f, 1.f, 1.f },
+//     { 0.5f, 0.5f, 1.f, 1.f },
+//     { -0.5f, 0.5f, 1.f, 1.f },
+// };
 
+// void vfvertices(void) {
+//     float aspectRatio = (float)wa.width / (float)wa.height;
+//     float fovRadius = 1.f / tanf(45.f * 0.5f / 180.0f * 3.14159f);
 
-// extern vec4f viewFrustum[8];
-vec4f viewFr[8] = {
-    { -0.5f, -0.5f, 0.001f, 1.f },
-    { 0.5f, -0.5f, 0.001f, 1.f },
-    { 0.5f, 0.5f, 0.001f, 1.f },
-    { -0.5f, 0.5f, 0.001f, 1.f },
-    { -0.5f, -0.5f, 1.f, 1.f },
-    { 0.5f, -0.5f, 1.f, 1.f },
-    { 0.5f, 0.5f, 1.f, 1.f },
-    { -0.5f, 0.5f, 1.f, 1.f },
-};
+//     vec4f nearcenter = (lookAt.m[3] + lookAt.m[2]) * NPlane;
+//     vec4f farcenter = (lookAt.m[3] + lookAt.m[2]) * 200;
 
-void vfcorners(void) {
-    float aspectRatio = (float)wa.width / (float)wa.height;
-    float fovRadius = 1.f / tanf(45.f * 0.5f / 180.0f * 3.14159f);
+//     float nearHeight = 2.f * tan(fovRadius / 2.f) * NPlane;
+//     float farHeight = 2.f * tan(fovRadius / 2.f) * 200;
+//     float nearWidth = nearHeight * aspectRatio;
+//     float farWidth = farHeight * aspectRatio;
 
-    vec4f nearcenter = (lookAt.m[3] + lookAt.m[2]) * NPlane;
-    vec4f farcenter = (lookAt.m[3] + lookAt.m[2]) * FPlane;
+//     viewFr[2] = nearcenter + (lookAt.m[1] * (nearHeight * 0.5f)) + (lookAt.m[0] * (nearWidth * 0.5f));
+//     viewFr[3] = nearcenter - (lookAt.m[1] * (nearHeight * 0.5f)) + (lookAt.m[0] * (nearWidth * 0.5f));
+//     viewFr[6] = nearcenter + (lookAt.m[1] * (nearHeight * 0.5f)) - (lookAt.m[0] * (nearWidth * 0.5f));
+//     viewFr[7] = nearcenter - (lookAt.m[1] * (nearHeight * 0.5f)) - (lookAt.m[0] * (nearWidth * 0.5f));
 
-    float nearHeight = 2.f * tan(fovRadius / 2.f) * NPlane;
-    float farHeight = 2.f * tan(fovRadius / 2.f) * FPlane;
-    float nearWidth = nearHeight * aspectRatio;
-    float farWidth = farHeight * aspectRatio;
-    // printf("nearcenter: ");
-    // logVec4f(nearcenter);
-    // printf("farcenter: ");
-    // logVec4f(farcenter);
-    // printf("nearHeight: %f,    nearWidth: %f,    farHeight: %f,    farWidth: %f\n", nearHeight, nearWidth, farHeight, farWidth);
-
-    viewFr[2] = nearcenter + (lookAt.m[1] * (nearHeight * 0.5f)) + (lookAt.m[0] * (nearWidth * 0.5f));
-    viewFr[3] = nearcenter - (lookAt.m[1] * (nearHeight * 0.5f)) + (lookAt.m[0] * (nearWidth * 0.5f));
-    viewFr[6] = nearcenter + (lookAt.m[1] * (nearHeight * 0.5f)) - (lookAt.m[0] * (nearWidth * 0.5f));
-    viewFr[7] = nearcenter - (lookAt.m[1] * (nearHeight * 0.5f)) - (lookAt.m[0] * (nearWidth * 0.5f));
-
-    viewFr[0] = farcenter + (lookAt.m[1] * (farHeight * 0.5f)) + (lookAt.m[0] * (farWidth * 0.5f));
-    viewFr[1] = farcenter - (lookAt.m[1] * (farHeight * 0.5f)) + (lookAt.m[0] * (farWidth * 0.5f));
-    viewFr[4] = farcenter + (lookAt.m[1] * (farHeight * 0.5f)) - (lookAt.m[0] * (farWidth * 0.5f));
-    viewFr[5] = farcenter - (lookAt.m[1] * (farHeight * 0.5f)) - (lookAt.m[0] * (farWidth * 0.5f));
-}
-extern Display *displ;
-extern Window mainwin;
-extern GC gc;
-// const void frustum_transform(vec4f vf[]) {
-//     // vfcorners();
-//     vec4f a[8], b[8], c[8];
+//     viewFr[0] = farcenter + (lookAt.m[1] * (farHeight * 0.5f)) + (lookAt.m[0] * (farWidth * 0.5f));
+//     viewFr[1] = farcenter - (lookAt.m[1] * (farHeight * 0.5f)) + (lookAt.m[0] * (farWidth * 0.5f));
+//     viewFr[4] = farcenter + (lookAt.m[1] * (farHeight * 0.5f)) - (lookAt.m[0] * (farWidth * 0.5f));
+//     viewFr[5] = farcenter - (lookAt.m[1] * (farHeight * 0.5f)) - (lookAt.m[0] * (farWidth * 0.5f));
+// }
+// /* Finds the minX, maxX, minYm´, maxY values of given vectors array. AKA (bounding box). */
+// const void vfsortvertices(vec4f vf[]) {
+//     float minX, maxX, minY, maxY;
+//     minX = vf[0][0];
+//     maxX = vf[0][0];
+//     minY = vf[0][1];
+//     maxY = vf[0][1];
 //     for (int i = 0; i < 8; i++) {
-//         // vf[i] /= vf[i][3];
-//         // a[i] = vecxm(vf[i], inverse_mat(worldMat));
-//         // a[i] /= a[i][3];
-//         // // b[i] = vecxm(a[i], lookAt);
-//         // Mat4x4 sc = scaleMatrix(0.1f);
-//         // c[i] = vecxm(vf[i], sc);
-//         c[i] = vecxm(vf[i], worldMat);
+//             /* Get min and max x values. */
+//         if ( vf[i][0] <= minX) {
+//             minX = vf[i][0];
+//         } else if ( vf[i][0] > maxX) {
+//             maxX = vf[i][0];             
+//         }
+//         /* Get min and max y values. */
+//         if ( vf[i][1] <= minY) {
+//             minY = vf[i][1];
+//         } else if ( vf[i][1] > maxY) {
+//             maxY = vf[i][1];             
+//         }
 
-//         // c[i] /= c[i][3];
-//         // // c[i] = vf[i];
-//         // c[i][0] = ((1 + c[i][0]) * HALFW) + 0.5;
-//         // c[i][1] = ((1 + c[i][1]) * HALFH) + 0.5;
-//         // c[i][2] = 1.f / c[i][2];
-//         logVec4f(c[i]);
+//         logVec4f(vf[i]);
 //     }
-
-//     // XGCValues gcv;
-//     // gcv.foreground = 0xcccccc;
-//     // XChangeGC(displ, gc, GCForeground, &gcv);
-//     // XDrawLine(displ, mainwin, gc, c[0][0], c[0][1], c[1][0], c[1][1]);
-//     // XDrawLine(displ, mainwin, gc, c[1][0], c[1][1], c[2][0], c[2][1]);
-//     // XDrawLine(displ, mainwin, gc, c[2][0], c[2][1], c[3][0], c[3][1]);
-//     // XDrawLine(displ, mainwin, gc, c[3][0], c[3][1], c[0][0], c[0][1]);
-//     // XDrawLine(displ, mainwin, gc, c[4][0], c[4][1], c[5][0], c[5][1]);
-//     // XDrawLine(displ, mainwin, gc, c[5][0], c[5][1], c[6][0], c[6][1]);
-//     // XDrawLine(displ, mainwin, gc, c[6][0], c[6][1], c[7][0], c[7][1]);
-//     // XDrawLine(displ, mainwin, gc, c[7][0], c[7][1], c[4][0], c[4][1]);
-//     exit(0);
+//     printf("minX: %f,    maxX: %f,    minY: %f,    maxY: %f\n", minX, maxX, minY, maxY);
 // }
 
 /* Passes the scene Meshes throught the graphic pipeline. */
 const void grafikPipeline(Scene s) {
     Mesh cache = { 0 };
-    vfcorners();
+    // vfvertices();
     // frustum_transform(viewFr);
     for (int i = 0; i < s.m_indexes; i++) {
         adoptdetail(&s.m[i]);
@@ -108,11 +85,11 @@ const void grafikPipeline(Scene s) {
         // } else {
         //     cache.v = malloc(16 * s.m[i].v_indexes);
         //     memcpy(cache.v, viewFr, 16 * s.m[i].v_indexes);
-        //     // Mat4x4 sc = scaleMatrix(0.1f);
-        //     // Mat4x4 tr = translationMatrix(0.f, 0.f, 100.f);
-        //     // Mat4x4 nm = mxm(sc, tr);
-        //     // cache.v = setvecsarrayxm(cache.v, cache.v_indexes, sc);
-        //     // rotate_x(&cache, 1);
+        //     system("clear\n");
+        //     vfsortvertices(cache.v);
+
+        //     Mat4x4 sc = scaleMatrix(0.5f);
+        //     cache.v = setvecsarrayxm(cache.v, cache.v_indexes, sc);
         //     cache.v = setvecsarrayxm(cache.v, cache.v_indexes, worldMat);
         //     cache.n = vecsarrayxm(s.m[i].n, s.m[i].n_indexes, viewMat);
         // }
@@ -130,8 +107,8 @@ const void grafikPipeline(Scene s) {
         }
 
         /* Clipping against far Plane in View Space. */
-        vec4f plane_far_p = { 0.0f, 0.0f,  FPlane},
-                plane_far_n = { 0.0f, 0.0f, -1.0f };
+        vec4f plane_far_p = { 0.0f, 0.0f, FPlane},
+              plane_far_n = { 0.0f, 0.0f, -1.0f };
         cache = clipp(cache, plane_far_p, plane_far_n);
         if (!cache.f_indexes) {
             releaseMesh(&cache);
@@ -139,7 +116,8 @@ const void grafikPipeline(Scene s) {
         }
 
         /* Applying perspective division. */
-        ppdiv(&cache, cache.f_indexes);
+        if (!PROJECTIONVIEW)
+            ppdiv(&cache, cache.f_indexes);
 
         /* Applying Backface culling before we proceed to Screen Space transformation and view Port clipping. */
         if (cache.cull)
@@ -161,11 +139,10 @@ const void grafikPipeline(Scene s) {
     }
 }
 const static void adoptdetail(Mesh *m) {
-    const int distance = len_vec(m->pivot - viewMat.m[3]);
-    // printf("length 1: %d\n", distance);
+    const int distance = len_vec(m->pivot - lookAt.m[3]);
     const int lcache = m->lvlofdetail;
 
-    if ( (distance > 0 && distance <= 200) && (m->lvlofdetail != 0) ) {
+    if ( (distance >= 0 && distance <= 200) && (m->lvlofdetail != 0) ) {
         printf("lvl of detail 1\n");
         m->lvlofdetail = 0;
     } else if ( (distance > 200 && distance <= 400) && (m->lvlofdetail != 1) ) {

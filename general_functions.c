@@ -40,6 +40,7 @@ const void swap(void *a, void *b, unsigned long size) {
     memcpy(b, temp, size);
     free(temp);
 }
+/* Returns the given value in radians. */
 const float radians(const float value) {
     return value * (3.14159 / 180.0);
 }
