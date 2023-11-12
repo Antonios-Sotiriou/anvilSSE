@@ -72,7 +72,7 @@ static int FBSIZE         = 0;
 float NPlane              = 1.0f;
 float FPlane              = 20000.0f;
 float SCALE               = 0.003f;
-float AmbientStrength     = 0.5f;
+float AmbientStrength     = 0.85f;
 float SpecularStrength    = 0.75f;
 float shadow_bias         = 0.f;//0.003105;//0.002138;//0.000487f;
 
@@ -89,14 +89,14 @@ Light sunlight = {
     // .u = { -0.694661f, 0.000000f, -0.719352f, 0.000000f },
     // .v = { 0.000000f, -1.000000f, 0.000000f, 0.000000f },
     // .n = { 0.719352f, 0.000000f, -0.694661f, 0.000000f },
-    .pos = { 0.f, 100.0f, 0.f, 1.f },
+    .pos = { 10.f, 100.0f, 0.f, 1.f },
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
 };
 
 /* Global Matrices */
-Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, lightMat;
+Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat, persplightMat, lm, lview;
 
 /* Anvil global Objects Meshes and Scene. */
 Scene scene = { 0 };
@@ -152,7 +152,77 @@ static void (*handler[LASTEvent]) (XEvent *event) = {
     [ButtonPress] = buttonpress,
     [KeyPress] = keypress,
 };
+/* ################################################### CASCADE SHADOW MAPPING ################################################ */
+vec4f viewFr[8] = {
+    { -1.f, -1.f, 0.f, 1.f },
+    { -1.f, 1.f, 0.f, 1.f },
+    { -1.f, -1.f, 1.f, 1.f },
+    { -1.f, 1.f, 1.f, 1.f },
+    { 1.f, -1.f, 0.f, 1.f },
+    { 1.f, 1.f, 0.f, 1.f },
+    { 1.f, -1.f, 1.f, 1.f },
+    { 1.f, 1.f, 1.f, 1.f },
+};
 
+void vfvertices(void) {
+    float aspectRatio = (float)wa.width / (float)wa.height;
+    float fovRadius = 1.f / tanf(45.f * 0.5f / 180.0f * 3.14159f);
+
+    vec4f nearcenter = (eye[0] + eye[3]) * NPlane;
+    vec4f farcenter = (eye[0] + eye[3]) * 50;
+
+    float nearHeight = 2.f * tan(fovRadius / 2.f) * NPlane;
+    float farHeight = 2.f * tan(fovRadius / 2.f) * 50;
+    float nearWidth = nearHeight * aspectRatio;
+    float farWidth = farHeight * aspectRatio;
+
+    viewFr[2] = nearcenter + (eye[2] * (nearHeight * 0.5f)) + (eye[1] * (nearWidth * 0.5f));
+    viewFr[3] = nearcenter - (eye[2] * (nearHeight * 0.5f)) + (eye[1] * (nearWidth * 0.5f));
+    viewFr[6] = nearcenter + (eye[2] * (nearHeight * 0.5f)) - (eye[1] * (nearWidth * 0.5f));
+    viewFr[7] = nearcenter - (eye[2] * (nearHeight * 0.5f)) - (eye[1] * (nearWidth * 0.5f));
+
+    viewFr[0] = farcenter + (eye[2] * (farHeight * 0.5f)) + (eye[1] * (farWidth * 0.5f));
+    viewFr[1] = farcenter - (eye[2] * (farHeight * 0.5f)) + (eye[1] * (farWidth * 0.5f));
+    viewFr[4] = farcenter + (eye[2] * (farHeight * 0.5f)) - (eye[1] * (farWidth * 0.5f));
+    viewFr[5] = farcenter - (eye[2] * (farHeight * 0.5f)) - (eye[1] * (farWidth * 0.5f));
+
+    for (int i = 0; i < 8; i++) {
+        viewFr[i] = vecxm(viewFr[i], viewMat);
+    }
+}
+/* Finds the minX, maxX, minYm´, maxY values of given vectors array. AKA (bounding box). */
+const void vfsortvertices(vec4f vf[]) {
+    float minX, maxX, minY, maxY, minZ, maxZ;
+    minX = vf[0][0];
+    maxX = vf[0][0];
+    minY = vf[0][1];
+    maxY = vf[0][1];
+    minZ = vf[0][2];
+    maxZ = vf[0][2];
+    for (int i = 0; i < 8; i++) {
+        /* Get min and max x values. */
+        if ( vf[i][0] <= minX) {
+            minX = vf[i][0];
+        } else if ( vf[i][0] > maxX) {
+            maxX = vf[i][0];             
+        }
+        /* Get min and max y values. */
+        if ( vf[i][1] <= minY) {
+            minY = vf[i][1];
+        } else if ( vf[i][1] > maxY) {
+            maxY = vf[i][1];             
+        }
+        /* Get min and max z values. */
+        if ( vf[i][2] <= minZ) {
+            minZ = vf[i][2];
+        } else if ( vf[i][2] > maxZ) {
+            maxZ = vf[i][2];             
+        }
+    }
+    orthoMat = orthographicMatrix(minX, maxX, minY, maxY, minZ, maxZ);
+    // orthoMat = orthographicMatrix(-50.f, 50.f, -50.f, 50.f, 0.01f, 1.f);
+}
+/* ################################################### CASCADE SHADOW MAPPING ################################################ */
 const static void clientmessage(XEvent *event) {
     printf("Received client message event\n");
     if (event->xclient.data.l[0] == wmatom[Win_Close]) {
@@ -219,7 +289,7 @@ const static void keypress(XEvent *event) {
     else
         eye = (vec4f*)&camera;
 
-    printf("Key Pressed: %ld\n", keysym);
+    // printf("Key Pressed: %ld\n", keysym);
     // printf("\x1b[H\x1b[J");
     system("clear\n");
     switch (keysym) {
@@ -243,11 +313,11 @@ const static void keypress(XEvent *event) {
             break;
         case 65364 : move_down(eye, 10.2);          /* down arrow */
             break;
-        case 65451 :FPlane += 1.f;             /* + */
-            printf("FPlane: %f\n",FPlane);
+        case 65451 :shadow_bias += 0.0001f;             /* + */
+            printf("shadow_bias: %f\n",shadow_bias);
             break;
-        case 65453 :FPlane -= 1.f;             /* - */
-            printf("FPlane: %f\n", FPlane);
+        case 65453 :shadow_bias -= 0.0001f;             /* - */
+            printf("shadow_bias: %f\n", shadow_bias);
             break;
         case 65450 : NPlane += 1.f;             /* * */
             printf("NPlane: %f\n", NPlane);
@@ -343,10 +413,23 @@ const static void keypress(XEvent *event) {
     AdjustShadow = 1;
     AdjustScene = 1;
 
+    // logVec4f(camera[Pos]);
+    // logVec4f(camera[Pos] + sunlight.pos);
+    lm = lookat(camera[Pos] + sunlight.pos, sunlight.u, sunlight.v, sunlight.n);
+    lview = inverse_mat(lm);
+
+    vfvertices();
+    vfsortvertices(viewFr);
+
+    ortholightMat = mxm(lview, orthoMat);
+    persplightMat = mxm(lview, perspMat);
+
     if (!PROJECTIONVIEW)
         worldMat = mxm(viewMat, perspMat);
     else
         worldMat = mxm(viewMat, orthoMat);
+
+    // memcpy(scene.m[0].v, viewFr, 128);
 }
 const static void project() {
     if (AdjustShadow) {
@@ -402,7 +485,7 @@ const static void initDependedVariables(void) {
     /* Matrices initialization. */
     perspMat = perspectiveMatrix(FOV, ASPECTRATIO, ZNEAR, ZFAR);
     reperspMat = reperspectiveMatrix(FOV, ASPECTRATIO);
-    orthoMat = orthographicMatrix(SCALE, SCALE, 0.f, 0.f, 0.01f, 0.1f);
+    orthoMat = orthographicMatrix(-1.f ,1.f, 1.f, -1.f, 0.01f, 1.f);
 
     AdjustShadow = 1;
     AdjustScene = 1;

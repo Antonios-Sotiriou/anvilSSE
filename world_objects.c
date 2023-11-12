@@ -12,7 +12,7 @@ const void posWorldObjects(Scene *s) {
     trMatrix = translationMatrix(0.0f, 0.0f, 0.0f);
     posMatrix = mxm(sclMatrix, trMatrix);
 
-    s->m[0].material = loadmaterial("pearl");
+    s->m[0].material = loadmaterial("emerald");
     loadtexture(&s->m[0]);
 
     s->m[0].pivot = trMatrix.m[3];

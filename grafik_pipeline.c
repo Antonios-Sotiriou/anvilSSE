@@ -1,6 +1,6 @@
 #include "headers/grafik_pipeline.h"
 
-// #include "headers/frustum_map.h"
+#include "headers/frustum_map.h"
 // #include "headers/logging.h"
 
 const static void adoptdetail(Mesh *m);
@@ -11,14 +11,14 @@ const static int viewtoscreen(Mesh *m, const int len);
 const static void rasterize(const Mesh m);
 
 // vec4f viewFr[8] = {
-//     { -0.5f, -0.5f, 0.001f, 1.f },
-//     { 0.5f, -0.5f, 0.001f, 1.f },
-//     { 0.5f, 0.5f, 0.001f, 1.f },
-//     { -0.5f, 0.5f, 0.001f, 1.f },
-//     { -0.5f, -0.5f, 1.f, 1.f },
-//     { 0.5f, -0.5f, 1.f, 1.f },
-//     { 0.5f, 0.5f, 1.f, 1.f },
-//     { -0.5f, 0.5f, 1.f, 1.f },
+    // { -1.f, -1.f, 0.f, 1.f },
+    // { -1.f, 1.f, 0.f, 1.f },
+    // { -1.f, -1.f, 1.f, 1.f },
+    // { -1.f, 1.f, 1.f, 1.f },
+    // { 1.f, -1.f, 0.f, 1.f },
+    // { 1.f, 1.f, 0.f, 1.f },
+    // { 1.f, -1.f, 1.f, 1.f },
+    // { 1.f, 1.f, 1.f, 1.f },
 // };
 
 // void vfvertices(void) {

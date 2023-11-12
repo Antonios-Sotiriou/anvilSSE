@@ -1,5 +1,12 @@
 #include "headers/test_shapes.h"
 
+extern XWindowAttributes wa;
+extern float NPlane, FPlane;
+extern vec4f camera[4];
+extern Mat4x4 reperspMat;
+#include <math.h>
+#include "headers/matrices.h"
+#include "headers/logging.h"
 const void createCube(Mesh *c) {
     size_t face_size = sizeof(face);
     c->v = malloc(16 * 8);
@@ -84,6 +91,36 @@ const void viewFrustum(Mesh *c) {
         { -1.000000f, 1.000000f, 1.000000f, 1.f },
         { -1.000000f, -1.000000f, 1.000000f, 1.f }
     };
+    float aspectRatio = (float)wa.width / (float)wa.height;
+    float fovRadius = 1.f / tanf(45.f * 0.5f / 180.0f * 3.14159f);
+
+    vec4f nearcenter = (camera[0] + camera[3]) * NPlane;
+    vec4f farcenter = (camera[0] + camera[3]) * 100;
+
+    float nearHeight = 2.f * tan(fovRadius / 2.f);
+    float farHeight = 2.f * tan(fovRadius / 2.f) * 100;
+    float nearWidth = nearHeight * aspectRatio;
+    float farWidth = farHeight * aspectRatio;
+
+    vectors[2] = nearcenter + (camera[2] * (nearHeight * 0.5f)) + (camera[1] * (nearWidth * 0.5f));
+    vectors[3] = nearcenter - (camera[2] * (nearHeight * 0.5f)) + (camera[1] * (nearWidth * 0.5f));
+    vectors[6] = nearcenter + (camera[2] * (nearHeight * 0.5f)) - (camera[1] * (nearWidth * 0.5f));
+    vectors[7] = nearcenter - (camera[2] * (nearHeight * 0.5f)) - (camera[1] * (nearWidth * 0.5f));
+
+    vectors[0] = farcenter + (camera[2] * (farHeight * 0.5f)) + (camera[1] * (farWidth * 0.5f));
+    vectors[1] = farcenter - (camera[2] * (farHeight * 0.5f)) + (camera[1] * (farWidth * 0.5f));
+    vectors[4] = farcenter + (camera[2] * (farHeight * 0.5f)) - (camera[1] * (farWidth * 0.5f));
+    vectors[5] = farcenter - (camera[2] * (farHeight * 0.5f)) - (camera[1] * (farWidth * 0.5f));
+
+    
+    // Mat4x4 test = lookat(camera[0], camera[1], camera[2], camera[3]);
+    // Mat4x4 ppm = perspectiveMatrix(fovRadius, aspectRatio, 0.1f, 1.f);
+    // Mat4x4 tr = mxm(test, ppm);
+    for (int i = 0; i < 8; i++) {
+        // vectors[i] = vecxm(vectors[i], inverse_mat(tr));
+        // vectors[i] /= vectors[i][3];
+        logVec4f(vectors[i]);
+    }
     vec4f normals[8] = {
         { -0.5774f, -0.5774f, -0.5774f, 0.f },
         { 0.5774f, -0.5774f, 0.5774f, 0.f },
