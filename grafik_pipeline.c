@@ -1,7 +1,6 @@
 #include "headers/grafik_pipeline.h"
 
 #include "headers/frustum_map.h"
-// #include "headers/logging.h"
 
 const static void adoptdetail(Mesh *m);
 const static void assemblyfaces(Mesh *m, const int len);
@@ -10,89 +9,17 @@ const static Mesh bfculling(const Mesh m, const int len);
 const static int viewtoscreen(Mesh *m, const int len);
 const static void rasterize(const Mesh m);
 
-// vec4f viewFr[8] = {
-    // { -1.f, -1.f, 0.f, 1.f },
-    // { -1.f, 1.f, 0.f, 1.f },
-    // { -1.f, -1.f, 1.f, 1.f },
-    // { -1.f, 1.f, 1.f, 1.f },
-    // { 1.f, -1.f, 0.f, 1.f },
-    // { 1.f, 1.f, 0.f, 1.f },
-    // { 1.f, -1.f, 1.f, 1.f },
-    // { 1.f, 1.f, 1.f, 1.f },
-// };
-
-// void vfvertices(void) {
-//     float aspectRatio = (float)wa.width / (float)wa.height;
-//     float fovRadius = 1.f / tanf(45.f * 0.5f / 180.0f * 3.14159f);
-
-//     vec4f nearcenter = (lookAt.m[3] + lookAt.m[2]) * NPlane;
-//     vec4f farcenter = (lookAt.m[3] + lookAt.m[2]) * 200;
-
-//     float nearHeight = 2.f * tan(fovRadius / 2.f) * NPlane;
-//     float farHeight = 2.f * tan(fovRadius / 2.f) * 200;
-//     float nearWidth = nearHeight * aspectRatio;
-//     float farWidth = farHeight * aspectRatio;
-
-//     viewFr[2] = nearcenter + (lookAt.m[1] * (nearHeight * 0.5f)) + (lookAt.m[0] * (nearWidth * 0.5f));
-//     viewFr[3] = nearcenter - (lookAt.m[1] * (nearHeight * 0.5f)) + (lookAt.m[0] * (nearWidth * 0.5f));
-//     viewFr[6] = nearcenter + (lookAt.m[1] * (nearHeight * 0.5f)) - (lookAt.m[0] * (nearWidth * 0.5f));
-//     viewFr[7] = nearcenter - (lookAt.m[1] * (nearHeight * 0.5f)) - (lookAt.m[0] * (nearWidth * 0.5f));
-
-//     viewFr[0] = farcenter + (lookAt.m[1] * (farHeight * 0.5f)) + (lookAt.m[0] * (farWidth * 0.5f));
-//     viewFr[1] = farcenter - (lookAt.m[1] * (farHeight * 0.5f)) + (lookAt.m[0] * (farWidth * 0.5f));
-//     viewFr[4] = farcenter + (lookAt.m[1] * (farHeight * 0.5f)) - (lookAt.m[0] * (farWidth * 0.5f));
-//     viewFr[5] = farcenter - (lookAt.m[1] * (farHeight * 0.5f)) - (lookAt.m[0] * (farWidth * 0.5f));
-// }
-// /* Finds the minX, maxX, minYm´, maxY values of given vectors array. AKA (bounding box). */
-// const void vfsortvertices(vec4f vf[]) {
-//     float minX, maxX, minY, maxY;
-//     minX = vf[0][0];
-//     maxX = vf[0][0];
-//     minY = vf[0][1];
-//     maxY = vf[0][1];
-//     for (int i = 0; i < 8; i++) {
-//             /* Get min and max x values. */
-//         if ( vf[i][0] <= minX) {
-//             minX = vf[i][0];
-//         } else if ( vf[i][0] > maxX) {
-//             maxX = vf[i][0];             
-//         }
-//         /* Get min and max y values. */
-//         if ( vf[i][1] <= minY) {
-//             minY = vf[i][1];
-//         } else if ( vf[i][1] > maxY) {
-//             maxY = vf[i][1];             
-//         }
-
-//         logVec4f(vf[i]);
-//     }
-//     printf("minX: %f,    maxX: %f,    minY: %f,    maxY: %f\n", minX, maxX, minY, maxY);
-// }
-
 /* Passes the scene Meshes throught the graphic pipeline. */
 const void grafikPipeline(Scene s) {
     Mesh cache = { 0 };
-    // vfvertices();
-    // frustum_transform(viewFr);
+
     for (int i = 0; i < s.m_indexes; i++) {
         adoptdetail(&s.m[i]);
 
         initMesh(&cache, s.m[i]);
 
-        // if (i > 0) {
-            cache.v = vecsarrayxm(s.m[i].v, s.m[i].v_indexes, worldMat);
-            cache.n = vecsarrayxm(s.m[i].n, s.m[i].n_indexes, viewMat);
-        // } else {
-        //     cache.v = malloc(16 * s.m[i].v_indexes);
-        //     memcpy(cache.v, viewFr, 16 * s.m[i].v_indexes);
-        //     system("clear\n");
-        //     vfsortvertices(cache.v);
-
-        //     Mat4x4 sc = scaleMatrix(0.5f);
-        //     cache.v = setvecsarrayxm(cache.v, cache.v_indexes, sc);
-        //     cache.v = setvecsarrayxm(cache.v, cache.v_indexes, worldMat);
-        //     cache.n = vecsarrayxm(s.m[i].n, s.m[i].n_indexes, viewMat);
-        // }
+        cache.v = vecsarrayxm(s.m[i].v, s.m[i].v_indexes, worldMat);
+        cache.n = vecsarrayxm(s.m[i].n, s.m[i].n_indexes, viewMat);
 
         /* Assembly and create the faces from the mesh vertices, normals and texture arrays, through the indexes. */
         assemblyfaces(&cache, cache.f_indexes);

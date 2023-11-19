@@ -23,7 +23,6 @@ extern int HALFW;
 extern int HALFH;
 extern Mat4x4 reperspMat;
 extern u_int8_t *frame_buffer;
-extern float *shadow_buffer;
 extern Light sunlight;
 
 /* Defined in shadow_pipeline.c. */

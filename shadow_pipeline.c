@@ -7,16 +7,17 @@ const static void shadowppdiv(Mesh *m, const int len);
 const static void clipptoview(Mesh *m, const int len);
 const static Mesh shadowculling(const Mesh c, const int len);
 const static int shadowtoscreen(Mesh *m, const int len);
-const static void createShadowmap(Mesh m);
-const static void shadowface(const face f, const Srt srt[]);
-const static vec4i sdmask = { 1, 2, 0, 3 };
+const static void createShadowmap(Mesh m, const unsigned int sm_index);
+const static void shadowface(const face f, const Srt srt[], const unsigned int sm_index);
+const static vec4i smmask = { 1, 2, 0, 3 };
 const static void setwone(Mesh *m, const int len);
-const void shadowPipeline(Scene s) {
+
+const void shadowPipeline(Scene s, const unsigned int sm_index) {
     Mesh cache = { 0 };
     for (int i = 0; i < s.m_indexes; i++) {
         initMesh(&cache, s.m[i]);
 
-        cache.v = vecsarrayxm(s.m[i].v, s.m[i].v_indexes, ortholightMat);
+        cache.v = vecsarrayxm(s.m[i].v, s.m[i].v_indexes, ortholightMat[sm_index]);
         cache.n = malloc(1);
         assemblyfacesShadow(&cache, cache.f_indexes);
 
@@ -66,7 +67,7 @@ const void shadowPipeline(Scene s) {
             continue;
         }
 
-        createShadowmap(cache);
+        createShadowmap(cache, sm_index);
         releaseMesh(&cache);
     }
 }
@@ -171,7 +172,7 @@ const static int shadowtoscreen(Mesh *m, const int len) {
 
     return 1;
 }
-const void createShadowmap(Mesh m) {
+const void createShadowmap(Mesh m, const unsigned int sm_index) {
     for (int c = 0; c < m.f_indexes; c++) {
         /* Creating 2Arrays for X and Y values to sort them. */
         Srt srt[3] = {
@@ -190,16 +191,16 @@ const void createShadowmap(Mesh m) {
                     srt[i] = temp;
                 }
 
-        shadowface(m.f[c], srt);
+        shadowface(m.f[c], srt, sm_index);
     }
 }
-const void shadowface(const face f, const Srt srt[]) {
+const void shadowface(const face f, const Srt srt[], const unsigned int sm_index) {
     vec4i xs = { f.v[srt[0].index][0], f.v[srt[1].index][0], f.v[srt[2].index][0], 0 };
     vec4i ys = { f.v[srt[0].index][1], f.v[srt[1].index][1], f.v[srt[2].index][1], 0 };
     vec4f zs = { f.v[srt[0].index][2], f.v[srt[1].index][2], f.v[srt[2].index][2], 0 };
-    vec4i xmx = __builtin_shuffle(xs, sdmask) - xs;
-    vec4i ymy = __builtin_shuffle(ys, sdmask) - ys;
-    vec4f zmz = __builtin_shuffle(zs, sdmask) - zs;
+    vec4i xmx = __builtin_shuffle(xs, smmask) - xs;
+    vec4i ymy = __builtin_shuffle(ys, smmask) - ys;
+    vec4f zmz = __builtin_shuffle(zs, smmask) - zs;
 
     const int orient = (xmx[0] * ymy[2]) - (ymy[0] * xmx[2]);
     float ma = (float)xmx[0] / ymy[0];
@@ -241,9 +242,9 @@ const void shadowface(const face f, const Srt srt[]) {
                 const float depthZ = z1 + (barycentric * z2z1);
                 
                 const int padxSB = padySB + x;
-                if ( depthZ > shadow_buffer[padxSB] ) {
+                if ( depthZ > shadow_buffer[sm_index][padxSB] ) {
 
-                    shadow_buffer[padxSB] = depthZ;
+                    shadow_buffer[sm_index][padxSB] = depthZ;
                 }
                 xxs += 1.0;
             }
@@ -281,9 +282,9 @@ const void shadowface(const face f, const Srt srt[]) {
             const float depthZ = z1 + (barycentric * z2z1);
 
             const int padxSB = padySB + x;
-            if ( depthZ > shadow_buffer[padxSB] ) {
+            if ( depthZ > shadow_buffer[sm_index][padxSB] ) {
 
-                shadow_buffer[padxSB] = depthZ;
+                shadow_buffer[sm_index][padxSB] = depthZ;
             }
             xxs += 1.0;
         }
@@ -291,12 +292,21 @@ const void shadowface(const face f, const Srt srt[]) {
     }
 }
 const int shadowTest(vec4f frag) {
+    // logVec4f(frag);
+    int sm_index;
+    if (frag[2] >= 0.f && frag[2] <= 100.f)
+        sm_index = 0;
+    else if (frag[2] > 100.f && frag[2] <= 300.f)
+        sm_index = 1;
+    else if (frag[2] > 300.f)
+        sm_index = 2;
+
     frag[3] = 1.f;
     /* Transform to Model space coordinates. */
     frag = vecxm(frag, lookAt);
 
     /* Transform to Light space coordinates. */
-    frag = vecxm(frag, ortholightMat);
+    frag = vecxm(frag, ortholightMat[0]);
     // float w = frag[3];
     // frag /= w;
     // frag[3] = w;
@@ -315,7 +325,8 @@ const int shadowTest(vec4f frag) {
         return 0;
 
     z = 1.f / z;
-    if ( z < shadow_buffer[((int)y * wa.width) + (int)x] + shadow_bias)
+
+    if ( z < shadow_buffer[sm_index][((int)y * wa.width) + (int)x] + shadow_bias)
         return 1;
 
     return 0;

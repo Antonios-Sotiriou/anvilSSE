@@ -28,7 +28,8 @@ const void rotate_x(Mesh *c, const float angle);
 const void rotate_y(Mesh *c, const float angle);
 const void rotate_z(Mesh *c, const float angle);
 const void rotate_origin(Mesh *obj, const float angle, float x, float y, float z);
-const void rotate_light(Light *l, const float angle, float x, float y, float z);
+const void rotate_light(Light *l, const vec4f pivot, const float angle, float x, float y, float z);
+const void rotate_light_cam(Mesh *l, const vec4f pivot, const float angle, float x, float y, float z);
 
 #endif /* _KINETICS_H */
 

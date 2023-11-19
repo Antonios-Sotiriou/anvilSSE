@@ -5,10 +5,6 @@
     #include <stdio.h>
 #endif
 
-// #ifndef _STDLIB_H
-//     #include <stdlib.h>
-// #endif
-
 #ifndef _ANVIL_STRUCTS_H
     #include "anvil_structs.h"
 #endif

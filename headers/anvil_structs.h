@@ -44,7 +44,11 @@ typedef struct {
     vec4c *texture;
     char texlvl[9][10];
 } Material;
-
+/* Dimensions Limits in any Space. */
+typedef struct {
+    float minX, maxX, minY, maxY, minZ, maxZ;
+} DimensionsLimits;
+/* Base face aka(triangle) struct. */
 typedef struct {
     vec4f v[3];
     vec4f vn[3];

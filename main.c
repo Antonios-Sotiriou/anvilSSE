@@ -56,7 +56,7 @@ Atom wmatom[Atom_Last];
 
 /* BUFFERS. */
 u_int8_t *frame_buffer, *map_buffer;
-float *depth_buffer, *shadow_buffer;
+float *depth_buffer, *shadow_buffer[3];
 
 /* Project Global Variables. */
 int PROJECTIONVIEW = 0;
@@ -89,14 +89,15 @@ Light sunlight = {
     // .u = { -0.694661f, 0.000000f, -0.719352f, 0.000000f },
     // .v = { 0.000000f, -1.000000f, 0.000000f, 0.000000f },
     // .n = { 0.719352f, 0.000000f, -0.694661f, 0.000000f },
-    .pos = { 10.f, 100.0f, 0.f, 1.f },
+    .pos = { 0.f, 100.0f, 0.f, 1.f },
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
 };
+vec4f pos = { 0.f, 100.0f, 0.f, 1.f };
 
 /* Global Matrices */
-Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat, persplightMat, lm, lview;
+Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, lm, lview;
 
 /* Anvil global Objects Meshes and Scene. */
 Scene scene = { 0 };
@@ -153,74 +154,92 @@ static void (*handler[LASTEvent]) (XEvent *event) = {
     [KeyPress] = keypress,
 };
 /* ################################################### CASCADE SHADOW MAPPING ################################################ */
-vec4f viewFr[8] = {
-    { -1.f, -1.f, 0.f, 1.f },
-    { -1.f, 1.f, 0.f, 1.f },
-    { -1.f, -1.f, 1.f, 1.f },
-    { -1.f, 1.f, 1.f, 1.f },
-    { 1.f, -1.f, 0.f, 1.f },
-    { 1.f, 1.f, 0.f, 1.f },
-    { 1.f, -1.f, 1.f, 1.f },
-    { 1.f, 1.f, 1.f, 1.f },
-};
+/* Returns a vec4f array with the values of the 8 vectors that form the View Frustum in View Space.np and fp are the near and far planes( can be Choosen accordingly ). */
+vec4f *worldSpaceFrustum(const float np, const float fp) {
+    vec4f *va = malloc(128);
+    const float fovRadius = (1.f / tanf(45.f * 0.5f / 180.0f * 3.14159f));
 
-void vfvertices(void) {
-    float aspectRatio = (float)wa.width / (float)wa.height;
-    float fovRadius = 1.f / tanf(45.f * 0.5f / 180.0f * 3.14159f);
+    const vec4f nearcenter = (eye[0] + eye[3]) * np;
+    const vec4f farcenter = (eye[0] + eye[3]) * fp;
 
-    vec4f nearcenter = (eye[0] + eye[3]) * NPlane;
-    vec4f farcenter = (eye[0] + eye[3]) * 50;
+    const float nearHeight = tan(fovRadius) * np;
+    const float farHeight = tan(fovRadius) * fp;
+    const float nearWidth = nearHeight * ASPECTRATIO;
+    const float farWidth = farHeight * ASPECTRATIO;
 
-    float nearHeight = 2.f * tan(fovRadius / 2.f) * NPlane;
-    float farHeight = 2.f * tan(fovRadius / 2.f) * 50;
-    float nearWidth = nearHeight * aspectRatio;
-    float farWidth = farHeight * aspectRatio;
+    const vec4f yxnh = eye[2] * nearHeight;
+    const vec4f yxnw = eye[1] * nearWidth;
 
-    viewFr[2] = nearcenter + (eye[2] * (nearHeight * 0.5f)) + (eye[1] * (nearWidth * 0.5f));
-    viewFr[3] = nearcenter - (eye[2] * (nearHeight * 0.5f)) + (eye[1] * (nearWidth * 0.5f));
-    viewFr[6] = nearcenter + (eye[2] * (nearHeight * 0.5f)) - (eye[1] * (nearWidth * 0.5f));
-    viewFr[7] = nearcenter - (eye[2] * (nearHeight * 0.5f)) - (eye[1] * (nearWidth * 0.5f));
+    const vec4f yxfh = eye[2] * farHeight;
+    const vec4f yxfw = eye[1] * farWidth;
 
-    viewFr[0] = farcenter + (eye[2] * (farHeight * 0.5f)) + (eye[1] * (farWidth * 0.5f));
-    viewFr[1] = farcenter - (eye[2] * (farHeight * 0.5f)) + (eye[1] * (farWidth * 0.5f));
-    viewFr[4] = farcenter + (eye[2] * (farHeight * 0.5f)) - (eye[1] * (farWidth * 0.5f));
-    viewFr[5] = farcenter - (eye[2] * (farHeight * 0.5f)) - (eye[1] * (farWidth * 0.5f));
+    va[2] = nearcenter + yxnh + yxnw;
+    va[3] = nearcenter - yxnh + yxnw;
+    va[6] = nearcenter + yxnh - yxnw;
+    va[7] = nearcenter - yxnh - yxnw;
+
+    va[0] = farcenter + yxfh + yxfw;
+    va[1] = farcenter - yxfh + yxfw;
+    va[4] = farcenter + yxfh - yxfw;
+    va[5] = farcenter - yxfh - yxfw;
+
+    va = setvecsarrayxm(va, 8, viewMat);
 
     for (int i = 0; i < 8; i++) {
-        viewFr[i] = vecxm(viewFr[i], viewMat);
+        logVec4f(va[i]);
     }
+
+    return va;
 }
-/* Finds the minX, maxX, minYm´, maxY values of given vectors array. AKA (bounding box). */
-const void vfsortvertices(vec4f vf[]) {
-    float minX, maxX, minY, maxY, minZ, maxZ;
-    minX = vf[0][0];
-    maxX = vf[0][0];
-    minY = vf[0][1];
-    maxY = vf[0][1];
-    minZ = vf[0][2];
-    maxZ = vf[0][2];
+/* Finds the minX, maxX, minY, maxY, minZ maxZ values of given vectors array. AKA (bounding box). */
+const DimensionsLimits getDimensionsLimits(vec4f va[]) {
+    DimensionsLimits dl = { 0 };
     for (int i = 0; i < 8; i++) {
         /* Get min and max x values. */
-        if ( vf[i][0] <= minX) {
-            minX = vf[i][0];
-        } else if ( vf[i][0] > maxX) {
-            maxX = vf[i][0];             
+        if ( va[i][0] <= dl.minX) {
+            dl.minX = va[i][0];
+        } else if ( va[i][0] > dl.maxX) {
+            dl.maxX = va[i][0];             
         }
         /* Get min and max y values. */
-        if ( vf[i][1] <= minY) {
-            minY = vf[i][1];
-        } else if ( vf[i][1] > maxY) {
-            maxY = vf[i][1];             
+        if ( va[i][1] <= dl.minY) {
+            dl.minY = va[i][1];
+        } else if ( va[i][1] > dl.maxY) {
+            dl.maxY = va[i][1];             
         }
         /* Get min and max z values. */
-        if ( vf[i][2] <= minZ) {
-            minZ = vf[i][2];
-        } else if ( vf[i][2] > maxZ) {
-            maxZ = vf[i][2];             
+        if ( va[i][2] <= dl.minZ) {
+            dl.minZ = va[i][2];
+        } else if ( va[i][2] > dl.maxZ) {
+            dl.maxZ = va[i][2];             
         }
     }
-    orthoMat = orthographicMatrix(minX, maxX, minY, maxY, minZ, maxZ);
-    // orthoMat = orthographicMatrix(-50.f, 50.f, -50.f, 50.f, 0.01f, 1.f);
+    return dl;
+}
+const Mat4x4 createOrthoMatrixFromLimits(const DimensionsLimits dl) {
+    return orthographicMatrix(dl.minX, dl.maxX, dl.minY, dl.maxY, dl.minZ, dl.maxZ);
+}
+const static void createCascadeShadowMaps(const unsigned int num_of_maps) {
+    DimensionsLimits dl;
+    vec4f *fr[3] = {
+        worldSpaceFrustum(NPlane, 100.f),
+        worldSpaceFrustum(100.f, 300.f),
+        worldSpaceFrustum(300.f, 600.f)
+    };
+    Mat4x4 lm[3] = {
+        lookat(camera[Pos] + (pos + (camera[3] * 100.f)), sunlight.u, sunlight.v, sunlight.n),
+        lookat(camera[Pos] + (pos + (camera[3] * 300.f)), sunlight.u, sunlight.v, sunlight.n),
+        lookat(camera[Pos] + (pos + (camera[3] * 600.f)), sunlight.u, sunlight.v, sunlight.n)
+    };
+
+    for (int i = 0; i < num_of_maps; i++) {
+        lview = inverse_mat(lm[i]);
+
+        dl = getDimensionsLimits(fr[i]);
+        free(fr[i]);
+
+        ortholightMat[i] = mxm(lview, createOrthoMatrixFromLimits(dl));
+    }
 }
 /* ################################################### CASCADE SHADOW MAPPING ################################################ */
 const static void clientmessage(XEvent *event) {
@@ -231,7 +250,9 @@ const static void clientmessage(XEvent *event) {
 
         free(frame_buffer);
         free(depth_buffer);
-        free(shadow_buffer);
+        free(shadow_buffer[0]);
+        free(shadow_buffer[1]);
+        free(shadow_buffer[2]);
 
         free(image);
         XFreeGC(displ, gc);
@@ -262,7 +283,9 @@ const static void configurenotify(XEvent *event) {
         if (INIT) {
             free(frame_buffer);
             free(depth_buffer);
-            free(shadow_buffer);
+            free(shadow_buffer[0]);
+            free(shadow_buffer[1]);
+            free(shadow_buffer[2]);
 
             free(image);
             initBuffers();
@@ -294,8 +317,12 @@ const static void keypress(XEvent *event) {
     system("clear\n");
     switch (keysym) {
         case 97 : look_left(eye, 0.2);             /* a */
+            rotate_light_cam(&scene.m[2], camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
+            rotate_light(&sunlight, camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
             break;
         case 100 : look_right(eye, 0.2);           /* d */
+            rotate_light_cam(&scene.m[2], camera[0], -2.0f, 0.0f, 1.0f, 0.0f);
+            rotate_light(&sunlight, camera[0], -2.0f, 0.0f, 1.0f, 0.0f);
             break;
         case 113 : look_up(eye, 2.2);              /* q */
             break;
@@ -361,7 +388,9 @@ const static void keypress(XEvent *event) {
             break;
         case 122 : rotate_z(&scene.m[0], 1);                     /* z */
             break;
-        case 114 : rotate_light(&sunlight, 1, 0.0f, 1.0f, 0.0f);        /* r */
+        case 114 : 
+            // vec4f center = { 0.f, 0.f, 498.f, 0.f };
+            // rotate_light(&sunlight, center, 1, 0.0f, 1.0f, 0.0f);        /* r */
             break;
         case 99 : rotate_origin(&scene.m[1], 1, 1.0f, 0.0f, 0.0f);  /* c */
             break;
@@ -372,7 +401,7 @@ const static void keypress(XEvent *event) {
             orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, 0.01f, 0.1f);
             break;
         case 112 :
-            if (PROJECTBUFFER == 3)
+            if (PROJECTBUFFER == 5)
                 PROJECTBUFFER = 0;
             PROJECTBUFFER++;
             if (PROJECTBUFFER == 1) {
@@ -407,34 +436,42 @@ const static void keypress(XEvent *event) {
                 PROJECTIONVIEW = 0;
             break;
     }
+    // sunlight.pos = camera[Pos] + (sunlight.pos + (camera[3] * 100.f));
     lookAt = lookat(eye[Pos], eye[U], eye[V], eye[N]);
     viewMat = inverse_mat(lookAt);
-    sunlight.newPos = vecxm(sunlight.pos, viewMat);
-    AdjustShadow = 1;
-    AdjustScene = 1;
+    sunlight.newPos = vecxm(pos, viewMat);
 
-    // logVec4f(camera[Pos]);
-    // logVec4f(camera[Pos] + sunlight.pos);
-    lm = lookat(camera[Pos] + sunlight.pos, sunlight.u, sunlight.v, sunlight.n);
-    lview = inverse_mat(lm);
+    createCascadeShadowMaps(3);
 
-    vfvertices();
-    vfsortvertices(viewFr);
+    // lm = lookat(camera[Pos] + (sunlight.pos + (camera[3] * 100.f)), sunlight.u, sunlight.v, sunlight.n);
+    // lview = inverse_mat(lm);
 
-    ortholightMat = mxm(lview, orthoMat);
-    persplightMat = mxm(lview, perspMat);
+    // vec4f *va = worldSpaceFrustum(NPlane, 50.f);
+    // DimensionsLimits dl = getDimensionsLimits(va);
+    // orthoMat = createOrthoMatrixFromLimits(dl);
+    // free(va);
+
+    // ortholightMat[0] = mxm(lview, orthoMat);
+    // persplightMat = mxm(lview, perspMat);
 
     if (!PROJECTIONVIEW)
         worldMat = mxm(viewMat, perspMat);
     else
         worldMat = mxm(viewMat, orthoMat);
 
-    // memcpy(scene.m[0].v, viewFr, 128);
+    // scene.m[0].v = worldSpaceFrustum(NPlane, 100.f);
+
+    AdjustShadow++;
+    AdjustScene++;
 }
 const static void project() {
     if (AdjustShadow) {
-        memset(shadow_buffer, 0, FBSIZE);
-        shadowPipeline(scene);
+        memset(shadow_buffer[0], 0, FBSIZE);
+        memset(shadow_buffer[1], 0, FBSIZE);
+        memset(shadow_buffer[2], 0, FBSIZE);
+        shadowPipeline(scene, 0);
+        shadowPipeline(scene, 1);
+        shadowPipeline(scene, 2);
         AdjustShadow = 0;
     }
     // if (AdjustScene) {
@@ -452,7 +489,11 @@ const static void drawFrame(void) {
     else if (PROJECTBUFFER == 2)
         image->data = (char*)depth_buffer;
     else if (PROJECTBUFFER == 3)
-        image->data = (char*)shadow_buffer;
+        image->data = (char*)shadow_buffer[0];
+    else if (PROJECTBUFFER == 4)
+        image->data = (char*)shadow_buffer[1];
+    else if (PROJECTBUFFER == 5)
+        image->data = (char*)shadow_buffer[2];
 
     XPutImage(displ, pixmap, gc, image, 0, 0, 0, 0, wa.width, wa.height);
 
@@ -485,7 +526,7 @@ const static void initDependedVariables(void) {
     /* Matrices initialization. */
     perspMat = perspectiveMatrix(FOV, ASPECTRATIO, ZNEAR, ZFAR);
     reperspMat = reperspectiveMatrix(FOV, ASPECTRATIO);
-    orthoMat = orthographicMatrix(-1.f ,1.f, 1.f, -1.f, 0.01f, 1.f);
+    orthoMat = orthographicMatrix(-100.f, 100.f, -100.f, 100.f, 0.01f, 1.f);
 
     AdjustShadow = 1;
     AdjustScene = 1;
@@ -501,9 +542,12 @@ const static void initAtoms(void) {
 }
 /* Creates and Initializes the importand buffers. (frame, depth, shadow). */
 const static void initBuffers(void) {
-    frame_buffer = calloc(wa.width * wa.height * 4, 1);
-    depth_buffer = calloc(wa.width * wa.height, 4);
-    shadow_buffer = calloc(wa.width * wa.height, 4);
+    const int emvadon = wa.width * wa.height;
+    frame_buffer = calloc(emvadon * 4, 1);
+    depth_buffer = calloc(emvadon, 4);
+    shadow_buffer[0] = calloc(emvadon, 4);
+    shadow_buffer[1] = calloc(emvadon, 4);
+    shadow_buffer[2] = calloc(emvadon, 4);
 }
 const static void initLightModel(Light *l) {
     vec4f lightColor = { 1.0, 1.0, 1.0, 1.0 };

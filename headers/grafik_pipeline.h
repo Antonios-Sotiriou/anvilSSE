@@ -25,6 +25,7 @@
     #include <stdio.h>
 #endif
 
+/* Defined in main.c. */
 extern int HALFH, HALFW, PROJECTIONVIEW, DEBUG;
 extern float FPlane, NPlane;
 extern XWindowAttributes wa;

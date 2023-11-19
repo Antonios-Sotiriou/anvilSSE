@@ -25,14 +25,14 @@
 extern int HALFH, HALFW, PROJECTIONVIEW;
 extern float FPlane, NPlane;
 extern XWindowAttributes wa;
-extern Mat4x4 ortholightMat, persplightMat, lookAt, reperspMat, lm;
-extern float *shadow_buffer, shadow_bias;
+extern Mat4x4 ortholightMat[3], persplightMat, lookAt, reperspMat, lm;
+extern float *shadow_buffer[3], shadow_bias;
 extern Light sunlight;
 
 /* Defined in general_functions.c. */
 extern const void swap(void *a, void *b, unsigned long size);
 
-const void shadowPipeline(Scene s);
+const void shadowPipeline(Scene s, const unsigned int sm_index);
 const int shadowTest(vec4f frag);
 
 #endif /* _SHADOW_PIPELINE_H */

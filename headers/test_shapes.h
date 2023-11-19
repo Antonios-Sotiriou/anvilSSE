@@ -10,6 +10,6 @@
 #endif
 
 const void createCube(Mesh *c);
-const void viewFrustum(Mesh *c);
+const void createskybox(Mesh *c);
 
 #endif /* _TEST_SHAPE_H */

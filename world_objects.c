@@ -1,18 +1,20 @@
 #include "headers/world_objects.h"
 
+extern float AmbientStrength, SpecularStrength ;
+
 /* This function is responsible to position the objects in world space. */
 const void posWorldObjects(Scene *s) {
     Mat4x4 sclMatrix, trMatrix, posMatrix;
 
     /* ######################################################################################################## */
-    s->m[0] = loadmesh("objfiles/triangle.obj");
+    s->m[0] = loadmesh("objfiles/terrain.obj");
     // createCube(&s->m[0]);
     // viewFrustum(&s->m[0]);
     sclMatrix = scaleMatrix(1000.0f);
     trMatrix = translationMatrix(0.0f, 0.0f, 0.0f);
     posMatrix = mxm(sclMatrix, trMatrix);
 
-    s->m[0].material = loadmaterial("emerald");
+    s->m[0].material = loadmaterial("stones");
     loadtexture(&s->m[0]);
 
     s->m[0].pivot = trMatrix.m[3];
@@ -27,7 +29,7 @@ const void posWorldObjects(Scene *s) {
     trMatrix = translationMatrix(0.0f, 15.0f, 0.0f);
     posMatrix = mxm(sclMatrix, trMatrix);
 
-    s->m[1].material = loadmaterial("stones");
+    s->m[1].material = loadmaterial("earth");
     loadtexture(&s->m[1]);
 
     s->m[1].pivot = trMatrix.m[3];
