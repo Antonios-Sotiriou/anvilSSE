@@ -410,7 +410,7 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
 
     const int orient = (txmx[0] * tymy[2]) - (tymy[0] * txmx[2]);
     // vec4f mslopes = __builtin_convertvector(txmx, vec4f) / __builtin_convertvector(tymy, vec4f);
-    vec4i a = { 8, 8, 8, 8 }, b = { 2, 2, 0, 2 }, c = { 5, 6, 7, 8 };
+    // vec4i a = { 8, 8, 8, 8 }, b = { 2, 2, 0, 2 }, c = { 5, 6, 7, 8 };
     // printf("before: ");
     // logVec4i(b > a);
     // mslopes[0] = ( __isinff(mslopes[0]) || __isnanf(mslopes[0])) ? 0 : mslopes[0];

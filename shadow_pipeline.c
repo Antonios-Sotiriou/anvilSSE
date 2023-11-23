@@ -292,7 +292,6 @@ const void shadowface(const face f, const Srt srt[], const unsigned int sm_index
     }
 }
 const int shadowTest(vec4f frag) {
-    // logVec4f(frag);
     int sm_index;
     if (frag[2] >= 0.f && frag[2] <= 100.f)
         sm_index = 0;
@@ -301,15 +300,12 @@ const int shadowTest(vec4f frag) {
     else if (frag[2] > 300.f)
         sm_index = 2;
 
-    frag[3] = 1.f;
     /* Transform to Model space coordinates. */
+    frag[3] = 1.f;
     frag = vecxm(frag, lookAt);
 
     /* Transform to Light space coordinates. */
-    frag = vecxm(frag, ortholightMat[0]);
-    // float w = frag[3];
-    // frag /= w;
-    // frag[3] = w;
+    frag = vecxm(frag, ortholightMat[sm_index]);
 
     float x = frag[0];
     float y = frag[1];

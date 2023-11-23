@@ -14,7 +14,7 @@ const void posWorldObjects(Scene *s) {
     trMatrix = translationMatrix(0.0f, 0.0f, 0.0f);
     posMatrix = mxm(sclMatrix, trMatrix);
 
-    s->m[0].material = loadmaterial("stones");
+    s->m[0].material = loadmaterial("emerald");
     loadtexture(&s->m[0]);
 
     s->m[0].pivot = trMatrix.m[3];
@@ -25,8 +25,9 @@ const void posWorldObjects(Scene *s) {
 
     /* ######################################################################################################## */
     s->m[1] = loadmesh("objfiles/cube.obj");
-    sclMatrix = scaleMatrix(10.0f);
-    trMatrix = translationMatrix(0.0f, 15.0f, 0.0f);
+    // createCube(&s->m[1]);
+    sclMatrix = scaleMatrix(100.0f);
+    trMatrix = translationMatrix(0.0f, 150.0f, 0.0f);
     posMatrix = mxm(sclMatrix, trMatrix);
 
     s->m[1].material = loadmaterial("earth");
@@ -40,6 +41,7 @@ const void posWorldObjects(Scene *s) {
 
     /* ######################################################################################################## */
     s->m[2] = loadmesh("objfiles/spacedom.obj");
+    // createCube(&s->m[2]);
     sclMatrix = scaleMatrix(10.0f);
     trMatrix = translationMatrix(0.0f, 100.0f, 0.0f);
     posMatrix = mxm(sclMatrix, trMatrix);

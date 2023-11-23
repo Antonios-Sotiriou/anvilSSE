@@ -42,6 +42,7 @@ enum { Pos, U, V, N, C, newPos };
 #define POINTERMASKS              ( ButtonPressMask )
 #define KEYBOARDMASKS             ( KeyPressMask )
 #define EXPOSEMASKS               ( StructureNotifyMask )
+#define NUM_OF_CASCADES           3
 
 /* X Global Structures. */
 Display *displ;
@@ -56,7 +57,7 @@ Atom wmatom[Atom_Last];
 
 /* BUFFERS. */
 u_int8_t *frame_buffer, *map_buffer;
-float *depth_buffer, *shadow_buffer[3];
+float *depth_buffer, *shadow_buffer[NUM_OF_CASCADES];
 
 /* Project Global Variables. */
 int PROJECTIONVIEW = 0;
@@ -70,7 +71,7 @@ static float ZFAR         = 1.0f;
 static float ASPECTRATIO  = 1;
 static int FBSIZE         = 0;
 float NPlane              = 1.0f;
-float FPlane              = 20000.0f;
+float FPlane              = 1000.0f;
 float SCALE               = 0.003f;
 float AmbientStrength     = 0.85f;
 float SpecularStrength    = 0.75f;
@@ -89,7 +90,7 @@ Light sunlight = {
     // .u = { -0.694661f, 0.000000f, -0.719352f, 0.000000f },
     // .v = { 0.000000f, -1.000000f, 0.000000f, 0.000000f },
     // .n = { 0.719352f, 0.000000f, -0.694661f, 0.000000f },
-    .pos = { 0.f, 100.0f, 0.f, 1.f },
+    .pos = { 0.f, 1000.0f, 0.f, 1.f },
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
@@ -183,11 +184,7 @@ vec4f *worldSpaceFrustum(const float np, const float fp) {
     va[4] = farcenter + yxfh - yxfw;
     va[5] = farcenter - yxfh - yxfw;
 
-    va = setvecsarrayxm(va, 8, viewMat);
-
-    for (int i = 0; i < 8; i++) {
-        logVec4f(va[i]);
-    }
+    // va = setvecsarrayxm(va, 8, viewMat);
 
     return va;
 }
@@ -219,7 +216,7 @@ const DimensionsLimits getDimensionsLimits(vec4f va[]) {
 const Mat4x4 createOrthoMatrixFromLimits(const DimensionsLimits dl) {
     return orthographicMatrix(dl.minX, dl.maxX, dl.minY, dl.maxY, dl.minZ, dl.maxZ);
 }
-const static void createCascadeShadowMaps(const unsigned int num_of_maps) {
+const static void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
     DimensionsLimits dl;
     vec4f *fr[3] = {
         worldSpaceFrustum(NPlane, 100.f),
@@ -227,13 +224,15 @@ const static void createCascadeShadowMaps(const unsigned int num_of_maps) {
         worldSpaceFrustum(300.f, 600.f)
     };
     Mat4x4 lm[3] = {
-        lookat(camera[Pos] + (pos + (camera[3] * 100.f)), sunlight.u, sunlight.v, sunlight.n),
-        lookat(camera[Pos] + (pos + (camera[3] * 300.f)), sunlight.u, sunlight.v, sunlight.n),
-        lookat(camera[Pos] + (pos + (camera[3] * 600.f)), sunlight.u, sunlight.v, sunlight.n)
+        lookat(camera[Pos] + (sunlight.pos + (camera[3] * 100.f)), sunlight.u, sunlight.v, sunlight.n),//100.f
+        lookat(camera[Pos] + (sunlight.pos + (camera[3] * 300.f)), sunlight.u, sunlight.v, sunlight.n),//460.f
+        lookat(camera[Pos] + (sunlight.pos + (camera[3] * 600.f)), sunlight.u, sunlight.v, sunlight.n)//1260.f
     };
 
-    for (int i = 0; i < num_of_maps; i++) {
+    for (int i = 0; i < num_of_cascades; i++) {
         lview = inverse_mat(lm[i]);
+        /* Transform view frustum to Space. */
+        fr[i] = vecsarrayxm(fr[i], 8, viewMat);
 
         dl = getDimensionsLimits(fr[i]);
         free(fr[i]);
@@ -318,11 +317,11 @@ const static void keypress(XEvent *event) {
     switch (keysym) {
         case 97 : look_left(eye, 0.2);             /* a */
             rotate_light_cam(&scene.m[2], camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
-            rotate_light(&sunlight, camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
+            // rotate_light(&sunlight, camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
             break;
         case 100 : look_right(eye, 0.2);           /* d */
             rotate_light_cam(&scene.m[2], camera[0], -2.0f, 0.0f, 1.0f, 0.0f);
-            rotate_light(&sunlight, camera[0], -2.0f, 0.0f, 1.0f, 0.0f);
+            // rotate_light(&sunlight, camera[0], -2.0f, 0.0f, 1.0f, 0.0f);
             break;
         case 113 : look_up(eye, 2.2);              /* q */
             break;
@@ -439,20 +438,9 @@ const static void keypress(XEvent *event) {
     // sunlight.pos = camera[Pos] + (sunlight.pos + (camera[3] * 100.f));
     lookAt = lookat(eye[Pos], eye[U], eye[V], eye[N]);
     viewMat = inverse_mat(lookAt);
-    sunlight.newPos = vecxm(pos, viewMat);
+    sunlight.newPos = vecxm(sunlight.pos, viewMat);
 
-    createCascadeShadowMaps(3);
-
-    // lm = lookat(camera[Pos] + (sunlight.pos + (camera[3] * 100.f)), sunlight.u, sunlight.v, sunlight.n);
-    // lview = inverse_mat(lm);
-
-    // vec4f *va = worldSpaceFrustum(NPlane, 50.f);
-    // DimensionsLimits dl = getDimensionsLimits(va);
-    // orthoMat = createOrthoMatrixFromLimits(dl);
-    // free(va);
-
-    // ortholightMat[0] = mxm(lview, orthoMat);
-    // persplightMat = mxm(lview, perspMat);
+    createCascadeShadowMatrices(NUM_OF_CASCADES);
 
     if (!PROJECTIONVIEW)
         worldMat = mxm(viewMat, perspMat);
@@ -460,6 +448,8 @@ const static void keypress(XEvent *event) {
         worldMat = mxm(viewMat, orthoMat);
 
     // scene.m[0].v = worldSpaceFrustum(NPlane, 100.f);
+    // scene.m[1].v = worldSpaceFrustum(100.f, 300.f);
+    // scene.m[2].v = worldSpaceFrustum(300.f, 600.f);
 
     AdjustShadow++;
     AdjustScene++;
