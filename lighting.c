@@ -16,7 +16,7 @@ const float phong(vec4f nm, const Material mtr, const float pixX, const float pi
     pixel = vecxm(pixel, reperspMat);
 
     /* Applying shadow test by transforming View Space coordinates to light Space. */
-    if (!shadowTest(pixel)) {
+    // if (!shadowTest(pixel)) {
         nm = norm_vec(nm);
         vec4f lightdir = norm_vec(sunlight.newPos - pixel);
         float diff = dot_product(lightdir, nm);
@@ -33,9 +33,11 @@ const float phong(vec4f nm, const Material mtr, const float pixX, const float pi
                 }
             }
         }
-        fragcolor = __builtin_convertvector(__builtin_shuffle(((specular + diffuse + ambient) * mtr.basecolor) * 255, rgbmask), vec4c);
-    } else
-        fragcolor = __builtin_convertvector(__builtin_shuffle((ambient * mtr.basecolor) * 255, rgbmask), vec4c);
+        fragcolor = __builtin_convertvector(__builtin_shuffle(((((specular + diffuse) * shadowTest(pixel)) + ambient) * mtr.basecolor) * 255, rgbmask), vec4c);
+    // } else
+    //     fragcolor = __builtin_convertvector(__builtin_shuffle((ambient * mtr.basecolor) * 255, rgbmask), vec4c);
+
+    // fragcolor = __builtin_convertvector(__builtin_shuffle(mtr.basecolor * 255, rgbmask), vec4c);
 
     // fragcolor = __builtin_convertvector(__builtin_shuffle(mtr.basecolor * 255, rgbmask), vec4c);
 

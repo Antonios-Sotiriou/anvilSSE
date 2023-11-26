@@ -38,9 +38,9 @@ const void rotate_light(Light *l, const vec4f pivot, const float angle, float x,
     Mat4x4 m = MatfromQuat(xrot, n.v);
 
     sunlight.pos = vecxm(l->pos, m);
-    // sunlight.u = vecxm(l->u, m);
-    // sunlight.v = vecxm(l->v, m);
-    // sunlight.n = vecxm(l->n, m);
+    sunlight.u = vecxm(l->u, m);
+    sunlight.v = vecxm(l->v, m);
+    sunlight.n = vecxm(l->n, m);
 }
 /* Rotates light according to camera position. */
 const void rotate_light_cam(Mesh *l, const vec4f pivot, const float angle, float x, float y, float z) {

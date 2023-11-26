@@ -71,7 +71,7 @@ static float ZFAR         = 1.0f;
 static float ASPECTRATIO  = 1;
 static int FBSIZE         = 0;
 float NPlane              = 1.0f;
-float FPlane              = 1000.0f;
+float FPlane              = 20000.0f;
 float SCALE               = 0.003f;
 float AmbientStrength     = 0.85f;
 float SpecularStrength    = 0.75f;
@@ -90,7 +90,7 @@ Light sunlight = {
     // .u = { -0.694661f, 0.000000f, -0.719352f, 0.000000f },
     // .v = { 0.000000f, -1.000000f, 0.000000f, 0.000000f },
     // .n = { 0.719352f, 0.000000f, -0.694661f, 0.000000f },
-    .pos = { 0.f, 1000.0f, 0.f, 1.f },
+    .pos = { 0.f, 100.0f, 0.f, 1.f },
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
@@ -232,7 +232,7 @@ const static void createCascadeShadowMatrices(const unsigned int num_of_cascades
     for (int i = 0; i < num_of_cascades; i++) {
         lview = inverse_mat(lm[i]);
         /* Transform view frustum to Space. */
-        fr[i] = vecsarrayxm(fr[i], 8, viewMat);
+        fr[i] = setvecsarrayxm(fr[i], 8, viewMat);
 
         dl = getDimensionsLimits(fr[i]);
         free(fr[i]);
@@ -388,8 +388,8 @@ const static void keypress(XEvent *event) {
         case 122 : rotate_z(&scene.m[0], 1);                     /* z */
             break;
         case 114 : 
-            // vec4f center = { 0.f, 0.f, 498.f, 0.f };
-            // rotate_light(&sunlight, center, 1, 0.0f, 1.0f, 0.0f);        /* r */
+            vec4f center = { 0.f, 0.f, 0.f, 0.f };
+            rotate_light(&sunlight, center, 1, 0.0f, 1.0f, 0.0f);        /* r */
             break;
         case 99 : rotate_origin(&scene.m[1], 1, 1.0f, 0.0f, 0.0f);  /* c */
             break;

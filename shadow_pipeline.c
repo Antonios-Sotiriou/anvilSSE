@@ -291,7 +291,7 @@ const void shadowface(const face f, const Srt srt[], const unsigned int sm_index
         yB++;
     }
 }
-const int shadowTest(vec4f frag) {
+const float shadowTest(vec4f frag) {
     int sm_index;
     if (frag[2] >= 0.f && frag[2] <= 100.f)
         sm_index = 0;
@@ -314,18 +314,18 @@ const int shadowTest(vec4f frag) {
     /* Transform to Screen space coordinates. */
     x = (1.0 + x) * HALFW;
     if ( (x < 0) || (x >= wa.width) )
-        return 0;
+        return 1.f;
 
     y = (1.0 + y) * HALFH;
     if ( (y < 0) || (y >= wa.height) )
-        return 0;
+        return 1.f;
 
     z = 1.f / z;
 
     if ( z < shadow_buffer[sm_index][((int)y * wa.width) + (int)x] + shadow_bias)
-        return 1;
+        return 0.f;
 
-    return 0;
+    return 1.f;
 }
 
 

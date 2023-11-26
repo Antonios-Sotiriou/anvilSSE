@@ -33,7 +33,7 @@ extern Light sunlight;
 extern const void swap(void *a, void *b, unsigned long size);
 
 const void shadowPipeline(Scene s, const unsigned int sm_index);
-const int shadowTest(vec4f frag);
+const float shadowTest(vec4f frag);
 
 #endif /* _SHADOW_PIPELINE_H */
 

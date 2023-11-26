@@ -1,7 +1,5 @@
 #include "headers/world_objects.h"
 
-extern float AmbientStrength, SpecularStrength ;
-
 /* This function is responsible to position the objects in world space. */
 const void posWorldObjects(Scene *s) {
     Mat4x4 sclMatrix, trMatrix, posMatrix;
