@@ -7,8 +7,8 @@ const float phong(vec4f nm, const Material mtr, const float pixX, const float pi
 
     float w = 1 / pixW;
     vec4f pixel = {
-        ((pixX / HALFW) - 1.0) * w,
-        ((pixY / HALFH) - 1.0) * w,
+        ((pixX / (point_attrib->width >> 1)) - 1.0) * w,
+        ((pixY / (point_attrib->height >> 1)) - 1.0) * w,
         (1.f / pixZ) * w,
         w
     };
@@ -41,7 +41,7 @@ const float phong(vec4f nm, const Material mtr, const float pixX, const float pi
 
     // fragcolor = __builtin_convertvector(__builtin_shuffle(mtr.basecolor * 255, rgbmask), vec4c);
 
-    memcpy(&frame_buffer[(int)((pixY * wa.width * 4) + (pixX * 4))], &fragcolor, 4);
+    memcpy(&point_buffer[(int)((pixY * point_attrib->width * 4) + (pixX * 4))], &fragcolor, 4);
     return pixW;
 }
 

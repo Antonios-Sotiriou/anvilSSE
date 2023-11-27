@@ -1,10 +1,10 @@
 #include "headers/matrices.h"
 
 /* Some usefull masks to shuffle vectors with builtins SSE gcc. */
-const const static vec4i xmask = { 0, 0, 0, 0 };
-const const static vec4i ymask = { 1, 1, 1, 1 };
-const const static vec4i zmask = { 2, 2, 2, 2 };
-const const static vec4i wmask = { 3, 3, 3, 3 };
+const static vec4i xmask = { 0, 0, 0, 0 };
+const static vec4i ymask = { 1, 1, 1, 1 };
+const static vec4i zmask = { 2, 2, 2, 2 };
+const static vec4i wmask = { 3, 3, 3, 3 };
 
 /* Scale Matrix. */
 const Mat4x4 scaleMatrix(const float scale) {

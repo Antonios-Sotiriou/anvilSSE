@@ -26,7 +26,7 @@ const void drawLine(float x1, float y1, float x2, float y2, vec4f color) {
     int start_x = x1 + 0.5;
     int end_x = x2 + 0.5;
 
-    const int pad = wa.width * 4;
+    const int pad = point_attrib->width * 4;
     int step_y, step_x;
     if ( (delta_x == 0) && (delta_y == 0) ) {
         return;
@@ -36,12 +36,12 @@ const void drawLine(float x1, float y1, float x2, float y2, vec4f color) {
         if (delta_x < 0) {
             for (int x = start_x; x > end_x; x--) {
                 step_y = ((slope * (x - start_x)) + y1);
-                memcpy(&frame_buffer[(step_y * pad) + (x * 4)], &rgba, 4);
+                memcpy(&point_buffer[(step_y * pad) + (x * 4)], &rgba, 4);
             }
         } else {
             for (int x = start_x; x < end_x; x++) {
                 step_y = ((slope * (x - start_x)) + y1);
-                memcpy(&frame_buffer[(step_y * pad) + (x * 4)], &rgba, 4);
+                memcpy(&point_buffer[(step_y * pad) + (x * 4)], &rgba, 4);
             }
         }
     } else if ( fabsdx < fabsdy ) {
@@ -50,12 +50,12 @@ const void drawLine(float x1, float y1, float x2, float y2, vec4f color) {
         if (delta_y < 0) {
             for (int y = start_y; y > end_y; y--) {
                 step_x = ((slope * (y - start_y)) + x1);
-                memcpy(&frame_buffer[(y * pad) + (step_x * 4)], &rgba, 4);
+                memcpy(&point_buffer[(y * pad) + (step_x * 4)], &rgba, 4);
             }
         } else {
             for (int y = start_y; y < end_y; y++) {
                 step_x = ((slope * (y - start_y)) + x1);
-                memcpy(&frame_buffer[(y * pad) + (step_x * 4)], &rgba, 4);
+                memcpy(&point_buffer[(y * pad) + (step_x * 4)], &rgba, 4);
             }
         }
     } else {
@@ -131,7 +131,7 @@ const static void edgefillGeneral(const face f, const Material mtr, int minX, in
 
         vec4i xa = ya;
         int xflag = 0;
-        const int padyDB = y * wa.width;
+        const int padyDB = y * point_attrib->width;
         for (int x = minX; x <= maxX; x++) {
 
             const int xa0 = ( (tps[0]) && (!xa[0]) ) ? -1 : xa[0];
@@ -207,7 +207,7 @@ const static void scanlinefillGeneral(const face f, const Material mtr, const Sr
     int yA = 0;
     if (tymy[0] != 0)
         for (int y = y_start; y < y_end1; y++) {
-            const int padyDB = y * wa.width;
+            const int padyDB = y * point_attrib->width;
 
             const int x_start = (ma * yA) + txs[0];
             const int x_end = (mb * yA) + txs[0];
@@ -248,7 +248,7 @@ const static void scanlinefillGeneral(const face f, const Material mtr, const Sr
 
     int yB = -tymy[1];
     for (int y = y_end1; y < y_end2; y++) {
-        const int padyDB = y * wa.width;
+        const int padyDB = y * point_attrib->width;
 
         const int x_start = (ma * yB) + txs[2];
         const int x_end = (mb * yB) + txs[2];
@@ -339,7 +339,7 @@ const static void edgetexGeneral(const face f, Material mtr, int minX, int maxX,
 
         vec4i xa = ya;
         int xflag = 0;
-        const int padyDB = y * wa.width;
+        const int padyDB = y * point_attrib->width;
         for (int x = minX; x <= maxX; x++) {
 
             const int xa0 = ( (tps[0]) && (!xa[0]) ) ? -1 : xa[0];
@@ -437,7 +437,7 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
     int yA = 0;
     if (tymy[0] != 0)
         for (int y = y_start; y < y_end1; y++) {
-            const int padyDB = y * wa.width;
+            const int padyDB = y * point_attrib->width;
 
             const int x_start = (ma * yA) + txs[0];
             const int x_end = (mb * yA) + txs[0];
@@ -490,7 +490,7 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
 
     int yB = -tymy[1];
     for (int y = y_end1; y < y_end2; y++) {
-        const int padyDB = y * wa.width;
+        const int padyDB = y * point_attrib->width;
 
         const int x_start = (ma * yB) + txs[2];
         const int x_end = (mb * yB) + txs[2];

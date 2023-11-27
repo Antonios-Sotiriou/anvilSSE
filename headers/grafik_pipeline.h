@@ -28,8 +28,9 @@
 /* Defined in main.c. */
 extern int HALFH, HALFW, PROJECTIONVIEW, DEBUG;
 extern float FPlane, NPlane;
-extern XWindowAttributes wa;
+extern XWindowAttributes main_wa;
 extern Mat4x4 viewMat, worldMat, lookAt;
+extern u_int8_t *frame_buffer, *point_buffer;
 
 const void grafikPipeline(Scene s);
 

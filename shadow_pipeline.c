@@ -3,16 +3,17 @@
 #include "headers/logging.h"
 
 const static void assemblyfacesShadow(Mesh *m, const int len);
-const static void shadowppdiv(Mesh *m, const int len);
-const static void clipptoview(Mesh *m, const int len);
+// const static void shadowppdiv(Mesh *m, const int len);
+// const static void clipptoview(Mesh *m, const int len);
+// const static void setwone(Mesh *m, const int len);
 const static Mesh shadowculling(const Mesh c, const int len);
 const static int shadowtoscreen(Mesh *m, const int len);
 const static void createShadowmap(Mesh m, const unsigned int sm_index);
 const static void shadowface(const face f, const Srt srt[], const unsigned int sm_index);
 const static vec4i smmask = { 1, 2, 0, 3 };
-const static void setwone(Mesh *m, const int len);
 
 const void shadowPipeline(Scene s, const unsigned int sm_index) {
+    point_attrib = &main_wa;
     Mesh cache = { 0 };
     for (int i = 0; i < s.m_indexes; i++) {
         initMesh(&cache, s.m[i]);
@@ -79,34 +80,34 @@ const static void assemblyfacesShadow(Mesh *m, const int len) {
         m->f[i].v[2] = m->v[m->f[i].c[0]];
     }
 }
-/* Perspective division. */
-const static void shadowppdiv(Mesh *m, const int len) {
-    for (int i = 0; i < len; i++) {
-        for (int j = 0; j < 3; j++) {
-            float w = m->f[i].v[j][3];
-            m->f[i].v[j] /= w;
-            m->f[i].v[j][3] = w;
-        }
-    }
-}
-/* Perspective division. */
-const static void clipptoview(Mesh *m, const int len) {
-    for (int i = 0; i < len; i++) {
-        for (int j = 0; j < 3; j++) {
-            float w = m->f[i].v[j][3];
-            m->f[i].v[j] *= w;
-            m->f[i].v[j][3] = w;
-        }
-    }
-}
-/* Perspective division. */
-const static void setwone(Mesh *m, const int len) {
-    for (int i = 0; i < len; i++) {
-        for (int j = 0; j < 3; j++) {
-            m->f[i].v[j][3] = 1.f;
-        }
-    }
-}
+// /* Perspective division. */
+// const static void shadowppdiv(Mesh *m, const int len) {
+//     for (int i = 0; i < len; i++) {
+//         for (int j = 0; j < 3; j++) {
+//             float w = m->f[i].v[j][3];
+//             m->f[i].v[j] /= w;
+//             m->f[i].v[j][3] = w;
+//         }
+//     }
+// }
+// /* Perspective division. */
+// const static void clipptoview(Mesh *m, const int len) {
+//     for (int i = 0; i < len; i++) {
+//         for (int j = 0; j < 3; j++) {
+//             float w = m->f[i].v[j][3];
+//             m->f[i].v[j] *= w;
+//             m->f[i].v[j][3] = w;
+//         }
+//     }
+// }
+// /* Perspective division. */
+// const static void setwone(Mesh *m, const int len) {
+//     for (int i = 0; i < len; i++) {
+//         for (int j = 0; j < 3; j++) {
+//             m->f[i].v[j][3] = 1.f;
+//         }
+//     }
+// }
 /* Backface culling.Discarding Triangles that should not be painted.Creating a new dynamic Mesh stucture Triangles array. */
 const static Mesh shadowculling(const Mesh m, const int len) {
     Mesh r = m;
@@ -152,7 +153,7 @@ const static int shadowtoscreen(Mesh *m, const int len) {
     if (!m->f_indexes)
         return 0;
 
-    vec4f plane_down_p = { 0.0, wa.height - 1.0, 0.0 },
+    vec4f plane_down_p = { 0.0, point_attrib->height - 1.0, 0.0 },
           plane_down_n = { 0.0, -1.0, 0.0 };
     *m = shadowclipp(*m, plane_down_p, plane_down_n);
     if (!m->f_indexes)
@@ -164,7 +165,7 @@ const static int shadowtoscreen(Mesh *m, const int len) {
     if (!m->f_indexes)
         return 0;
 
-    vec4f plane_right_p = { wa.width - 1.0, 0.0, 0.0 },
+    vec4f plane_right_p = { point_attrib->width - 1.0, 0.0, 0.0 },
           plane_right_n = { -1.0, 0.0, 0.0 };
     *m = shadowclipp(*m, plane_right_p, plane_right_n);
     if (!m->f_indexes)
@@ -225,7 +226,7 @@ const void shadowface(const face f, const Srt srt[], const unsigned int sm_index
     int yA = 0;
     if (ymy[0] != 0)
         for (int y = y_start; y < y_end1; y++) {
-            const int padySB = y * wa.width;
+            const int padySB = y * point_attrib->width;
 
             const int x_start = (ma * yA) + xs[0];
             const int x_end = (mb * yA) + xs[0];
@@ -265,7 +266,7 @@ const void shadowface(const face f, const Srt srt[], const unsigned int sm_index
 
     int yB = -ymy[1];
     for (int y = y_end1; y < y_end2; y++) {
-        const int padySB = y * wa.width;
+        const int padySB = y * point_attrib->width;
 
         const int x_start = (ma * yB) + xs[2];
         const int x_end = (mb * yB) + xs[2];
@@ -312,17 +313,17 @@ const float shadowTest(vec4f frag) {
     float z = frag[2];
 
     /* Transform to Screen space coordinates. */
-    x = (1.0 + x) * HALFW;
-    if ( (x < 0) || (x >= wa.width) )
+    x = (1.0 + x) * (point_attrib->width >> 1);
+    if ( (x < 0) || (x >= point_attrib->width) )
         return 1.f;
 
-    y = (1.0 + y) * HALFH;
-    if ( (y < 0) || (y >= wa.height) )
+    y = (1.0 + y) * (point_attrib->height >> 1);
+    if ( (y < 0) || (y >= point_attrib->height) )
         return 1.f;
 
     z = 1.f / z;
 
-    if ( z < shadow_buffer[sm_index][((int)y * wa.width) + (int)x] + shadow_bias)
+    if ( z < shadow_buffer[sm_index][((int)y * point_attrib->width) + (int)x] + shadow_bias)
         return 0.f;
 
     return 1.f;

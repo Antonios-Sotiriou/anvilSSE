@@ -39,6 +39,8 @@ enum { Pos, U, V, N, C, newPos };
 
 #define WIDTH                     1000
 #define HEIGHT                    1000
+#define MAP_WIDTH                 200
+#define MAP_HEIGHT                200
 #define POINTERMASKS              ( ButtonPressMask )
 #define KEYBOARDMASKS             ( KeyPressMask )
 #define EXPOSEMASKS               ( StructureNotifyMask )
@@ -46,17 +48,17 @@ enum { Pos, U, V, N, C, newPos };
 
 /* X Global Structures. */
 Display *displ;
-Window mainwin;
-XImage *image;
-Pixmap pixmap;
+Window mainwin, mapwin;
+XImage *main_image, *map_image;
+Pixmap main_pixmap, map_pixmap;
 GC gc;
 XGCValues gcvalues;
-XWindowAttributes wa;
+XWindowAttributes main_wa, map_wa, *point_attrib;
 XSetWindowAttributes sa;
 Atom wmatom[Atom_Last];
 
 /* BUFFERS. */
-u_int8_t *frame_buffer, *map_buffer;
+u_int8_t *frame_buffer, *map_buffer, *point_buffer;
 float *depth_buffer, *shadow_buffer[NUM_OF_CASCADES];
 
 /* Project Global Variables. */
@@ -136,7 +138,7 @@ const static void initAtoms(void);
 const static void initBuffers(void);
 const static void initLightModel(Light *l);
 const static void pixmapcreate(void);
-const static void pixmapdisplay(void);
+const static void pixmapdisplay(Drawable pixmap, Drawable window, unsigned int wdth, unsigned int heigth);
 const static void announceReadyState(void);
 const static void InitTimeCounter(void);
 const static void UpdateTimeCounter(void);
@@ -248,14 +250,18 @@ const static void clientmessage(XEvent *event) {
         releaseScene(&scene);
 
         free(frame_buffer);
+        free(map_buffer);
         free(depth_buffer);
         free(shadow_buffer[0]);
         free(shadow_buffer[1]);
         free(shadow_buffer[2]);
 
-        free(image);
+        free(main_image);
+        free(map_image);
         XFreeGC(displ, gc);
-        XFreePixmap(displ, pixmap);
+        XFreePixmap(displ, main_pixmap);
+        XFreePixmap(displ, map_pixmap);
+        XDestroyWindow(displ, mapwin);
         XDestroyWindow(displ, mainwin);
 
         RUNNING = 0;
@@ -277,16 +283,18 @@ const static void configurenotify(XEvent *event) {
 
     if (!event->xconfigure.send_event) {
         printf("configurenotify event received\n");
-        XGetWindowAttributes(displ, mainwin, &wa);
+        XGetWindowAttributes(displ, mainwin, &main_wa);
 
         if (INIT) {
             free(frame_buffer);
+            free(map_buffer);
             free(depth_buffer);
             free(shadow_buffer[0]);
             free(shadow_buffer[1]);
             free(shadow_buffer[2]);
 
-            free(image);
+            free(main_image);
+            free(map_image);
             initBuffers();
             pixmapcreate();
 
@@ -474,29 +482,41 @@ const static void project() {
 }
 /* Writes the final Pixel values on screen. */
 const static void drawFrame(void) {
-    if (PROJECTBUFFER <= 1)
-        image->data = (char*)frame_buffer;
-    else if (PROJECTBUFFER == 2)
-        image->data = (char*)depth_buffer;
-    else if (PROJECTBUFFER == 3)
-        image->data = (char*)shadow_buffer[0];
-    else if (PROJECTBUFFER == 4)
-        image->data = (char*)shadow_buffer[1];
-    else if (PROJECTBUFFER == 5)
-        image->data = (char*)shadow_buffer[2];
+    map_image->data = (char*)map_buffer;
+    XPutImage(displ, map_pixmap, gc, map_image, 0, 0, 0, 0, map_wa.width, map_wa.height);
+    pixmapdisplay(map_pixmap, mapwin, MAP_WIDTH, MAP_HEIGHT);
 
-    XPutImage(displ, pixmap, gc, image, 0, 0, 0, 0, wa.width, wa.height);
+    if (PROJECTBUFFER <= 1)
+        main_image->data = (char*)frame_buffer;
+    else if (PROJECTBUFFER == 2)
+        main_image->data = (char*)depth_buffer;
+    else if (PROJECTBUFFER == 3)
+        main_image->data = (char*)shadow_buffer[0];
+    else if (PROJECTBUFFER == 4)
+        main_image->data = (char*)shadow_buffer[1];
+    else if (PROJECTBUFFER == 5)
+        main_image->data = (char*)shadow_buffer[2];
+
+    XPutImage(displ, main_pixmap, gc, main_image, 0, 0, 0, 0, main_wa.width, main_wa.height);
 
     memset(frame_buffer, 0, FBSIZE);
+    memset(map_buffer, 0, map_wa.width * map_wa.height * 4);
     memset(depth_buffer, 0, FBSIZE);
-    pixmapdisplay();
+    pixmapdisplay(main_pixmap, mainwin, WIDTH, HEIGHT);
 }
 const static void initMainWindow(void) {
     sa.event_mask = EXPOSEMASKS | KEYBOARDMASKS | POINTERMASKS;
     sa.background_pixel = 0x000000;
     mainwin = XCreateWindow(displ, XRootWindow(displ, XDefaultScreen(displ)), 0, 0, WIDTH, HEIGHT, 0, CopyFromParent, InputOutput, CopyFromParent, CWBackPixel | CWEventMask, &sa);
     XMapWindow(displ, mainwin);
-    XGetWindowAttributes(displ, mainwin, &wa);
+    XGetWindowAttributes(displ, mainwin, &main_wa);
+}
+const static void initMapWindow(void) {
+    sa.event_mask = NoEventMask;
+    sa.background_pixel = 0x000000;
+    mapwin = XCreateWindow(displ, mainwin, WIDTH - MAP_WIDTH, 0, MAP_WIDTH, MAP_HEIGHT, 0, CopyFromParent, InputOutput, CopyFromParent, CWBackPixel, &sa);
+    XMapWindow(displ, mapwin);
+    XGetWindowAttributes(displ, mapwin, &map_wa);
 }
 const static void initGlobalGC(void) {
     gcvalues.foreground = 0xffffff;
@@ -505,13 +525,14 @@ const static void initGlobalGC(void) {
     gc = XCreateGC(displ, mainwin, GCBackground | GCForeground | GCGraphicsExposures, &gcvalues);
 }
 const static void initDependedVariables(void) {
-    image = XCreateImage(displ, wa.visual, wa.depth, ZPixmap, 0, (char*)frame_buffer, wa.width, wa.height, 32, (wa.width * 4));
+    main_image = XCreateImage(displ, main_wa.visual, main_wa.depth, ZPixmap, 0, (char*)frame_buffer, main_wa.width, main_wa.height, 32, (main_wa.width * 4));
+    map_image = XCreateImage(displ, map_wa.visual, map_wa.depth, ZPixmap, 0, (char*)map_buffer, map_wa.width, map_wa.height, 32, (map_wa.width * 4));
 
-    ASPECTRATIO = ((float)wa.width / (float)wa.height);
-    HALFH = wa.height >> 1;
-    HALFW = wa.width >> 1;
+    ASPECTRATIO = ((float)main_wa.width / (float)main_wa.height);
+    HALFH = main_wa.height >> 1;
+    HALFW = main_wa.width >> 1;
 
-    FBSIZE = wa.width * wa.height * 4;
+    FBSIZE = main_wa.width * main_wa.height * 4;
 
     /* Matrices initialization. */
     perspMat = perspectiveMatrix(FOV, ASPECTRATIO, ZNEAR, ZFAR);
@@ -532,8 +553,9 @@ const static void initAtoms(void) {
 }
 /* Creates and Initializes the importand buffers. (frame, depth, shadow). */
 const static void initBuffers(void) {
-    const int emvadon = wa.width * wa.height;
+    const int emvadon = main_wa.width * main_wa.height;
     frame_buffer = calloc(emvadon * 4, 1);
+    map_buffer = calloc(map_wa.width * map_wa.height * 4, 1);
     depth_buffer = calloc(emvadon, 4);
     shadow_buffer[0] = calloc(emvadon, 4);
     shadow_buffer[1] = calloc(emvadon, 4);
@@ -550,10 +572,11 @@ const static void initLightModel(Light *l) {
     l->material = mt;
 }
 const static void pixmapcreate(void) {
-    pixmap = XCreatePixmap(displ, mainwin, wa.width, wa.height, wa.depth);
+    main_pixmap = XCreatePixmap(displ, mainwin, main_wa.width, main_wa.height, main_wa.depth);
+    map_pixmap = XCreatePixmap(displ, mapwin, map_wa.width, map_wa.height, map_wa.depth);
 }
-const static void pixmapdisplay(void) {
-    XCopyArea(displ, pixmap, mainwin, gc, 0, 0, wa.width, wa.height, 0, 0);
+const static void pixmapdisplay(Drawable pixmap, Drawable window, unsigned int width, unsigned int height) {
+    XCopyArea(displ, pixmap, window, gc, 0, 0, width, height, 0, 0);
 }
 const static void announceReadyState(void) {
     printf("Announcing ready process state event\n");
@@ -585,7 +608,7 @@ const static void CalculateFPS(void) {
 }
 const static void displayInfo(void) {
     char info_string[30];
-    sprintf(info_string, "Resolution: %d x %d", wa.width, wa.height);
+    sprintf(info_string, "Resolution: %d x %d", main_wa.width, main_wa.height);
     XDrawString(displ ,mainwin ,gc, 5, 12, info_string, strlen(info_string));
 
     sprintf(info_string, "Running Time: %4.1f", TimeCounter);
@@ -633,6 +656,7 @@ const static int board(void) {
     }
 
     initMainWindow();
+    initMapWindow();
     InitTimeCounter();
     initGlobalGC();
     pixmapcreate();

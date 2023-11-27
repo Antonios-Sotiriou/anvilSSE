@@ -59,7 +59,7 @@ const void grafikPipeline(Scene s) {
             releaseMesh(&cache);
             continue;
         }
-        // mapPipeline(cache);
+        mapPipeline(cache);
         rasterize(cache);
 
         releaseMesh(&cache);
@@ -179,7 +179,7 @@ const static int viewtoscreen(Mesh *m, const int len) {
     if(!m->f_indexes)
         return 0;
 
-    vec4f plane_down_p = { 0.0f, wa.height - 1.0f, 0.0f },
+    vec4f plane_down_p = { 0.0f, main_wa.height - 1.0f, 0.0f },
         plane_down_n = { 0.0f, -1.0f, 0.0f };
     *m = clipp(*m, plane_down_p, plane_down_n);
     if(!m->f_indexes)
@@ -191,7 +191,7 @@ const static int viewtoscreen(Mesh *m, const int len) {
     if(!m->f_indexes)
         return 0;
 
-    vec4f plane_right_p = { wa.width - 1.0f, 0.0f, 0.0f },
+    vec4f plane_right_p = { main_wa.width - 1.0f, 0.0f, 0.0f },
         plane_right_n = { -1.0f, 0.0f, 0.0f };
     *m = clipp(*m, plane_right_p, plane_right_n);
     if(!m->f_indexes)
@@ -201,6 +201,8 @@ const static int viewtoscreen(Mesh *m, const int len) {
 }
 /* Rasterize given Mesh by passing them to the appropriate function. */
 const static void rasterize(const Mesh m) {
+    point_buffer = frame_buffer;
+    point_attrib = &main_wa;
     if (DEBUG == 1) {
         edgeMesh(m, m.material.basecolor);
     } else if (DEBUG == 2) {

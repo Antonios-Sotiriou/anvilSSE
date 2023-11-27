@@ -18,11 +18,11 @@
 #endif
 
 /* Defined in main.c. */
-extern XWindowAttributes wa;
+extern XWindowAttributes *point_attrib;
 extern int HALFW;
 extern int HALFH;
 extern Mat4x4 reperspMat;
-extern u_int8_t *frame_buffer;
+extern u_int8_t *point_buffer;
 extern Light sunlight;
 extern float AmbientStrength, SpecularStrength;
 

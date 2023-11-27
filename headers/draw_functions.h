@@ -25,7 +25,7 @@
 extern int EDGEFUNC, SCANLINE;
 extern u_int8_t *frame_buffer;
 extern float *depth_buffer;
-extern XWindowAttributes wa;
+extern XWindowAttributes *point_attrib;
 
 /* Defined in general_functions.c. */
 extern const void swap(void *a, void *b, unsigned long size);

@@ -24,7 +24,7 @@
 /* Defined in main.c. */
 extern int HALFH, HALFW, PROJECTIONVIEW;
 extern float FPlane, NPlane;
-extern XWindowAttributes wa;
+extern XWindowAttributes *point_attrib, main_wa;
 extern Mat4x4 ortholightMat[3], persplightMat, lookAt, reperspMat, lm;
 extern float *shadow_buffer[3], shadow_bias;
 extern Light sunlight;
