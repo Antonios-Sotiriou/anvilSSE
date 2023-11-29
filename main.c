@@ -97,10 +97,9 @@ Light sunlight = {
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
 };
-vec4f pos = { 0.f, 100.0f, 0.f, 1.f };
 
 /* Global Matrices */
-Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, lm, lview;
+Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, lm, lview, *point_mat;
 
 /* Anvil global Objects Meshes and Scene. */
 Scene scene = { 0 };
@@ -443,7 +442,7 @@ const static void keypress(XEvent *event) {
                 PROJECTIONVIEW = 0;
             break;
     }
-    // sunlight.pos = camera[Pos] + (sunlight.pos + (camera[3] * 100.f));
+
     lookAt = lookat(eye[Pos], eye[U], eye[V], eye[N]);
     viewMat = inverse_mat(lookAt);
     sunlight.newPos = vecxm(sunlight.pos, viewMat);

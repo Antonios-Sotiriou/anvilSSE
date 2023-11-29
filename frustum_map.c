@@ -6,7 +6,7 @@
 
 extern u_int8_t *map_buffer, *point_buffer;
 extern int HALFW, HALFH, DEBUG, PROJECTIONVIEW;
-extern Mat4x4 lookAt, reperspMat, perspMat, orthoMat;
+extern Mat4x4 lookAt, reperspMat, perspMat, orthoMat, *point_mat;
 Mat4x4 mapLook, mapView, mapWorld;
 extern float FPlane, NPlane;
 extern XWindowAttributes main_wa, map_wa, *point_attrib;
@@ -92,33 +92,33 @@ const static int screentondc(Mesh *m, const int len) {
             /* screen space */
             m->f[i].vt[j] /= m->f[i].v[j][3];
 
-            m->f[i].v[j][0] = ((1.0 + m->f[i].v[j][0]) * (map_wa.width >> 1)) + 0.5;
-            m->f[i].v[j][1] = ((1.0 + m->f[i].v[j][1]) * (map_wa.height >> 1)) + 0.5;
+            m->f[i].v[j][0] = ((1.0f + m->f[i].v[j][0]) * (map_wa.width >> 1)) + 0.5;
+            m->f[i].v[j][1] = ((1.0f + m->f[i].v[j][1]) * (map_wa.height >> 1)) + 0.5;
             m->f[i].v[j][2] = 1.0f / m->f[i].v[j][2];
             m->f[i].v[j][3] = 1.0f / m->f[i].v[j][3];
         }
     }
 
-    vec4f plane_up_p = { 0.0, 0.0, 0.0 },
-          plane_up_n = { 0.0, 1.0, 0.0 };
+    vec4f plane_up_p = { 0.f, 0.f, 0.f },
+          plane_up_n = { 0.f, 1.f, 0.f };
     *m = clipp(*m, plane_up_p, plane_up_n);
     if (!m->f_indexes)
         return 0;
 
-    vec4f plane_down_p = { 0.0, map_wa.height - 1.0, 0.0 },
-          plane_down_n = { 0.0, -1.0, 0.0 };
+    vec4f plane_down_p = { 0.f, map_wa.height - 1.f, 0.f },
+          plane_down_n = { 0.f, -1.f, 0.f };
     *m = clipp(*m, plane_down_p, plane_down_n);
     if (!m->f_indexes)
         return 0;
 
-    vec4f plane_left_p = { 0.0, 0.0, 0.0 },
-          plane_left_n = { 1.0, 0.0, 0.0 };
+    vec4f plane_left_p = { 0.f, 0.f, 0.f },
+          plane_left_n = { 1.f, 0.f, 0.f };
     *m = clipp(*m, plane_left_p, plane_left_n);
     if (!m->f_indexes)
         return 0;
 
-    vec4f plane_right_p = { map_wa.width - 1.0, 0.0, 0.0 },
-          plane_right_n = { -1.0, 0.0, 0.0 };
+    vec4f plane_right_p = { map_wa.width - 1.f, 0.f, 0.f },
+          plane_right_n = { -1.f, 0.f, 0.f };
     *m = clipp(*m, plane_right_p, plane_right_n);
     if (!m->f_indexes)
         return 0;
@@ -129,6 +129,7 @@ const static int screentondc(Mesh *m, const int len) {
 const static void maprasterize(const Mesh m) {
     point_buffer = map_buffer;
     point_attrib = &map_wa;
+    point_mat = &mapLook;
     if (DEBUG == 1) {
         edgeMesh(m, m.material.basecolor);
     } else if (DEBUG == 2) {
@@ -136,7 +137,7 @@ const static void maprasterize(const Mesh m) {
     } else {
         texMesh(m);
     }
-    memset(depth_buffer, 0, 4000000);
+    // memset(depth_buffer, 0, 4000000);
 }
 
 

@@ -27,7 +27,7 @@ extern Light sunlight;
 extern float AmbientStrength, SpecularStrength;
 
 /* Defined in shadow_pipeline.c. */
-extern const float shadowTest(vec4f frag);
+extern const float shadowTest(vec4f frag, vec4f nml);
 
 /* Defined in draw_functions.c. */
 extern const vec4i rgbmask;

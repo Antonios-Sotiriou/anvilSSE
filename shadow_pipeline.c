@@ -13,7 +13,6 @@ const static void shadowface(const face f, const Srt srt[], const unsigned int s
 const static vec4i smmask = { 1, 2, 0, 3 };
 
 const void shadowPipeline(Scene s, const unsigned int sm_index) {
-    point_attrib = &main_wa;
     Mesh cache = { 0 };
     for (int i = 0; i < s.m_indexes; i++) {
         initMesh(&cache, s.m[i]);
@@ -153,7 +152,7 @@ const static int shadowtoscreen(Mesh *m, const int len) {
     if (!m->f_indexes)
         return 0;
 
-    vec4f plane_down_p = { 0.0, point_attrib->height - 1.0, 0.0 },
+    vec4f plane_down_p = { 0.0, main_wa.height - 1.0, 0.0 },
           plane_down_n = { 0.0, -1.0, 0.0 };
     *m = shadowclipp(*m, plane_down_p, plane_down_n);
     if (!m->f_indexes)
@@ -165,7 +164,7 @@ const static int shadowtoscreen(Mesh *m, const int len) {
     if (!m->f_indexes)
         return 0;
 
-    vec4f plane_right_p = { point_attrib->width - 1.0, 0.0, 0.0 },
+    vec4f plane_right_p = { main_wa.width - 1.0, 0.0, 0.0 },
           plane_right_n = { -1.0, 0.0, 0.0 };
     *m = shadowclipp(*m, plane_right_p, plane_right_n);
     if (!m->f_indexes)
@@ -226,7 +225,7 @@ const void shadowface(const face f, const Srt srt[], const unsigned int sm_index
     int yA = 0;
     if (ymy[0] != 0)
         for (int y = y_start; y < y_end1; y++) {
-            const int padySB = y * point_attrib->width;
+            const int padySB = y * main_wa.width;
 
             const int x_start = (ma * yA) + xs[0];
             const int x_end = (mb * yA) + xs[0];
@@ -266,7 +265,7 @@ const void shadowface(const face f, const Srt srt[], const unsigned int sm_index
 
     int yB = -ymy[1];
     for (int y = y_end1; y < y_end2; y++) {
-        const int padySB = y * point_attrib->width;
+        const int padySB = y * main_wa.width;
 
         const int x_start = (ma * yB) + xs[2];
         const int x_end = (mb * yB) + xs[2];
@@ -292,7 +291,7 @@ const void shadowface(const face f, const Srt srt[], const unsigned int sm_index
         yB++;
     }
 }
-const float shadowTest(vec4f frag) {
+const float shadowTest(vec4f frag, vec4f nml) {
     int sm_index;
     if (frag[2] >= 0.f && frag[2] <= 100.f)
         sm_index = 0;
@@ -301,9 +300,14 @@ const float shadowTest(vec4f frag) {
     else if (frag[2] > 300.f)
         sm_index = 2;
 
+    // float dot = dot_product(norm_vec(sunlight.newPos), nml);
+    // if ( dot > -0.2 && dot < 0.2 )
+    //     return 0;
+    // printf("dot: %f\n", dot);
     /* Transform to Model space coordinates. */
+    // logVec4f(norm_vec(sunlight.newPos));
     frag[3] = 1.f;
-    frag = vecxm(frag, lookAt);
+    frag = vecxm(frag, *point_mat);
 
     /* Transform to Light space coordinates. */
     frag = vecxm(frag, ortholightMat[sm_index]);
@@ -313,17 +317,17 @@ const float shadowTest(vec4f frag) {
     float z = frag[2];
 
     /* Transform to Screen space coordinates. */
-    x = (1.0 + x) * (point_attrib->width >> 1);
-    if ( (x < 0) || (x >= point_attrib->width) )
+    x = (1.0 + x) * (main_wa.width >> 1);
+    if ( (x < 0) || (x >= main_wa.width) )
         return 1.f;
 
-    y = (1.0 + y) * (point_attrib->height >> 1);
-    if ( (y < 0) || (y >= point_attrib->height) )
+    y = (1.0 + y) * (main_wa.height >> 1);
+    if ( (y < 0) || (y >= main_wa.height) )
         return 1.f;
 
     z = 1.f / z;
 
-    if ( z < shadow_buffer[sm_index][((int)y * point_attrib->width) + (int)x] + shadow_bias)
+    if ( z < shadow_buffer[sm_index][((int)y * main_wa.width) + (int)x] + shadow_bias)
         return 0.f;
 
     return 1.f;

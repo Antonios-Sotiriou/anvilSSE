@@ -203,6 +203,7 @@ const static int viewtoscreen(Mesh *m, const int len) {
 const static void rasterize(const Mesh m) {
     point_buffer = frame_buffer;
     point_attrib = &main_wa;
+    point_mat = &lookAt;
     if (DEBUG == 1) {
         edgeMesh(m, m.material.basecolor);
     } else if (DEBUG == 2) {
