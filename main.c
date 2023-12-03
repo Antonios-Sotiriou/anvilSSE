@@ -59,7 +59,7 @@ Atom wmatom[Atom_Last];
 
 /* BUFFERS. */
 u_int8_t *frame_buffer, *map_buffer, *point_buffer;
-float *depth_buffer, *shadow_buffer[NUM_OF_CASCADES];
+float *main_depth_buffer, *map_depth_buffer, *point_depth_buffer, *shadow_buffer[NUM_OF_CASCADES];
 
 /* Project Global Variables. */
 int PROJECTIONVIEW = 0;
@@ -231,6 +231,7 @@ const static void createCascadeShadowMatrices(const unsigned int num_of_cascades
     };
 
     for (int i = 0; i < num_of_cascades; i++) {
+        lm[i].m[3][1] = sunlight.pos[1];
         lview = inverse_mat(lm[i]);
         /* Transform view frustum to Space. */
         fr[i] = setvecsarrayxm(fr[i], 8, viewMat);
@@ -250,7 +251,8 @@ const static void clientmessage(XEvent *event) {
 
         free(frame_buffer);
         free(map_buffer);
-        free(depth_buffer);
+        free(main_depth_buffer);
+        free(map_depth_buffer);
         free(shadow_buffer[0]);
         free(shadow_buffer[1]);
         free(shadow_buffer[2]);
@@ -283,11 +285,14 @@ const static void configurenotify(XEvent *event) {
     if (!event->xconfigure.send_event) {
         printf("configurenotify event received\n");
         XGetWindowAttributes(displ, mainwin, &main_wa);
+        XGetWindowAttributes(displ, mapwin, &map_wa);
 
         if (INIT) {
+
             free(frame_buffer);
             free(map_buffer);
-            free(depth_buffer);
+            free(main_depth_buffer);
+            free(map_depth_buffer);
             free(shadow_buffer[0]);
             free(shadow_buffer[1]);
             free(shadow_buffer[2]);
@@ -319,8 +324,8 @@ const static void keypress(XEvent *event) {
         eye = (vec4f*)&camera;
 
     // printf("Key Pressed: %ld\n", keysym);
-    // printf("\x1b[H\x1b[J");
-    system("clear\n");
+    printf("\x1b[H\x1b[J");
+    // system("clear\n");
     switch (keysym) {
         case 97 : look_left(eye, 0.2);             /* a */
             rotate_light_cam(&scene.m[2], camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
@@ -483,12 +488,12 @@ const static void project() {
 const static void drawFrame(void) {
     map_image->data = (char*)map_buffer;
     XPutImage(displ, map_pixmap, gc, map_image, 0, 0, 0, 0, map_wa.width, map_wa.height);
-    pixmapdisplay(map_pixmap, mapwin, MAP_WIDTH, MAP_HEIGHT);
+    pixmapdisplay(map_pixmap, mapwin, map_wa.width, map_wa.height);
 
     if (PROJECTBUFFER <= 1)
         main_image->data = (char*)frame_buffer;
     else if (PROJECTBUFFER == 2)
-        main_image->data = (char*)depth_buffer;
+        main_image->data = (char*)main_depth_buffer;
     else if (PROJECTBUFFER == 3)
         main_image->data = (char*)shadow_buffer[0];
     else if (PROJECTBUFFER == 4)
@@ -497,11 +502,13 @@ const static void drawFrame(void) {
         main_image->data = (char*)shadow_buffer[2];
 
     XPutImage(displ, main_pixmap, gc, main_image, 0, 0, 0, 0, main_wa.width, main_wa.height);
+    pixmapdisplay(main_pixmap, mainwin, main_wa.width, main_wa.height);
 
     memset(frame_buffer, 0, FBSIZE);
     memset(map_buffer, 0, map_wa.width * map_wa.height * 4);
-    memset(depth_buffer, 0, FBSIZE);
-    pixmapdisplay(main_pixmap, mainwin, WIDTH, HEIGHT);
+
+    memset(main_depth_buffer, 0, FBSIZE);
+    memset(map_depth_buffer, 0, map_wa.width * map_wa.height * 4);
 }
 const static void initMainWindow(void) {
     sa.event_mask = EXPOSEMASKS | KEYBOARDMASKS | POINTERMASKS;
@@ -513,7 +520,7 @@ const static void initMainWindow(void) {
 const static void initMapWindow(void) {
     sa.event_mask = NoEventMask;
     sa.background_pixel = 0x000000;
-    mapwin = XCreateWindow(displ, mainwin, WIDTH - MAP_WIDTH, 0, MAP_WIDTH, MAP_HEIGHT, 0, CopyFromParent, InputOutput, CopyFromParent, CWBackPixel, &sa);
+    mapwin = XCreateWindow(displ, mainwin, WIDTH - MAP_WIDTH, 0, MAP_WIDTH, MAP_HEIGHT, 0, CopyFromParent, InputOutput, CopyFromParent, CWBackPixel | CWEventMask, &sa);
     XMapWindow(displ, mapwin);
     XGetWindowAttributes(displ, mapwin, &map_wa);
 }
@@ -524,8 +531,8 @@ const static void initGlobalGC(void) {
     gc = XCreateGC(displ, mainwin, GCBackground | GCForeground | GCGraphicsExposures, &gcvalues);
 }
 const static void initDependedVariables(void) {
-    main_image = XCreateImage(displ, main_wa.visual, main_wa.depth, ZPixmap, 0, (char*)frame_buffer, main_wa.width, main_wa.height, 32, (main_wa.width * 4));
-    map_image = XCreateImage(displ, map_wa.visual, map_wa.depth, ZPixmap, 0, (char*)map_buffer, map_wa.width, map_wa.height, 32, (map_wa.width * 4));
+    main_image = XCreateImage(displ, main_wa.visual, main_wa.depth, ZPixmap, 0, (char*)point_buffer, main_wa.width, main_wa.height, 32, (main_wa.width * 4));
+    map_image = XCreateImage(displ, map_wa.visual, map_wa.depth, ZPixmap, 0, (char*)point_buffer, map_wa.width, map_wa.height, 32, (map_wa.width * 4));
 
     ASPECTRATIO = ((float)main_wa.width / (float)main_wa.height);
     HALFH = main_wa.height >> 1;
@@ -552,13 +559,18 @@ const static void initAtoms(void) {
 }
 /* Creates and Initializes the importand buffers. (frame, depth, shadow). */
 const static void initBuffers(void) {
-    const int emvadon = main_wa.width * main_wa.height;
-    frame_buffer = calloc(emvadon * 4, 1);
-    map_buffer = calloc(map_wa.width * map_wa.height * 4, 1);
-    depth_buffer = calloc(emvadon, 4);
-    shadow_buffer[0] = calloc(emvadon, 4);
-    shadow_buffer[1] = calloc(emvadon, 4);
-    shadow_buffer[2] = calloc(emvadon, 4);
+    const int main_emvadon = main_wa.width * main_wa.height;
+    const int map_emvadon = map_wa.width * map_wa.height;
+
+    frame_buffer = calloc(main_emvadon * 4, 1);
+    map_buffer = calloc(map_emvadon * 4, 1);
+
+    main_depth_buffer = calloc(main_emvadon, 4);
+    map_depth_buffer = calloc(map_emvadon, 4);
+
+    shadow_buffer[0] = calloc(main_emvadon, 4);
+    shadow_buffer[1] = calloc(main_emvadon, 4);
+    shadow_buffer[2] = calloc(main_emvadon, 4);
 }
 const static void initLightModel(Light *l) {
     vec4f lightColor = { 1.0, 1.0, 1.0, 1.0 };

@@ -142,12 +142,12 @@ const static void edgefillGeneral(const face f, const Material mtr, int minX, in
                 vec4f a = __builtin_convertvector(xa, vec4f) / area;
 
                 const vec4f frag = a[0] * f.v[2] + a[1] * f.v[0] + a[2] * f.v[1];
-
-                if (frag[3] > depth_buffer[padyDB + x]) {
+                const int padxDB = padyDB + x;
+                if (frag[3] > point_depth_buffer[padxDB]) {
 
                     const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
 
-                    depth_buffer[padyDB + x] = phong(normal, mtr, x, y, frag[2], frag[3]);
+                    point_depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
                 }
                 xflag++;
             } else if (xflag) break;
@@ -225,11 +225,11 @@ const static void scanlinefillGeneral(const face f, const Material mtr, const Sr
 
                     const vec4f frag = a[0] * f.v[2] + a[1] * f.v[0] + a[2] * f.v[1];
                     const int padxDB = padyDB + x;
-                    if ( frag[3] > depth_buffer[padxDB] ) {
+                    if ( frag[3] > point_depth_buffer[padxDB] ) {
 
                         const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
 
-                        depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
+                        point_depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
                     }
                 }
                 xa += ymy;
@@ -266,11 +266,11 @@ const static void scanlinefillGeneral(const face f, const Material mtr, const Sr
 
                 const vec4f frag = a[0] * f.v[2] + a[1] * f.v[0] + a[2] * f.v[1];
                 const int padxDB = padyDB + x;
-                if ( frag[3] > depth_buffer[padxDB] ) {
+                if ( frag[3] > point_depth_buffer[padxDB] ) {
 
                     const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
 
-                    depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
+                    point_depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
                 }
             }
             xa += ymy;
@@ -350,8 +350,8 @@ const static void edgetexGeneral(const face f, Material mtr, int minX, int maxX,
                 vec4f a = __builtin_convertvector(xa, vec4f) / area;
 
                 const vec4f frag = a[0] * f.v[2] + a[1] * f.v[0] + a[2] * f.v[1];
-
-                if (frag[3] > depth_buffer[padyDB + x]) {
+                const int padxDB = padyDB + x;
+                if (frag[3] > point_depth_buffer[padxDB]) {
 
                     const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
 
@@ -364,7 +364,7 @@ const static void edgetexGeneral(const face f, Material mtr, int minX, int maxX,
                         mtr.basecolor = __builtin_convertvector(mtr.texture[(tex_y * mtr.texture_width) + tex_x], vec4f) / 255.0f;
                     }
 
-                    depth_buffer[padyDB + x] = phong(normal, mtr, x, y, frag[2], frag[3]);
+                    point_depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
                 }
                 xflag++;
             } else if (xflag) break;
@@ -455,7 +455,7 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
 
                     const vec4f frag = a[0] * f.v[2] + a[1] * f.v[0] + a[2] * f.v[1];
                     const int padxDB = padyDB + x;
-                    if ( frag[3] > depth_buffer[padxDB] ) {
+                    if ( frag[3] > point_depth_buffer[padxDB] ) {
 
                         const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
 
@@ -468,7 +468,7 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
                             mtr.basecolor = __builtin_convertvector(mtr.texture[(tex_y * mtr.texture_width) + tex_x], vec4f) / 255.0f;
                         }
 
-                        depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
+                        point_depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
                     }
                 }
                 xa += ymy;
@@ -508,7 +508,7 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
 
                 const vec4f frag = a[0] * f.v[2] + a[1] * f.v[0] + a[2] * f.v[1];
                 const int padxDB = padyDB + x;
-                if ( frag[3] > depth_buffer[padxDB] ) {
+                if ( frag[3] > point_depth_buffer[padxDB] ) {
 
                     const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
 
@@ -521,7 +521,7 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
                         mtr.basecolor = __builtin_convertvector(mtr.texture[(tex_y * mtr.texture_width) + tex_x], vec4f) / 255.0f;
                     }
 
-                    depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
+                    point_depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
                 }
             }
             xa += ymy;

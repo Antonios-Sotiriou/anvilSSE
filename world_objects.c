@@ -145,10 +145,17 @@ const void releaseMesh(Mesh *c) {
 const void initMesh(Mesh *a, const Mesh b) {
     *a = b;
 
+    size_t vsize = sizeof(vec4f) * b.v_indexes;
+    size_t nsize = sizeof(vec4f) * b.n_indexes;
     size_t tsize = sizeof(vec2f) * b.t_indexes;
     size_t fsize = sizeof(face) * b.f_indexes;
-    /* To get the proper size, add 1 to width and height, because we subtracted when created the Texture. */
     size_t texsize = b.material.texture_height * b.material.texture_width * 4;
+
+    a->v = malloc(vsize);
+    memcpy(a->v, b.v, vsize);
+
+    a->n = malloc(nsize);
+    memcpy(a->n, b.n, nsize);
 
     a->t = malloc(tsize);
     memcpy(a->t, b.t, tsize);

@@ -1,19 +1,9 @@
 #include "headers/frustum_map.h"
 
-#include "headers/world_objects.h"
-#include "headers/draw_functions.h"
-#include "headers/clipping.h"
-
-extern u_int8_t *map_buffer, *point_buffer;
-extern int HALFW, HALFH, DEBUG, PROJECTIONVIEW;
-extern Mat4x4 lookAt, reperspMat, perspMat, orthoMat, *point_mat;
-Mat4x4 mapLook, mapView, mapWorld;
-extern float FPlane, NPlane;
-extern XWindowAttributes main_wa, map_wa, *point_attrib;
-extern vec4f *eye;
-
 const static int screentondc(Mesh *m, const int len);
 const static void maprasterize(const Mesh m);
+
+Mat4x4 mapLook, mapView, mapWorld;
 
 /* Camera and Global light Source. */
 vec4f mapcam[4] = {
@@ -23,21 +13,8 @@ vec4f mapcam[4] = {
     { 0.0f, -1.0f, 0.0f, 0.0f }
 };
 
-const void mapPipeline(const Mesh m) {
-    Mesh cache = { 0 };
-    initMesh(&cache, m);
-    cache.v = malloc(1);
-    cache.n = malloc(1);
+const void mapPipeline(const Scene *s) {
 
-    if (!screentondc(&cache, cache.f_indexes)) {
-        releaseMesh(&cache);
-        return;
-    }
-
-    maprasterize(cache);
-    releaseMesh(&cache);
-}
-const static int screentondc(Mesh *m, const int len) {
     mapcam[0][0] = eye[0][0];
     mapcam[0][2] = eye[0][2];
     mapLook = lookat(mapcam[0], mapcam[1], mapcam[2], mapcam[3]);
@@ -48,13 +25,21 @@ const static int screentondc(Mesh *m, const int len) {
     else
         mapWorld = mxm(mapView, orthoMat);
 
+    for (int i = 0; i < s->m_indexes; i++) {
+
+        if (screentondc(&s->m[i], s->m[i].f_indexes))
+            maprasterize(s->m[i]);
+    }
+}
+const static int screentondc(Mesh *m, const int len) {
+
     for (int i = 0; i < len; i++) {
         for (int j = 0; j < 3; j++) {
             m->f[i].v[j][3] = 1.0f / m->f[i].v[j][3];
             m->f[i].vt[j] *= m->f[i].v[j][3];
 
-            m->f[i].v[j][0] = ((m->f[i].v[j][0] / (main_wa.width >> 1)) - 1.0) * m->f[i].v[j][3];
-            m->f[i].v[j][1] = ((m->f[i].v[j][1] / (main_wa.height >> 1)) - 1.0) * m->f[i].v[j][3];
+            m->f[i].v[j][0] = ((m->f[i].v[j][0] / HALFW) - 1.0) * m->f[i].v[j][3];
+            m->f[i].v[j][1] = ((m->f[i].v[j][1] / HALFH) - 1.0) * m->f[i].v[j][3];
             m->f[i].v[j][2] = (m->f[i].v[j][2] / 1.f) * m->f[i].v[j][3];
 
             m->f[i].v[j] = vecxm(m->f[i].v[j], reperspMat);
@@ -75,7 +60,7 @@ const static int screentondc(Mesh *m, const int len) {
         return 0;
     }
 
-    vec4f plane_far_p = { 0.0f, 0.0f, 10000},
+    vec4f plane_far_p = { 0.0f, 0.0f, FPlane},
         plane_far_n = { 0.0f, 0.0f, -1.0f };
     *m = clipp(*m, plane_far_p, plane_far_n);
     if (!m->f_indexes) {
@@ -128,6 +113,7 @@ const static int screentondc(Mesh *m, const int len) {
 /* Rasterize given Mesh by passing them to the appropriate function. */
 const static void maprasterize(const Mesh m) {
     point_buffer = map_buffer;
+    point_depth_buffer = map_depth_buffer;
     point_attrib = &map_wa;
     point_mat = &mapLook;
     if (DEBUG == 1) {
@@ -137,7 +123,6 @@ const static void maprasterize(const Mesh m) {
     } else {
         texMesh(m);
     }
-    // memset(depth_buffer, 0, 4000000);
 }
 
 

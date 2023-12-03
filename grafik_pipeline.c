@@ -12,14 +12,18 @@ const static void rasterize(const Mesh m);
 /* Passes the scene Meshes throught the graphic pipeline. */
 const void grafikPipeline(Scene s) {
     Mesh cache = { 0 };
+    Scene frustum;
+    size_t mesh_size = sizeof(Mesh);
+    frustum.m = malloc(mesh_size);
+    int index = 0, dynamic_inc = 1;
 
     for (int i = 0; i < s.m_indexes; i++) {
         adoptdetail(&s.m[i]);
 
         initMesh(&cache, s.m[i]);
 
-        cache.v = vecsarrayxm(s.m[i].v, s.m[i].v_indexes, worldMat);
-        cache.n = vecsarrayxm(s.m[i].n, s.m[i].n_indexes, viewMat);
+        cache.v = setvecsarrayxm(cache.v, cache.v_indexes, worldMat);
+        cache.n = setvecsarrayxm(cache.n, cache.n_indexes, viewMat);
 
         /* Assembly and create the faces from the mesh vertices, normals and texture arrays, through the indexes. */
         assemblyfaces(&cache, cache.f_indexes);
@@ -59,10 +63,18 @@ const void grafikPipeline(Scene s) {
             releaseMesh(&cache);
             continue;
         }
-        mapPipeline(cache);
-        rasterize(cache);
 
-        releaseMesh(&cache);
+        frustum.m = realloc(frustum.m, dynamic_inc * mesh_size);
+        frustum.m[index] = cache;
+        index++;
+        dynamic_inc++;
+
+        rasterize(cache);
+    }
+    frustum.m_indexes = index;
+    if (frustum.m) {
+        mapPipeline(&frustum);
+        releaseScene(&frustum);
     }
 }
 const static void adoptdetail(Mesh *m) {
@@ -202,6 +214,7 @@ const static int viewtoscreen(Mesh *m, const int len) {
 /* Rasterize given Mesh by passing them to the appropriate function. */
 const static void rasterize(const Mesh m) {
     point_buffer = frame_buffer;
+    point_depth_buffer = main_depth_buffer;
     point_attrib = &main_wa;
     point_mat = &lookAt;
     if (DEBUG == 1) {

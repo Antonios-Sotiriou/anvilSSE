@@ -17,8 +17,8 @@ const void shadowPipeline(Scene s, const unsigned int sm_index) {
     for (int i = 0; i < s.m_indexes; i++) {
         initMesh(&cache, s.m[i]);
 
-        cache.v = vecsarrayxm(s.m[i].v, s.m[i].v_indexes, ortholightMat[sm_index]);
-        cache.n = malloc(1);
+        cache.v = setvecsarrayxm(cache.v, cache.v_indexes, ortholightMat[sm_index]);
+
         assemblyfacesShadow(&cache, cache.f_indexes);
 
         /* At this Point triangles must be shadowclipped against near plane. */

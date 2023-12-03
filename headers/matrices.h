@@ -9,6 +9,10 @@
     #include "vectors_math.h"
 #endif
 
+#ifndef _STRING_H
+    #include <string.h>
+#endif
+
 #ifndef _MATH_H
     #include <math.h>
 #endif
@@ -24,6 +28,7 @@ const Mat4x4 perspectiveMatrix(const float fov, const float aspectratio, const f
 const Mat4x4 reperspectiveMatrix(const float fov, const float aspectratio);
 vec4f *vecsarrayxm(vec4f vecs[], const int len, const Mat4x4 m);
 vec4f *setvecsarrayxm(vec4f vecs[], const int len, const Mat4x4 m);
+face *facesarrayxm(face fs[], const int len, const Mat4x4 m);
 face *setfacesarrayxm(face fs[], const int len, const Mat4x4 m);
 const vec4f vecxm(const vec4f v, const Mat4x4 m);
 const Mat4x4 lookat(const vec4f P, const vec4f U, const vec4f V, const vec4f N);

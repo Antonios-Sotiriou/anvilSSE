@@ -25,7 +25,7 @@
 extern int HALFH, HALFW, PROJECTIONVIEW;
 extern float FPlane, NPlane;
 extern XWindowAttributes main_wa;
-extern Mat4x4 ortholightMat[3], persplightMat, lookAt, reperspMat, lm, *point_mat;
+extern Mat4x4 ortholightMat[3], *point_mat;
 extern float *shadow_buffer[3], shadow_bias;
 extern Light sunlight;
 

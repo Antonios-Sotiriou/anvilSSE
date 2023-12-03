@@ -8,6 +8,10 @@ const void logVec4i(const vec4i v) {
     fprintf(stdout, "x: %d    y: %d    z: %d    w: %d\n", v[0], v[1], v[2], v[3]);
 }
 
+const void logVec4c(const vec4c v) {
+    fprintf(stdout, "x: %d    y: %d    z: %d    w: %d\n", v[0], v[1], v[2], v[3]);
+}
+
 /* Logging Triangle values.If vec = 1 loggs vec4 values, if tex Texture, if norm Normal. */
 const void logFace(const face f, const int vec, const int tex, const int norm, const int indexes) {
     if (vec) {

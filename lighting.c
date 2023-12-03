@@ -1,4 +1,5 @@
 #include "headers/lighting.h"
+#include "headers/logging.h"
 
 const float phong(vec4f nm, const Material mtr, const float pixX, const float pixY, const float pixZ, const float pixW) {
     vec4f diffuse = { 0 }, specular = { 0 };
@@ -36,8 +37,6 @@ const float phong(vec4f nm, const Material mtr, const float pixX, const float pi
         fragcolor = __builtin_convertvector(__builtin_shuffle((((specular + diffuse) + ambient) * mtr.basecolor) * 255, rgbmask), vec4c);
     } else
         fragcolor = __builtin_convertvector(__builtin_shuffle((ambient * mtr.basecolor) * 255, rgbmask), vec4c);
-
-    // fragcolor = __builtin_convertvector(__builtin_shuffle(mtr.basecolor * 255, rgbmask), vec4c);
 
     // fragcolor = __builtin_convertvector(__builtin_shuffle(mtr.basecolor * 255, rgbmask), vec4c);
 
