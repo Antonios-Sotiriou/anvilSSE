@@ -18,6 +18,13 @@
 #include "headers/logging.h"
 #include "headers/test_shapes.h"
 
+/* ############################################## MULTITHREADING ################################################################### */
+#include <pthread.h>
+#define THREADS 8
+pthread_t threads[THREADS];
+int *thread_ids;
+/* ############################################## MULTITHREADING ################################################################### */
+
 int EDGEFUNC = 0;
 int SCANLINE = 1;
 
@@ -58,8 +65,9 @@ XSetWindowAttributes sa;
 Atom wmatom[Atom_Last];
 
 /* BUFFERS. */
-u_int8_t *frame_buffer, *map_buffer, *point_buffer;
+u_int8_t *frame_buffer, *map_buffer, *point_buffer, *reset_buffer;
 float *main_depth_buffer, *map_depth_buffer, *point_depth_buffer, *shadow_buffer[NUM_OF_CASCADES];
+Fragment *frags_buffer, *reset_frags;
 
 /* Project Global Variables. */
 int PROJECTIONVIEW = 0;
@@ -109,6 +117,7 @@ static int INIT = 0;
 static int RUNNING = 1;
 int HALFW = 0; // Half width of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
 int HALFH = 0; // Half height of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
+int MAIN_EMVADON, MAP_EMVADON;
 int DEBUG = 0;
 
 /* Display usefull measurements. */
@@ -253,6 +262,12 @@ const static void clientmessage(XEvent *event) {
         free(map_buffer);
         free(main_depth_buffer);
         free(map_depth_buffer);
+        free(reset_buffer);
+
+        free(frags_buffer);
+        free(reset_frags);
+        free(thread_ids);
+
         free(shadow_buffer[0]);
         free(shadow_buffer[1]);
         free(shadow_buffer[2]);
@@ -293,16 +308,23 @@ const static void configurenotify(XEvent *event) {
             free(map_buffer);
             free(main_depth_buffer);
             free(map_depth_buffer);
+            free(reset_buffer);
+
+            free(frags_buffer);
+            free(reset_frags);
+            free(thread_ids);
+
             free(shadow_buffer[0]);
             free(shadow_buffer[1]);
             free(shadow_buffer[2]);
 
             free(main_image);
             free(map_image);
-            initBuffers();
-            pixmapcreate();
 
             initDependedVariables();
+
+            initBuffers();
+            pixmapcreate();
         } else {
             INIT = 1;
         }
@@ -466,22 +488,53 @@ const static void keypress(XEvent *event) {
     AdjustShadow++;
     AdjustScene++;
 }
+static void *oscillator(void *args) {
+
+    int thread_id = *(int*)args;
+
+    int ypol = ( (MAIN_EMVADON) % THREADS);
+    int stuck = ( (MAIN_EMVADON) / THREADS);
+
+    int tile_size = stuck * (thread_id + 1);
+    int step = stuck * thread_id;
+
+    if ( ypol && (thread_id == THREADS) )
+        tile_size += ypol;
+
+    for (int i = step; i < tile_size; i++) {
+        if ( frags_buffer[i].state )
+            phong(&frags_buffer[i]);
+    }
+
+    return (void*) args;
+}
 const static void project() {
     if (AdjustShadow) {
-        memset(shadow_buffer[0], 0, FBSIZE);
-        memset(shadow_buffer[1], 0, FBSIZE);
-        memset(shadow_buffer[2], 0, FBSIZE);
-        shadowPipeline(scene, 0);
-        shadowPipeline(scene, 1);
-        shadowPipeline(scene, 2);
+        memcpy(shadow_buffer[0], reset_buffer, FBSIZE);
+        memcpy(shadow_buffer[1], reset_buffer, FBSIZE);
+        memcpy(shadow_buffer[2], reset_buffer, FBSIZE);
+        shadowPipeline(&scene, 0);
+        shadowPipeline(&scene, 1);
+        shadowPipeline(&scene, 2);
         AdjustShadow = 0;
     }
+
     // if (AdjustScene) {
     //     memset(frame_buffer, 0, FBSIZE);
     //     memset(depth_buffer, 0, FBSIZE);
-        grafikPipeline(scene);
+        grafikPipeline(&scene);
     //     AdjustScene = 0;
     // }
+
+    for (int i = 0; i < THREADS; i++) {
+        if (pthread_create(&threads[i], NULL, &oscillator, &thread_ids[i]))
+            fprintf(stderr, "ERROR: project() -- pthread_create()\n");
+    }
+    for (int i = 0; i < THREADS; i++) {
+        if (pthread_join(threads[i], NULL))
+            fprintf(stderr, "ERROR: project() -- pthread_join()\n");
+    }
+
     drawFrame();
 }
 /* Writes the final Pixel values on screen. */
@@ -504,11 +557,13 @@ const static void drawFrame(void) {
     XPutImage(displ, main_pixmap, gc, main_image, 0, 0, 0, 0, main_wa.width, main_wa.height);
     pixmapdisplay(main_pixmap, mainwin, main_wa.width, main_wa.height);
 
-    memset(frame_buffer, 0, FBSIZE);
-    memset(map_buffer, 0, map_wa.width * map_wa.height * 4);
+    memcpy(frame_buffer, reset_buffer, FBSIZE);
+    memcpy(map_buffer, reset_buffer, MAP_EMVADON * 4);
 
-    memset(main_depth_buffer, 0, FBSIZE);
-    memset(map_depth_buffer, 0, map_wa.width * map_wa.height * 4);
+    memcpy(main_depth_buffer, reset_buffer, FBSIZE);
+    memcpy(map_depth_buffer, reset_buffer, MAP_EMVADON * 4);
+
+    memcpy(frags_buffer, reset_frags, MAIN_EMVADON * sizeof(Fragment));
 }
 const static void initMainWindow(void) {
     sa.event_mask = EXPOSEMASKS | KEYBOARDMASKS | POINTERMASKS;
@@ -537,6 +592,13 @@ const static void initDependedVariables(void) {
     ASPECTRATIO = ((float)main_wa.width / (float)main_wa.height);
     HALFH = main_wa.height >> 1;
     HALFW = main_wa.width >> 1;
+    MAIN_EMVADON = main_wa.width * main_wa.height;
+    MAP_EMVADON = map_wa.width * map_wa.height;
+
+    /* Init thread_ids dynamically */
+    thread_ids = malloc(THREADS * 4);
+    for (int i = 0; i < THREADS; i++)
+        thread_ids[i] = i;
 
     FBSIZE = main_wa.width * main_wa.height * 4;
 
@@ -559,18 +621,20 @@ const static void initAtoms(void) {
 }
 /* Creates and Initializes the importand buffers. (frame, depth, shadow). */
 const static void initBuffers(void) {
-    const int main_emvadon = main_wa.width * main_wa.height;
-    const int map_emvadon = map_wa.width * map_wa.height;
+    frame_buffer = calloc(MAIN_EMVADON * 4, 1);
+    map_buffer = calloc(MAP_EMVADON * 4, 1);
 
-    frame_buffer = calloc(main_emvadon * 4, 1);
-    map_buffer = calloc(map_emvadon * 4, 1);
+    main_depth_buffer = calloc(MAIN_EMVADON, 4);
+    map_depth_buffer = calloc(MAP_EMVADON, 4);
 
-    main_depth_buffer = calloc(main_emvadon, 4);
-    map_depth_buffer = calloc(map_emvadon, 4);
+    reset_buffer = calloc(MAIN_EMVADON * 4, 1);
 
-    shadow_buffer[0] = calloc(main_emvadon, 4);
-    shadow_buffer[1] = calloc(main_emvadon, 4);
-    shadow_buffer[2] = calloc(main_emvadon, 4);
+    frags_buffer = calloc(MAIN_EMVADON, sizeof(Fragment));
+    reset_frags = calloc(MAIN_EMVADON, sizeof(Fragment));
+
+    shadow_buffer[0] = calloc(MAIN_EMVADON, 4);
+    shadow_buffer[1] = calloc(MAIN_EMVADON, 4);
+    shadow_buffer[2] = calloc(MAIN_EMVADON, 4);
 }
 const static void initLightModel(Light *l) {
     vec4f lightColor = { 1.0, 1.0, 1.0, 1.0 };

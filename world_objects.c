@@ -5,14 +5,14 @@ const void posWorldObjects(Scene *s) {
     Mat4x4 sclMatrix, trMatrix, posMatrix;
 
     /* ######################################################################################################## */
-    s->m[0] = loadmesh("objfiles/terrain.obj");
+    s->m[0] = loadmesh("objfiles/triangle.obj");
     // createCube(&s->m[0]);
     // viewFrustum(&s->m[0]);
-    sclMatrix = scaleMatrix(1000.0f);
+    sclMatrix = scaleMatrix(1.0f);
     trMatrix = translationMatrix(0.0f, 0.0f, 0.0f);
     posMatrix = mxm(sclMatrix, trMatrix);
 
-    s->m[0].material = loadmaterial("emerald");
+    s->m[0].material = loadmaterial("pearl");
     loadtexture(&s->m[0]);
 
     s->m[0].pivot = trMatrix.m[3];
@@ -52,6 +52,30 @@ const void posWorldObjects(Scene *s) {
 
     s->m[2].v = setvecsarrayxm(s->m[2].v, s->m[2].v_indexes, posMatrix);
     s->m[2].n = setvecsarrayxm(s->m[2].n, s->m[2].n_indexes, posMatrix);
+}
+/* Loads the appropriate Material with given name and importand Material infos. */
+const Material loadmaterial(const char name[]) {
+    FILE *fp;
+    fp = fopen("tables/materials.dat", "rb");
+    Material mat = { 0 };
+    if (!fp){
+        fclose(fp);
+        fprintf(stderr, "Could not open material files < tables/%s >! loadmaterial() -- fopen().\n", name);
+    } else {
+        while (!feof(fp)) {
+
+            fread(&mat, sizeof(Material), 1, fp);
+
+            if ( strncmp(mat.name, name, strlen(name)) == 0 ) {
+                fclose(fp);
+                fprintf(stderr, "Material < %s > found... Loading!\n", name);
+                return mat;
+            }
+        }
+    }
+    fclose(fp);
+    fprintf(stderr, "Material < %s > not found!\n", name);
+    return mat;
 }
 /* Loads the appropriate Textures and importand Texture infos. */
 const void loadtexture(Mesh *m) {
@@ -97,30 +121,6 @@ const void loadtexture(Mesh *m) {
     }
     fclose(fp);
 }
-/* Loads the appropriate Material with given name and importand Material infos. */
-const Material loadmaterial(const char name[]) {
-    FILE *fp;
-    fp = fopen("tables/materials.dat", "rb");
-    Material mat = { 0 };
-    if (!fp){
-        fclose(fp);
-        fprintf(stderr, "Could not open material files < tables/%s >! loadmaterial() -- fopen().\n", name);
-    } else {
-        while (!feof(fp)) {
-
-            fread(&mat, sizeof(Material), 1, fp);
-
-            if ( strncmp(mat.name, name, strlen(name)) == 0 ) {
-                fclose(fp);
-                fprintf(stderr, "Material < %s > found... Loading!\n", name);
-                return mat;
-            }
-        }
-    }
-    fclose(fp);
-    fprintf(stderr, "Material < %s > not found!\n", name);
-    return mat;
-}
 /* Teams all objects of the the world in a scene for further procesing. */
 const void createScene(Scene *s) {
     s->m = malloc(sizeof(Mesh) * 3);
@@ -129,6 +129,7 @@ const void createScene(Scene *s) {
 /* Releases all Meshes that form a scene. */
 const void releaseScene(Scene *s) {
     for (int i = 0; i < s->m_indexes; i++) {
+        free(s->m[i].material.texture);
         releaseMesh(&s->m[i]);
     }
     free(s->m);
@@ -139,7 +140,6 @@ const void releaseMesh(Mesh *c) {
     free(c->n);
     free(c->t);
     free(c->f);
-    free(c->material.texture);
 }
 /* Initializing Mesh a from Mesh b. */
 const void initMesh(Mesh *a, const Mesh b) {
@@ -149,7 +149,7 @@ const void initMesh(Mesh *a, const Mesh b) {
     size_t nsize = sizeof(vec4f) * b.n_indexes;
     size_t tsize = sizeof(vec2f) * b.t_indexes;
     size_t fsize = sizeof(face) * b.f_indexes;
-    size_t texsize = b.material.texture_height * b.material.texture_width * 4;
+    // size_t texsize = b.material.texture_height * b.material.texture_width * 4;
 
     a->v = malloc(vsize);
     memcpy(a->v, b.v, vsize);
@@ -163,8 +163,8 @@ const void initMesh(Mesh *a, const Mesh b) {
     a->f = malloc(fsize);
     memcpy(a->f, b.f, fsize);
 
-    a->material.texture = malloc(texsize);
-    memcpy(a->material.texture, b.material.texture, texsize);
+    // a->material.texture = malloc(texsize);
+    // memcpy(a->material.texture, b.material.texture, texsize);
 }
 
 

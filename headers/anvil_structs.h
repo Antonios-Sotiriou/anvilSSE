@@ -32,7 +32,6 @@ typedef union {
 
 /* Material struct to hold the specific for each material values. */
 typedef struct {
-    // char texture_file[50];
     char name[25];
     vec4f basecolor;
     vec4f ambient;
@@ -91,6 +90,13 @@ typedef struct {
     float y;
     int index;
 } Srt;
+
+typedef struct {
+    vec4f pos, nrm;
+    Material *mtr;
+    int state, tex_x, tex_y;
+    // void (*drawMesh)(int, int);
+} Fragment;
 
 #endif /* _ANVIL_STRUCTS_H */
 

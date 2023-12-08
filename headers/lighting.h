@@ -32,7 +32,7 @@ extern const float shadowTest(vec4f frag, vec4f nml);
 /* Defined in draw_functions.c. */
 extern const vec4i rgbmask;
 
-const float phong(vec4f nm, const Material mtr, const float pixX, const float pixY, const float pixZ, const float pixW);
+const void phong(Fragment *fr);
 
 #endif /* _LIGHTING_H */
 

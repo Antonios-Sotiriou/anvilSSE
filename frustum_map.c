@@ -1,7 +1,7 @@
 #include "headers/frustum_map.h"
 
 const static int screentondc(Mesh *m, const int len);
-const static void maprasterize(const Mesh m);
+const static void maprasterize(Mesh *m, Material *mtr);
 
 Mat4x4 mapLook, mapView, mapWorld;
 
@@ -28,7 +28,7 @@ const void mapPipeline(const Scene *s) {
     for (int i = 0; i < s->m_indexes; i++) {
 
         if (screentondc(&s->m[i], s->m[i].f_indexes))
-            maprasterize(s->m[i]);
+            maprasterize(&s->m[i], &s->m[i].material);
     }
 }
 const static int screentondc(Mesh *m, const int len) {
@@ -111,17 +111,17 @@ const static int screentondc(Mesh *m, const int len) {
     return 1;
 }
 /* Rasterize given Mesh by passing them to the appropriate function. */
-const static void maprasterize(const Mesh m) {
+const static void maprasterize(Mesh *m, Material *mtr) {
     point_buffer = map_buffer;
     point_depth_buffer = map_depth_buffer;
     point_attrib = &map_wa;
     point_mat = &mapLook;
     if (DEBUG == 1) {
-        edgeMesh(m, m.material.basecolor);
+        edgeMesh(m, m->material.basecolor);
     } else if (DEBUG == 2) {
-        fillMesh(m);
+        fillMesh(m, mtr);
     } else {
-        texMesh(m);
+        texMesh(m, mtr);
     }
 }
 

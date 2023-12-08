@@ -26,6 +26,7 @@ extern int EDGEFUNC, SCANLINE;
 extern u_int8_t *frame_buffer;
 extern float *point_depth_buffer;
 extern XWindowAttributes *point_attrib;
+extern Fragment *frags_buffer;
 
 /* Defined in general_functions.c. */
 extern const void swap(void *a, void *b, unsigned long size);
@@ -33,15 +34,15 @@ extern const void swap(void *a, void *b, unsigned long size);
 
 const void drawLine(float x1, float y1, float x2, float y2, vec4f color);
 
-const void edgeMesh(const Mesh m, const vec4f color);
+const void edgeMesh(Mesh *m, const vec4f color);
 
-const void fillMesh(const Mesh m);
-const void edgefillface(const face f, const Material mtr);
-const void scanlinefillface(const face f, const Material mtr);
+const void fillMesh(Mesh *m, Material *mtr);
+const void edgefillface(const face f, Material *mtr);
+const void scanlinefillface(const face f, Material *mtr);
 
-const void texMesh(const Mesh m);
-const void edgetexface(const face f, const Material mtr);
-const void scanlinetexface(const face f, const Material mtr);
+const void texMesh(Mesh *m, Material *mtr);
+const void edgetexface(face *f, Material *mtr);
+const void scanlinetexface(face *f, Material *mtr);
 
 #endif /* _DRAW_FUNCTIONS_H */
 

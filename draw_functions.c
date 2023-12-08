@@ -1,14 +1,14 @@
 #include "headers/draw_functions.h"
-
+#include "headers/logging.h"
 /* Global masks. Probably must be moved to a global variables file. */
 const vec4i edgemask = { 1, 2, 0, 3 };
 const vec4i rgbmask = { 2, 1, 0, 3 };
 
-const static void edgefillGeneral(const face f, const Material mtr, const int minX, const int maxX, const int minY, const int maxY);
-const static void scanlinefillGeneral(const face f, const Material mtr, const Srt srt[]);
+const static void edgefillGeneral(const face f, Material *mtr, const int minX, const int maxX, const int minY, const int maxY);
+const static void scanlinefillGeneral(const face f, Material *mtr, const Srt srt[]);
 
-const static void edgetexGeneral(const face f, Material mtr, const int minX, const int maxX, const int minY, const int maxY);
-const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]);
+const static void edgetexGeneral(face *f, Material *mtr, const int minX, const int maxX, const int minY, const int maxY);
+const static void scanlinetexGeneral(face *f, Material *mtr, const Srt srt[]);
 
 
 const void drawLine(float x1, float y1, float x2, float y2, vec4f color) {
@@ -64,19 +64,19 @@ const void drawLine(float x1, float y1, float x2, float y2, vec4f color) {
     }
 }
 /* Draws face edges of given mesh with color. */
-const void edgeMesh(const Mesh m, const vec4f color) {
-    for (int i = 0; i < m.f_indexes; i++) {
-        drawLine(m.f[i].v[0][0], m.f[i].v[0][1], m.f[i].v[1][0], m.f[i].v[1][1], color);
-        drawLine(m.f[i].v[1][0], m.f[i].v[1][1], m.f[i].v[2][0], m.f[i].v[2][1], color);
-        drawLine(m.f[i].v[2][0], m.f[i].v[2][1], m.f[i].v[0][0], m.f[i].v[0][1], color);
+const void edgeMesh(Mesh *m, const vec4f color) {
+    for (int i = 0; i < m->f_indexes; i++) {
+        drawLine(m->f[i].v[0][0], m->f[i].v[0][1], m->f[i].v[1][0], m->f[i].v[1][1], color);
+        drawLine(m->f[i].v[1][0], m->f[i].v[1][1], m->f[i].v[2][0], m->f[i].v[2][1], color);
+        drawLine(m->f[i].v[2][0], m->f[i].v[2][1], m->f[i].v[0][0], m->f[i].v[0][1], color);
     }
 }
 /* ######################################## FILLING FUNCTIONS ######################################## */
 
 /* Fills given mesh with color according to mesh material und with the appropriate fill method. */
-const void fillMesh(const Mesh m) {
+const void fillMesh(Mesh *m, Material *mtr) {
     struct fillDispatch {
-        void (*fillfunction)(face, Material);
+        void (*fillfunction)(face, Material *m);
     } dis;
 
     if (EDGEFUNC)
@@ -84,12 +84,12 @@ const void fillMesh(const Mesh m) {
     else if (SCANLINE)
         dis.fillfunction = &scanlinefillface;
 
-    for (int i = 0; i < m.f_indexes; i++) {
-        dis.fillfunction(m.f[i], m.material);
+    for (int i = 0; i < m->f_indexes; i++) {
+        dis.fillfunction(m->f[i], mtr);
     }
 }
-const void edgefillface(const face f, const Material mtr) {
-    /* Creating 2Arrays for X and Y values to sort them. */
+const void edgefillface(const face f, Material *mtr) {
+    /* Creating 2Arrays for X and Y values to sort them-> */
     int Ys[3] = { f.v[0][1], f.v[1][1], f.v[2][1] };
     int Xs[3] = { f.v[0][0], f.v[1][0], f.v[2][0] };
     /* Sorting the values from smaller to larger. Those values are the triangle bounding box. */
@@ -112,7 +112,7 @@ const void edgefillface(const face f, const Material mtr) {
 
     edgefillGeneral(f, mtr, Xs[0], Xs[2], Ys[0], Ys[2]);
 }
-const static void edgefillGeneral(const face f, const Material mtr, int minX, int maxX, int minY, int maxY) {
+const static void edgefillGeneral(const face f, Material *mtr, int minX, int maxX, int minY, int maxY) {
     const vec4i xs = { f.v[0][0],  f.v[1][0], f.v[2][0], 0};
     const vec4i ys = { f.v[0][1],  f.v[1][1], f.v[2][1], 0};
 
@@ -147,7 +147,7 @@ const static void edgefillGeneral(const face f, const Material mtr, int minX, in
 
                     const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
 
-                    point_depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
+                    // point_depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
                 }
                 xflag++;
             } else if (xflag) break;
@@ -156,7 +156,7 @@ const static void edgefillGeneral(const face f, const Material mtr, int minX, in
         ya += -xmx;
     }
 }
-const void scanlinefillface(const face f, const Material mtr) {
+const void scanlinefillface(const face f, Material *mtr) {
     /* Creating a struct to be able to sort vertices without affecting their order. */
     Srt srt[3] = {
         { .y =  f.v[0][1], .index = 0},
@@ -176,7 +176,7 @@ const void scanlinefillface(const face f, const Material mtr) {
 
     scanlinefillGeneral(f, mtr, srt);
 }
-const static void scanlinefillGeneral(const face f, const Material mtr, const Srt srt[]) {
+const static void scanlinefillGeneral(const face f, Material *mtr, const Srt srt[]) {
     const vec4i xs = { f.v[0][0],  f.v[1][0], f.v[2][0], 0};
     const vec4i ys = { f.v[0][1],  f.v[1][1], f.v[2][1], 0};
     const vec4i xmx = xs - __builtin_shuffle(xs, edgemask);
@@ -229,7 +229,12 @@ const static void scanlinefillGeneral(const face f, const Material mtr, const Sr
 
                         const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
 
-                        point_depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
+                        vec4f temp = { x, y, frag[2], frag[3] };
+                        frags_buffer[padxDB].pos = temp;
+                        frags_buffer[padxDB].nrm = normal;
+                        frags_buffer[padxDB].mtr = mtr;
+                        frags_buffer[padxDB].state = 1;
+                        point_depth_buffer[padxDB] = frag[3];
                     }
                 }
                 xa += ymy;
@@ -270,7 +275,12 @@ const static void scanlinefillGeneral(const face f, const Material mtr, const Sr
 
                     const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
 
-                    point_depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
+                    vec4f temp = { x, y, frag[2], frag[3] };
+                    frags_buffer[padxDB].pos = temp;
+                    frags_buffer[padxDB].nrm = normal;
+                    frags_buffer[padxDB].mtr = mtr;
+                    frags_buffer[padxDB].state = 1;
+                    point_depth_buffer[padxDB] = frag[3];
                 }
             }
             xa += ymy;
@@ -281,10 +291,10 @@ const static void scanlinefillGeneral(const face f, const Material mtr, const Sr
 }
 /* ######################################## TEXTURE PAINTING FUNCTIONS ######################################## */
 
-/* Textures given Mesh using the choosen algorithm. (Edge Function or Scanline Function). */
-const void texMesh(const Mesh m) {
+/* Textures given Mesh using the choosen algorithm-> (Edge Function or Scanline Function). */
+const void texMesh(Mesh *m, Material *mtr) {
     struct fillDispatch {
-        void (*fillfunction)(face, Material);
+        void (*fillfunction)(face *f, Material *m);
     } dis;
 
     if (EDGEFUNC)
@@ -292,14 +302,14 @@ const void texMesh(const Mesh m) {
     else if (SCANLINE)
         dis.fillfunction = &scanlinetexface;
 
-    for (int i = 0; i < m.f_indexes; i++) {
-        dis.fillfunction(m.f[i], m.material);
+    for (int i = 0; i < m->f_indexes; i++) {
+        dis.fillfunction(&m->f[i], mtr);
     }
 }
-const void edgetexface(const face f, const Material mtr) {
-    /* Creating 2Arrays for X and Y values to sort them. */
-    int Ys[3] = { f.v[0][1], f.v[1][1], f.v[2][1] };
-    int Xs[3] = { f.v[0][0], f.v[1][0], f.v[2][0] };
+const void edgetexface(face *f, Material *mtr) {
+    /* Creating 2Arrays for X and Y values to sort them-> */
+    int Ys[3] = { f->v[0][1], f->v[1][1], f->v[2][1] };
+    int Xs[3] = { f->v[0][0], f->v[1][0], f->v[2][0] };
     /* Sorting the values from smaller to larger. Those values are the triangle bounding box. */
     float temp;
     for (int i = 0; i < 3; i++)
@@ -320,9 +330,9 @@ const void edgetexface(const face f, const Material mtr) {
 
     edgetexGeneral(f, mtr, Xs[0], Xs[2], Ys[0], Ys[2]);
 }
-const static void edgetexGeneral(const face f, Material mtr, int minX, int maxX, int minY, int maxY) {
-    const vec4i xs = { f.v[0][0],  f.v[1][0], f.v[2][0], 0};
-    const vec4i ys = { f.v[0][1],  f.v[1][1], f.v[2][1], 0};
+const static void edgetexGeneral(face *f, Material *mtr, int minX, int maxX, int minY, int maxY) {
+    const vec4i xs = { f->v[0][0],  f->v[1][0], f->v[2][0], 0};
+    const vec4i ys = { f->v[0][1],  f->v[1][1], f->v[2][1], 0};
 
     const vec4i xmx = xs - __builtin_shuffle(xs, edgemask);
     const vec4i ymy = ys - __builtin_shuffle(ys, edgemask);
@@ -349,22 +359,22 @@ const static void edgetexGeneral(const face f, Material mtr, int minX, int maxX,
             if ( (xa0 | xa1 | xa2) > 0 ) {
                 vec4f a = __builtin_convertvector(xa, vec4f) / area;
 
-                const vec4f frag = a[0] * f.v[2] + a[1] * f.v[0] + a[2] * f.v[1];
+                const vec4f frag = a[0] * f->v[2] + a[1] * f->v[0] + a[2] * f->v[1];
                 const int padxDB = padyDB + x;
                 if (frag[3] > point_depth_buffer[padxDB]) {
 
-                    const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
+                    const vec4f normal = a[0] * f->vn[2] + a[1] * f->vn[0] + a[2] * f->vn[1];
 
-                    if (mtr.tex_levels) {
-                        const vec2f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
+                    if (mtr->tex_levels) {
+                        const vec2f texel = a[0] * f->vt[2] + a[1] * f->vt[0] + a[2] * f->vt[1];
 
-                        const int tex_y = (texel[1] * (mtr.texture_height - 1)) / frag[3];
-                        const int tex_x = (texel[0] * (mtr.texture_width - 1)) / frag[3];
+                        const int tex_y = (texel[1] * (mtr->texture_height - 1)) / frag[3];
+                        const int tex_x = (texel[0] * (mtr->texture_width - 1)) / frag[3];
 
-                        mtr.basecolor = __builtin_convertvector(mtr.texture[(tex_y * mtr.texture_width) + tex_x], vec4f) / 255.0f;
+                        mtr->basecolor = __builtin_convertvector(mtr->texture[(tex_y * mtr->texture_width) + tex_x], vec4f) / 255.0f;
                     }
 
-                    point_depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
+                    // point_depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
                 }
                 xflag++;
             } else if (xflag) break;
@@ -373,12 +383,12 @@ const static void edgetexGeneral(const face f, Material mtr, int minX, int maxX,
         ya += -xmx;
     }
 }
-const void scanlinetexface(const face f, const Material mtr) {
+const void scanlinetexface(face *f, Material *mtr) {
     /* Creating a struct to be able to sort vertices without affecting their order. */
     Srt srt[3] = {
-        { .y =  f.v[0][1], .index = 0},
-        { .y =  f.v[1][1], .index = 1},
-        { .y =  f.v[2][1], .index = 2}
+        { .y =  f->v[0][1], .index = 0},
+        { .y =  f->v[1][1], .index = 1},
+        { .y =  f->v[2][1], .index = 2}
     };
 
     /* Sorting the values from smaller to larger y. */
@@ -393,14 +403,14 @@ const void scanlinetexface(const face f, const Material mtr) {
 
     scanlinetexGeneral(f, mtr, srt);
 }
-const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]) {
-    const vec4i xs = { f.v[0][0],  f.v[1][0], f.v[2][0], 0};
-    const vec4i ys = { f.v[0][1],  f.v[1][1], f.v[2][1], 0};
+const static void scanlinetexGeneral(face *f, Material *mtr, const Srt srt[]) {
+    const vec4i xs = { f->v[0][0],  f->v[1][0], f->v[2][0], 0};
+    const vec4i ys = { f->v[0][1],  f->v[1][1], f->v[2][1], 0};
     const vec4i xmx = xs - __builtin_shuffle(xs, edgemask);
     const vec4i ymy = ys - __builtin_shuffle(ys, edgemask);
 
-    const vec4i txs = { f.v[srt[0].index][0], f.v[srt[1].index][0], f.v[srt[2].index][0], 0 };
-    const vec4i tys = { f.v[srt[0].index][1], f.v[srt[1].index][1], f.v[srt[2].index][1], 0 };
+    const vec4i txs = { f->v[srt[0].index][0], f->v[srt[1].index][0], f->v[srt[2].index][0], 0 };
+    const vec4i tys = { f->v[srt[0].index][1], f->v[srt[1].index][1], f->v[srt[2].index][1], 0 };
     const vec4i txmx = __builtin_shuffle(txs, edgemask) - txs;
     const vec4i tymy = __builtin_shuffle(tys, edgemask) - tys;
 
@@ -453,22 +463,24 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
                 if ( (xa0 | xa1 | xa2) > 0 ) {
                     vec4f a = __builtin_convertvector(xa, vec4f) / area;
 
-                    const vec4f frag = a[0] * f.v[2] + a[1] * f.v[0] + a[2] * f.v[1];
+                    const vec4f frag = a[0] * f->v[2] + a[1] * f->v[0] + a[2] * f->v[1];
                     const int padxDB = padyDB + x;
                     if ( frag[3] > point_depth_buffer[padxDB] ) {
 
-                        const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
+                        const vec4f normal = a[0] * f->vn[2] + a[1] * f->vn[0] + a[2] * f->vn[1];
 
-                        if (mtr.tex_levels) {
-                            const vec2f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
+                        if (mtr->tex_levels) {
+                            const vec2f texel = a[0] * f->vt[2] + a[1] * f->vt[0] + a[2] * f->vt[1];
 
-                            const int tex_y = (texel[1] * (mtr.texture_height - 1)) / frag[3];
-                            const int tex_x = (texel[0] * (mtr.texture_width - 1)) / frag[3];
-
-                            mtr.basecolor = __builtin_convertvector(mtr.texture[(tex_y * mtr.texture_width) + tex_x], vec4f) / 255.0f;
+                            frags_buffer[padxDB].tex_y = (texel[1] * (mtr->texture_height - 1)) / frag[3];
+                            frags_buffer[padxDB].tex_x = (texel[0] * (mtr->texture_width - 1)) / frag[3];
                         }
-
-                        point_depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
+                        vec4f temp = { x, y, frag[2], frag[3] };
+                        frags_buffer[padxDB].pos = temp;
+                        frags_buffer[padxDB].nrm = normal;
+                        frags_buffer[padxDB].mtr = mtr;
+                        frags_buffer[padxDB].state = 1;
+                        point_depth_buffer[padxDB] = frag[3];
                     }
                 }
                 xa += ymy;
@@ -506,22 +518,24 @@ const static void scanlinetexGeneral(const face f, Material mtr, const Srt srt[]
             if ( (xa0 | xa1 | xa2) > 0 ) {
                 vec4f a = __builtin_convertvector(xa, vec4f) / area;
 
-                const vec4f frag = a[0] * f.v[2] + a[1] * f.v[0] + a[2] * f.v[1];
+                const vec4f frag = a[0] * f->v[2] + a[1] * f->v[0] + a[2] * f->v[1];
                 const int padxDB = padyDB + x;
                 if ( frag[3] > point_depth_buffer[padxDB] ) {
 
-                    const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
+                    const vec4f normal = a[0] * f->vn[2] + a[1] * f->vn[0] + a[2] * f->vn[1];
 
-                    if (mtr.tex_levels) {
-                        const vec2f texel = a[0] * f.vt[2] + a[1] * f.vt[0] + a[2] * f.vt[1];
-
-                        const int tex_y = (texel[1] * (mtr.texture_height - 1)) / frag[3];
-                        const int tex_x = (texel[0] * (mtr.texture_width - 1)) / frag[3];
-
-                        mtr.basecolor = __builtin_convertvector(mtr.texture[(tex_y * mtr.texture_width) + tex_x], vec4f) / 255.0f;
+                    if (mtr->tex_levels) {
+                        const vec2f texel = a[0] * f->vt[2] + a[1] * f->vt[0] + a[2] * f->vt[1];
+                        
+                        frags_buffer[padxDB].tex_y = (texel[1] * (mtr->texture_height - 1)) / frag[3];
+                        frags_buffer[padxDB].tex_x = (texel[0] * (mtr->texture_width - 1)) / frag[3];
                     }
-
-                    point_depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
+                    vec4f temp = { x, y, frag[2], frag[3] };
+                    frags_buffer[padxDB].pos = temp;
+                    frags_buffer[padxDB].nrm = normal;
+                    frags_buffer[padxDB].mtr = mtr;
+                    frags_buffer[padxDB].state = 1;
+                    point_depth_buffer[padxDB] = frag[3];
                 }
             }
             xa += ymy;

@@ -8,14 +8,14 @@ const static void assemblyfacesShadow(Mesh *m, const int len);
 // const static void setwone(Mesh *m, const int len);
 const static Mesh shadowculling(const Mesh c, const int len);
 const static int shadowtoscreen(Mesh *m, const int len);
-const static void createShadowmap(Mesh m, const unsigned int sm_index);
-const static void shadowface(const face f, const Srt srt[], const unsigned int sm_index);
+const static void createShadowmap(Mesh *m, const unsigned int sm_index);
+const static void shadowface(face *f, const Srt srt[], const unsigned int sm_index);
 const static vec4i smmask = { 1, 2, 0, 3 };
 
-const void shadowPipeline(Scene s, const unsigned int sm_index) {
+const void shadowPipeline(Scene *s, const unsigned int sm_index) {
     Mesh cache = { 0 };
-    for (int i = 0; i < s.m_indexes; i++) {
-        initMesh(&cache, s.m[i]);
+    for (int i = 0; i < s->m_indexes; i++) {
+        initMesh(&cache, s->m[i]);
 
         cache.v = setvecsarrayxm(cache.v, cache.v_indexes, ortholightMat[sm_index]);
 
@@ -67,7 +67,7 @@ const void shadowPipeline(Scene s, const unsigned int sm_index) {
             continue;
         }
 
-        createShadowmap(cache, sm_index);
+        createShadowmap(&cache, sm_index);
         releaseMesh(&cache);
     }
 }
@@ -172,13 +172,13 @@ const static int shadowtoscreen(Mesh *m, const int len) {
 
     return 1;
 }
-const void createShadowmap(Mesh m, const unsigned int sm_index) {
-    for (int c = 0; c < m.f_indexes; c++) {
+const void createShadowmap(Mesh *m, const unsigned int sm_index) {
+    for (int c = 0; c < m->f_indexes; c++) {
         /* Creating 2Arrays for X and Y values to sort them. */
         Srt srt[3] = {
-            { .y =  m.f[c].v[0][1], .index = 0},
-            { .y =  m.f[c].v[1][1], .index = 1},
-            { .y =  m.f[c].v[2][1], .index = 2}
+            { .y =  m->f[c].v[0][1], .index = 0},
+            { .y =  m->f[c].v[1][1], .index = 1},
+            { .y =  m->f[c].v[2][1], .index = 2}
         };
 
         /* Sorting the values from smaller to larger y. */
@@ -191,13 +191,13 @@ const void createShadowmap(Mesh m, const unsigned int sm_index) {
                     srt[i] = temp;
                 }
 
-        shadowface(m.f[c], srt, sm_index);
+        shadowface(&m->f[c], srt, sm_index);
     }
 }
-const void shadowface(const face f, const Srt srt[], const unsigned int sm_index) {
-    vec4i xs = { f.v[srt[0].index][0], f.v[srt[1].index][0], f.v[srt[2].index][0], 0 };
-    vec4i ys = { f.v[srt[0].index][1], f.v[srt[1].index][1], f.v[srt[2].index][1], 0 };
-    vec4f zs = { f.v[srt[0].index][2], f.v[srt[1].index][2], f.v[srt[2].index][2], 0 };
+const void shadowface(face *f, const Srt srt[], const unsigned int sm_index) {
+    vec4i xs = { f->v[srt[0].index][0], f->v[srt[1].index][0], f->v[srt[2].index][0], 0 };
+    vec4i ys = { f->v[srt[0].index][1], f->v[srt[1].index][1], f->v[srt[2].index][1], 0 };
+    vec4f zs = { f->v[srt[0].index][2], f->v[srt[1].index][2], f->v[srt[2].index][2], 0 };
     vec4i xmx = __builtin_shuffle(xs, smmask) - xs;
     vec4i ymy = __builtin_shuffle(ys, smmask) - ys;
     vec4f zmz = __builtin_shuffle(zs, smmask) - zs;
@@ -213,7 +213,7 @@ const void shadowface(const face f, const Srt srt[], const unsigned int sm_index
     }
 
     // vec4f lightpos = norm_vec(vecxm(sunlight.pos, lightMat));
-    // float dot = dot_product(lightpos, f.fn);
+    // float dot = dot_product(lightpos, f->fn);
     // printf("dot_product: %f\n", dot);
     // if (dot > 0 && dot < 0.00025)
     //     return;

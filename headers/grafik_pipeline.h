@@ -33,7 +33,7 @@ extern Mat4x4 viewMat, worldMat, lookAt, *point_mat;
 extern u_int8_t *frame_buffer, *point_buffer;
 extern float *point_depth_buffer, *main_depth_buffer;
 
-const void grafikPipeline(Scene s);
+const void grafikPipeline(Scene *s);
 
 #endif /* _GRAFIK_PIPELINE_H */
 

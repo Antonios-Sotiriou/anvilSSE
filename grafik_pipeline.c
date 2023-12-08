@@ -7,20 +7,20 @@ const static void assemblyfaces(Mesh *m, const int len);
 const static void ppdiv(Mesh *m, const int len);
 const static Mesh bfculling(const Mesh m, const int len);
 const static int viewtoscreen(Mesh *m, const int len);
-const static void rasterize(const Mesh m);
+const static void rasterize(Mesh *m, Material *mtr);
 
 /* Passes the scene Meshes throught the graphic pipeline. */
-const void grafikPipeline(Scene s) {
+const void grafikPipeline(Scene *s) {
     Mesh cache = { 0 };
-    Scene frustum;
-    size_t mesh_size = sizeof(Mesh);
-    frustum.m = malloc(mesh_size);
-    int index = 0, dynamic_inc = 1;
+    // Scene frustum;
+    // size_t mesh_size = sizeof(Mesh);
+    // frustum.m = malloc(mesh_size);
+    // int index = 0, dynamic_inc = 1;
 
-    for (int i = 0; i < s.m_indexes; i++) {
-        adoptdetail(&s.m[i]);
+    for (int i = 0; i < s->m_indexes; i++) {
+        adoptdetail(&s->m[i]);
 
-        initMesh(&cache, s.m[i]);
+        initMesh(&cache, s->m[i]);
 
         cache.v = setvecsarrayxm(cache.v, cache.v_indexes, worldMat);
         cache.n = setvecsarrayxm(cache.n, cache.n_indexes, viewMat);
@@ -64,18 +64,19 @@ const void grafikPipeline(Scene s) {
             continue;
         }
 
-        frustum.m = realloc(frustum.m, dynamic_inc * mesh_size);
-        frustum.m[index] = cache;
-        index++;
-        dynamic_inc++;
+        // frustum.m = realloc(frustum.m, dynamic_inc * mesh_size);
+        // frustum.m[index] = cache;
+        // index++;
+        // dynamic_inc++;
 
-        rasterize(cache);
+        rasterize(&cache, &s->m[i].material);
+        releaseMesh(&cache);
     }
-    frustum.m_indexes = index;
-    if (frustum.m) {
-        mapPipeline(&frustum);
-        releaseScene(&frustum);
-    }
+    // frustum.m_indexes = index;
+    // if (frustum.m) {
+    //     mapPipeline(&frustum);
+    //     releaseScene(&frustum);
+    // }
 }
 const static void adoptdetail(Mesh *m) {
     const int distance = len_vec(m->pivot - lookAt.m[3]);
@@ -212,17 +213,18 @@ const static int viewtoscreen(Mesh *m, const int len) {
     return 1;
 }
 /* Rasterize given Mesh by passing them to the appropriate function. */
-const static void rasterize(const Mesh m) {
+const static void rasterize(Mesh *m, Material *mtr) {
     point_buffer = frame_buffer;
     point_depth_buffer = main_depth_buffer;
     point_attrib = &main_wa;
     point_mat = &lookAt;
+
     if (DEBUG == 1) {
-        edgeMesh(m, m.material.basecolor);
+        edgeMesh(m, m->material.basecolor);
     } else if (DEBUG == 2) {
-        fillMesh(m);
+        fillMesh(m, mtr);
     } else {
-        texMesh(m);
+        texMesh(m, mtr);
     }
 }
 
