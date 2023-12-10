@@ -3,15 +3,15 @@
 #include "headers/frustum_map.h"
 
 const static void adoptdetail(Mesh *m);
-const static void assemblyfaces(Mesh *m, const int len);
-const static void ppdiv(Mesh *m, const int len);
-const static Mesh bfculling(const Mesh m, const int len);
-const static int viewtoscreen(Mesh *m, const int len);
-const static void rasterize(Mesh *m, Material *mtr);
+const static MeshStepTwo assemblyfaces(MeshStepOne *m, unsigned int *indices, const int len);
+const static void ppdiv(MeshStepTwo *m, const int len);
+const static MeshStepTwo bfculling(const MeshStepTwo m, const int len);
+const static int viewtoscreen(MeshStepTwo *m, const int len);
+const static void rasterize(MeshStepTwo *m, Material *mtr);
 
 /* Passes the scene Meshes throught the graphic pipeline. */
 const void grafikPipeline(Scene *s) {
-    MeshStepOne cache = { 0 };
+    MeshStepOne cache_0 = { 0 };
     // Scene frustum;
     // size_t mesh_size = sizeof(Mesh);
     // frustum.m = malloc(mesh_size);
@@ -20,58 +20,58 @@ const void grafikPipeline(Scene *s) {
     for (int i = 0; i < s->m_indexes; i++) {
         adoptdetail(&s->m[i]);
 
-        initMeshStepOne(&cache, s->m[i]);
+        initMeshStepOne(&cache_0, &s->m[i]);
 
-        cache.v = setvecsarrayxm(cache.v, cache.v_indexes, worldMat);
-        cache.n = setvecsarrayxm(cache.n, cache.n_indexes, viewMat);
+        cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, worldMat);
+        cache_0.n = setvecsarrayxm(cache_0.n, cache_0.n_indexes, viewMat);
 
         /* Assembly and create the faces from the mesh vertices, normals and texture arrays, through the indexes. */
-        /* Assembler should receive a mesh pointer as argument, assembly the faces and return a faces array struct. */
-        assemblyfaces(&cache, cache.f_indexes);
+        MeshStepTwo cache_1 = assemblyfaces(&cache_0, s->m[i].f, s->m[i].f_indexes);
+        releaseMeshStepOne(&cache_0);
 
         /* Clipping against near Plane in View Space. */
         vec4f plane_near_p = { 0.0f, 0.0f, NPlane },
                 plane_near_n = { 0.0f, 0.0f, 1.0f };
-        cache = clipp(&cache, plane_near_p, plane_near_n);
-        if (!cache.f_indexes) {
-            releaseMesh(&cache);
+        cache_1 = clipp(&cache_1, plane_near_p, plane_near_n);
+        if (!cache_1.f_indexes) {
+            releaseMeshStepTwo(&cache_1);
             continue;
         }
 
         /* Clipping against far Plane in View Space. */
         vec4f plane_far_p = { 0.0f, 0.0f, FPlane},
               plane_far_n = { 0.0f, 0.0f, -1.0f };
-        cache = clipp(&cache, plane_far_p, plane_far_n);
-        if (!cache.f_indexes) {
-            releaseMesh(&cache);
+        cache_1 = clipp(&cache_1, plane_far_p, plane_far_n);
+        if (!cache_1.f_indexes) {
+            releaseMeshStepTwo(&cache_1);
             continue;
         }
 
         /* Applying perspective division. */
         if (!PROJECTIONVIEW)
-            ppdiv(&cache, cache.f_indexes);
+            ppdiv(&cache_1, cache_1.f_indexes);
 
         /* Applying Backface culling before we proceed to Screen Space transformation and view Port clipping. */
-        if (cache.cull)
-            cache = bfculling(cache, cache.f_indexes);
-        if (!cache.f_indexes) {
-            releaseMesh(&cache);
+        if (cache_1.cull)
+            cache_1 = bfculling(cache_1, cache_1.f_indexes);
+        if (!cache_1.f_indexes) {
+            releaseMeshStepTwo(&cache_1);
             continue;
         }
 
         /* Sending to translation from NDC to Screen Coordinates. */
-        if (!viewtoscreen(&cache, cache.f_indexes)) {
-            releaseMesh(&cache);
+        if (!viewtoscreen(&cache_1, cache_1.f_indexes)) {
+            releaseMeshStepTwo(&cache_1);
             continue;
         }
 
         // frustum.m = realloc(frustum.m, dynamic_inc * mesh_size);
-        // frustum.m[index] = cache;
+        // frustum.m[index] = cache_0;
         // index++;
         // dynamic_inc++;
 
-        rasterize(&cache, &s->m[i].material);
-        releaseMesh(&cache);
+        rasterize(&cache_1, &s->m[i].material);
+        releaseMeshStepTwo(&cache_1);
     }
     // frustum.m_indexes = index;
     // if (frustum.m) {
@@ -81,7 +81,7 @@ const void grafikPipeline(Scene *s) {
 }
 const static void adoptdetail(Mesh *m) {
     const int distance = len_vec(m->pivot - lookAt.m[3]);
-    const int lcache = m->lvlofdetail;
+    const int lcache_0 = m->lvlofdetail;
 
     if ( (distance >= 0 && distance <= 200) && (m->lvlofdetail != 0) ) {
         printf("lvl of detail 1\n");
@@ -115,28 +115,38 @@ const static void adoptdetail(Mesh *m) {
     if (!m->material.tex_levels)
         return;
 
-    if (strcmp(m->material.texlvl[lcache], m->material.texlvl[m->lvlofdetail]) != 0) {
+    if (strcmp(m->material.texlvl[lcache_0], m->material.texlvl[m->lvlofdetail]) != 0) {
         loadtexture(m);
     }
 }
 /* Assosiates vertices coordinate values from vector array through indexes. */
-const static void assemblyfaces(Mesh *m, const int len) {
-    for (int i = 0; i < len; i++) {
-        m->f[i].v[0] = m->v[m->f[i].a[0]];
-        m->f[i].v[1] = m->v[m->f[i].b[0]];
-        m->f[i].v[2] = m->v[m->f[i].c[0]];
+const static MeshStepTwo assemblyfaces(MeshStepOne *m, unsigned int *indices, const int len) {
+    MeshStepTwo r = { 0 };
+    r.f_indexes = len / 9;
+    r.f = malloc(sizeof(face) * r.f_indexes);
 
-        m->f[i].vt[0] = m->t[m->f[i].a[1]];
-        m->f[i].vt[1] = m->t[m->f[i].b[1]];
-        m->f[i].vt[2] = m->t[m->f[i].c[1]];
+    int index = 0;
+    for (int i = 0; i < len; i += 9) {
+        r.f[index].v[0] = m->v[indices[i]];
+        r.f[index].v[1] = m->v[indices[i + 3]];
+        r.f[index].v[2] = m->v[indices[i + 6]];
 
-        m->f[i].vn[0] = m->n[m->f[i].a[2]];
-        m->f[i].vn[1] = m->n[m->f[i].b[2]];
-        m->f[i].vn[2] = m->n[m->f[i].c[2]];
+        r.f[index].vt[0] = m->t[indices[i + 1]];
+        r.f[index].vt[1] = m->t[indices[i + 4]];
+        r.f[index].vt[2] = m->t[indices[i + 7]];
+
+        r.f[index].vn[0] = m->n[indices[i + 2]];
+        r.f[index].vn[1] = m->n[indices[i + 5]];
+        r.f[index].vn[2] = m->n[indices[i + 8]];
+        index++;
     }
+
+    r.cull = m->cull;
+    r.lvlofdetail = m->lvlofdetail;
+    return r;
 }
 /* Perspective division. */
-const static void ppdiv(Mesh *m, const int len) {
+const static void ppdiv(MeshStepTwo *m, const int len) {
     for (int i = 0; i < len; i++) {
         for (int j = 0; j < 3; j++) {
             float w = m->f[i].v[j][3];
@@ -146,8 +156,8 @@ const static void ppdiv(Mesh *m, const int len) {
     }
 }
 /* Backface culling.Discarding Triangles that should not be painted.Creating a new dynamic Mesh stucture Triangles array. */
-const static Mesh bfculling(const Mesh m, const int len) {
-    Mesh r = m;
+const static MeshStepTwo bfculling(const MeshStepTwo m, const int len) {
+    MeshStepTwo r = m;
     size_t size = sizeof(face);
     int counter = 1;
     int index = 0;
@@ -173,7 +183,7 @@ const static Mesh bfculling(const Mesh m, const int len) {
     return r;
 }
 /* Translates the Mesh's Triangles from world to Screen Coordinates. */
-const static int viewtoscreen(Mesh *m, const int len) {
+const static int viewtoscreen(MeshStepTwo *m, const int len) {
     for (int i = 0; i < len; i++) {
         for (int j = 0; j < 3; j++) {
 
@@ -214,14 +224,14 @@ const static int viewtoscreen(Mesh *m, const int len) {
     return 1;
 }
 /* Rasterize given Mesh by passing them to the appropriate function. */
-const static void rasterize(Mesh *m, Material *mtr) {
+const static void rasterize(MeshStepTwo *m, Material *mtr) {
     point_buffer = frame_buffer;
     point_depth_buffer = main_depth_buffer;
     point_attrib = &main_wa;
     point_mat = &lookAt;
 
     if (DEBUG == 1) {
-        edgeMesh(m, m->material.basecolor);
+        edgeMesh(m, mtr->basecolor);
     } else if (DEBUG == 2) {
         fillMesh(m, mtr);
     } else {

@@ -13,13 +13,11 @@ const void logVec4c(const vec4c v) {
 }
 
 /* Logging Triangle values.If vec = 1 loggs vec4 values, if tex Texture, if norm Normal. */
-const void logFace(const face f, const int vec, const int tex, const int norm, const int indexes) {
+const void logFace(const face f, const int vec, const int tex, const int norm) {
     if (vec) {
         fprintf(stdout, "v0 - { %f, %f, %f, %f }\n", f.v[0][0], f.v[0][1], f.v[0][2], f.v[0][3]);
         fprintf(stdout, "v1 - { %f, %f, %f, %f }\n", f.v[1][0], f.v[1][1], f.v[1][2], f.v[1][3]);
         fprintf(stdout, "v2 - { %f, %f, %f, %f }\n", f.v[2][0], f.v[2][1], f.v[2][2], f.v[2][3]);
-    } else if (indexes) {
-        fprintf(stdout, "{ %d, %d, %d }, { %d, %d, %d }, { %d, %d, %d }\n", f.a[0], f.a[1], f.a[2], f.b[0], f.b[1], f.b[2], f.c[0], f.c[1], f.c[2]);
     } else if (tex) {
         fprintf(stdout, "f.vt[0].u: %f    f.vt[0].v: %f\n", f.vt[0][0], f.vt[0][1]);
         fprintf(stdout, "f.vt[1].u: %f    f.vt[1].v: %f\n", f.vt[1][0], f.vt[1][1]);

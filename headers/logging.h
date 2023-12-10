@@ -18,7 +18,7 @@ const void logVec4f(const vec4f v);
 const void logVec4i(const vec4i v);
 const void logVec4c(const vec4c v);
 // const void logPixel(const Pixel p);
-const void logFace(const face f, const int vec, const int tex, const int norm, const int indexes);
+const void logFace(const face f, const int vec, const int tex, const int norm);
 const void logMatrix(const Mat4x4 m);
 // const void logQuat(const Quat q);
 

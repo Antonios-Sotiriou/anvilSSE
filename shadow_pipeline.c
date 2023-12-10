@@ -2,40 +2,41 @@
 
 #include "headers/logging.h"
 
-const static void assemblyfacesShadow(Mesh *m, const int len);
+const static MeshStepTwo assemblyfacesShadow(MeshStepOne *m, unsigned int *indices, const int len);
 // const static void shadowppdiv(Mesh *m, const int len);
 // const static void clipptoview(Mesh *m, const int len);
 // const static void setwone(Mesh *m, const int len);
-const static Mesh shadowculling(const Mesh c, const int len);
-const static int shadowtoscreen(Mesh *m, const int len);
-const static void createShadowmap(Mesh *m, const unsigned int sm_index);
+const static MeshStepTwo shadowculling(const MeshStepTwo c, const int len);
+const static int shadowtoscreen(MeshStepTwo *m, const int len);
+const static void createShadowmap(MeshStepTwo *m, const unsigned int sm_index);
 const static void shadowface(face *f, const Srt srt[], const unsigned int sm_index);
 const static vec4i smmask = { 1, 2, 0, 3 };
 
 const void shadowPipeline(Scene *s, const unsigned int sm_index) {
-    Mesh cache = { 0 };
+    MeshStepOne cache_0 = { 0 };
     for (int i = 0; i < s->m_indexes; i++) {
-        initMesh(&cache, s->m[i]);
+        initMeshStepOne(&cache_0, &s->m[i]);
 
-        cache.v = setvecsarrayxm(cache.v, cache.v_indexes, ortholightMat[sm_index]);
+        cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, ortholightMat[sm_index]);
 
-        assemblyfacesShadow(&cache, cache.f_indexes);
+        MeshStepTwo cache_1 = assemblyfacesShadow(&cache_0, s->m[i].f, s->m[i].f_indexes);
+        releaseMeshStepOne(&cache_0);
 
         /* At this Point triangles must be shadowclipped against near plane. */
         vec4f plane_near_p = { 0.0f, 0.0f, NPlane },
                 plane_near_n = { 0.0f, 0.0f, 1.0f };
-        cache = shadowclipp(cache, plane_near_p, plane_near_n);
-        if (!cache.f_indexes) {
-            releaseMesh(&cache);
+        cache_1 = shadowclipp(&cache_1, plane_near_p, plane_near_n);
+        if (!cache_1.f_indexes) {
+            releaseMeshStepTwo(&cache_1);
             continue;
         }
 
         /* Clipping against far Plane in View Space. */
         vec4f plane_far_p = { 0.0f, 0.0f,  FPlane},
                 plane_far_n = { 0.0f, 0.0f, -1.0f };
-        cache = shadowclipp(cache, plane_far_p, plane_far_n);
-        if (!cache.f_indexes) {
-            releaseMesh(&cache);
+        cache_1 = shadowclipp(&cache_1, plane_far_p, plane_far_n);
+        if (!cache_1.f_indexes) {
+            releaseMeshStepTwo(&cache_1);
             continue;
         }
 
@@ -44,10 +45,10 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
             // shadowppdiv(&cache, cache.f_indexes);
 
         /* Applying Backface culling before we proceed to full frustum shadowclipping. */
-        if (cache.cull)
-            cache = shadowculling(cache, cache.f_indexes);
-        if (!cache.f_indexes) {
-            releaseMesh(&cache);
+        if (cache_1.cull)
+            cache_1 = shadowculling(cache_1, cache_1.f_indexes);
+        if (!cache_1.f_indexes) {
+            releaseMeshStepTwo(&cache_1);
             continue;
         }
 
@@ -62,22 +63,31 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
         // cache.f = setfacesarrayxm(cache.f, cache.f_indexes, ortholightMat);
 
         /* Sending to translation from NDC to Screen Coordinates. */
-        if (!shadowtoscreen(&cache, cache.f_indexes)) {
-            releaseMesh(&cache);
+        if (!shadowtoscreen(&cache_1, cache_1.f_indexes)) {
+            releaseMeshStepTwo(&cache_1);
             continue;
         }
 
-        createShadowmap(&cache, sm_index);
-        releaseMesh(&cache);
+        createShadowmap(&cache_1, sm_index);
+        releaseMeshStepTwo(&cache_1);
     }
 }
 /* Assosiates vertices coordinate values from vector array through indexes. */
-const static void assemblyfacesShadow(Mesh *m, const int len) {
-    for (int i = 0; i < len; i++) {
-        m->f[i].v[0] = m->v[m->f[i].a[0]];
-        m->f[i].v[1] = m->v[m->f[i].b[0]];
-        m->f[i].v[2] = m->v[m->f[i].c[0]];
+const static MeshStepTwo assemblyfacesShadow(MeshStepOne *m, unsigned int *indices, const int len) {
+    MeshStepTwo r = { 0 };
+    r.f_indexes = len / 9;
+    r.f = malloc(sizeof(face) * r.f_indexes);
+
+    int index = 0;
+    for (int i = 0; i < len; i += 9) {
+        r.f[index].v[0] = m->v[indices[i]];
+        r.f[index].v[1] = m->v[indices[i + 3]];
+        r.f[index].v[2] = m->v[indices[i + 6]];
+        index++;
     }
+
+    r.cull = m->cull;
+    return r;
 }
 // /* Perspective division. */
 // const static void shadowppdiv(Mesh *m, const int len) {
@@ -108,8 +118,8 @@ const static void assemblyfacesShadow(Mesh *m, const int len) {
 //     }
 // }
 /* Backface culling.Discarding Triangles that should not be painted.Creating a new dynamic Mesh stucture Triangles array. */
-const static Mesh shadowculling(const Mesh m, const int len) {
-    Mesh r = m;
+const static MeshStepTwo shadowculling(const MeshStepTwo m, const int len) {
+    MeshStepTwo r = m;
     size_t size = sizeof(face);
     int counter = 1;
     int index = 0;
@@ -135,7 +145,7 @@ const static Mesh shadowculling(const Mesh m, const int len) {
     return r;
 }
 /* Translates the Mesh's Triangles from world to Screen Coordinates. */
-const static int shadowtoscreen(Mesh *m, const int len) {
+const static int shadowtoscreen(MeshStepTwo *m, const int len) {
     for (int i = 0; i < len; i++) {
         // m->f[i].fn = norm_vec(triangle_cp(m->f[i]));
         for (int j = 0; j < 3; j++) {
@@ -148,31 +158,31 @@ const static int shadowtoscreen(Mesh *m, const int len) {
 
     vec4f plane_up_p = { 0.0, 0.0, 0.0 },
           plane_up_n = { 0.0, 1.0, 0.0 };
-    *m = shadowclipp(*m, plane_up_p, plane_up_n);
+    *m = shadowclipp(m, plane_up_p, plane_up_n);
     if (!m->f_indexes)
         return 0;
 
     vec4f plane_down_p = { 0.0, main_wa.height - 1.0, 0.0 },
           plane_down_n = { 0.0, -1.0, 0.0 };
-    *m = shadowclipp(*m, plane_down_p, plane_down_n);
+    *m = shadowclipp(m, plane_down_p, plane_down_n);
     if (!m->f_indexes)
         return 0;
 
     vec4f plane_left_p = { 0.0, 0.0, 0.0 },
           plane_left_n = { 1.0, 0.0, 0.0 };
-    *m = shadowclipp(*m, plane_left_p, plane_left_n);
+    *m = shadowclipp(m, plane_left_p, plane_left_n);
     if (!m->f_indexes)
         return 0;
 
     vec4f plane_right_p = { main_wa.width - 1.0, 0.0, 0.0 },
           plane_right_n = { -1.0, 0.0, 0.0 };
-    *m = shadowclipp(*m, plane_right_p, plane_right_n);
+    *m = shadowclipp(m, plane_right_p, plane_right_n);
     if (!m->f_indexes)
         return 0;
 
     return 1;
 }
-const void createShadowmap(Mesh *m, const unsigned int sm_index) {
+const void createShadowmap(MeshStepTwo *m, const unsigned int sm_index) {
     for (int c = 0; c < m->f_indexes; c++) {
         /* Creating 2Arrays for X and Y values to sort them. */
         Srt srt[3] = {

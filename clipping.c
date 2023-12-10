@@ -3,9 +3,9 @@
 extern const void swap(void *a, void *b, unsigned long size);
 
 /* Normal Grafik Pipeline clipping algorythm. */
-const Mesh clipp(Mesh *c, vec4f plane_p, vec4f plane_n) {
+const MeshStepTwo clipp(MeshStepTwo *c, vec4f plane_p, vec4f plane_n) {
 
-    Mesh r = *c;
+    MeshStepTwo r = *c;
     size_t face_size = sizeof(face);
     r.f = malloc(face_size);
     int index = 0;
@@ -142,11 +142,10 @@ const int clipp_triangle(vec4f plane_p, vec4f plane_n, face in_t, face *out_t1, 
     return 0;
 }
 
-
 /* Shadow Pipeline clipping algorythm. */
-const Mesh shadowclipp(const Mesh c, vec4f plane_p, vec4f plane_n) {
+const MeshStepTwo shadowclipp(MeshStepTwo *c, vec4f plane_p, vec4f plane_n) {
 
-    Mesh r = c;
+    MeshStepTwo r = *c;
     size_t face_size = sizeof(face);
     r.f = malloc(face_size);
     int index = 0;
@@ -154,9 +153,9 @@ const Mesh shadowclipp(const Mesh c, vec4f plane_p, vec4f plane_n) {
 
     int clipped_count = 0;
     face clipped[2];
-    for (int i = 0; i < c.f_indexes; i++) {
+    for (int i = 0; i < c->f_indexes; i++) {
 
-        clipped_count = shadowclipp_triangle(plane_p, plane_n, c.f[i], &clipped[0], &clipped[1]);
+        clipped_count = shadowclipp_triangle(plane_p, plane_n, c->f[i], &clipped[0], &clipped[1]);
 
         if (clipped_count) {
 
@@ -174,14 +173,14 @@ const Mesh shadowclipp(const Mesh c, vec4f plane_p, vec4f plane_n) {
                 dynamic_inc += 2;
             } else if (clipped_count == 3) {
                 r.f = realloc(r.f, face_size * dynamic_inc);
-                r.f[index] = c.f[i];
+                r.f[index] = c->f[i];
                 index++;
                 dynamic_inc++;
             }
         }
     }
     r.f_indexes = index;
-    free(c.f);
+    free(c->f);
     return r;
 }
 const int shadowclipp_triangle(vec4f plane_p, vec4f plane_n, face in_t, face *out_t1, face *out_t2) {

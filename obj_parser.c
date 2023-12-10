@@ -3,7 +3,7 @@
 static vec4f *loadvectors(const char path[]);
 static vec2f *loadtextors(const char path[]);
 static vec4f *loadnormals(const char path[]);
-static face *loadfaces(const char path[]);
+static unsigned int *loadfaces(const char path[]);
 
 /* vectors array indexes */
 static int v_indexes = 0;
@@ -39,22 +39,22 @@ const Mesh loadmesh(const char path[]) {
 
     return r;
 }
-static face *loadfaces(const char path[]) {
-    size_t facesize = sizeof(face);
+static unsigned int *loadfaces(const char path[]) {
+    size_t facesize = sizeof(unsigned int);
     FILE *fp = fopen(path, "r");
     if (!fp) {
         fprintf(stderr, "Could not open file : %s.\n", path);
         return NULL;
     }
 
-    face *f = malloc(facesize);
+    unsigned int *f = malloc(facesize);
     if (!f) {
         fprintf(stderr, "Could not allocate memory for Face struct. load_obj() -- malloc().\n");
         fclose(fp);
         return NULL;
     }
     int va, vb, vc, vd, ve, vf, vg, vh, vi;
-    int dynamic_inc = 1;
+    int dynamic_inc = 9;
     int index = 0;
 
     char ch;
@@ -71,12 +71,12 @@ static face *loadfaces(const char path[]) {
                         free(f);
                         return NULL;
                     }
-                    f[index].a[0] = va - 1, f[index].a[1] = vb - 1, f[index].a[2] = vc - 1,
-                    f[index].b[0] = vd - 1, f[index].b[1] = ve - 1, f[index].b[2] = vf - 1,
-                    f[index].c[0] = vg - 1, f[index].c[1] = vh - 1, f[index].c[2] = vi - 1;
+                    f[index]     = va - 1, f[index + 1] = vb - 1, f[index + 2] = vc - 1,
+                    f[index + 3] = vd - 1, f[index + 4] = ve - 1, f[index + 5] = vf - 1,
+                    f[index + 6] = vg - 1, f[index + 7] = vh - 1, f[index + 8] = vi - 1;
 
-                    index++;
-                    dynamic_inc++;
+                    index += 9;
+                    dynamic_inc += 9;
                 }
     }
 

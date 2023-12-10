@@ -57,7 +57,6 @@ typedef struct {
     vec4f v[3];
     vec4f vn[3];
     vec2f vt[3];
-    int a[3], b[3], c[3];
 } face;
 
 /* Initialization matrix */
@@ -71,7 +70,7 @@ typedef struct {
     vec4f *v;
     vec4f *n;
     vec2f *t;
-    face *f;
+    unsigned int *f;
     // void (*drawMesh)(void *args);
     int v_indexes, n_indexes, t_indexes, f_indexes, cull, lvlofdetail;
     Material material;
