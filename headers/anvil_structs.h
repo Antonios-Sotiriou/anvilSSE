@@ -33,6 +33,11 @@ typedef union {
     vec4i i;
 } v128i;
 
+/* Initialization matrix */
+typedef struct {
+    vec4f m[4];
+} Mat4x4;
+
 /* Material struct to hold the specific for each material values. */
 typedef struct {
     char name[25];
@@ -59,11 +64,6 @@ typedef struct {
     vec2f vt[3];
 } face;
 
-/* Initialization matrix */
-typedef struct {
-    vec4f m[4];
-} Mat4x4;
-
 /* General Mesh struct from which the scene consists. It holds all the information before the graphic pipeline. */
 typedef struct {
     vec4f pivot;
@@ -89,6 +89,23 @@ typedef struct {
     face *f;
     int f_indexes, cull, lvlofdetail;
 } MeshStepTwo;
+
+/* Base Shadow face aka(triangle) struct. */
+typedef struct {
+    vec4f v[3];
+} Shadowface;
+
+// /* Inside graphic pipeline struct. Holds necessery data for the 1st step of the graphic pipeline. */
+typedef struct {
+    vec4f *v;
+    int v_indexes, cull;
+} MeshShadowStepOne;
+
+/* Inside graphic pipeline struct. Holds necessery data for the 2nd step of the graphic pipeline. */
+typedef struct {
+    Shadowface *f;
+    int f_indexes, cull;
+} MeshShadowStepTwo;
 
 /* Scene structs which teams all the meshes into an objects array. */
 typedef struct {

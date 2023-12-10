@@ -141,36 +141,5 @@ const void releaseMesh(Mesh *c) {
     free(c->t);
     free(c->f);
 }
-/* Releases all members of the given inside graphic pipeline lvl 1 Mesh. */
-const void releaseMeshStepOne(MeshStepOne *c) {
-    free(c->v);
-    free(c->n);
-    free(c->t);
-}
-/* Releases all members of the given inside graphic pipeline lvl 2 Mesh. */
-const void releaseMeshStepTwo(MeshStepTwo *c) {
-    free(c->f);
-}
-/* Initializing Mesh a from Mesh b. */
-const void initMeshStepOne(MeshStepOne *a, Mesh *b) {
-    size_t vsize = sizeof(vec4f) * b->v_indexes;
-    size_t nsize = sizeof(vec4f) * b->n_indexes;
-    size_t tsize = sizeof(vec2f) * b->t_indexes;
-
-    a->v = malloc(vsize);
-    memcpy(a->v, b->v, vsize);
-    a->v_indexes = b->v_indexes;
-
-    a->n = malloc(nsize);
-    memcpy(a->n, b->n, nsize);
-    a->n_indexes = b->n_indexes;
-
-    a->t = malloc(tsize);
-    memcpy(a->t, b->t, tsize);
-    a->t_indexes = b->t_indexes;
-
-    a->cull = b->cull;
-    a->lvlofdetail = b->lvlofdetail;
-}
 
 

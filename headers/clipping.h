@@ -18,8 +18,8 @@ const vec4f plane_intersect(vec4f plane_n, vec4f plane_p, vec4f line_start, vec4
 const float dist(vec4f plane_p, vec4f plane_n, vec4f v);
 const int clipp_triangle(vec4f plane_p, vec4f plane_n, face in_t, face *out_t1, face *out_t2);
 
-const MeshStepTwo shadowclipp(MeshStepTwo *c, vec4f plane_n, vec4f plane_p);
-const int shadowclipp_triangle(vec4f plane_p, vec4f plane_n, face in_t, face *out_t1, face *out_t2);
+const MeshShadowStepTwo shadowclipp(MeshShadowStepTwo *c, vec4f plane_n, vec4f plane_p);
+const int shadowclipp_triangle(vec4f plane_p, vec4f plane_n, Shadowface in_t, Shadowface *out_t1, Shadowface *out_t2);
 
 #endif /* _CLIPPING_H */
 

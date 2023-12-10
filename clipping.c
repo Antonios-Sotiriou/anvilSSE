@@ -143,16 +143,16 @@ const int clipp_triangle(vec4f plane_p, vec4f plane_n, face in_t, face *out_t1, 
 }
 
 /* Shadow Pipeline clipping algorythm. */
-const MeshStepTwo shadowclipp(MeshStepTwo *c, vec4f plane_p, vec4f plane_n) {
+const MeshShadowStepTwo shadowclipp(MeshShadowStepTwo *c, vec4f plane_p, vec4f plane_n) {
 
-    MeshStepTwo r = *c;
-    size_t face_size = sizeof(face);
+    MeshShadowStepTwo r = *c;
+    size_t face_size = sizeof(Shadowface);
     r.f = malloc(face_size);
     int index = 0;
     int dynamic_inc = 1;
 
     int clipped_count = 0;
-    face clipped[2];
+    Shadowface clipped[2];
     for (int i = 0; i < c->f_indexes; i++) {
 
         clipped_count = shadowclipp_triangle(plane_p, plane_n, c->f[i], &clipped[0], &clipped[1]);
@@ -183,7 +183,7 @@ const MeshStepTwo shadowclipp(MeshStepTwo *c, vec4f plane_p, vec4f plane_n) {
     free(c->f);
     return r;
 }
-const int shadowclipp_triangle(vec4f plane_p, vec4f plane_n, face in_t, face *out_t1, face *out_t2) {
+const int shadowclipp_triangle(vec4f plane_p, vec4f plane_n, Shadowface in_t, Shadowface *out_t1, Shadowface *out_t2) {
     int inside_points[3];     int inside_count = 0;
     int outside_points[3];    int outside_count = 0;
 
