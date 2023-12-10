@@ -82,8 +82,5 @@ const void loadtexture(Mesh *c);
 const void createScene(Scene *s);
 const void releaseScene(Scene *s);
 const void releaseMesh(Mesh *c);
-const void releaseMeshStepOne(MeshStepOne *c);
-const void releaseMeshStepTwo(MeshStepTwo *c);
-const void initMeshStepOne(MeshStepOne *a, Mesh *b);
 
 #endif /* _WORLD_OBJECTS_H */

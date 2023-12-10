@@ -8,6 +8,9 @@ const static void ppdiv(MeshStepTwo *m, const int len);
 const static MeshStepTwo bfculling(const MeshStepTwo m, const int len);
 const static int viewtoscreen(MeshStepTwo *m, const int len);
 const static void rasterize(MeshStepTwo *m, Material *mtr);
+const static void releaseMeshStepOne(MeshStepOne *c);
+const static void releaseMeshStepTwo(MeshStepTwo *c);
+const static void initMeshStepOne(MeshStepOne *a, Mesh *b);
 
 /* Passes the scene Meshes throught the graphic pipeline. */
 const void grafikPipeline(Scene *s) {
@@ -142,7 +145,6 @@ const static MeshStepTwo assemblyfaces(MeshStepOne *m, unsigned int *indices, co
     }
 
     r.cull = m->cull;
-    r.lvlofdetail = m->lvlofdetail;
     return r;
 }
 /* Perspective division. */
@@ -239,17 +241,17 @@ const static void rasterize(MeshStepTwo *m, Material *mtr) {
     }
 }
 /* Releases all members of the given inside graphic pipeline lvl 1 Mesh. */
-const void releaseMeshStepOne(MeshStepOne *c) {
+const static void releaseMeshStepOne(MeshStepOne *c) {
     free(c->v);
     free(c->n);
     free(c->t);
 }
 /* Releases all members of the given inside graphic pipeline lvl 2 Mesh. */
-const void releaseMeshStepTwo(MeshStepTwo *c) {
+const static void releaseMeshStepTwo(MeshStepTwo *c) {
     free(c->f);
 }
 /* Initializing Mesh a from Mesh b. */
-const void initMeshStepOne(MeshStepOne *a, Mesh *b) {
+const static void initMeshStepOne(MeshStepOne *a, Mesh *b) {
     size_t vsize = sizeof(vec4f) * b->v_indexes;
     size_t nsize = sizeof(vec4f) * b->n_indexes;
     size_t tsize = sizeof(vec2f) * b->t_indexes;
@@ -267,7 +269,6 @@ const void initMeshStepOne(MeshStepOne *a, Mesh *b) {
     a->t_indexes = b->t_indexes;
 
     a->cull = b->cull;
-    a->lvlofdetail = b->lvlofdetail;
 }
 
 

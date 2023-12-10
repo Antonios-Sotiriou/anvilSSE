@@ -1,9 +1,6 @@
 #include "headers/shadow_pipeline.h"
 
 const static MeshShadowStepTwo assemblyfacesShadow(MeshShadowStepOne *m, unsigned int *indices, const int len);
-// const static void shadowppdiv(Mesh *m, const int len);
-// const static void clipptoview(Mesh *m, const int len);
-// const static void setwone(Mesh *m, const int len);
 const static MeshShadowStepTwo shadowculling(const MeshShadowStepTwo c, const int len);
 const static int shadowtoscreen(MeshShadowStepTwo *m, const int len);
 const static void createShadowmap(MeshShadowStepTwo *m, const unsigned int sm_index);
@@ -42,10 +39,6 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
             continue;
         }
 
-        /* Applying perspective division. */
-        // if (!PROJECTIONVIEW)
-            // shadowppdiv(&cache, cache.f_indexes);
-
         /* Applying Backface culling before we proceed to full frustum shadowclipping. */
         if (cache_1.cull)
             cache_1 = shadowculling(cache_1, cache_1.f_indexes);
@@ -53,16 +46,6 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
             releaseMeshShadowStepTwo(&cache_1);
             continue;
         }
-
-        /* Retransform to View Space. */
-        // if (!PROJECTIONVIEW)
-            // clipptoview(&cache, cache.f_indexes);
-
-        // cache.f = setfacesarrayxm(cache.f, cache.f_indexes, reperspMat);
-        // setwone(&cache, cache.f_indexes);
-        // cache.f = setfacesarrayxm(cache.f, cache.f_indexes, lm);
-        // cache.f = setfacesarrayxm(cache.f, cache.f_indexes, inverse_mat(persplightMat));
-        // cache.f = setfacesarrayxm(cache.f, cache.f_indexes, ortholightMat);
 
         /* Sending to translation from NDC to Screen Coordinates. */
         if (!shadowtoscreen(&cache_1, cache_1.f_indexes)) {
@@ -91,34 +74,6 @@ const static MeshShadowStepTwo assemblyfacesShadow(MeshShadowStepOne *m, unsigne
     r.cull = m->cull;
     return r;
 }
-// /* Perspective division. */
-// const static void shadowppdiv(Mesh *m, const int len) {
-//     for (int i = 0; i < len; i++) {
-//         for (int j = 0; j < 3; j++) {
-//             float w = m->f[i].v[j][3];
-//             m->f[i].v[j] /= w;
-//             m->f[i].v[j][3] = w;
-//         }
-//     }
-// }
-// /* Perspective division. */
-// const static void clipptoview(Mesh *m, const int len) {
-//     for (int i = 0; i < len; i++) {
-//         for (int j = 0; j < 3; j++) {
-//             float w = m->f[i].v[j][3];
-//             m->f[i].v[j] *= w;
-//             m->f[i].v[j][3] = w;
-//         }
-//     }
-// }
-// /* Perspective division. */
-// const static void setwone(Mesh *m, const int len) {
-//     for (int i = 0; i < len; i++) {
-//         for (int j = 0; j < 3; j++) {
-//             m->f[i].v[j][3] = 1.f;
-//         }
-//     }
-// }
 /* Backface culling.Discarding Triangles that should not be painted.Creating a new dynamic Mesh stucture Triangles array. */
 const static MeshShadowStepTwo shadowculling(const MeshShadowStepTwo m, const int len) {
     MeshShadowStepTwo r = m;
@@ -345,15 +300,15 @@ const float shadowTest(vec4f frag, vec4f nml) {
     return 1.f;
 }
 /* Releases all members of the given inside graphic pipeline lvl 1 Mesh. */
-const void releaseMeshShadowStepOne(MeshShadowStepOne *c) {
+const static void releaseMeshShadowStepOne(MeshShadowStepOne *c) {
     free(c->v);
 }
 /* Releases all members of the given inside graphic pipeline lvl 2 Mesh. */
-const void releaseMeshShadowStepTwo(MeshShadowStepTwo *c) {
+const static void releaseMeshShadowStepTwo(MeshShadowStepTwo *c) {
     free(c->f);
 }
 /* Initializing Mesh a from Mesh b. */
-const void initMeshShadowStepOne(MeshShadowStepOne *a, Mesh *b) {
+const static void initMeshShadowStepOne(MeshShadowStepOne *a, Mesh *b) {
     size_t vsize = sizeof(vec4f) * b->v_indexes;
 
     a->v = malloc(vsize);

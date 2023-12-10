@@ -81,13 +81,13 @@ typedef struct {
     vec4f *v;
     vec4f *n;
     vec2f *t;
-    int v_indexes, n_indexes, t_indexes, cull, lvlofdetail;
+    int v_indexes, n_indexes, t_indexes, cull;
 } MeshStepOne;
 
 /* Inside graphic pipeline struct. Holds necessery data for the 2nd step of the graphic pipeline. */
 typedef struct {
     face *f;
-    int f_indexes, cull, lvlofdetail;
+    int f_indexes, cull;
 } MeshStepTwo;
 
 /* Base Shadow face aka(triangle) struct. */
