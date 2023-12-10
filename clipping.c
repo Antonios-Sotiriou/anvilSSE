@@ -3,9 +3,9 @@
 extern const void swap(void *a, void *b, unsigned long size);
 
 /* Normal Grafik Pipeline clipping algorythm. */
-const Mesh clipp(const Mesh c, vec4f plane_p, vec4f plane_n) {
+const Mesh clipp(Mesh *c, vec4f plane_p, vec4f plane_n) {
 
-    Mesh r = c;
+    Mesh r = *c;
     size_t face_size = sizeof(face);
     r.f = malloc(face_size);
     int index = 0;
@@ -13,9 +13,9 @@ const Mesh clipp(const Mesh c, vec4f plane_p, vec4f plane_n) {
 
     int clipped_count = 0;
     face clipped[2];
-    for (int i = 0; i < c.f_indexes; i++) {
+    for (int i = 0; i < c->f_indexes; i++) {
 
-        clipped_count = clipp_triangle(plane_p, plane_n, c.f[i], &clipped[0], &clipped[1]);
+        clipped_count = clipp_triangle(plane_p, plane_n, c->f[i], &clipped[0], &clipped[1]);
 
         if (clipped_count) {
 
@@ -33,14 +33,14 @@ const Mesh clipp(const Mesh c, vec4f plane_p, vec4f plane_n) {
                 dynamic_inc += 2;
             } else if (clipped_count == 3) {
                 r.f = realloc(r.f, face_size * dynamic_inc);
-                r.f[index] = c.f[i];
+                r.f[index] = c->f[i];
                 index++;
                 dynamic_inc++;
             }
         }
     }
     r.f_indexes = index;
-    free(c.f);
+    free(c->f);
     return r;
 }
 const vec4f plane_intersect(vec4f plane_p, vec4f plane_n, vec4f line_start, vec4f line_end, float *t) {

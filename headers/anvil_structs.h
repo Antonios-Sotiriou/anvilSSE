@@ -18,17 +18,20 @@ typedef float vec2f __attribute__((vector_size(8)));
 /* Primitive struct vec4 with 4 x 32bits integers as members */
 typedef int vec4i __attribute__((vector_size(16)));
 
-typedef union {
-    __m128i mm;
-    vec4i i;
-} v128i;
-
 /* Primitive struct vec4 with 4 x 32bits floats as members */
 typedef float vec4f __attribute__((vector_size(16)));
+
+/* intrinsics float union. */
 typedef union {
     __m128 mm;
     vec4f f;
 } v128f;
+
+/* intrinsics integer union. */
+typedef union {
+    __m128i mm;
+    vec4i i;
+} v128i;
 
 /* Material struct to hold the specific for each material values. */
 typedef struct {
@@ -43,16 +46,17 @@ typedef struct {
     vec4c *texture;
     char texlvl[9][10];
 } Material;
+
 /* Dimensions Limits in any Space. */
 typedef struct {
     float minX, maxX, minY, maxY, minZ, maxZ;
 } DimensionsLimits;
+
 /* Base face aka(triangle) struct. */
 typedef struct {
     vec4f v[3];
     vec4f vn[3];
     vec2f vt[3];
-    vec4f fn;
     int a[3], b[3], c[3];
 } face;
 
@@ -61,7 +65,7 @@ typedef struct {
     vec4f m[4];
 } Mat4x4;
 
-/* Mesh struct which teams all the primitives like faces, vector arrays and textures. */
+/* General Mesh struct from which the scene consists. It holds all the information before the graphic pipeline. */
 typedef struct {
     vec4f pivot;
     vec4f *v;
@@ -69,9 +73,23 @@ typedef struct {
     vec2f *t;
     face *f;
     // void (*drawMesh)(void *args);
-    int v_indexes, f_indexes, n_indexes, t_indexes, cull, lvlofdetail;
+    int v_indexes, n_indexes, t_indexes, f_indexes, cull, lvlofdetail;
     Material material;
 } Mesh;
+
+// /* Inside graphic pipeline struct. Holds necessery data for the 1st step of the graphic pipeline. */
+typedef struct {
+    vec4f *v;
+    vec4f *n;
+    vec2f *t;
+    int v_indexes, n_indexes, t_indexes, cull, lvlofdetail;
+} MeshStepOne;
+
+/* Inside graphic pipeline struct. Holds necessery data for the 2nd step of the graphic pipeline. */
+typedef struct {
+    face *f;
+    int f_indexes, cull, lvlofdetail;
+} MeshStepTwo;
 
 /* Scene structs which teams all the meshes into an objects array. */
 typedef struct {

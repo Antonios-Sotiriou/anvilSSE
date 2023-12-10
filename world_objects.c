@@ -5,10 +5,10 @@ const void posWorldObjects(Scene *s) {
     Mat4x4 sclMatrix, trMatrix, posMatrix;
 
     /* ######################################################################################################## */
-    s->m[0] = loadmesh("objfiles/triangle.obj");
+    s->m[0] = loadmesh("objfiles/terrain.obj");
     // createCube(&s->m[0]);
     // viewFrustum(&s->m[0]);
-    sclMatrix = scaleMatrix(1.0f);
+    sclMatrix = scaleMatrix(1000.0f);
     trMatrix = translationMatrix(0.0f, 0.0f, 0.0f);
     posMatrix = mxm(sclMatrix, trMatrix);
 
@@ -149,7 +149,6 @@ const void initMesh(Mesh *a, const Mesh b) {
     size_t nsize = sizeof(vec4f) * b.n_indexes;
     size_t tsize = sizeof(vec2f) * b.t_indexes;
     size_t fsize = sizeof(face) * b.f_indexes;
-    // size_t texsize = b.material.texture_height * b.material.texture_width * 4;
 
     a->v = malloc(vsize);
     memcpy(a->v, b.v, vsize);
@@ -162,9 +161,6 @@ const void initMesh(Mesh *a, const Mesh b) {
 
     a->f = malloc(fsize);
     memcpy(a->f, b.f, fsize);
-
-    // a->material.texture = malloc(texsize);
-    // memcpy(a->material.texture, b.material.texture, texsize);
 }
 
 

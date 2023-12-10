@@ -11,7 +11,7 @@ const static void rasterize(Mesh *m, Material *mtr);
 
 /* Passes the scene Meshes throught the graphic pipeline. */
 const void grafikPipeline(Scene *s) {
-    Mesh cache = { 0 };
+    MeshStepOne cache = { 0 };
     // Scene frustum;
     // size_t mesh_size = sizeof(Mesh);
     // frustum.m = malloc(mesh_size);
@@ -20,18 +20,19 @@ const void grafikPipeline(Scene *s) {
     for (int i = 0; i < s->m_indexes; i++) {
         adoptdetail(&s->m[i]);
 
-        initMesh(&cache, s->m[i]);
+        initMeshStepOne(&cache, s->m[i]);
 
         cache.v = setvecsarrayxm(cache.v, cache.v_indexes, worldMat);
         cache.n = setvecsarrayxm(cache.n, cache.n_indexes, viewMat);
 
         /* Assembly and create the faces from the mesh vertices, normals and texture arrays, through the indexes. */
+        /* Assembler should receive a mesh pointer as argument, assembly the faces and return a faces array struct. */
         assemblyfaces(&cache, cache.f_indexes);
 
         /* Clipping against near Plane in View Space. */
         vec4f plane_near_p = { 0.0f, 0.0f, NPlane },
                 plane_near_n = { 0.0f, 0.0f, 1.0f };
-        cache = clipp(cache, plane_near_p, plane_near_n);
+        cache = clipp(&cache, plane_near_p, plane_near_n);
         if (!cache.f_indexes) {
             releaseMesh(&cache);
             continue;
@@ -40,7 +41,7 @@ const void grafikPipeline(Scene *s) {
         /* Clipping against far Plane in View Space. */
         vec4f plane_far_p = { 0.0f, 0.0f, FPlane},
               plane_far_n = { 0.0f, 0.0f, -1.0f };
-        cache = clipp(cache, plane_far_p, plane_far_n);
+        cache = clipp(&cache, plane_far_p, plane_far_n);
         if (!cache.f_indexes) {
             releaseMesh(&cache);
             continue;
@@ -188,25 +189,25 @@ const static int viewtoscreen(Mesh *m, const int len) {
     /* Viewport clipping. */
     vec4f plane_up_p = { 0.0f, 0.0f, 0.0f },
         plane_up_n = { 0.0f, 1.0f, 0.0f };
-    *m = clipp(*m, plane_up_p, plane_up_n);
+    *m = clipp(m, plane_up_p, plane_up_n);
     if(!m->f_indexes)
         return 0;
 
     vec4f plane_down_p = { 0.0f, main_wa.height - 1.0f, 0.0f },
         plane_down_n = { 0.0f, -1.0f, 0.0f };
-    *m = clipp(*m, plane_down_p, plane_down_n);
+    *m = clipp(m, plane_down_p, plane_down_n);
     if(!m->f_indexes)
         return 0;
 
     vec4f plane_left_p = { 0.0f, 0.0f, 0.0f },
         plane_left_n = { 1.0f, 0.0f, 0.0f };
-    *m = clipp(*m, plane_left_p, plane_left_n);
+    *m = clipp(m, plane_left_p, plane_left_n);
     if(!m->f_indexes)
         return 0;
 
     vec4f plane_right_p = { main_wa.width - 1.0f, 0.0f, 0.0f },
         plane_right_n = { -1.0f, 0.0f, 0.0f };
-    *m = clipp(*m, plane_right_p, plane_right_n);
+    *m = clipp(m, plane_right_p, plane_right_n);
     if(!m->f_indexes)
         return 0;
 
