@@ -508,32 +508,46 @@ static void *oscillator(void *args) {
 
     return (void*) args;
 }
+static void *cascade(void *args) {
+
+    int shadow_id = *(int*)args;
+
+    memcpy(shadow_buffer[shadow_id], reset_buffer, FBSIZE);
+    shadowPipeline(&scene, shadow_id);
+
+    return (void*) args;
+}
 const static void project() {
     if (AdjustShadow) {
-        memcpy(shadow_buffer[0], reset_buffer, FBSIZE);
-        memcpy(shadow_buffer[1], reset_buffer, FBSIZE);
-        memcpy(shadow_buffer[2], reset_buffer, FBSIZE);
-        shadowPipeline(&scene, 0);
-        shadowPipeline(&scene, 1);
-        shadowPipeline(&scene, 2);
+        int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
+        for (int i = 0; i < NUM_OF_CASCADES; i++) {
+            if (pthread_create(&threads[i], NULL, &cascade, &shadow_ids[i]))
+                fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
+        }
+        for (int i = 0; i < NUM_OF_CASCADES; i++) {
+            if (pthread_join(threads[i], NULL))
+                fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
+        }
         AdjustShadow = 0;
     }
 
     // if (AdjustScene) {
-    //     memset(frame_buffer, 0, FBSIZE);
-    //     memset(depth_buffer, 0, FBSIZE);
+    //     memcpy(frame_buffer, reset_buffer, FBSIZE);
+    //     memcpy(main_depth_buffer, reset_buffer, FBSIZE);
+    //     memcpy(frags_buffer, reset_frags, MAIN_EMVADON * sizeof(Fragment));
+
         grafikPipeline(&scene);
+
+        for (int i = 0; i < THREADS; i++) {
+            if (pthread_create(&threads[i], NULL, &oscillator, &thread_ids[i]))
+                fprintf(stderr, "ERROR: project() -- oscillator -- pthread_create()\n");
+        }
+        for (int i = 0; i < THREADS; i++) {
+            if (pthread_join(threads[i], NULL))
+                fprintf(stderr, "ERROR: project() -- oscillator -- pthread_join()\n");
+        }
     //     AdjustScene = 0;
     // }
-
-    for (int i = 0; i < THREADS; i++) {
-        if (pthread_create(&threads[i], NULL, &oscillator, &thread_ids[i]))
-            fprintf(stderr, "ERROR: project() -- pthread_create()\n");
-    }
-    for (int i = 0; i < THREADS; i++) {
-        if (pthread_join(threads[i], NULL))
-            fprintf(stderr, "ERROR: project() -- pthread_join()\n");
-    }
 
     drawFrame();
 }

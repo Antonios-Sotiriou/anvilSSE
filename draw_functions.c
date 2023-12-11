@@ -1,5 +1,5 @@
 #include "headers/draw_functions.h"
-#include "headers/logging.h"
+
 /* Global masks. Probably must be moved to a global variables file. */
 const vec4i edgemask = { 1, 2, 0, 3 };
 const vec4i rgbmask = { 2, 1, 0, 3 };
