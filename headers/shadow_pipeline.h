@@ -5,6 +5,10 @@
     #include "anvil_structs.h"
 #endif
 
+#ifndef _GENERAL_FUNCTIONS_H
+    #include "general_functions.h"
+#endif
+
 #ifndef _MATRICES_H
     #include "matrices.h"
 #endif
@@ -23,15 +27,16 @@
 
 /* Defined in main.c. */
 extern int HALFH, HALFW, PROJECTIONVIEW;
-extern float FPlane, NPlane;
+extern float FPlane, NPlane, ASPECTRATIO;
 extern XWindowAttributes main_wa;
-extern Mat4x4 ortholightMat[3], *point_mat;
+extern Mat4x4 ortholightMat[3], viewMat,  *point_mat;
 extern float *shadow_buffer[3], shadow_bias;
 extern Light sunlight;
+extern vec4f *eye, camera[4];
 
-/* Defined in general_functions.c. */
-extern const void swap(void *a, void *b, unsigned long size);
-
+vec4f *worldSpaceFrustum(const float np, const float fp);
+const Mat4x4 createOrthoMatrixFromLimits(const DimensionsLimits dl);
+const void createCascadeShadowMatrices(const unsigned int num_of_cascades);
 const void shadowPipeline(Scene *s, const unsigned int sm_index);
 const float shadowTest(vec4f frag, vec4f nml);
 

@@ -147,7 +147,12 @@ const static void edgefillGeneral(const face f, Material *mtr, int minX, int max
 
                     const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
 
-                    // point_depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
+                    vec4f temp = { x, y, frag[2], frag[3] };
+                    frags_buffer[padxDB].pos = temp;
+                    frags_buffer[padxDB].nrm = normal;
+                    frags_buffer[padxDB].mtr = mtr;
+                    frags_buffer[padxDB].state = 1;
+                    point_depth_buffer[padxDB] = frag[3];
                 }
                 xflag++;
             } else if (xflag) break;
@@ -365,16 +370,18 @@ const static void edgetexGeneral(face *f, Material *mtr, int minX, int maxX, int
 
                     const vec4f normal = a[0] * f->vn[2] + a[1] * f->vn[0] + a[2] * f->vn[1];
 
-                    if (mtr->tex_levels) {
+                    if (mtr->texlevels) {
                         const vec2f texel = a[0] * f->vt[2] + a[1] * f->vt[0] + a[2] * f->vt[1];
 
-                        const int tex_y = (texel[1] * (mtr->texture_height - 1)) / frag[3];
-                        const int tex_x = (texel[0] * (mtr->texture_width - 1)) / frag[3];
-
-                        mtr->basecolor = __builtin_convertvector(mtr->texture[(tex_y * mtr->texture_width) + tex_x], vec4f) / 255.0f;
+                        frags_buffer[padxDB].tex_y = (texel[1] * (mtr->texture_height - 1)) / frag[3];
+                        frags_buffer[padxDB].tex_x = (texel[0] * (mtr->texture_width - 1)) / frag[3];
                     }
-
-                    // point_depth_buffer[padxDB] = phong(normal, mtr, x, y, frag[2], frag[3]);
+                    vec4f temp = { x, y, frag[2], frag[3] };
+                    frags_buffer[padxDB].pos = temp;
+                    frags_buffer[padxDB].nrm = normal;
+                    frags_buffer[padxDB].mtr = mtr;
+                    frags_buffer[padxDB].state = 1;
+                    point_depth_buffer[padxDB] = frag[3];
                 }
                 xflag++;
             } else if (xflag) break;
@@ -419,21 +426,9 @@ const static void scanlinetexGeneral(face *f, Material *mtr, const Srt srt[]) {
     const int tps2 = ((ymy[2] == 0) && (ys[1] < ys[0])) || (ymy[2] < 0) ? 1 : 0;
 
     const int orient = (txmx[0] * tymy[2]) - (tymy[0] * txmx[2]);
-    // vec4f mslopes = __builtin_convertvector(txmx, vec4f) / __builtin_convertvector(tymy, vec4f);
-    // vec4i a = { 8, 8, 8, 8 }, b = { 2, 2, 0, 2 }, c = { 5, 6, 7, 8 };
-    // printf("before: ");
-    // logVec4i(b > a);
-    // mslopes[0] = ( __isinff(mslopes[0]) || __isnanf(mslopes[0])) ? 0 : mslopes[0];
-    // mslopes[1] = ( __isinff(mslopes[1]) || __isnanf(mslopes[1])) ? 0 : mslopes[1];
-    // mslopes[2] = ( __isinff(mslopes[2]) || __isnanf(mslopes[2])) ? 0 : mslopes[2];
-    // mslopes[3] = ( __isinff(mslopes[3]) || __isnanf(mslopes[3])) ? 0 : mslopes[3];
-    // printf("after: ");
-    // logVec4f(mslopes);
     float ma = (float)txmx[0] / tymy[0];
     float mb = (float)txmx[2] / tymy[2];
     if (orient < 0) {
-        // vec4i sledgemask = { 2, 1, 0, 3 };
-        // mslopes = __builtin_shuffle(mslopes, sledgemask);
         swap(&ma, &mb, 4);
     }
 
@@ -469,7 +464,7 @@ const static void scanlinetexGeneral(face *f, Material *mtr, const Srt srt[]) {
 
                         const vec4f normal = a[0] * f->vn[2] + a[1] * f->vn[0] + a[2] * f->vn[1];
 
-                        if (mtr->tex_levels) {
+                        if (mtr->texlevels) {
                             const vec2f texel = a[0] * f->vt[2] + a[1] * f->vt[0] + a[2] * f->vt[1];
 
                             frags_buffer[padxDB].tex_y = (texel[1] * (mtr->texture_height - 1)) / frag[3];
@@ -495,8 +490,6 @@ const static void scanlinetexGeneral(face *f, Material *mtr, const Srt srt[]) {
     ma = (float)txmx[1] / tymy[1];
     mb = (float)txmx[2] / tymy[2];
     if (orient < 0) {
-        // vec4i sledgemask = { 0, 2, 1, 3 };
-        // mslopes = __builtin_shuffle(mslopes, sledgemask);
         swap(&ma, &mb, 4);
     }
 
@@ -524,7 +517,7 @@ const static void scanlinetexGeneral(face *f, Material *mtr, const Srt srt[]) {
 
                     const vec4f normal = a[0] * f->vn[2] + a[1] * f->vn[0] + a[2] * f->vn[1];
 
-                    if (mtr->tex_levels) {
+                    if (mtr->texlevels) {
                         const vec2f texel = a[0] * f->vt[2] + a[1] * f->vt[0] + a[2] * f->vt[1];
                         
                         frags_buffer[padxDB].tex_y = (texel[1] * (mtr->texture_height - 1)) / frag[3];

@@ -12,7 +12,29 @@ const int createMaterialDatabase(void) {
     // }
 
     const int intensity = 128;
-    Material mats[27] = {
+    Material mats[29] = {
+        {
+            .name = "skybox",
+            .basecolor = { 1.0f, 0.8f, 0.0f, 0.0f },
+            .ambient = { 0.24725f, 0.1995f, 0.0745f, 0.0f },
+            .specular = { 0.628281f, 0.555802f, 0.366065f, 0.0f },
+            .diffuse = { 0.75164f, 0.60648f, 0.22648f, 0.0f },
+            .shinniness = 0.4f * intensity,
+            .reflect = 0,
+            .texlevels = 1,
+            .texlvl = { "2048x1536", "2048x1536", "2048x1536", "2048x1536", "2048x1536", "2048x1536", "2048x1536", "2048x1536", "2048x1536" }
+        },
+        {
+            .name = "spacedom",
+            .basecolor = { 1.0f, 0.8f, 0.0f, 0.0f },
+            .ambient = { 0.24725f, 0.1995f, 0.0745f, 0.0f },
+            .specular = { 0.628281f, 0.555802f, 0.366065f, 0.0f },
+            .diffuse = { 0.75164f, 0.60648f, 0.22648f, 0.0f },
+            .shinniness = 0.4f * intensity,
+            .reflect = 0,
+            .texlevels = 1,
+            .texlvl = { "3840x2160", "3840x2160", "3840x2160", "3840x2160", "3840x2160", "3840x2160", "3840x2160", "3840x2160", "3840x2160" }
+        },
         {
             .name = "stones",
             .basecolor = { 1.0f, 0.8f, 0.0f, 0.0f },
@@ -21,7 +43,7 @@ const int createMaterialDatabase(void) {
             .diffuse = { 0.75164f, 0.60648f, 0.22648f, 0.0f },
             .shinniness = 0.4f * intensity,
             .reflect = 0,
-            .tex_levels = 1,
+            .texlevels = 9,
             .texlvl = { "2048x2048", "1024x1024", "512x512", "256x256", "128x128", "64x64", "32x32", "16x16", "8x8" }
         },
         {
@@ -32,7 +54,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.628281f, 0.555802f, 0.366065f, 0.0f },
             .shinniness = 0.4f * intensity,
             .reflect = 0,
-            .tex_levels = 1,
+            .texlevels = 9,
             .texlvl = { "4096x2048", "2048x1024", "1024x512", "512x256", "256x128", "128x64", "64x32", "32x16", "16x8" }
         },
         {
@@ -43,7 +65,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.628281f, 0.555802f, 0.366065f, 0.0f },
             .shinniness = 0.4f * intensity,
             .reflect = 0,
-            .tex_levels = 1,
+            .texlevels = 7,
             .texlvl = { "1080x562", "1080x562", "1080x562", "540x281", "270x140", "135x70", "68x35", "34x17", "17x8" }
         },
         {
@@ -54,8 +76,8 @@ const int createMaterialDatabase(void) {
             .specular = { 0.628281f, 0.555802f, 0.366065f, 0.0f },
             .shinniness = 0.4f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
-            .texlvl = { { 0 } }
+            .texlevels = 1,
+            .texlvl = { "1x1", "1x1", "1x1", "1x1", "1x1", "1x1", "1x1", "1x1", "1x1" }
         },
         {
             .name = "emerald",
@@ -65,7 +87,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.633f, 0.727811f, 0.633f, 0.0f },
             .shinniness = 0.6f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -76,7 +98,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.316228f, 0.316228f, 0.316228f, 0.0f },
             .shinniness = 0.1f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -87,7 +109,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.332741f, 0.328634f, 0.346435f, 0.0f },
             .shinniness = 0.3f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -98,7 +120,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.296648f, 0.296648f, 0.296648f, 0.0f },
             .shinniness = 0.088f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -109,7 +131,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.727811f, 0.626959f, 0.626959f, 0.0f },
             .shinniness = 0.6f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -120,7 +142,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.297254f,0.30829f, 0.306678f, 0.0f },
             .shinniness = 0.1f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -131,7 +153,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.992157f,0.941176f, 0.807843f, 0.0f },
             .shinniness = 0.21794872f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -142,7 +164,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.393548f,0.271906f, 0.166721f, 0.0f },
             .shinniness = 0.2f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -153,7 +175,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.774597f,0.774597f, 0.774597f, 0.0f },
             .shinniness = 0.6f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -164,7 +186,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.256777f,0.137622f, 0.086014f, 0.0f },
             .shinniness = 0.1f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -175,7 +197,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.508273f,0.508273f, 0.508273f, 0.0f },
             .shinniness = 0.4f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -186,7 +208,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.50f,0.50f, 0.50f , 0.0f },
             .shinniness = 0.25f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -197,7 +219,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.50196078f,0.50196078f, 0.50196078f, 0.0f },
             .shinniness = 0.25f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -208,7 +230,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.45f,0.55f, 0.45f, 0.0f },
             .shinniness = 0.25f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -219,7 +241,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.7f,0.6f, 0.6f, 0.0f },
             .shinniness = 0.25f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -230,7 +252,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.70f,0.70f, 0.70f, 0.0f },
             .shinniness = 0.25f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -241,7 +263,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.60f,0.60f, 0.50f, 0.0f },
             .shinniness = 0.25f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -252,7 +274,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.4f,0.4f, 0.4f, 0.0f },
             .shinniness = 0.078125f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -263,7 +285,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.04f,0.7f, 0.7f, 0.0f },
             .shinniness = 0.078125f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -274,7 +296,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.04f,0.7f, 0.04f, 0.0f },
             .shinniness = 0.078125f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -285,7 +307,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.7f,0.04f, 0.04f, 0.0f },
             .shinniness = 0.078125f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -296,7 +318,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.7f,0.7f, 0.7f, 0.0f },
             .shinniness = 0.078125f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
         {
@@ -307,12 +329,12 @@ const int createMaterialDatabase(void) {
             .specular = { 0.7f,0.7f, 0.04f, 0.0f },
             .shinniness = 0.078125f * intensity,
             .reflect = 1,
-            .tex_levels = 0,
+            .texlevels = 0,
             .texlvl = { { 0 } }
         },
     };
     
-    for (int i = 0; i < 27; i++)
+    for (int i = 0; i < 29; i++)
         fwrite(&mats[i], sizeof(Material), 1, fp);
 
     fprintf(stderr, "INFO: tables/materials.dat... Success!\n");

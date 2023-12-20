@@ -24,13 +24,10 @@ extern int HALFH;
 extern Mat4x4 reperspMat;
 extern u_int8_t *point_buffer;
 extern Light sunlight;
-extern float AmbientStrength, SpecularStrength;
+extern float AmbientStrength, SpecularStrength, DiffuseStrength;
 
 /* Defined in shadow_pipeline.c. */
 extern const float shadowTest(vec4f frag, vec4f nml);
-
-/* Defined in draw_functions.c. */
-extern const vec4i rgbmask;
 
 const void phong(Fragment *fr);
 

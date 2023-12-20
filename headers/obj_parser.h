@@ -13,7 +13,11 @@
     #include <stdlib.h>
 #endif
 
-const Mesh loadmesh(const char path[]);
+#ifndef _STRING_H
+    #include <string.h>
+#endif
+
+const void loadmesh(Mesh *m, const char name[], const unsigned int meshlod);
 
 #endif /* _OBJ_PARSER_H */
 

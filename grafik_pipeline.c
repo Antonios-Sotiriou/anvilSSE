@@ -2,7 +2,6 @@
 
 #include "headers/frustum_map.h"
 
-const static void adoptdetail(Mesh *m);
 const static MeshStepTwo assemblyfaces(MeshStepOne *m, unsigned int *indices, const int len);
 const static void ppdiv(MeshStepTwo *m, const int len);
 const static MeshStepTwo bfculling(const MeshStepTwo m, const int len);
@@ -15,14 +14,8 @@ const static void initMeshStepOne(MeshStepOne *a, Mesh *b);
 /* Passes the scene Meshes throught the graphic pipeline. */
 const void grafikPipeline(Scene *s) {
     MeshStepOne cache_0 = { 0 };
-    // Scene frustum;
-    // size_t mesh_size = sizeof(Mesh);
-    // frustum.m = malloc(mesh_size);
-    // int index = 0, dynamic_inc = 1;
 
     for (int i = 0; i < s->m_indexes; i++) {
-        adoptdetail(&s->m[i]);
-
         initMeshStepOne(&cache_0, &s->m[i]);
 
         cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, worldMat);
@@ -68,58 +61,8 @@ const void grafikPipeline(Scene *s) {
             continue;
         }
 
-        // frustum.m = realloc(frustum.m, dynamic_inc * mesh_size);
-        // frustum.m[index] = cache_0;
-        // index++;
-        // dynamic_inc++;
-
         rasterize(&cache_1, &s->m[i].material);
         releaseMeshStepTwo(&cache_1);
-    }
-    // frustum.m_indexes = index;
-    // if (frustum.m) {
-    //     mapPipeline(&frustum);
-    //     releaseScene(&frustum);
-    // }
-}
-const static void adoptdetail(Mesh *m) {
-    const int distance = len_vec(m->pivot - lookAt.m[3]);
-    const int lcache_0 = m->lvlofdetail;
-
-    if ( (distance >= 0 && distance <= 200) && (m->lvlofdetail != 0) ) {
-        printf("lvl of detail 1\n");
-        m->lvlofdetail = 0;
-    } else if ( (distance > 200 && distance <= 400) && (m->lvlofdetail != 1) ) {
-        printf("lvl of detail 2\n");
-        m->lvlofdetail = 1;
-    } else if ( (distance > 400 && distance <= 600) && (m->lvlofdetail != 2) ) {
-        printf("lvl of detail 3\n");
-        m->lvlofdetail = 2;
-    } else if ( (distance > 600 && distance <= 800) && (m->lvlofdetail != 3) ) {
-        printf("lvl of detail 4\n");
-        m->lvlofdetail = 3;
-    } else if ( (distance > 800 && distance <= 1000) && (m->lvlofdetail != 4) ) {
-        printf("lvl of detail 5\n");
-        m->lvlofdetail = 4;
-    } else if ( (distance > 1000 && distance <= 3000) && (m->lvlofdetail != 5) ) {
-        printf("lvl of detail 6\n");
-        m->lvlofdetail = 5;
-    } else if ( (distance > 3000 && distance <= 4000) && (m->lvlofdetail != 6) ) {
-        printf("lvl of detail 7\n");
-        m->lvlofdetail = 6;
-    } else if ( (distance > 4000 && distance <= 5000) && (m->lvlofdetail != 7) ) {
-        printf("lvl of detail 8\n");
-        m->lvlofdetail = 7;
-    } else if ( (distance > 5000 && distance < FPlane) && (m->lvlofdetail != 8) ) {
-        printf("lvl of detail 9\n");
-        m->lvlofdetail = 8;
-    }
-
-    if (!m->material.tex_levels)
-        return;
-
-    if (strcmp(m->material.texlvl[lcache_0], m->material.texlvl[m->lvlofdetail]) != 0) {
-        loadtexture(m);
     }
 }
 /* Assosiates vertices coordinate values from vector array through indexes. */

@@ -28,17 +28,19 @@ int *thread_ids;
 int EDGEFUNC = 0;
 int SCANLINE = 1;
 
+enum str { first, second, third };
+
 /* Project specific headers */
-#include "headers/database.h"
 #include "headers/anvil_structs.h"
+#include "headers/database.h"
 #include "headers/matrices.h"
 #include "headers/kinetics.h"
+#include "headers/world_objects.h"
+#include "headers/general_functions.h"
 #include "headers/clipping.h"
 #include "headers/shadow_pipeline.h"
 #include "headers/grafik_pipeline.h"
 #include "headers/camera.h"
-#include "headers/world_objects.h"
-#include "headers/general_functions.h"
 #include "headers/draw_functions.h"
 
 enum { Win_Close, Win_Name, Atom_Type, Atom_Last};
@@ -55,18 +57,18 @@ enum { Pos, U, V, N, C, newPos };
 
 /* X Global Structures. */
 Display *displ;
-Window mainwin, mapwin;
-XImage *main_image, *map_image;
-Pixmap main_pixmap, map_pixmap;
+Window mainwin;
+XImage *main_image;
+Pixmap main_pixmap;
 GC gc;
 XGCValues gcvalues;
-XWindowAttributes main_wa, map_wa, *point_attrib;
+XWindowAttributes main_wa, *point_attrib;
 XSetWindowAttributes sa;
 Atom wmatom[Atom_Last];
 
 /* BUFFERS. */
-u_int8_t *frame_buffer, *map_buffer, *point_buffer, *reset_buffer;
-float *main_depth_buffer, *map_depth_buffer, *point_depth_buffer, *shadow_buffer[NUM_OF_CASCADES];
+u_int8_t *frame_buffer, *point_buffer, *reset_buffer;
+float *main_depth_buffer, *point_depth_buffer, *shadow_buffer[NUM_OF_CASCADES];
 Fragment *frags_buffer, *reset_frags;
 
 /* Project Global Variables. */
@@ -78,13 +80,14 @@ static int EYEPOINT       = 0;
 static float FOV          = 45.0f;
 static float ZNEAR        = 0.1f;
 static float ZFAR         = 1.0f;
-static float ASPECTRATIO  = 1;
+float ASPECTRATIO         = 1;
 static int FBSIZE         = 0;
 float NPlane              = 1.0f;
 float FPlane              = 20000.0f;
 float SCALE               = 0.003f;
-float AmbientStrength     = 0.85f;
-float SpecularStrength    = 0.75f;
+float AmbientStrength     = 0.2f;
+float SpecularStrength    = 0.5f;
+float DiffuseStrength     = 0.5f;
 float shadow_bias         = 0.f;//0.003105;//0.002138;//0.000487f;
 
 /* Camera and Global light Source. */
@@ -107,7 +110,7 @@ Light sunlight = {
 };
 
 /* Global Matrices */
-Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, lm, lview, *point_mat;
+Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
 
 /* Anvil global Objects Meshes and Scene. */
 Scene scene = { 0 };
@@ -164,94 +167,7 @@ static void (*handler[LASTEvent]) (XEvent *event) = {
     [ButtonPress] = buttonpress,
     [KeyPress] = keypress,
 };
-/* ################################################### CASCADE SHADOW MAPPING ################################################ */
-/* Returns a vec4f array with the values of the 8 vectors that form the View Frustum in View Space.np and fp are the near and far planes( can be Choosen accordingly ). */
-vec4f *worldSpaceFrustum(const float np, const float fp) {
-    vec4f *va = malloc(128);
-    const float fovRadius = (1.f / tanf(45.f * 0.5f / 180.0f * 3.14159f));
 
-    const vec4f nearcenter = (eye[0] + eye[3]) * np;
-    const vec4f farcenter = (eye[0] + eye[3]) * fp;
-
-    const float nearHeight = tan(fovRadius) * np;
-    const float farHeight = tan(fovRadius) * fp;
-    const float nearWidth = nearHeight * ASPECTRATIO;
-    const float farWidth = farHeight * ASPECTRATIO;
-
-    const vec4f yxnh = eye[2] * nearHeight;
-    const vec4f yxnw = eye[1] * nearWidth;
-
-    const vec4f yxfh = eye[2] * farHeight;
-    const vec4f yxfw = eye[1] * farWidth;
-
-    va[2] = nearcenter + yxnh + yxnw;
-    va[3] = nearcenter - yxnh + yxnw;
-    va[6] = nearcenter + yxnh - yxnw;
-    va[7] = nearcenter - yxnh - yxnw;
-
-    va[0] = farcenter + yxfh + yxfw;
-    va[1] = farcenter - yxfh + yxfw;
-    va[4] = farcenter + yxfh - yxfw;
-    va[5] = farcenter - yxfh - yxfw;
-
-    // va = setvecsarrayxm(va, 8, viewMat);
-
-    return va;
-}
-/* Finds the minX, maxX, minY, maxY, minZ maxZ values of given vectors array. AKA (bounding box). */
-const DimensionsLimits getDimensionsLimits(vec4f va[]) {
-    DimensionsLimits dl = { 0 };
-    for (int i = 0; i < 8; i++) {
-        /* Get min and max x values. */
-        if ( va[i][0] <= dl.minX) {
-            dl.minX = va[i][0];
-        } else if ( va[i][0] > dl.maxX) {
-            dl.maxX = va[i][0];             
-        }
-        /* Get min and max y values. */
-        if ( va[i][1] <= dl.minY) {
-            dl.minY = va[i][1];
-        } else if ( va[i][1] > dl.maxY) {
-            dl.maxY = va[i][1];             
-        }
-        /* Get min and max z values. */
-        if ( va[i][2] <= dl.minZ) {
-            dl.minZ = va[i][2];
-        } else if ( va[i][2] > dl.maxZ) {
-            dl.maxZ = va[i][2];             
-        }
-    }
-    return dl;
-}
-const Mat4x4 createOrthoMatrixFromLimits(const DimensionsLimits dl) {
-    return orthographicMatrix(dl.minX, dl.maxX, dl.minY, dl.maxY, dl.minZ, dl.maxZ);
-}
-const static void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
-    DimensionsLimits dl;
-    vec4f *fr[3] = {
-        worldSpaceFrustum(NPlane, 100.f),
-        worldSpaceFrustum(100.f, 300.f),
-        worldSpaceFrustum(300.f, 600.f)
-    };
-    Mat4x4 lm[3] = {
-        lookat(camera[Pos] + (sunlight.pos + (camera[3] * 100.f)), sunlight.u, sunlight.v, sunlight.n),//100.f
-        lookat(camera[Pos] + (sunlight.pos + (camera[3] * 300.f)), sunlight.u, sunlight.v, sunlight.n),//460.f
-        lookat(camera[Pos] + (sunlight.pos + (camera[3] * 600.f)), sunlight.u, sunlight.v, sunlight.n)//1260.f
-    };
-
-    for (int i = 0; i < num_of_cascades; i++) {
-        lm[i].m[3][1] = sunlight.pos[1];
-        lview = inverse_mat(lm[i]);
-        /* Transform view frustum to Space. */
-        fr[i] = setvecsarrayxm(fr[i], 8, viewMat);
-
-        dl = getDimensionsLimits(fr[i]);
-        free(fr[i]);
-
-        ortholightMat[i] = mxm(lview, createOrthoMatrixFromLimits(dl));
-    }
-}
-/* ################################################### CASCADE SHADOW MAPPING ################################################ */
 const static void clientmessage(XEvent *event) {
     printf("Received client message event\n");
     if (event->xclient.data.l[0] == wmatom[Win_Close]) {
@@ -259,9 +175,7 @@ const static void clientmessage(XEvent *event) {
         releaseScene(&scene);
 
         free(frame_buffer);
-        free(map_buffer);
         free(main_depth_buffer);
-        free(map_depth_buffer);
         free(reset_buffer);
 
         free(frags_buffer);
@@ -273,11 +187,8 @@ const static void clientmessage(XEvent *event) {
         free(shadow_buffer[2]);
 
         free(main_image);
-        free(map_image);
         XFreeGC(displ, gc);
         XFreePixmap(displ, main_pixmap);
-        XFreePixmap(displ, map_pixmap);
-        XDestroyWindow(displ, mapwin);
         XDestroyWindow(displ, mainwin);
 
         RUNNING = 0;
@@ -300,14 +211,11 @@ const static void configurenotify(XEvent *event) {
     if (!event->xconfigure.send_event) {
         printf("configurenotify event received\n");
         XGetWindowAttributes(displ, mainwin, &main_wa);
-        XGetWindowAttributes(displ, mapwin, &map_wa);
 
         if (INIT) {
 
             free(frame_buffer);
-            free(map_buffer);
             free(main_depth_buffer);
-            free(map_depth_buffer);
             free(reset_buffer);
 
             free(frags_buffer);
@@ -319,7 +227,6 @@ const static void configurenotify(XEvent *event) {
             free(shadow_buffer[2]);
 
             free(main_image);
-            free(map_image);
 
             initDependedVariables();
 
@@ -346,7 +253,7 @@ const static void keypress(XEvent *event) {
         eye = (vec4f*)&camera;
 
     // printf("Key Pressed: %ld\n", keysym);
-    printf("\x1b[H\x1b[J");
+    // printf("\x1b[H\x1b[J");
     // system("clear\n");
     switch (keysym) {
         case 97 : look_left(eye, 0.2);             /* a */
@@ -373,17 +280,17 @@ const static void keypress(XEvent *event) {
             break;
         case 65364 : move_down(eye, 10.2);          /* down arrow */
             break;
-        case 65451 :shadow_bias += 0.0001f;             /* + */
-            printf("shadow_bias: %f\n",shadow_bias);
+        case 65451 :DiffuseStrength += 0.01f;             /* + */
+            printf("DiffuseStrength: %f\n",DiffuseStrength);
             break;
-        case 65453 :shadow_bias -= 0.0001f;             /* - */
-            printf("shadow_bias: %f\n", shadow_bias);
+        case 65453 :DiffuseStrength -= 0.01f;             /* - */
+            printf("DiffuseStrength: %f\n", DiffuseStrength);
             break;
-        case 65450 : NPlane += 1.f;             /* * */
-            printf("NPlane: %f\n", NPlane);
+        case 65450 : SpecularStrength += 0.01f;             /* * */
+            printf("SpecularStrength: %f\n", SpecularStrength);
             break;
-        case 65455 : NPlane -= 1.f;             /* / */
-            printf("NPlane: %f\n", NPlane);
+        case 65455 : SpecularStrength -= 0.01f;             /* / */
+            printf("SpecularStrength: %f\n", SpecularStrength);
             break;
         case 65430 : sunlight.pos[0] -= 10.0f;                   /* Adjust Light Source */
             Mat4x4 ar = translationMatrix(-10.0f, 0.0f, 0.0f);
@@ -415,7 +322,7 @@ const static void keypress(XEvent *event) {
             scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, dr);
             scene.m[2].pivot[2] -= 10.0f;
             break;
-        case 120 : rotate_x(&scene.m[0], 1);                     /* x */
+        case 120 : rotate_x(&scene.m[1], 1);                     /* x */
             break;
         case 121 : rotate_y(&scene.m[0], 1);                     /* y */
             break;
@@ -427,11 +334,13 @@ const static void keypress(XEvent *event) {
             break;
         case 99 : rotate_origin(&scene.m[1], 1, 1.0f, 0.0f, 0.0f);  /* c */
             break;
-        case 43 : SCALE += 0.0101;                                    /* + */
-            orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, 0.01f, 0.1f);
+        case 43 : AmbientStrength += 0.01;                                    /* + */
+            printf("AmbientStrength: %f\n", AmbientStrength);
+            // orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, 0.01f, 0.1f);
             break;
-        case 45 : SCALE -= 0.0101;                                   /* - */
-            orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, 0.01f, 0.1f);
+        case 45 : AmbientStrength -= 0.01;                                   /* - */
+            printf("AmbientStrength: %f\n", AmbientStrength);
+            // orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, 0.01f, 0.1f);
             break;
         case 112 :
             if (PROJECTBUFFER == 5)
@@ -484,6 +393,10 @@ const static void keypress(XEvent *event) {
     // scene.m[0].v = worldSpaceFrustum(NPlane, 100.f);
     // scene.m[1].v = worldSpaceFrustum(100.f, 300.f);
     // scene.m[2].v = worldSpaceFrustum(300.f, 600.f);
+    for (int i = 0; i < scene.m_indexes; i++) {
+        adoptdetailMesh(&scene.m[i]);
+        adoptdetailTexture(&scene.m[i]);
+    }
 
     AdjustShadow++;
     AdjustScene++;
@@ -506,7 +419,7 @@ static void *oscillator(void *args) {
             phong(&frags_buffer[i]);
     }
 
-    return (void*) args;
+    return (void*)args;
 }
 static void *cascade(void *args) {
 
@@ -515,7 +428,7 @@ static void *cascade(void *args) {
     memcpy(shadow_buffer[shadow_id], reset_buffer, FBSIZE);
     shadowPipeline(&scene, shadow_id);
 
-    return (void*) args;
+    return (void*)args;
 }
 const static void project() {
     if (AdjustShadow) {
@@ -553,10 +466,6 @@ const static void project() {
 }
 /* Writes the final Pixel values on screen. */
 const static void drawFrame(void) {
-    map_image->data = (char*)map_buffer;
-    XPutImage(displ, map_pixmap, gc, map_image, 0, 0, 0, 0, map_wa.width, map_wa.height);
-    pixmapdisplay(map_pixmap, mapwin, map_wa.width, map_wa.height);
-
     if (PROJECTBUFFER <= 1)
         main_image->data = (char*)frame_buffer;
     else if (PROJECTBUFFER == 2)
@@ -572,11 +481,7 @@ const static void drawFrame(void) {
     pixmapdisplay(main_pixmap, mainwin, main_wa.width, main_wa.height);
 
     memcpy(frame_buffer, reset_buffer, FBSIZE);
-    memcpy(map_buffer, reset_buffer, MAP_EMVADON * 4);
-
     memcpy(main_depth_buffer, reset_buffer, FBSIZE);
-    memcpy(map_depth_buffer, reset_buffer, MAP_EMVADON * 4);
-
     memcpy(frags_buffer, reset_frags, MAIN_EMVADON * sizeof(Fragment));
 }
 const static void initMainWindow(void) {
@@ -586,13 +491,13 @@ const static void initMainWindow(void) {
     XMapWindow(displ, mainwin);
     XGetWindowAttributes(displ, mainwin, &main_wa);
 }
-const static void initMapWindow(void) {
-    sa.event_mask = NoEventMask;
-    sa.background_pixel = 0x000000;
-    mapwin = XCreateWindow(displ, mainwin, WIDTH - MAP_WIDTH, 0, MAP_WIDTH, MAP_HEIGHT, 0, CopyFromParent, InputOutput, CopyFromParent, CWBackPixel | CWEventMask, &sa);
-    XMapWindow(displ, mapwin);
-    XGetWindowAttributes(displ, mapwin, &map_wa);
-}
+// const static void initMapWindow(void) {
+//     sa.event_mask = NoEventMask;
+//     sa.background_pixel = 0x000000;
+//     mapwin = XCreateWindow(displ, mainwin, WIDTH - MAP_WIDTH, 0, MAP_WIDTH, MAP_HEIGHT, 0, CopyFromParent, InputOutput, CopyFromParent, CWBackPixel | CWEventMask, &sa);
+//     XMapWindow(displ, mapwin);
+//     XGetWindowAttributes(displ, mapwin, &map_wa);
+// }
 const static void initGlobalGC(void) {
     gcvalues.foreground = 0xffffff;
     gcvalues.background = 0x000000;
@@ -601,13 +506,11 @@ const static void initGlobalGC(void) {
 }
 const static void initDependedVariables(void) {
     main_image = XCreateImage(displ, main_wa.visual, main_wa.depth, ZPixmap, 0, (char*)point_buffer, main_wa.width, main_wa.height, 32, (main_wa.width * 4));
-    map_image = XCreateImage(displ, map_wa.visual, map_wa.depth, ZPixmap, 0, (char*)point_buffer, map_wa.width, map_wa.height, 32, (map_wa.width * 4));
 
     ASPECTRATIO = ((float)main_wa.width / (float)main_wa.height);
     HALFH = main_wa.height >> 1;
     HALFW = main_wa.width >> 1;
     MAIN_EMVADON = main_wa.width * main_wa.height;
-    MAP_EMVADON = map_wa.width * map_wa.height;
 
     /* Init thread_ids dynamically */
     thread_ids = malloc(THREADS * 4);
@@ -636,11 +539,7 @@ const static void initAtoms(void) {
 /* Creates and Initializes the importand buffers. (frame, depth, shadow). */
 const static void initBuffers(void) {
     frame_buffer = calloc(MAIN_EMVADON * 4, 1);
-    map_buffer = calloc(MAP_EMVADON * 4, 1);
-
     main_depth_buffer = calloc(MAIN_EMVADON, 4);
-    map_depth_buffer = calloc(MAP_EMVADON, 4);
-
     reset_buffer = calloc(MAIN_EMVADON * 4, 1);
 
     frags_buffer = calloc(MAIN_EMVADON, sizeof(Fragment));
@@ -662,7 +561,6 @@ const static void initLightModel(Light *l) {
 }
 const static void pixmapcreate(void) {
     main_pixmap = XCreatePixmap(displ, mainwin, main_wa.width, main_wa.height, main_wa.depth);
-    map_pixmap = XCreatePixmap(displ, mapwin, map_wa.width, map_wa.height, map_wa.depth);
 }
 const static void pixmapdisplay(Drawable pixmap, Drawable window, unsigned int width, unsigned int height) {
     XCopyArea(displ, pixmap, window, gc, 0, 0, width, height, 0, 0);
@@ -696,7 +594,12 @@ const static void CalculateFPS(void) {
     }
 }
 const static void displayInfo(void) {
-    char info_string[30];
+    char info_string[64];
+
+    // time_t t = tv.tv_sec;
+    // struct tm *info;
+    // info = localtime(&t);
+
     sprintf(info_string, "Resolution: %d x %d", main_wa.width, main_wa.height);
     XDrawString(displ ,mainwin ,gc, 5, 12, info_string, strlen(info_string));
 
@@ -705,6 +608,12 @@ const static void displayInfo(void) {
 
     sprintf(info_string, "%4.1f fps", FPS);
     XDrawString(displ ,mainwin ,gc, 5, 36, info_string, strlen(info_string));
+
+    // sprintf(info_string, "%s\0", asctime(info));
+    // XDrawString(displ ,mainwin ,gc, 5, 48, info_string, strlen(info_string));
+
+    // sprintf(info_string, "Camera x: %f,    y: %f,    z: %f\0", camera[0][0], camera[0][1], camera[0][2]);
+    // XDrawString(displ ,mainwin ,gc, 5, 60, info_string, strlen(info_string));
 }
 /* Signal handler to clean memory before exit, after receiving a given signal. */
 const static void sigsegv_handler(const int sig) {
@@ -745,7 +654,7 @@ const static int board(void) {
     }
 
     initMainWindow();
-    initMapWindow();
+    // initMapWindow();
     InitTimeCounter();
     initGlobalGC();
     pixmapcreate();
@@ -756,8 +665,8 @@ const static int board(void) {
     initBuffers();
     initLightModel(&sunlight);
 
-    createScene(&scene);
-    posWorldObjects(&scene);
+    createScene(&scene);     /*  Scene creation must happen after world objects initialization.    */
+    initWorldObjects(&scene);
 
     /* Announcing to event despatcher that starting initialization is done. We send a Keyress event to Despatcher to awake Projection. */
     announceReadyState();

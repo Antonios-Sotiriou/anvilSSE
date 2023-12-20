@@ -9,7 +9,69 @@ const static void releaseMeshShadowStepOne(MeshShadowStepOne *c);
 const static void releaseMeshShadowStepTwo(MeshShadowStepTwo *c);
 const static void initMeshShadowStepOne(MeshShadowStepOne *a, Mesh *b);
 const static vec4i smmask = { 1, 2, 0, 3 };
+static Mat4x4 lm, lview;
 
+/* ################################################### CASCADE SHADOW MAPPING START   ################################################ */
+/* Returns a vec4f array with the values of the 8 vectors that form the View Frustum in View Space.np and fp are the near and far planes( can be Choosen accordingly ). */
+vec4f *worldSpaceFrustum(const float np, const float fp) {
+    vec4f *va = malloc(128);
+    const float fovRadius = (1.f / tanf(45.f * 0.5f / 180.0f * 3.14159f));
+
+    const vec4f nearcenter = (eye[0] + eye[3]) * np;
+    const vec4f farcenter = (eye[0] + eye[3]) * fp;
+
+    const float nearHeight = tan(fovRadius) * np;
+    const float farHeight = tan(fovRadius) * fp;
+    const float nearWidth = nearHeight * ASPECTRATIO;
+    const float farWidth = farHeight * ASPECTRATIO;
+
+    const vec4f yxnh = eye[2] * nearHeight;
+    const vec4f yxnw = eye[1] * nearWidth;
+
+    const vec4f yxfh = eye[2] * farHeight;
+    const vec4f yxfw = eye[1] * farWidth;
+
+    va[2] = nearcenter + yxnh + yxnw;
+    va[3] = nearcenter - yxnh + yxnw;
+    va[6] = nearcenter + yxnh - yxnw;
+    va[7] = nearcenter - yxnh - yxnw;
+
+    va[0] = farcenter + yxfh + yxfw;
+    va[1] = farcenter - yxfh + yxfw;
+    va[4] = farcenter + yxfh - yxfw;
+    va[5] = farcenter - yxfh - yxfw;
+
+    return va;
+}
+const Mat4x4 createOrthoMatrixFromLimits(const DimensionsLimits dl) {
+    return orthographicMatrix(dl.minX, dl.maxX, dl.minY, dl.maxY, dl.minZ, dl.maxZ);
+}
+const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
+    DimensionsLimits dl;
+    vec4f *fr[3] = {
+        worldSpaceFrustum(NPlane, 100.f),
+        worldSpaceFrustum(100.f, 300.f),
+        worldSpaceFrustum(300.f, 600.f)
+    };
+    Mat4x4 lm[3] = {
+        lookat(eye[0] + (sunlight.pos + (eye[3] * 100.f)), sunlight.u, sunlight.v, sunlight.n),//100.f
+        lookat(eye[0] + (sunlight.pos + (eye[3] * 300.f)), sunlight.u, sunlight.v, sunlight.n),//460.f
+        lookat(eye[0] + (sunlight.pos + (eye[3] * 600.f)), sunlight.u, sunlight.v, sunlight.n)//1260.f
+    };
+
+    for (int i = 0; i < num_of_cascades; i++) {
+        lm[i].m[3][1] = sunlight.pos[1];
+        lview = inverse_mat(lm[i]);
+        /* Transform view frustum to Space. */
+        fr[i] = setvecsarrayxm(fr[i], 8, viewMat);
+
+        dl = getDimensionsLimits(fr[i]);
+        free(fr[i]);
+
+        ortholightMat[i] = mxm(lview, createOrthoMatrixFromLimits(dl));
+    }
+}
+/* ################################################### CASCADE SHADOW MAPPING FINISH ################################################ */
 const void shadowPipeline(Scene *s, const unsigned int sm_index) {
     MeshShadowStepOne cache_0 = { 0 };
 
@@ -299,15 +361,15 @@ const float shadowTest(vec4f frag, vec4f nml) {
 
     return 1.f;
 }
-/* Releases all members of the given inside graphic pipeline lvl 1 Mesh. */
+/* Releases all members of the given inside Shadow pipeline lvl 1 Mesh. */
 const static void releaseMeshShadowStepOne(MeshShadowStepOne *c) {
     free(c->v);
 }
-/* Releases all members of the given inside graphic pipeline lvl 2 Mesh. */
+/* Releases all members of the given inside Shadow pipeline lvl 2 Mesh. */
 const static void releaseMeshShadowStepTwo(MeshShadowStepTwo *c) {
     free(c->f);
 }
-/* Initializing Mesh a from Mesh b. */
+/* Initializing a MeshShadowStepOne a from Mesh b. */
 const static void initMeshShadowStepOne(MeshShadowStepOne *a, Mesh *b) {
     size_t vsize = sizeof(vec4f) * b->v_indexes;
 

@@ -40,13 +40,13 @@ typedef struct {
 
 /* Material struct to hold the specific for each material values. */
 typedef struct {
-    char name[25];
+    char name[24];
     vec4f basecolor;
     vec4f ambient;
     vec4f diffuse;
     vec4f specular;
     float shinniness;
-    int reflect, tex_levels;
+    int reflect, texlevels, texlod;
     signed int texture_height, texture_width;
     vec4c *texture;
     char texlvl[9][10];
@@ -66,13 +66,15 @@ typedef struct {
 
 /* General Mesh struct from which the scene consists. It holds all the information before the graphic pipeline. */
 typedef struct {
-    vec4f pivot;
+    char name[24];
+    vec4f pivot, rotation;
     vec4f *v;
     vec4f *n;
     vec2f *t;
     unsigned int *f;
     // void (*drawMesh)(void *args);
-    int v_indexes, n_indexes, t_indexes, f_indexes, cull, lvlofdetail;
+    int v_indexes, n_indexes, t_indexes, f_indexes, cull, meshlod, lodlevels;
+    float scale;
     Material material;
 } Mesh;
 

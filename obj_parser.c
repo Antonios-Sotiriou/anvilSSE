@@ -14,30 +14,30 @@ static int t_indexes = 0;
 /* Face array indexes */
 static int f_indexes = 0;
 
-const Mesh loadmesh(const char path[]) {
-    Mesh r = { 0 };
+const void loadmesh(Mesh *m, const char name[], const unsigned int meshlod) {
+    size_t len = 18 + (strlen(name) * 2) + 2;
+    char objfile[len];
+    snprintf(objfile, len, "objfiles/%s/%s_lod%d.obj", name, name, meshlod);
 
-    r.v = loadvectors(path);
-    if (!r.v)
+    m->v = loadvectors(objfile);
+    if (!m->v)
         fprintf(stderr, "Could not reallocate Vectors array. load_obj() - get_vectors()\n");
-    r.v_indexes = v_indexes;
+    m->v_indexes = v_indexes;
 
-    r.t = loadtextors(path);
-    if (!r.t)
+    m->t = loadtextors(objfile);
+    if (!m->t)
         fprintf(stderr, "Could not create Vectors array. load_obj() - get_textors()\n");
-    r.t_indexes = t_indexes;
+    m->t_indexes = t_indexes;
 
-    r.n = loadnormals(path);
-    if (!r.n)
+    m->n = loadnormals(objfile);
+    if (!m->n)
         fprintf(stderr, "Could not create Vectors array. load_obj() - get_normals()\n");
-    r.n_indexes = n_indexes;
+    m->n_indexes = n_indexes;
 
-    r.f = loadfaces(path);
-    if (!r.f)
+    m->f = loadfaces(objfile);
+    if (!m->f)
         fprintf(stderr, "Could not create Faces array. load_obj() - get_faces()\n");
-    r.f_indexes = f_indexes;
-
-    return r;
+    m->f_indexes = f_indexes;
 }
 static unsigned int *loadfaces(const char path[]) {
     size_t facesize = sizeof(unsigned int);
