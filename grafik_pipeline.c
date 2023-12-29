@@ -16,53 +16,55 @@ const void grafikPipeline(Scene *s) {
     MeshStepOne cache_0 = { 0 };
 
     for (int i = 0; i < s->m_indexes; i++) {
-        initMeshStepOne(&cache_0, &s->m[i]);
+        if (s->m[i].visible) {
+            initMeshStepOne(&cache_0, &s->m[i]);
 
-        cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, worldMat);
-        cache_0.n = setvecsarrayxm(cache_0.n, cache_0.n_indexes, viewMat);
+            cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, worldMat);
+            cache_0.n = setvecsarrayxm(cache_0.n, cache_0.n_indexes, viewMat);
 
-        /* Assembly and create the faces from the mesh vertices, normals and texture arrays, through the indexes. */
-        MeshStepTwo cache_1 = assemblyfaces(&cache_0, s->m[i].f, s->m[i].f_indexes);
-        releaseMeshStepOne(&cache_0);
+            /* Assembly and create the faces from the mesh vertices, normals and texture arrays, through the indexes. */
+            MeshStepTwo cache_1 = assemblyfaces(&cache_0, s->m[i].f, s->m[i].f_indexes);
+            releaseMeshStepOne(&cache_0);
 
-        /* Clipping against near Plane in View Space. */
-        vec4f plane_near_p = { 0.0f, 0.0f, NPlane },
-                plane_near_n = { 0.0f, 0.0f, 1.0f };
-        cache_1 = clipp(&cache_1, plane_near_p, plane_near_n);
-        if (!cache_1.f_indexes) {
+            /* Clipping against near Plane in View Space. */
+            vec4f plane_near_p = { 0.0f, 0.0f, NPlane },
+                    plane_near_n = { 0.0f, 0.0f, 1.0f };
+            cache_1 = clipp(&cache_1, plane_near_p, plane_near_n);
+            if (!cache_1.f_indexes) {
+                releaseMeshStepTwo(&cache_1);
+                continue;
+            }
+
+            /* Clipping against far Plane in View Space. */
+            vec4f plane_far_p = { 0.0f, 0.0f, FPlane},
+                plane_far_n = { 0.0f, 0.0f, -1.0f };
+            cache_1 = clipp(&cache_1, plane_far_p, plane_far_n);
+            if (!cache_1.f_indexes) {
+                releaseMeshStepTwo(&cache_1);
+                continue;
+            }
+
+            /* Applying perspective division. */
+            if (!PROJECTIONVIEW)
+                ppdiv(&cache_1, cache_1.f_indexes);
+
+            /* Applying Backface culling before we proceed to Screen Space transformation and view Port clipping. */
+            if (cache_1.cull)
+                cache_1 = bfculling(cache_1, cache_1.f_indexes);
+            if (!cache_1.f_indexes) {
+                releaseMeshStepTwo(&cache_1);
+                continue;
+            }
+
+            /* Sending to translation from NDC to Screen Coordinates. */
+            if (!viewtoscreen(&cache_1, cache_1.f_indexes)) {
+                releaseMeshStepTwo(&cache_1);
+                continue;
+            }
+
+            rasterize(&cache_1, &s->m[i].material);
             releaseMeshStepTwo(&cache_1);
-            continue;
         }
-
-        /* Clipping against far Plane in View Space. */
-        vec4f plane_far_p = { 0.0f, 0.0f, FPlane},
-              plane_far_n = { 0.0f, 0.0f, -1.0f };
-        cache_1 = clipp(&cache_1, plane_far_p, plane_far_n);
-        if (!cache_1.f_indexes) {
-            releaseMeshStepTwo(&cache_1);
-            continue;
-        }
-
-        /* Applying perspective division. */
-        if (!PROJECTIONVIEW)
-            ppdiv(&cache_1, cache_1.f_indexes);
-
-        /* Applying Backface culling before we proceed to Screen Space transformation and view Port clipping. */
-        if (cache_1.cull)
-            cache_1 = bfculling(cache_1, cache_1.f_indexes);
-        if (!cache_1.f_indexes) {
-            releaseMeshStepTwo(&cache_1);
-            continue;
-        }
-
-        /* Sending to translation from NDC to Screen Coordinates. */
-        if (!viewtoscreen(&cache_1, cache_1.f_indexes)) {
-            releaseMeshStepTwo(&cache_1);
-            continue;
-        }
-
-        rasterize(&cache_1, &s->m[i].material);
-        releaseMeshStepTwo(&cache_1);
     }
 }
 /* Assosiates vertices coordinate values from vector array through indexes. */

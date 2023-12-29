@@ -17,8 +17,8 @@
     #include "clipping.h"
 #endif
 
-#ifndef _WORLD_OBJECTS_H
-    #include "world_objects.h"
+#ifndef _SCENE_OBJECTS_H
+    #include "scene_objects.h"
 #endif
 
 #ifndef _STDIO_H

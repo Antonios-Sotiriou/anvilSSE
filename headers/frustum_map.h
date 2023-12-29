@@ -5,7 +5,7 @@
     #include "anvil_structs.h"
 #endif
 
-#include "world_objects.h"
+#include "scene_objects.h"
 #include "draw_functions.h"
 #include "clipping.h"
 

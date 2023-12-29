@@ -9,7 +9,7 @@ const static void releaseMeshShadowStepOne(MeshShadowStepOne *c);
 const static void releaseMeshShadowStepTwo(MeshShadowStepTwo *c);
 const static void initMeshShadowStepOne(MeshShadowStepOne *a, Mesh *b);
 const static vec4i smmask = { 1, 2, 0, 3 };
-static Mat4x4 lm, lview;
+static Mat4x4 lview;
 
 /* ################################################### CASCADE SHADOW MAPPING START   ################################################ */
 /* Returns a vec4f array with the values of the 8 vectors that form the View Frustum in View Space.np and fp are the near and far planes( can be Choosen accordingly ). */
@@ -65,7 +65,7 @@ const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
         /* Transform view frustum to Space. */
         fr[i] = setvecsarrayxm(fr[i], 8, viewMat);
 
-        dl = getDimensionsLimits(fr[i]);
+        dl = getDimensionsLimits(fr[i], 8);
         free(fr[i]);
 
         ortholightMat[i] = mxm(lview, createOrthoMatrixFromLimits(dl));

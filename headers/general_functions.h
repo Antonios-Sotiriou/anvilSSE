@@ -81,18 +81,30 @@ typedef struct {
 	unsigned int Reserved;
 } BMP_Info ;
 
+#ifndef _DRAW_FUNCTIONS_H
+    #include "draw_functions.h"
+#endif
+
 /* Define in main.c */
-extern Mat4x4 lookAt;
-extern float FPlane;
+extern Mat4x4 lookAt, worldMat;
+extern float FPlane, NPlane;
+extern int HALFW, HALFH;
+
+extern Window mainwin;
+extern Display *displ;
+extern GC gc;
 
 const void swap(void *a, void *b, unsigned long size);
 const float radians(const float value);
-const DimensionsLimits getDimensionsLimits(vec4f va[]);
+const DimensionsLimits getDimensionsLimits(vec4f va[], const int len);
 const void loadmaterial(Material *mtr, const char name[]);
 const void loadtexture(Mesh *m, const unsigned int lvl);
 const void adoptdetailMesh(Mesh *m);
 const void adoptdetailTexture(Mesh *m);
-const void enWorldMesh(Mesh *m);
+const void reWorldMesh(Mesh *m);
+const void placeMesh(Mesh *m, const vec4f pos);
+const void frustumCulling(Mesh *m, const int len);
+const void initMesh(Mesh *a, const Mesh *b);
 const void releaseMesh(Mesh *m);
 
 #endif /* _GENERAL_FUNCTIONS_H */

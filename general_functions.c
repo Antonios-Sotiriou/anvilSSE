@@ -13,9 +13,14 @@ const float radians(const float value) {
     return value * (3.14159 / 180.0);
 }
 /* Finds the minX, maxX, minY, maxY, minZ maxZ values of given vectors array. AKA (bounding box). */
-const DimensionsLimits getDimensionsLimits(vec4f va[]) {
-    DimensionsLimits dl = { 0 };
-    for (int i = 0; i < 8; i++) {
+const DimensionsLimits getDimensionsLimits(vec4f va[], const int len) {
+    DimensionsLimits dl = {
+        .minX = dl.maxX = va[0][0],
+        .minY = dl.maxY = va[0][1],
+        .minZ = dl.maxZ = va[0][2]
+    };
+
+    for (int i = 0; i < len; i++) {
         /* Get min and max x values. */
         if ( va[i][0] <= dl.minX) {
             dl.minX = va[i][0];
@@ -125,10 +130,13 @@ const void adoptdetailMesh(Mesh *m) {
         m->meshlod = 6;
     }
 
+    if (m->meshlod > m->lodlevels)
+        m->meshlod = m->lodlevels;
+
     if (lcache_0 != m->meshlod) {
         releaseMesh(m);
         loadmesh(m, m->name, m->meshlod);
-        enWorldMesh(m);
+        reWorldMesh(m);
     }
 }
 const void adoptdetailTexture(Mesh *m) {
@@ -163,7 +171,7 @@ const void adoptdetailTexture(Mesh *m) {
         loadtexture(m, index);
     }
 }
-const void enWorldMesh(Mesh *m) {
+const void reWorldMesh(Mesh *m) {
     Mat4x4 sclMatrix, trMatrix, posMatrix;
 
     sclMatrix = scaleMatrix(m->scale);
@@ -172,6 +180,80 @@ const void enWorldMesh(Mesh *m) {
 
     m->v = setvecsarrayxm(m->v, m->v_indexes, posMatrix);
     m->n = setvecsarrayxm(m->n, m->n_indexes, posMatrix);
+}
+const void placeMesh(Mesh *m, const vec4f pos) {
+    Mat4x4 trMatrix = translationMatrix(pos[0], pos[1], pos[2]);
+
+    m->v = setvecsarrayxm(m->v, m->v_indexes, trMatrix);
+    m->n = setvecsarrayxm(m->n, m->n_indexes, trMatrix);
+    m->pivot = pos;
+}
+#include "headers/logging.h"
+const void frustumCulling(Mesh *m, const int len) {
+    vec4f *vec_arr;
+    DimensionsLimits dm;
+    for (int i = 0; i < len; i++) {
+        vec_arr = vecsarrayxm(m[i].v, m[i].v_indexes, worldMat);
+
+        for (int j = 0; j < m[i].v_indexes; j++) {
+            /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
+            float z = vec_arr[j][2];
+
+            if (vec_arr[j][3] > 0) {
+                vec_arr[j] /= vec_arr[j][3];
+                vec_arr[j][2] = z;
+            }
+        }
+
+        dm = getDimensionsLimits(vec_arr, m[i].v_indexes);
+
+        vec4f min = { dm.minX, dm.minY, dm.minZ, 1.f };
+        vec4f max = { dm.maxX, dm.maxY, dm.maxZ, 1.f };
+
+
+        min[0] = ((1 + min[0]) * HALFW) + 0.5;
+        min[1] = ((1 + min[1]) * HALFH) + 0.5;
+
+        max[0] = ((1 + max[0]) * HALFW) + 0.5;
+        max[1] = ((1 + max[1]) * HALFH) + 0.5;
+
+        XDrawRectangle(displ, mainwin, gc, min[0], min[1], max[0] - min[0], max[1] - min[1]);
+
+        if ( ((min[2] > FPlane) || (max[2] < NPlane)) ||
+             ((min[1] > 1000) || (max[1] < 0)) ||
+             ((min[0] > 1000) || (max[0] < 0)) ) {
+
+            free(vec_arr);
+            m[i].visible = 0;
+            continue;
+        }
+        free(vec_arr);
+        m[i].visible = 1;
+    }
+}
+/* Initializing Mesh a from Mesh b. */
+const void initMesh(Mesh *a, const Mesh *b) {
+    *a = *b;
+    size_t vsize = sizeof(vec4f) * b->v_indexes;
+    size_t nsize = sizeof(vec4f) * b->n_indexes;
+    size_t tsize = sizeof(vec2f) * b->t_indexes;
+    size_t fsize = sizeof(unsigned int) * b->f_indexes;
+
+    a->v = malloc(vsize);
+    memcpy(a->v, b->v, vsize);
+    a->v_indexes = b->v_indexes;
+
+    a->n = malloc(nsize);
+    memcpy(a->n, b->n, nsize);
+    a->n_indexes = b->n_indexes;
+
+    a->t = malloc(tsize);
+    memcpy(a->t, b->t, tsize);
+    a->t_indexes = b->t_indexes;
+
+    a->f = malloc(fsize);
+    memcpy(a->f, b->f, fsize);
+    a->f_indexes = b->f_indexes;
 }
 /* Releases all members of the given Mesh. */
 const void releaseMesh(Mesh *m) {

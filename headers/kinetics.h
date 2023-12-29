@@ -17,7 +17,6 @@
 extern Light sunlight;
 
 /* Defined in world_objects.c. */
-extern const void initMesh(Mesh *a, const Mesh b);
 extern const void releaseMesh(Mesh *c);
 
 /* Defined in general_functions.c. */

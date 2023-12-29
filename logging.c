@@ -12,6 +12,29 @@ const void logVec4c(const vec4c v) {
     fprintf(stdout, "x: %d    y: %d    z: %d    w: %d\n", v[0], v[1], v[2], v[3]);
 }
 
+/* Logging Mesh. */
+const void logMesh(const Mesh m) {
+    printf("Mesh name:     %s\n", m.name);
+    printf("pivot:         ");
+    logVec4f(m.pivot);
+    printf("rotation:      ");
+    logVec4f(m.rotation);
+    printf("v:             %p -->  ", m.v);
+    printf("v_indexes:     %d\n", m.v_indexes);
+    printf("n:             %p -->  ", m.n);
+    printf("n_indexes:     %d\n", m.n_indexes);
+    printf("t:             %p -->  ", m.t);
+    printf("t_indexes:     %d\n", m.t_indexes);
+    printf("f:             %p -->  ", m.f);
+    printf("f_indexes:     %d\n", m.f_indexes);
+    printf("cull:          %d\n", m.cull);
+    printf("lodlevels:     %d\n", m.lodlevels);
+    printf("meshlod:       %d\n", m.meshlod);
+    printf("scale:         %f\n", m.scale);
+    printf("visible:       %d\n", m.visible);
+    printf("material:      %s\n\n", m.material.name);
+}
+
 /* Logging Triangle values.If vec = 1 loggs vec4 values, if tex Texture, if norm Normal. */
 const void logFace(const face f, const int vec, const int tex, const int norm) {
     if (vec) {

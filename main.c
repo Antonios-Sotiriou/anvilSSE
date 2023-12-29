@@ -35,7 +35,7 @@ enum str { first, second, third };
 #include "headers/database.h"
 #include "headers/matrices.h"
 #include "headers/kinetics.h"
-#include "headers/world_objects.h"
+#include "headers/scene_objects.h"
 #include "headers/general_functions.h"
 #include "headers/clipping.h"
 #include "headers/shadow_pipeline.h"
@@ -88,7 +88,7 @@ float SCALE               = 0.003f;
 float AmbientStrength     = 0.2f;
 float SpecularStrength    = 0.5f;
 float DiffuseStrength     = 0.5f;
-float shadow_bias         = 0.f;//0.003105;//0.002138;//0.000487f;
+float shadow_bias         = -0.0003f;//0.003105;//0.002138;//0.000487f;
 
 /* Camera and Global light Source. */
 vec4f *eye;
@@ -254,15 +254,13 @@ const static void keypress(XEvent *event) {
 
     // printf("Key Pressed: %ld\n", keysym);
     // printf("\x1b[H\x1b[J");
-    // system("clear\n");
+    system("clear\n");
     switch (keysym) {
         case 97 : look_left(eye, 0.2);             /* a */
-            rotate_light_cam(&scene.m[2], camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
-            // rotate_light(&sunlight, camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
+            rotate_light_cam(&scene.m[4], camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
             break;
         case 100 : look_right(eye, 0.2);           /* d */
-            rotate_light_cam(&scene.m[2], camera[0], -2.0f, 0.0f, 1.0f, 0.0f);
-            // rotate_light(&sunlight, camera[0], -2.0f, 0.0f, 1.0f, 0.0f);
+            rotate_light_cam(&scene.m[4], camera[0], -2.0f, 0.0f, 1.0f, 0.0f);
             break;
         case 113 : look_up(eye, 2.2);              /* q */
             break;
@@ -294,33 +292,33 @@ const static void keypress(XEvent *event) {
             break;
         case 65430 : sunlight.pos[0] -= 10.0f;                   /* Adjust Light Source */
             Mat4x4 ar = translationMatrix(-10.0f, 0.0f, 0.0f);
-            scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, ar);
-            scene.m[2].pivot[0] -= 10.0f;
+            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, ar);
+            scene.m[4].pivot[0] -= 10.0f;
             break;
         case 65432 : sunlight.pos[0] += 10.0f;                   /* Adjust Light Source */
             Mat4x4 br = translationMatrix(10.0f, 0.0f, 0.0f);
-            scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, br);
-            scene.m[2].pivot[0] += 10.0f;
+            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, br);
+            scene.m[4].pivot[0] += 10.0f;
             break;
         case 65434 : sunlight.pos[1] += 10.0f;                   /* Adjust Light Source */
             Mat4x4 er = translationMatrix(0.0f, 10.0f, 0.0f);
-            scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, er);
-            scene.m[2].pivot[1] += 10.0f;
+            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, er);
+            scene.m[4].pivot[1] += 10.0f;
             break;
         case 65435 : sunlight.pos[1] -= 10.0f;                   /* Adjust Light Source */
             Mat4x4 fr = translationMatrix(0.0f, -10.0f, 0.0f);
-            scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, fr);
-            scene.m[2].pivot[1] -= 10.0f;
+            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, fr);
+            scene.m[4].pivot[1] -= 10.0f;
             break;
         case 65431 : sunlight.pos[2] += 10.0f;                   /* Adjust Light Source */
             Mat4x4 cr = translationMatrix(0.0f, 0.0f, 10.0f);
-            scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, cr);
-            scene.m[2].pivot[2] += 10.0f;
+            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, cr);
+            scene.m[4].pivot[2] += 10.0f;
             break;
         case 65433 : sunlight.pos[2] -= 10.0f;                   /* Adjust Light Source */
             Mat4x4 dr = translationMatrix(0.0f, 0.0f, -10.0f);
-            scene.m[2].v = setvecsarrayxm(scene.m[2].v, scene.m[2].v_indexes, dr);
-            scene.m[2].pivot[2] -= 10.0f;
+            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, dr);
+            scene.m[4].pivot[2] -= 10.0f;
             break;
         case 120 : rotate_x(&scene.m[1], 1);                     /* x */
             break;
@@ -383,6 +381,8 @@ const static void keypress(XEvent *event) {
     viewMat = inverse_mat(lookAt);
     sunlight.newPos = vecxm(sunlight.pos, viewMat);
 
+    /* At this point must be created probably the height map. */
+
     createCascadeShadowMatrices(NUM_OF_CASCADES);
 
     if (!PROJECTIONVIEW)
@@ -393,13 +393,21 @@ const static void keypress(XEvent *event) {
     // scene.m[0].v = worldSpaceFrustum(NPlane, 100.f);
     // scene.m[1].v = worldSpaceFrustum(100.f, 300.f);
     // scene.m[2].v = worldSpaceFrustum(300.f, 600.f);
+    
+    frustumCulling(scene.m, scene.m_indexes);
+
     for (int i = 0; i < scene.m_indexes; i++) {
-        adoptdetailMesh(&scene.m[i]);
-        adoptdetailTexture(&scene.m[i]);
+        if (scene.m[i].visible && scene.m[i].meshlod > 0) {
+            adoptdetailMesh(&scene.m[i]);
+            adoptdetailTexture(&scene.m[i]);
+            logMesh(scene.m[i]);
+        }
     }
 
     AdjustShadow++;
     AdjustScene++;
+
+    // logVec4i(camera[0] < 0.f);
 }
 static void *oscillator(void *args) {
 

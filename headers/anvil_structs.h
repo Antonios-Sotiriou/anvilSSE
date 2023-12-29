@@ -73,7 +73,7 @@ typedef struct {
     vec2f *t;
     unsigned int *f;
     // void (*drawMesh)(void *args);
-    int v_indexes, n_indexes, t_indexes, f_indexes, cull, meshlod, lodlevels;
+    int v_indexes, n_indexes, t_indexes, f_indexes, cull, lodlevels, meshlod, visible;
     float scale;
     Material material;
 } Mesh;

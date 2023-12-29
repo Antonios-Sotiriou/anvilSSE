@@ -1,5 +1,5 @@
-#ifndef _WORLD_OBJECTS_H
-#define _WORLD_OBJECTS_H 1
+#ifndef _SCENE_OBJECTS_H
+#define _SCENE_OBJECTS_H 1
 
 #ifndef _ANVIL_STRUCTS_H
     #include "anvil_structs.h"
@@ -17,4 +17,4 @@ const void initWorldObjects(Scene *s);
 const void createScene(Scene *s);
 const void releaseScene(Scene *s);
 
-#endif /* _WORLD_OBJECTS_H */
+#endif /* _SCENE_OBJECTS_H */
