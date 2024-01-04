@@ -90,7 +90,7 @@ float SpecularStrength    = 0.5f;
 float DiffuseStrength     = 0.5f;
 float shadow_bias         = -0.0003f;//0.003105;//0.002138;//0.000487f;
 
-/* Camera and Global light Source. */
+/* Main Camera. Player */
 vec4f *eye;
 vec4f camera[N + 1] = {
     { 0.0f, 0.0f, 0.0f, 1.0f },
@@ -98,11 +98,14 @@ vec4f camera[N + 1] = {
     { 0.0f, -1.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 1.0f, 0.0f }
 };
+/* Bird view Camera for heightmap. */
+vec4f birdview[4] = {
+    { 0.0f, 1000.0f, 0.0f, 1.0f },
+    { 1.0f, 0.0f, 0.0f, 0.0f },
+    { 0.0f, 0.0f, -1.0f, 0.0f },
+    { 0.0f, -1.0f, 0.0f, 0.0f }
+};
 Light sunlight = {
-    // .pos = { -800.001343f, 205.598007f, 802.004822f, 1.000000f },
-    // .u = { -0.694661f, 0.000000f, -0.719352f, 0.000000f },
-    // .v = { 0.000000f, -1.000000f, 0.000000f, 0.000000f },
-    // .n = { 0.719352f, 0.000000f, -0.694661f, 0.000000f },
     .pos = { 0.f, 100.0f, 0.f, 1.f },
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
@@ -257,10 +260,10 @@ const static void keypress(XEvent *event) {
     system("clear\n");
     switch (keysym) {
         case 97 : look_left(eye, 0.2);             /* a */
-            rotate_light_cam(&scene.m[4], camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
+            // rotate_light_cam(&scene.m[4], camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
             break;
         case 100 : look_right(eye, 0.2);           /* d */
-            rotate_light_cam(&scene.m[4], camera[0], -2.0f, 0.0f, 1.0f, 0.0f);
+            // rotate_light_cam(&scene.m[4], camera[0], -2.0f, 0.0f, 1.0f, 0.0f);
             break;
         case 113 : look_up(eye, 2.2);              /* q */
             break;
@@ -292,32 +295,32 @@ const static void keypress(XEvent *event) {
             break;
         case 65430 : sunlight.pos[0] -= 10.0f;                   /* Adjust Light Source */
             Mat4x4 ar = translationMatrix(-10.0f, 0.0f, 0.0f);
-            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, ar);
+            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, ar);
             scene.m[4].pivot[0] -= 10.0f;
             break;
         case 65432 : sunlight.pos[0] += 10.0f;                   /* Adjust Light Source */
             Mat4x4 br = translationMatrix(10.0f, 0.0f, 0.0f);
-            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, br);
+            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, br);
             scene.m[4].pivot[0] += 10.0f;
             break;
         case 65434 : sunlight.pos[1] += 10.0f;                   /* Adjust Light Source */
             Mat4x4 er = translationMatrix(0.0f, 10.0f, 0.0f);
-            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, er);
+            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, er);
             scene.m[4].pivot[1] += 10.0f;
             break;
         case 65435 : sunlight.pos[1] -= 10.0f;                   /* Adjust Light Source */
             Mat4x4 fr = translationMatrix(0.0f, -10.0f, 0.0f);
-            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, fr);
+            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, fr);
             scene.m[4].pivot[1] -= 10.0f;
             break;
         case 65431 : sunlight.pos[2] += 10.0f;                   /* Adjust Light Source */
             Mat4x4 cr = translationMatrix(0.0f, 0.0f, 10.0f);
-            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, cr);
+            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, cr);
             scene.m[4].pivot[2] += 10.0f;
             break;
         case 65433 : sunlight.pos[2] -= 10.0f;                   /* Adjust Light Source */
             Mat4x4 dr = translationMatrix(0.0f, 0.0f, -10.0f);
-            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, dr);
+            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
             scene.m[4].pivot[2] -= 10.0f;
             break;
         case 120 : rotate_x(&scene.m[1], 1);                     /* x */
@@ -439,6 +442,11 @@ static void *cascade(void *args) {
     return (void*)args;
 }
 const static void project() {
+
+
+    /* Probably at this point i must implement gravity. */
+    // applyGravity(Scene *s, );
+
     if (AdjustShadow) {
         int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
         for (int i = 0; i < NUM_OF_CASCADES; i++) {
@@ -597,16 +605,16 @@ const static void CalculateFPS(void) {
     Frame ++;
 
     if ( (Frame % FramesPerFPS) == 0 ) {
-        FPS = ((float)(FramesPerFPS)) / (TimeCounter-prevTime);
+        FPS = ((float)(FramesPerFPS)) / (TimeCounter - prevTime);
         prevTime = TimeCounter;
     }
 }
 const static void displayInfo(void) {
     char info_string[64];
 
-    // time_t t = tv.tv_sec;
-    // struct tm *info;
-    // info = localtime(&t);
+    time_t t = tv.tv_sec;
+    struct tm *info;
+    info = localtime(&t);
 
     sprintf(info_string, "Resolution: %d x %d", main_wa.width, main_wa.height);
     XDrawString(displ ,mainwin ,gc, 5, 12, info_string, strlen(info_string));
