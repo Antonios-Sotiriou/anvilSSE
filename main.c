@@ -25,10 +25,9 @@ pthread_t threads[THREADS];
 int *thread_ids;
 /* ############################################## MULTITHREADING ################################################################### */
 
+/* CHOOSE WITH WHICH FUNCTION TO RASTERIZE. */
 int EDGEFUNC = 0;
 int SCANLINE = 1;
-
-enum str { first, second, third };
 
 /* Project specific headers */
 #include "headers/anvil_structs.h"
@@ -37,9 +36,12 @@ enum str { first, second, third };
 #include "headers/kinetics.h"
 #include "headers/scene_objects.h"
 #include "headers/general_functions.h"
+#include "headers/gravity.h"
 #include "headers/clipping.h"
 #include "headers/shadow_pipeline.h"
 #include "headers/grafik_pipeline.h"
+#include "headers/height_pipeline.h"
+#include "headers/collision_detection.h"
 #include "headers/camera.h"
 #include "headers/draw_functions.h"
 
@@ -68,7 +70,7 @@ Atom wmatom[Atom_Last];
 
 /* BUFFERS. */
 u_int8_t *frame_buffer, *point_buffer, *reset_buffer;
-float *main_depth_buffer, *point_depth_buffer, *shadow_buffer[NUM_OF_CASCADES];
+float *main_depth_buffer, *point_depth_buffer, *shadow_buffer[NUM_OF_CASCADES], *height_map;
 Fragment *frags_buffer, *reset_frags;
 
 /* Project Global Variables. */
@@ -127,9 +129,12 @@ int MAIN_EMVADON, MAP_EMVADON;
 int DEBUG = 0;
 
 /* Display usefull measurements. */
-float			        TimeCounter, LastFrameTimeCounter, DeltaTime, prevTime = 0.0, FPS;
+float			        TimeCounter, LastFrameTimeCounter, DeltaTime, GravityTime, prevTime = 0.0, FPS;
 struct timeval		    tv, tv0;
 int			            Frame = 1, FramesPerFPS;
+
+/* Gravity usefull Global Variables. */
+int DROPBALL = 0;
 
 /* Event handling functions. */
 const static void clientmessage(XEvent *event);
@@ -245,6 +250,7 @@ const static void buttonpress(XEvent *event) {
     printf("buttonpress event received\n");
     printf("X: %f\n", ((event->xbutton.x - (WIDTH / 2.00)) / (WIDTH / 2.00)));
     printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
+    DROPBALL = 1;
 }
 const static void keypress(XEvent *event) {
     
@@ -294,34 +300,34 @@ const static void keypress(XEvent *event) {
             printf("SpecularStrength: %f\n", SpecularStrength);
             break;
         case 65430 : sunlight.pos[0] -= 10.0f;                   /* Adjust Light Source */
+            scene.m[1].pivot[0] -= 10.0f;
             Mat4x4 ar = translationMatrix(-10.0f, 0.0f, 0.0f);
             scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, ar);
-            scene.m[4].pivot[0] -= 10.0f;
             break;
         case 65432 : sunlight.pos[0] += 10.0f;                   /* Adjust Light Source */
+            scene.m[1].pivot[0] += 10.0f;
             Mat4x4 br = translationMatrix(10.0f, 0.0f, 0.0f);
             scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, br);
-            scene.m[4].pivot[0] += 10.0f;
             break;
         case 65434 : sunlight.pos[1] += 10.0f;                   /* Adjust Light Source */
+            scene.m[1].pivot[1] += 10.0f;
             Mat4x4 er = translationMatrix(0.0f, 10.0f, 0.0f);
             scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, er);
-            scene.m[4].pivot[1] += 10.0f;
             break;
         case 65435 : sunlight.pos[1] -= 10.0f;                   /* Adjust Light Source */
+            scene.m[1].pivot[1] -= 10.0f;
             Mat4x4 fr = translationMatrix(0.0f, -10.0f, 0.0f);
             scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, fr);
-            scene.m[4].pivot[1] -= 10.0f;
             break;
         case 65431 : sunlight.pos[2] += 10.0f;                   /* Adjust Light Source */
+            scene.m[1].pivot[2] += 10.0f;
             Mat4x4 cr = translationMatrix(0.0f, 0.0f, 10.0f);
             scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, cr);
-            scene.m[4].pivot[2] += 10.0f;
             break;
         case 65433 : sunlight.pos[2] -= 10.0f;                   /* Adjust Light Source */
+            scene.m[1].pivot[2] -= 10.0f;
             Mat4x4 dr = translationMatrix(0.0f, 0.0f, -10.0f);
             scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
-            scene.m[4].pivot[2] -= 10.0f;
             break;
         case 120 : rotate_x(&scene.m[1], 1);                     /* x */
             break;
@@ -344,7 +350,7 @@ const static void keypress(XEvent *event) {
             // orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, 0.01f, 0.1f);
             break;
         case 112 :
-            if (PROJECTBUFFER == 5)
+            if (PROJECTBUFFER == 6)
                 PROJECTBUFFER = 0;
             PROJECTBUFFER++;
             if (PROJECTBUFFER == 1) {
@@ -353,6 +359,8 @@ const static void keypress(XEvent *event) {
                 fprintf(stderr, "Projecting Depth buffer -- PROJECTBUFFER: %d\n", PROJECTBUFFER);
             } else if (PROJECTBUFFER == 3) {
                 fprintf(stderr, "Projecting Shadow buffer -- PROJECTBUFFER: %d\n", PROJECTBUFFER);
+            } else if (PROJECTBUFFER == 6) {
+                fprintf(stderr, "Projecting Height map -- PROJECTBUFFER: %d\n", PROJECTBUFFER);
             }
             break;
         case 65507 :
@@ -443,22 +451,33 @@ static void *cascade(void *args) {
 }
 const static void project() {
 
-
     /* Probably at this point i must implement gravity. */
-    // applyGravity(Scene *s, );
-
-    if (AdjustShadow) {
-        int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
-        for (int i = 0; i < NUM_OF_CASCADES; i++) {
-            if (pthread_create(&threads[i], NULL, &cascade, &shadow_ids[i]))
-                fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
-        }
-        for (int i = 0; i < NUM_OF_CASCADES; i++) {
-            if (pthread_join(threads[i], NULL))
-                fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
-        }
-        AdjustShadow = 0;
+    // printf("time Counter: %f, DelTaTime: %f\n", TimeCounter, GravityTime);
+    // if ( GravityTime >= 1 ) {
+    if (DROPBALL) {
+        GravityTime += DeltaTime;
+        applyGravity(&scene, GravityTime);
+    //     GravityTime = 0;
     }
+
+    /* Probably at this point i must implement Height Map. */
+    heightPipeline(&scene);
+
+    /* Probably at this point i must implement colission detection. */
+    checkCollision(&scene);
+
+    // if (AdjustShadow) {
+    //     int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
+    //     for (int i = 0; i < NUM_OF_CASCADES; i++) {
+    //         if (pthread_create(&threads[i], NULL, &cascade, &shadow_ids[i]))
+    //             fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
+    //     }
+    //     for (int i = 0; i < NUM_OF_CASCADES; i++) {
+    //         if (pthread_join(threads[i], NULL))
+    //             fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
+    //     }
+    //     AdjustShadow = 0;
+    // }
 
     // if (AdjustScene) {
     //     memcpy(frame_buffer, reset_buffer, FBSIZE);
@@ -492,12 +511,15 @@ const static void drawFrame(void) {
         main_image->data = (char*)shadow_buffer[1];
     else if (PROJECTBUFFER == 5)
         main_image->data = (char*)shadow_buffer[2];
+    else if (PROJECTBUFFER == 6)
+        main_image->data = (char*)height_map;
 
     XPutImage(displ, main_pixmap, gc, main_image, 0, 0, 0, 0, main_wa.width, main_wa.height);
     pixmapdisplay(main_pixmap, mainwin, main_wa.width, main_wa.height);
 
     memcpy(frame_buffer, reset_buffer, FBSIZE);
     memcpy(main_depth_buffer, reset_buffer, FBSIZE);
+    memcpy(height_map, reset_buffer, FBSIZE);
     memcpy(frags_buffer, reset_frags, MAIN_EMVADON * sizeof(Fragment));
 }
 const static void initMainWindow(void) {
@@ -556,6 +578,7 @@ const static void initAtoms(void) {
 const static void initBuffers(void) {
     frame_buffer = calloc(MAIN_EMVADON * 4, 1);
     main_depth_buffer = calloc(MAIN_EMVADON, 4);
+    height_map = calloc(MAIN_EMVADON, 4);
     reset_buffer = calloc(MAIN_EMVADON * 4, 1);
 
     frags_buffer = calloc(MAIN_EMVADON, sizeof(Fragment));

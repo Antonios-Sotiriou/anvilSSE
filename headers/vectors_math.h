@@ -21,7 +21,6 @@ const vec4f div_vec(const vec4f v1, const float num);
 const vec4f add_vecs(const vec4f v1, const vec4f v2);
 const vec4f sub_vecs(const vec4f v1, const vec4f v2);
 const float winding(const face f);
-const float shadow_winding(const Shadowface f);
 float dot_product(const vec4f v1, const vec4f v2);
 const vec4f cross_product(const vec4f v1, const vec4f v2);
 const vec4f triangle_cp(const face f);

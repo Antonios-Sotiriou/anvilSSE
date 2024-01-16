@@ -9,6 +9,10 @@
     #include <immintrin.h>
 #endif
 
+#ifndef _ANVIL_FLAGS_H
+    #include "anvil_flags.h"
+#endif
+
 /* Primitive struct vec4 with 4 x 8bits unsigned char as members */
 typedef unsigned char vec4c __attribute__((vector_size(4)));
 
@@ -73,7 +77,7 @@ typedef struct {
     vec2f *t;
     unsigned int *f;
     // void (*drawMesh)(void *args);
-    int v_indexes, n_indexes, t_indexes, f_indexes, cull, lodlevels, meshlod, visible;
+    int v_indexes, n_indexes, t_indexes, f_indexes, cull, lodlevels, meshlod, visible, type;
     float scale;
     Material material;
 } Mesh;
@@ -91,6 +95,25 @@ typedef struct {
     face *f;
     int f_indexes, cull;
 } MeshStepTwo;
+
+/* Base Height face aka(triangle) struct. */
+typedef struct {
+    vec4f v[3];
+    vec4f vn[3];
+} Heightface;
+
+// /* Inside height pipeline struct. Holds necessery data for the 1st step of the height pipeline. */
+typedef struct {
+    vec4f *v;
+    vec4f *n;
+    int v_indexes, n_indexes, cull;
+} MeshHeightStepOne;
+
+/* Inside height pipeline struct. Holds necessery data for the 2nd step of the height pipeline. */
+typedef struct {
+    Heightface *f;
+    int f_indexes, cull;
+} MeshHeightStepTwo;
 
 /* Base Shadow face aka(triangle) struct. */
 typedef struct {

@@ -2,13 +2,14 @@
 
 const static MeshShadowStepTwo assemblyfacesShadow(MeshShadowStepOne *m, unsigned int *indices, const int len);
 const static MeshShadowStepTwo shadowculling(const MeshShadowStepTwo c, const int len);
+const static float shadow_winding(const Shadowface f);
 const static int shadowtoscreen(MeshShadowStepTwo *m, const int len);
 const static void createShadowmap(MeshShadowStepTwo *m, const unsigned int sm_index);
 const static void shadowface(Shadowface *f, const Srt srt[], const unsigned int sm_index);
 const static void releaseMeshShadowStepOne(MeshShadowStepOne *c);
 const static void releaseMeshShadowStepTwo(MeshShadowStepTwo *c);
 const static void initMeshShadowStepOne(MeshShadowStepOne *a, Mesh *b);
-const static vec4i smmask = { 1, 2, 0, 3 };
+const static vec4i smask = { 1, 2, 0, 3 };
 static Mat4x4 lview;
 
 /* ################################################### CASCADE SHADOW MAPPING START   ################################################ */
@@ -163,6 +164,14 @@ const static MeshShadowStepTwo shadowculling(const MeshShadowStepTwo m, const in
     free(m.f);
     return r;
 }
+/* Identifies if the Vectors are in clockwise order < CW > or not < CCW >. */
+const float shadow_winding(const Shadowface f) {
+    vec4f xs = { f.v[0][0], f.v[1][0], f.v[2][0], 0.0f };
+    vec4f ys = { f.v[0][1], f.v[1][1], f.v[2][1], 0.0f };
+
+    vec4f r = xs * __builtin_shuffle(ys, smask) - ys * __builtin_shuffle(xs, smask);
+    return r[0] + r[1] + r[2];
+}
 /* Translates the Mesh's Triangles from world to Screen Coordinates. */
 const static int shadowtoscreen(MeshShadowStepTwo *m, const int len) {
     for (int i = 0; i < len; i++) {
@@ -201,7 +210,7 @@ const static int shadowtoscreen(MeshShadowStepTwo *m, const int len) {
 
     return 1;
 }
-const void createShadowmap(MeshShadowStepTwo *m, const unsigned int sm_index) {
+const static void createShadowmap(MeshShadowStepTwo *m, const unsigned int sm_index) {
     for (int c = 0; c < m->f_indexes; c++) {
         /* Creating 2Arrays for X and Y values to sort them. */
         Srt srt[3] = {
@@ -223,13 +232,13 @@ const void createShadowmap(MeshShadowStepTwo *m, const unsigned int sm_index) {
         shadowface(&m->f[c], srt, sm_index);
     }
 }
-const void shadowface(Shadowface *f, const Srt srt[], const unsigned int sm_index) {
+const static void shadowface(Shadowface *f, const Srt srt[], const unsigned int sm_index) {
     vec4i xs = { f->v[srt[0].index][0], f->v[srt[1].index][0], f->v[srt[2].index][0], 0 };
     vec4i ys = { f->v[srt[0].index][1], f->v[srt[1].index][1], f->v[srt[2].index][1], 0 };
     vec4f zs = { f->v[srt[0].index][2], f->v[srt[1].index][2], f->v[srt[2].index][2], 0 };
-    vec4i xmx = __builtin_shuffle(xs, smmask) - xs;
-    vec4i ymy = __builtin_shuffle(ys, smmask) - ys;
-    vec4f zmz = __builtin_shuffle(zs, smmask) - zs;
+    vec4i xmx = __builtin_shuffle(xs, smask) - xs;
+    vec4i ymy = __builtin_shuffle(ys, smask) - ys;
+    vec4f zmz = __builtin_shuffle(zs, smask) - zs;
 
     const int orient = (xmx[0] * ymy[2]) - (ymy[0] * xmx[2]);
     float ma = (float)xmx[0] / ymy[0];

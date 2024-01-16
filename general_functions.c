@@ -20,24 +20,24 @@ const DimensionsLimits getDimensionsLimits(vec4f va[], const int len) {
         .minZ = dl.maxZ = va[0][2]
     };
 
-    for (int i = 0; i < len; i++) {
+    for (int i = 1; i < len; i++) {
         /* Get min and max x values. */
         if ( va[i][0] <= dl.minX) {
             dl.minX = va[i][0];
         } else if ( va[i][0] > dl.maxX) {
-            dl.maxX = va[i][0];             
+            dl.maxX = va[i][0];
         }
         /* Get min and max y values. */
         if ( va[i][1] <= dl.minY) {
             dl.minY = va[i][1];
         } else if ( va[i][1] > dl.maxY) {
-            dl.maxY = va[i][1];             
+            dl.maxY = va[i][1];
         }
         /* Get min and max z values. */
         if ( va[i][2] <= dl.minZ) {
             dl.minZ = va[i][2];
         } else if ( va[i][2] > dl.maxZ) {
-            dl.maxZ = va[i][2];             
+            dl.maxZ = va[i][2];
         }
     }
     return dl;
@@ -188,7 +188,6 @@ const void placeMesh(Mesh *m, const vec4f pos) {
     m->n = setvecsarrayxm(m->n, m->n_indexes, trMatrix);
     m->pivot = pos;
 }
-#include "headers/logging.h"
 const void frustumCulling(Mesh *m, const int len) {
     vec4f *vec_arr;
     DimensionsLimits dm;
