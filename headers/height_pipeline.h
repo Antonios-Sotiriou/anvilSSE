@@ -21,11 +21,6 @@
     #include <stdio.h>
 #endif
 
-/* Defined in main.c. */
-extern Mat4x4 worldMat;
-extern XWindowAttributes main_wa;
-extern int HALFW, HALFH;
-
 const void heightPipeline(Scene *s, vec4f *pivot);
 
 #endif /* _HEIGHT_MAP_H */

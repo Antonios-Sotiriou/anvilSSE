@@ -26,8 +26,8 @@ int *thread_ids;
 /* ############################################## MULTITHREADING ################################################################### */
 
 /* CHOOSE WITH WHICH FUNCTION TO RASTERIZE. */
-int EDGEFUNC = 0;
-int SCANLINE = 1;
+int EDGEFUNC = 1;
+int SCANLINE = 0;
 
 /* Project specific headers */
 #include "headers/anvil_structs.h"
@@ -251,7 +251,7 @@ const static void buttonpress(XEvent *event) {
     printf("buttonpress event received\n");
     printf("X: %f\n", ((event->xbutton.x - (WIDTH / 2.00)) / (WIDTH / 2.00)));
     printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
-    DROPBALL = 1;
+    DROPBALL = DROPBALL == 0 ? 1 : 0;
 }
 const static void keypress(XEvent *event) {
     
@@ -405,21 +405,9 @@ const static void keypress(XEvent *event) {
     // scene.m[0].v = worldSpaceFrustum(NPlane, 100.f);
     // scene.m[1].v = worldSpaceFrustum(100.f, 300.f);
     // scene.m[2].v = worldSpaceFrustum(300.f, 600.f);
-    
-    frustumCulling(scene.m, scene.m_indexes);
-
-    for (int i = 0; i < scene.m_indexes; i++) {
-        if (scene.m[i].visible) {
-            adoptdetailMesh(&scene.m[i]);
-            adoptdetailTexture(&scene.m[i]);
-            logMesh(scene.m[i]);
-        }
-    }
 
     AdjustShadow++;
     AdjustScene++;
-
-    // logVec4i(camera[0] < 0.f);
 }
 static void *oscillator(void *args) {
 
@@ -451,6 +439,16 @@ static void *cascade(void *args) {
     return (void*)args;
 }
 const static void project() {
+
+    frustumCulling(scene.m, scene.m_indexes);
+
+    for (int i = 0; i < scene.m_indexes; i++) {
+        if (scene.m[i].visible) {
+            adoptdetailMesh(&scene.m[i]);
+            adoptdetailTexture(&scene.m[i]);
+            logMesh(scene.m[i]);
+        }
+    }
 
     /* Probably at this point i must implement gravity. */
     // printf("time Counter: %f, DelTaTime: %f\n", TimeCounter, GravityTime);
