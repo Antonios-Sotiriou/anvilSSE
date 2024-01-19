@@ -8,7 +8,7 @@ const int checkCollision(Scene *s) {
     for (int i = 0; i < s->m_indexes; i++) {
         if ( s->m[i].type != Terrain ) {
             logVec4f(s->m[i].pivot);
-            cache_0 = vecxm(s->m[i].pivot, heightWorld);
+            // cache_0 = vecxm(s->m[i].pivot, heightWorld);
 
             float w = cache_0[3];
             cache_0 /= w;

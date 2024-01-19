@@ -134,5 +134,45 @@ const void createskybox(Mesh *c) {
     memcpy(c->t, textures, 8 * 14);
     memcpy(c->f, faces, face_size);
 }
+const void createPlane(Mesh *c) {
+    const size_t face_size = sizeof(unsigned int) * 18;
+    c->v = malloc(16 * 4);
+    c->n = malloc(16 * 4);
+    c->t = malloc(8 * 4);
+    c->f = malloc(face_size);
+
+    vec4f vectors[4] = {
+        { -1.000000f, 0.000000f, -1.000000f, 1.f },
+        { -1.000000f, 0.000000f, 1.000000f, 1.f },
+        { 1.000000f, 0.000000f, 1.000000f, 1.f },
+        { 1.000000f, 0.000000f, -1.000000f, 1.f },
+    };
+    vec4f normals[4] = {
+        { -0.5774f, -0.5774f, -0.5774f, 0.f },
+        { 0.5774f, -0.5774f, 0.5774f, 0.f },
+        { -0.5774f, -0.5774f, 0.5774f, 0.f },
+        { 0.5774f, 0.5774f, -0.5774f, 0.f },
+    };
+    vec2f textures[14] = {
+        { 0.250869, 0.999111 },
+        { 0.000272, 0.664772 },
+        { 0.999470, 0.666021 },
+        { 0.000071, 0.334027 },
+    };
+    unsigned int faces[18] = {
+        0, 1, 0, 1, 1, 2, 2, 8, 9,
+        0, 1, 0, 2, 1, 2, 3, 8, 9
+    };
+    c->v_indexes = 4;
+    c->n_indexes = 4;
+    c->t_indexes = 4;
+    c->f_indexes = 18;
+
+    memcpy(c->v, vectors, 16 * 4);
+    memcpy(c->n, normals, 16 * 4);
+    memcpy(c->t, textures, 8 * 4);
+    memcpy(c->f, faces, face_size);
+}
+
 
 

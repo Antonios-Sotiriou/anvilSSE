@@ -10,7 +10,7 @@ const void applyGravity(Scene *s, const float FallTime) {
         if (s->m[i].type != Terrain) {
             
             const vec4f pull_point = { 0.f, -1.f, 0.f };
-            const float velocity = 0.981f * FallTime;
+            const float velocity = 9.81f * FallTime;
             // printf("fraction: %f\n", velocity);
             // printf("BEFORE: ");
             // logVec4f(s->m[i].pivot);

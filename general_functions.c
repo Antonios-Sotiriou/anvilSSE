@@ -110,7 +110,7 @@ const void loadtexture(Mesh *m, const unsigned int lvl) {
     fclose(fp);
 }
 const void adoptdetailMesh(Mesh *m) {
-    if ( m->meshlod && (m->lodlevels <= 1) )
+    if ( m->lodlevels < 1 )
         return;
 
     const int distance = len_vec(m->pivot - lookAt.m[3]);
@@ -216,7 +216,7 @@ const void frustumCulling(Mesh *m, const int len) {
         max[0] = ((1 + max[0]) * HALFW) + 0.5;
         max[1] = ((1 + max[1]) * HALFH) + 0.5;
 
-        XDrawRectangle(displ, mainwin, gc, min[0], min[1], max[0] - min[0], max[1] - min[1]);
+        // XDrawRectangle(displ, mainwin, gc, min[0], min[1], max[0] - min[0], max[1] - min[1]);
 
         if ( ((min[2] > FPlane) || (max[2] < NPlane)) ||
              ((min[1] > 1000) || (max[1] < 0)) ||

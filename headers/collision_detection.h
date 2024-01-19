@@ -27,7 +27,7 @@ extern XWindowAttributes main_wa;
 extern int HALFW, HALFH;
 
 /* Defined in height_pipeline.c. */
-extern Mat4x4 viewHeight, heightWorld;
+// extern Mat4x4 viewHeight, heightWorld;
 
 const int checkCollision(Scene *s);
 

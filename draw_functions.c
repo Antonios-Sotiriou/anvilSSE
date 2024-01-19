@@ -119,10 +119,9 @@ const static void edgefillGeneral(const face f, Material *mtr, int minX, int max
     const vec4i xmx = xs - __builtin_shuffle(xs, edgemask);
     const vec4i ymy = ys - __builtin_shuffle(ys, edgemask);
 
-    vec4i tps = { 0 };
-    tps[0] = ((ymy[0] == 0) && (ys[2] > ys[1])) || (ymy[0] < 0) ? 1 : 0;
-    tps[1] = ((ymy[1] == 0) && (ys[0] > ys[2])) || (ymy[1] < 0) ? 1 : 0;
-    tps[2] = ((ymy[2] == 0) && (ys[1] > ys[0])) || (ymy[2] < 0) ? 1 : 0;
+    const int tps0 = ((ymy[0] == 0) && (ys[2] > ys[1])) || (ymy[0] < 0) ? 1 : 0;
+    const int tps1 = ((ymy[1] == 0) && (ys[0] > ys[2])) || (ymy[1] < 0) ? 1 : 0;
+    const int tps2 = ((ymy[2] == 0) && (ys[1] > ys[0])) || (ymy[2] < 0) ? 1 : 0;
 
     const float area = ((xs[0] - xs[1]) * ymy[1]) - ((ys[0] - ys[1]) * xmx[1]);
     vec4i ya = ((minX - xs) * ymy) - ((minY - ys) * xmx);
@@ -134,9 +133,9 @@ const static void edgefillGeneral(const face f, Material *mtr, int minX, int max
         const int padyDB = y * point_attrib->width;
         for (int x = minX; x <= maxX; x++) {
 
-            const int xa0 = ( (tps[0]) && (!xa[0]) ) ? -1 : xa[0];
-            const int xa1 = ( (tps[1]) && (!xa[1]) ) ? -1 : xa[1];
-            const int xa2 = ( (tps[2]) && (!xa[2]) ) ? -1 : xa[2];
+            const int xa0 = ( (tps0) && (!xa[0]) ) ? -1 : xa[0];
+            const int xa1 = ( (tps1) && (!xa[1]) ) ? -1 : xa[1];
+            const int xa2 = ( (tps2) && (!xa[2]) ) ? -1 : xa[2];
 
             if ( (xa0 | xa1 | xa2) > 0 ) {
                 vec4f a = __builtin_convertvector(xa, vec4f) / area;
@@ -342,10 +341,9 @@ const static void edgetexGeneral(face *f, Material *mtr, int minX, int maxX, int
     const vec4i xmx = xs - __builtin_shuffle(xs, edgemask);
     const vec4i ymy = ys - __builtin_shuffle(ys, edgemask);
 
-    vec4i tps = { 0 };
-    tps[0] = ((ymy[0] == 0) && (ys[2] > ys[1])) || (ymy[0] < 0) ? 1 : 0;
-    tps[1] = ((ymy[1] == 0) && (ys[0] > ys[2])) || (ymy[1] < 0) ? 1 : 0;
-    tps[2] = ((ymy[2] == 0) && (ys[1] > ys[0])) || (ymy[2] < 0) ? 1 : 0;
+    const int tps0 = ((ymy[0] == 0) && (ys[2] > ys[1])) || (ymy[0] < 0) ? 1 : 0;
+    const int tps1 = ((ymy[1] == 0) && (ys[0] > ys[2])) || (ymy[1] < 0) ? 1 : 0;
+    const int tps2 = ((ymy[2] == 0) && (ys[1] > ys[0])) || (ymy[2] < 0) ? 1 : 0;
 
     const float area = ((xs[0] - xs[1]) * ymy[1]) - ((ys[0] - ys[1]) * xmx[1]);
     vec4i ya = ((minX - xs) * ymy) - ((minY - ys) * xmx);
@@ -357,9 +355,9 @@ const static void edgetexGeneral(face *f, Material *mtr, int minX, int maxX, int
         const int padyDB = y * point_attrib->width;
         for (int x = minX; x <= maxX; x++) {
 
-            const int xa0 = ( (tps[0]) && (!xa[0]) ) ? -1 : xa[0];
-            const int xa1 = ( (tps[1]) && (!xa[1]) ) ? -1 : xa[1];
-            const int xa2 = ( (tps[2]) && (!xa[2]) ) ? -1 : xa[2];
+            const int xa0 = ( (tps0) && (!xa[0]) ) ? -1 : xa[0];
+            const int xa1 = ( (tps1) && (!xa[1]) ) ? -1 : xa[1];
+            const int xa2 = ( (tps2) && (!xa[2]) ) ? -1 : xa[2];
 
             if ( (xa0 | xa1 | xa2) > 0 ) {
                 vec4f a = __builtin_convertvector(xa, vec4f) / area;

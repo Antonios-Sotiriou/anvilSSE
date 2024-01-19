@@ -113,6 +113,7 @@ Light sunlight = {
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
 };
+const float sunMov = 1.5f;
 
 /* Global Matrices */
 Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
@@ -299,34 +300,34 @@ const static void keypress(XEvent *event) {
         case 65455 : SpecularStrength -= 0.01f;             /* / */
             printf("SpecularStrength: %f\n", SpecularStrength);
             break;
-        case 65430 : sunlight.pos[0] -= 10.0f;                   /* Adjust Light Source */
-            scene.m[1].pivot[0] -= 10.0f;
-            Mat4x4 ar = translationMatrix(-10.0f, 0.0f, 0.0f);
+        case 65430 : sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
+            scene.m[1].pivot[0] -= sunMov;
+            Mat4x4 ar = translationMatrix(-sunMov, 0.0f, 0.0f);
             scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, ar);
             break;
-        case 65432 : sunlight.pos[0] += 10.0f;                   /* Adjust Light Source */
-            scene.m[1].pivot[0] += 10.0f;
-            Mat4x4 br = translationMatrix(10.0f, 0.0f, 0.0f);
+        case 65432 : sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
+            scene.m[1].pivot[0] += sunMov;
+            Mat4x4 br = translationMatrix(sunMov, 0.0f, 0.0f);
             scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, br);
             break;
-        case 65434 : sunlight.pos[1] += 10.0f;                   /* Adjust Light Source */
-            scene.m[1].pivot[1] += 10.0f;
-            Mat4x4 er = translationMatrix(0.0f, 10.0f, 0.0f);
+        case 65434 : sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
+            scene.m[1].pivot[1] += sunMov;
+            Mat4x4 er = translationMatrix(0.0f, sunMov, 0.0f);
             scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, er);
             break;
-        case 65435 : sunlight.pos[1] -= 10.0f;                   /* Adjust Light Source */
-            scene.m[1].pivot[1] -= 10.0f;
-            Mat4x4 fr = translationMatrix(0.0f, -10.0f, 0.0f);
+        case 65435 : sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
+            scene.m[1].pivot[1] -= sunMov;
+            Mat4x4 fr = translationMatrix(0.0f, -sunMov, 0.0f);
             scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, fr);
             break;
-        case 65431 : sunlight.pos[2] += 10.0f;                   /* Adjust Light Source */
-            scene.m[1].pivot[2] += 10.0f;
-            Mat4x4 cr = translationMatrix(0.0f, 0.0f, 10.0f);
+        case 65431 : sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
+            scene.m[1].pivot[2] += sunMov;
+            Mat4x4 cr = translationMatrix(0.0f, 0.0f, sunMov);
             scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, cr);
             break;
-        case 65433 : sunlight.pos[2] -= 10.0f;                   /* Adjust Light Source */
-            scene.m[1].pivot[2] -= 10.0f;
-            Mat4x4 dr = translationMatrix(0.0f, 0.0f, -10.0f);
+        case 65433 : sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
+            scene.m[1].pivot[2] -= sunMov;
+            Mat4x4 dr = translationMatrix(0.0f, 0.0f, -sunMov);
             scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
             break;
         case 120 : rotate_x(&scene.m[1], 1);                     /* x */
@@ -408,7 +409,7 @@ const static void keypress(XEvent *event) {
     frustumCulling(scene.m, scene.m_indexes);
 
     for (int i = 0; i < scene.m_indexes; i++) {
-        if (scene.m[i].visible && scene.m[i].meshlod > 0) {
+        if (scene.m[i].visible) {
             adoptdetailMesh(&scene.m[i]);
             adoptdetailTexture(&scene.m[i]);
             logMesh(scene.m[i]);
@@ -461,22 +462,22 @@ const static void project() {
     }
 
     /* Probably at this point i must implement Height Map. */
-    heightPipeline(&scene);
+    heightPipeline(&scene, &scene.m[1].pivot);
 
     /* Probably at this point i must implement colission detection. */
-    checkCollision(&scene);
+    // checkCollision(&scene);
 
     // if (AdjustShadow) {
-    //     int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
-    //     for (int i = 0; i < NUM_OF_CASCADES; i++) {
-    //         if (pthread_create(&threads[i], NULL, &cascade, &shadow_ids[i]))
-    //             fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
-    //     }
-    //     for (int i = 0; i < NUM_OF_CASCADES; i++) {
-    //         if (pthread_join(threads[i], NULL))
-    //             fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
-    //     }
-    //     AdjustShadow = 0;
+        int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
+        for (int i = 0; i < NUM_OF_CASCADES; i++) {
+            if (pthread_create(&threads[i], NULL, &cascade, &shadow_ids[i]))
+                fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
+        }
+        for (int i = 0; i < NUM_OF_CASCADES; i++) {
+            if (pthread_join(threads[i], NULL))
+                fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
+        }
+        AdjustShadow = 0;
     // }
 
     // if (AdjustScene) {

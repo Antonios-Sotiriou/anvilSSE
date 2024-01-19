@@ -11,5 +11,6 @@
 
 const void createCube(Mesh *c);
 const void createskybox(Mesh *c);
+const void createPlane(Mesh *c);
 
 #endif /* _TEST_SHAPE_H */

@@ -22,13 +22,11 @@
 #endif
 
 /* Defined in main.c. */
-extern float *point_depth_buffer, *height_map, NPlane, FPlane;
-extern vec4f birdview[4], camera[4];
-extern Mat4x4 perspMat;
+extern Mat4x4 worldMat;
 extern XWindowAttributes main_wa;
 extern int HALFW, HALFH;
 
-const void heightPipeline(Scene *s);
+const void heightPipeline(Scene *s, vec4f *pivot);
 
 #endif /* _HEIGHT_MAP_H */
 
