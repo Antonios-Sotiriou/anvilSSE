@@ -70,7 +70,7 @@ Atom wmatom[Atom_Last];
 
 /* BUFFERS. */
 u_int8_t *frame_buffer, *point_buffer, *reset_buffer;
-float *main_depth_buffer, *point_depth_buffer, *shadow_buffer[NUM_OF_CASCADES], *height_map;
+float *main_depth_buffer, *point_depth_buffer, *shadow_buffer[NUM_OF_CASCADES];
 Fragment *frags_buffer, *reset_frags;
 
 /* Project Global Variables. */
@@ -510,15 +510,12 @@ const static void drawFrame(void) {
         main_image->data = (char*)shadow_buffer[1];
     else if (PROJECTBUFFER == 5)
         main_image->data = (char*)shadow_buffer[2];
-    else if (PROJECTBUFFER == 6)
-        main_image->data = (char*)height_map;
 
     XPutImage(displ, main_pixmap, gc, main_image, 0, 0, 0, 0, main_wa.width, main_wa.height);
     pixmapdisplay(main_pixmap, mainwin, main_wa.width, main_wa.height);
 
     memcpy(frame_buffer, reset_buffer, FBSIZE);
     memcpy(main_depth_buffer, reset_buffer, FBSIZE);
-    memcpy(height_map, reset_buffer, FBSIZE);
     memcpy(frags_buffer, reset_frags, MAIN_EMVADON * sizeof(Fragment));
 }
 const static void initMainWindow(void) {
@@ -577,7 +574,6 @@ const static void initAtoms(void) {
 const static void initBuffers(void) {
     frame_buffer = calloc(MAIN_EMVADON * 4, 1);
     main_depth_buffer = calloc(MAIN_EMVADON, 4);
-    height_map = calloc(MAIN_EMVADON, 4);
     reset_buffer = calloc(MAIN_EMVADON * 4, 1);
 
     frags_buffer = calloc(MAIN_EMVADON, sizeof(Fragment));

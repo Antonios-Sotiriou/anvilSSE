@@ -148,20 +148,20 @@ const void createPlane(Mesh *c) {
         { 1.000000f, 0.000000f, -1.000000f, 1.f },
     };
     vec4f normals[4] = {
-        { -0.5774f, -0.5774f, -0.5774f, 0.f },
-        { 0.5774f, -0.5774f, 0.5774f, 0.f },
-        { -0.5774f, -0.5774f, 0.5774f, 0.f },
-        { 0.5774f, 0.5774f, -0.5774f, 0.f },
+        { 0.f, 1.0f, 0.f, 0.f },
+        { 0.f, 1.0f, 0.f, 0.f },
+        { 0.f, 1.0f, 0.f, 0.f },
+        { 0.f, 1.0f, 0.f, 0.f },
     };
-    vec2f textures[14] = {
+    vec2f textures[4] = {
         { 0.250869, 0.999111 },
         { 0.000272, 0.664772 },
         { 0.999470, 0.666021 },
         { 0.000071, 0.334027 },
     };
     unsigned int faces[18] = {
-        0, 1, 0, 1, 1, 2, 2, 8, 9,
-        0, 1, 0, 2, 1, 2, 3, 8, 9
+        0, 0, 0, 1, 1, 1, 2, 2, 2,
+        0, 0, 0, 2, 2, 2, 3, 3, 3
     };
     c->v_indexes = 4;
     c->n_indexes = 4;
@@ -173,6 +173,27 @@ const void createPlane(Mesh *c) {
     memcpy(c->t, textures, 8 * 4);
     memcpy(c->f, faces, face_size);
 }
+// const void createTerrain(Mesh *c, const int vx, const int vz) {
+//     const int emvadon = vx * vz;
+//     const size_t face_size = sizeof(unsigned int) * (emvadon * 9);
+//     c->v = malloc(16 * emvadon);
+//     c->n = malloc(16 * emvadon);
+//     c->t = malloc(8 * emvadon);
+//     c->f = malloc(face_size);
+
+//     float step_x = 1.f / vx;
+//     float step_z = 1.f / vz;
+
+//     for (int x = 0; x < vx; x++) {
+
+//     }
+
+
+//     c->v_indexes = 4;
+//     c->n_indexes = 4;
+//     c->t_indexes = 4;
+//     c->f_indexes = 18;
+// }
 
 
 
