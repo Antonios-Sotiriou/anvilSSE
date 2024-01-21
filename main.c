@@ -264,7 +264,7 @@ const static void keypress(XEvent *event) {
 
     // printf("Key Pressed: %ld\n", keysym);
     // printf("\x1b[H\x1b[J");
-    system("clear\n");
+    // system("clear\n");
     switch (keysym) {
         case 97 : look_left(eye, 0.2);             /* a */
             // rotate_light_cam(&scene.m[4], camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
@@ -446,7 +446,7 @@ const static void project() {
         if (scene.m[i].visible) {
             adoptdetailMesh(&scene.m[i]);
             adoptdetailTexture(&scene.m[i]);
-            logMesh(scene.m[i]);
+            // logMesh(scene.m[i]);
         }
     }
 
@@ -460,7 +460,14 @@ const static void project() {
     }
 
     /* Probably at this point i must implement Height Map. */
-    heightPipeline(&scene, &scene.m[1].pivot);
+    const float height = getTerrainHeight(&scene, &scene.m[1].pivot);
+    if ( scene.m[1].pivot[1] <= (height + scene.m[1].scale) ) {
+        scene.m[1].pivot[1] = height + scene.m[1].scale;
+        Mat4x4 cr = translationMatrix(0.0f, 0.0f, height + scene.m[1].scale);
+        scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, cr);
+    }
+    // } else
+    //     scene.m[1].pivot[1] = 0.f;
 
     /* Probably at this point i must implement colission detection. */
     // checkCollision(&scene);

@@ -1,11 +1,12 @@
 #include "headers/height_pipeline.h"
 
-const static float sortVertices(face *f, vec4f *pivot);
+const static float sortVertices(face *f, vec4f pivot);
 const static float checkIfInside(face *f, vec4i pv);
 const static vec4i hmask = { 2, 0, 1, 3 };
 #include "headers/logging.h"
-const void heightPipeline(Scene *s, vec4f *pivot) {
+const float getTerrainHeight(Scene *s, vec4f *pivot) {
     face temp;
+    float height = 0;
     system("clear\n");
     for (int i = 0; i < s->m_indexes; i++) {
         if (s->m[i].type == Terrain) {
@@ -15,21 +16,22 @@ const void heightPipeline(Scene *s, vec4f *pivot) {
                 temp.v[1] = s->m[i].v[s->m[i].f[j + 3]];
                 temp.v[2] = s->m[i].v[s->m[i].f[j + 6]];
 
-                const float height = sortVertices(&temp, pivot);
+                height = sortVertices(&temp, *pivot);
             }
         }
     }
+    return height;
 }
-const static float sortVertices(face *f, vec4f *pivot) {
+const static float sortVertices(face *f, vec4f pivot) {
     /* Creating 2Arrays for X and Y values to sort them-> */
     for (int i = 0; i < 3; i++) {
         f->v[i][0] = ((1.f + f->v[i][0]) * 50.f) + 0.5;
         f->v[i][2] = ((1.f + f->v[i][2]) * 50.f) + 0.5;
     }
 
-    vec4i pv = __builtin_convertvector(*pivot + 0.5f, vec4i);
-    pv[0] = (1.f + pv[0]) * 50.f;
-    pv[2] = (1.f + pv[2]) * 50.f;
+    vec4i pv = __builtin_convertvector(pivot + 0.5, vec4i);
+    pv[0] = (1 + pv[0]) * 50;
+    pv[2] = (1 + pv[2]) * 50;
     // logVec4i(pv);
     return checkIfInside(f, pv);
 }
@@ -54,12 +56,12 @@ const static float checkIfInside(face *f, vec4i pv) {
     const int xa0 = ( (tps0) && (!za[0]) ) ? -1 : za[0];
     const int xa1 = ( (tps1) && (!za[1]) ) ? -1 : za[1];
     const int xa2 = ( (tps2) && (!za[2]) ) ? -1 : za[2];
-
+    // logFace(*f, 1, 0, 0);
     if ( (xa0 | xa1 | xa2) > 0 ) {
         const vec4f a = __builtin_convertvector(za, vec4f) / area;
-
-        const vec4f height = a[0] * f->v[2] + a[1] * f->v[0] + a[2] * f->v[1];
-        printf("Inside: height = %f\n", height[1]);
+        // logVec4i(a);
+        const vec4f height = a[0] * f->v[1] + a[1] * f->v[2] + a[2] * f->v[0];
+        // printf("Inside: height = %f\n", height[1]);
         // logVec4f(a); 
         return height[1];
     }

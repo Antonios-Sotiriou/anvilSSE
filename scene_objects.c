@@ -20,9 +20,10 @@ const void initWorldObjects(Scene *s) {
 
     /* ######################################################################################################## */
     // memcpy(s->m[0].name, "basic_terrain", sizeof("basic_terrain"));
-    createPlane(&s->m[0]);
+    // createPlane(&s->m[0]);
+    createTerrain(&s->m[0], 10, 10);
     s->m[0].type = Terrain;
-    loadmaterial(&s->m[0].material, "pearl");
+    loadmaterial(&s->m[0].material, "earth");
 
     s->m[0].scale = 100.f;
     // s->m[0].pivot[0] = 100.f;

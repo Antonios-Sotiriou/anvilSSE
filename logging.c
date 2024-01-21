@@ -12,6 +12,10 @@ const void logVec4c(const vec4c v) {
     fprintf(stdout, "x: %d    y: %d    z: %d    w: %d\n", v[0], v[1], v[2], v[3]);
 }
 
+const void logVec2f(const vec2f v) {
+    fprintf(stdout, "u: %f    v: %f\n", v[0], v[1]);
+}
+
 /* Logging Mesh. */
 const void logMesh(const Mesh m) {
     printf("Mesh name:     %s\n", m.name);

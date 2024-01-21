@@ -154,10 +154,10 @@ const void createPlane(Mesh *c) {
         { 0.f, 1.0f, 0.f, 0.f },
     };
     vec2f textures[4] = {
-        { 0.250869, 0.999111 },
-        { 0.000272, 0.664772 },
-        { 0.999470, 0.666021 },
-        { 0.000071, 0.334027 },
+        { 0.f, 0.f },
+        { 0.f, 1.f },
+        { 1.f, 1.f },
+        { 1.f, 0.f },
     };
     unsigned int faces[18] = {
         0, 0, 0, 1, 1, 1, 2, 2, 2,
@@ -173,27 +173,131 @@ const void createPlane(Mesh *c) {
     memcpy(c->t, textures, 8 * 4);
     memcpy(c->f, faces, face_size);
 }
-// const void createTerrain(Mesh *c, const int vx, const int vz) {
-//     const int emvadon = vx * vz;
-//     const size_t face_size = sizeof(unsigned int) * (emvadon * 9);
-//     c->v = malloc(16 * emvadon);
-//     c->n = malloc(16 * emvadon);
-//     c->t = malloc(8 * emvadon);
-//     c->f = malloc(face_size);
+#include <stdio.h>
+#include "headers/logging.h"
+const void createTerrain(Mesh *c, const int rows, const int cols) {
+    const int emvadon = rows * cols;
+    const int quads = (rows - 1) * (cols - 1);
+    const int faces_per_row = (rows - 1) * 2;
+    const int num_of_faces = quads * 2 * 9;
+    const size_t face_size = sizeof(unsigned int) * num_of_faces;
 
-//     float step_x = 1.f / vx;
-//     float step_z = 1.f / vz;
+    c->v = malloc(16 * emvadon);
+    c->n = malloc(16 * emvadon);
+    c->t = malloc(8 * emvadon);
+    c->f = malloc(face_size);
 
-//     for (int x = 0; x < vx; x++) {
+    /* Vectors initialization. ############################## */ 
+    float step_x = (2.f / rows);
+    float step_z = (2.f / cols);
+    float start_x = -1.f;
+    float start_z = -1.f;
 
-//     }
+    float x_step_cache = -1.f;
+    float z_step_cache = -1.f;
 
+    int rows_count = rows;
 
-//     c->v_indexes = 4;
-//     c->n_indexes = 4;
-//     c->t_indexes = 4;
-//     c->f_indexes = 18;
-// }
+    for (int x = 0; x < emvadon; x++) {
+
+        if ( x == rows_count ) {
+            x_step_cache = start_x;
+            z_step_cache += step_z;
+
+            rows_count += rows;
+        }
+        // printf("ten_count: %d\n", ten_count);
+        c->v[x][0] = x_step_cache;
+        if (x > 50 && x < 70)
+            c->v[x][1] = 1;
+        c->v[x][2] = z_step_cache;
+        c->v[x][3] = 1.f;
+
+        x_step_cache += step_x;
+        // logVec4f(c->v[x]);
+    }
+
+    /* Normals initialization. ############################## */
+    vec4f normal = { 0.f, 1.f, 0.f, 0.f };
+    for (int x = 0; x < emvadon; x++) {
+            c->n[x] = normal;
+    }
+
+    /* Textors initialization. ############################## */
+    float step_tu = 1.f / rows;
+    float step_tv = 1.f / cols;
+    float start_tu = 0.f;
+    float start_tv = 0.f;
+    float tu_step_cache = start_tu;
+    float tv_step_cache = start_tv;
+
+    int tx_count = rows;
+    for (int x = 0; x < emvadon; x++) {
+
+        if ( x == tx_count ) {
+            tu_step_cache = start_tu;
+            tv_step_cache += step_tv;
+
+            tx_count += rows;
+        }
+        c->t[x][0] = tu_step_cache;
+        c->t[x][1] = tv_step_cache;
+
+        tu_step_cache += step_tu;
+        // logVec2f(c->t[x]);
+    }
+
+    /* faces initialization. ############################## */
+    int face_1_0 = 0;
+    int face_1_1 = rows;
+    int face_1_2 =  rows + 1;
+    int face_counter = 0;
+
+    for (int x = 0; x < num_of_faces; x += 18) {
+
+        if (face_counter == faces_per_row) {
+            face_1_0 += 1;
+            face_1_1 += 1;
+            face_1_2 += 1;
+
+            face_counter = 0;
+        }
+
+        /* Face 1st Up. */
+        c->f[x] = face_1_0;
+        c->f[x + 1] = face_1_0;
+
+        c->f[x + 3] = face_1_1;
+        c->f[x + 4] = face_1_1;
+
+        c->f[x + 6] = face_1_2;
+        c->f[x + 7] = face_1_2;
+
+        /* Face 2nd Down. */
+        c->f[x + 9] = face_1_0;
+        c->f[x + 10] = face_1_0;
+
+        c->f[x + 12] = face_1_2;
+        c->f[x + 13] = face_1_2;
+
+        c->f[x + 15] = face_1_0 + 1;
+        c->f[x + 16] = face_1_0 + 1;
+
+        face_1_0++;
+        face_1_1++;
+        face_1_2++;
+
+        face_counter += 2;
+    }
+
+    // for (int x = 0; x < num_of_faces; x += 9)
+    //     printf("face: %d/%d/%d    %d/%d/%d    %d/%d/%d\n", c->f[x], c->f[x+ 1], c->f[x + 2], c->f[x + 3], c->f[x + 4], c->f[x + 5], c->f[x + 6], c->f[x + 7], c->f[x + 8]);
+
+    c->v_indexes = emvadon;
+    c->n_indexes = emvadon;
+    c->t_indexes = emvadon;
+    c->f_indexes = num_of_faces;
+}
 
 
 

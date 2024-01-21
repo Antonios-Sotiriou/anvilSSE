@@ -16,7 +16,7 @@
 /* Primitive struct vec4 with 4 x 8bits unsigned char as members */
 typedef unsigned char vec4c __attribute__((vector_size(4)));
 
-/* Primitive struct vec4 with 2 x 32bits floats as members */
+/* Primitive struct vec with 2 x 32bits floats as members */
 typedef float vec2f __attribute__((vector_size(8)));
 
 /* Primitive struct vec4 with 4 x 32bits integers as members */

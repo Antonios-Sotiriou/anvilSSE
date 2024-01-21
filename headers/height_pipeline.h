@@ -21,7 +21,7 @@
     #include <stdio.h>
 #endif
 
-const void heightPipeline(Scene *s, vec4f *pivot);
+const float getTerrainHeight(Scene *s, vec4f *pivot);
 
 #endif /* _HEIGHT_MAP_H */
 
