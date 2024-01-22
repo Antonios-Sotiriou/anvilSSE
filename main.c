@@ -113,7 +113,7 @@ Light sunlight = {
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
 };
-const float sunMov = 1.5f;
+const float sunMov = 1.f;
 
 /* Global Matrices */
 Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
@@ -456,21 +456,29 @@ const static void project() {
     if (DROPBALL) {
         GravityTime += DeltaTime;
         applyGravity(&scene, GravityTime);
-    //     GravityTime = 0;
+        // GravityTime = 0;
+        // placeMesh(&scene.m[1], scene.m[1].pivot);
+        // Mat4x4 dr = translationMatrix(scene.m[1].pivot[0], scene.m[1].pivot[1], scene.m[1].pivot[2]);
+        // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
     }
 
     /* Probably at this point i must implement Height Map. */
     const float height = getTerrainHeight(&scene, &scene.m[1].pivot);
-    if ( scene.m[1].pivot[1] <= (height + scene.m[1].scale) ) {
-        scene.m[1].pivot[1] = height + scene.m[1].scale;
-        Mat4x4 cr = translationMatrix(0.0f, 0.0f, height + scene.m[1].scale);
-        scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, cr);
-    }
-    // } else
-    //     scene.m[1].pivot[1] = 0.f;
 
-    /* Probably at this point i must implement colission detection. */
-    // checkCollision(&scene);
+    vec4f antiG = { 0.f, 0.01f, 0.f };
+    vec4f pivot = { 0 };
+    pivot[1] = height;
+    if (pivot[1] < scene.m[1].pivot[1]) { 
+        Mat4x4 dr = translationMatrix(pivot[0], pivot[1], pivot[2]);
+        scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
+        // placeMesh(&scene.m[1], pivot);
+        scene.m[1].pivot += pivot;
+    }
+    // system("clear\n");
+    // logVec4f(pivot);
+
+    // printf("height: %f    \n", height);
+    logVec4f(scene.m[1].pivot);
 
     // if (AdjustShadow) {
         int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };

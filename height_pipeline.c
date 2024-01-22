@@ -7,7 +7,7 @@ const static vec4i hmask = { 2, 0, 1, 3 };
 const float getTerrainHeight(Scene *s, vec4f *pivot) {
     face temp;
     float height = 0;
-    system("clear\n");
+    // system("clear\n");
     for (int i = 0; i < s->m_indexes; i++) {
         if (s->m[i].type == Terrain) {
             for (int j = 0; j < s->m[i].f_indexes; j += 9) {
@@ -17,21 +17,15 @@ const float getTerrainHeight(Scene *s, vec4f *pivot) {
                 temp.v[2] = s->m[i].v[s->m[i].f[j + 6]];
 
                 height = sortVertices(&temp, *pivot);
+                if (height > 0)
+                    return height;
             }
         }
     }
-    return height;
+    return 0;
 }
 const static float sortVertices(face *f, vec4f pivot) {
-    /* Creating 2Arrays for X and Y values to sort them-> */
-    for (int i = 0; i < 3; i++) {
-        f->v[i][0] = ((1.f + f->v[i][0]) * 50.f) + 0.5;
-        f->v[i][2] = ((1.f + f->v[i][2]) * 50.f) + 0.5;
-    }
-
     vec4i pv = __builtin_convertvector(pivot + 0.5, vec4i);
-    pv[0] = (1 + pv[0]) * 50;
-    pv[2] = (1 + pv[2]) * 50;
     // logVec4i(pv);
     return checkIfInside(f, pv);
 }
@@ -42,11 +36,10 @@ const static float checkIfInside(face *f, vec4i pv) {
     const vec4i xmx = xs - __builtin_shuffle(xs, hmask);
     const vec4i zmz = zs - __builtin_shuffle(zs, hmask);
 
-    const int tps0 = ((zmz[0] == 0) && (zs[1] < zs[2])) || (zmz[0] < 0) ? 1 : 0;
-    const int tps1 = ((zmz[1] == 0) && (zs[2] < zs[0])) || (zmz[1] < 0) ? 1 : 0;
-    const int tps2 = ((zmz[2] == 0) && (zs[0] < zs[1])) || (zmz[2] < 0) ? 1 : 0;
+    const int tps0 = ((zmz[0] == 0) && (zs[1] > zs[2])) || (zmz[0] < 0) ? 1 : 0;
+    const int tps1 = ((zmz[1] == 0) && (zs[2] > zs[0])) || (zmz[1] < 0) ? 1 : 0;
+    const int tps2 = ((zmz[2] == 0) && (zs[0] > zs[1])) || (zmz[2] < 0) ? 1 : 0;
 
-    // const float area = ((xs[0] - xs[2]) * zmz[1]) - ((zs[0] - zs[2]) * xmx[1]);
     const float area = ((xs[0] - xs[2]) * zmz[1]) - ((zs[0] - zs[2]) * xmx[1]);
     vec4i za = ((pv[0] - xs) * zmz) - ((pv[2] - zs) * xmx);
     // printf("Inside: area: %f\n", area);
@@ -61,9 +54,9 @@ const static float checkIfInside(face *f, vec4i pv) {
         const vec4f a = __builtin_convertvector(za, vec4f) / area;
         // logVec4i(a);
         const vec4f height = a[0] * f->v[1] + a[1] * f->v[2] + a[2] * f->v[0];
-        // printf("Inside: height = %f\n", height[1]);
+        // printf("Inside: height = %f\n", height[1] * -1);
         // logVec4f(a); 
-        return height[1];
+        return height[1] * -1;
     }
     // printf("Outside\n");
     return 0;

@@ -24,16 +24,27 @@ const void initWorldObjects(Scene *s) {
     createTerrain(&s->m[0], 10, 10);
     s->m[0].type = Terrain;
     loadmaterial(&s->m[0].material, "earth");
-
     s->m[0].scale = 100.f;
-    // s->m[0].pivot[0] = 100.f;
+    s->m[0].pivot[0] = 100.f;
     // s->m[0].pivot[1] = 20.f;
-    // s->m[0].pivot[2] = 100.f;
+    s->m[0].pivot[2] = 100.f;
     // s->m[0].rotation[1] = 90.f;
     s->m[0].cull = 1;
     s->m[0].lodlevels = 0;
     // s->m[0].visible = 1;
     reWorldMesh(&s->m[0]);
+
+    // # include "headers/logging.h"
+    // face temp;
+    // temp.v[0] = s->m[0].v[s->m[0].f[0]];
+    // temp.v[1] = s->m[0].v[s->m[0].f[3]];
+    // temp.v[2] = s->m[0].v[s->m[0].f[6]];
+    // logFace(temp, 1, 0, 0);
+
+    // temp.v[0] = s->m[0].v[s->m[0].f[9]];
+    // temp.v[1] = s->m[0].v[s->m[0].f[12]];
+    // temp.v[2] = s->m[0].v[s->m[0].f[15]];
+    // logFace(temp, 1, 0, 0);
 
     /* ######################################################################################################## */
     memcpy(s->m[1].name, "planet", sizeof("planet"));

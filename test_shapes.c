@@ -175,11 +175,23 @@ const void createPlane(Mesh *c) {
 }
 #include <stdio.h>
 #include "headers/logging.h"
+/* Rows and colums here are given in Quads. Consider that each quad consists of 4 vertices. */
 const void createTerrain(Mesh *c, const int rows, const int cols) {
+    if ( rows == 0 || cols == 0 ) {
+        fprintf(stderr, "Zero value for %s. test_shapes.c --> createTerrain() --> ERROR 1\n", rows == 0 ? "rows" : cols == 0 ? "cols" : "input");
+        exit(1);
+    }
+
+    /* Emvadon vertices. Must be 1 more than given from user in both directions to corect handle all cases with faces and quads. */
     const int emvadon = rows * cols;
-    const int quads = (rows - 1) * (cols - 1);
-    const int faces_per_row = (rows - 1) * 2;
-    const int num_of_faces = quads * 2 * 9;
+    /* Quads. */
+    const int quad_rows = rows == 1 ? 1 : rows - 1;
+    const int quad_cols = cols == 1 ? 1 : cols - 1;
+    const int quads = quad_rows * quad_cols;
+
+    /* Faces. */
+    const int faces_per_row = quad_rows * 2;
+    const int num_of_faces = quads * 2 * quad_rows;
     const size_t face_size = sizeof(unsigned int) * num_of_faces;
 
     c->v = malloc(16 * emvadon);
@@ -206,8 +218,8 @@ const void createTerrain(Mesh *c, const int rows, const int cols) {
 
             rows_count += rows;
         }
-        // printf("ten_count: %d\n", ten_count);
-        c->v[x][0] = x_step_cache;
+
+        c->v[x][0] += x_step_cache;
         if (x > 50 && x < 70)
             c->v[x][1] = 1;
         c->v[x][2] = z_step_cache;
