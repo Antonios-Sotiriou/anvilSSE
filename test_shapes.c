@@ -176,52 +176,55 @@ const void createPlane(Mesh *c) {
 #include <stdio.h>
 #include "headers/logging.h"
 /* Rows and colums here are given in Quads. Consider that each quad consists of 4 vertices. */
-const void createTerrain(Mesh *c, const int rows, const int cols) {
-    if ( rows == 0 || cols == 0 ) {
-        fprintf(stderr, "Zero value for %s. test_shapes.c --> createTerrain() --> ERROR 1\n", rows == 0 ? "rows" : cols == 0 ? "cols" : "input");
+const void createTerrain(Mesh *c, int vrows, int vcols) {
+    if ( vrows == 0 || vcols == 0 ) {
+        fprintf(stderr, "Zero value for %s. test_shapes.c --> createTerrain() --> ERROR 1\n", vrows == 0 ? "vrows" : vcols == 0 ? "vcols" : "input");
         exit(1);
     }
 
+    vrows = (vrows % 2 == 0) ? vrows + 1 : vrows;
+    vcols = (vcols % 2 == 0) ? vcols + 1 : vcols;
+
     /* Emvadon vertices. Must be 1 more than given from user in both directions to corect handle all cases with faces and quads. */
-    const int emvadon = rows * cols;
+    const int emvadon = vrows * vcols;
+
     /* Quads. */
-    const int quad_rows = rows == 1 ? 1 : rows - 1;
-    const int quad_cols = cols == 1 ? 1 : cols - 1;
-    const int quads = quad_rows * quad_cols;
+    const int quad_vrows = vrows == 1 ? 1 : vrows - 1;
+    const int quad_vcols = vcols == 1 ? 1 : vcols - 1;
+    const int quads = quad_vrows * quad_vcols;
 
     /* Faces. */
-    const int faces_per_row = quad_rows * 2;
-    const int num_of_faces = quads * 2 * quad_rows;
-    const size_t face_size = sizeof(unsigned int) * num_of_faces;
+    const int faces_per_row = quad_vrows * 2;
+    const int num_of_faces = quads * 2 * 9;
 
-    c->v = malloc(16 * emvadon);
-    c->n = malloc(16 * emvadon);
-    c->t = malloc(8 * emvadon);
-    c->f = malloc(face_size);
+    c->v = calloc(emvadon, 16);
+    c->n = calloc(emvadon, 16);
+    c->t = calloc(emvadon, 8);
+    c->f = calloc(num_of_faces, 4);
 
     /* Vectors initialization. ############################## */ 
-    float step_x = (2.f / rows);
-    float step_z = (2.f / cols);
+    float step_x = (2.f / quad_vrows);
+    float step_z = (2.f / quad_vcols);
     float start_x = -1.f;
     float start_z = -1.f;
 
-    float x_step_cache = -1.f;
-    float z_step_cache = -1.f;
+    float x_step_cache = start_x;
+    float z_step_cache = start_z;
 
-    int rows_count = rows;
+    int vrows_count = vrows;
 
     for (int x = 0; x < emvadon; x++) {
 
-        if ( x == rows_count ) {
+        if ( x == vrows_count ) {
             x_step_cache = start_x;
             z_step_cache += step_z;
 
-            rows_count += rows;
+            vrows_count += vrows;
         }
 
         c->v[x][0] += x_step_cache;
-        if (x > 50 && x < 70)
-            c->v[x][1] = 1;
+        c->v[x][1] = (float)rand() / (float)(RAND_MAX / 0.05f);
+        // c->v[x][1] = 0;
         c->v[x][2] = z_step_cache;
         c->v[x][3] = 1.f;
 
@@ -236,21 +239,21 @@ const void createTerrain(Mesh *c, const int rows, const int cols) {
     }
 
     /* Textors initialization. ############################## */
-    float step_tu = 1.f / rows;
-    float step_tv = 1.f / cols;
+    float step_tu = 1.f / quad_vrows;
+    float step_tv = 1.f / quad_vcols;
     float start_tu = 0.f;
     float start_tv = 0.f;
     float tu_step_cache = start_tu;
     float tv_step_cache = start_tv;
 
-    int tx_count = rows;
+    int tx_count = vrows;
     for (int x = 0; x < emvadon; x++) {
 
         if ( x == tx_count ) {
             tu_step_cache = start_tu;
             tv_step_cache += step_tv;
 
-            tx_count += rows;
+            tx_count += vrows;
         }
         c->t[x][0] = tu_step_cache;
         c->t[x][1] = tv_step_cache;
@@ -261,8 +264,8 @@ const void createTerrain(Mesh *c, const int rows, const int cols) {
 
     /* faces initialization. ############################## */
     int face_1_0 = 0;
-    int face_1_1 = rows;
-    int face_1_2 =  rows + 1;
+    int face_1_1 = vrows;
+    int face_1_2 =  vrows + 1;
     int face_counter = 0;
 
     for (int x = 0; x < num_of_faces; x += 18) {
@@ -309,6 +312,7 @@ const void createTerrain(Mesh *c, const int rows, const int cols) {
     c->n_indexes = emvadon;
     c->t_indexes = emvadon;
     c->f_indexes = num_of_faces;
+    printf("reached this spot\n");
 }
 
 

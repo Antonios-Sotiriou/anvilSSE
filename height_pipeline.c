@@ -26,7 +26,6 @@ const float getTerrainHeight(Scene *s, vec4f *pivot) {
 }
 const static float sortVertices(face *f, vec4f pivot) {
     vec4i pv = __builtin_convertvector(pivot + 0.5, vec4i);
-    // logVec4i(pv);
     return checkIfInside(f, pv);
 }
 const static float checkIfInside(face *f, vec4i pv) {

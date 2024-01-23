@@ -12,6 +12,6 @@
 const void createCube(Mesh *c);
 const void createskybox(Mesh *c);
 const void createPlane(Mesh *c);
-const void createTerrain(Mesh *c, const int vx, const int vz);
+const void createTerrain(Mesh *c, int vrows, int vcols);
 
 #endif /* _TEST_SHAPE_H */

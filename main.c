@@ -252,6 +252,7 @@ const static void buttonpress(XEvent *event) {
     printf("X: %f\n", ((event->xbutton.x - (WIDTH / 2.00)) / (WIDTH / 2.00)));
     printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
     DROPBALL = DROPBALL == 0 ? 1 : 0;
+    GravityTime = 0;
 }
 const static void keypress(XEvent *event) {
     
@@ -464,21 +465,35 @@ const static void project() {
 
     /* Probably at this point i must implement Height Map. */
     const float height = getTerrainHeight(&scene, &scene.m[1].pivot);
-
-    vec4f antiG = { 0.f, 0.01f, 0.f };
-    vec4f pivot = { 0 };
-    pivot[1] = height;
-    if (pivot[1] < scene.m[1].pivot[1]) { 
-        Mat4x4 dr = translationMatrix(pivot[0], pivot[1], pivot[2]);
+    system("clear\n");
+    printf("height: %f    \n", height);
+    // vec4f antiG = { 0.f, 0.01f, 0.f };
+    // vec4f pivot = (height * antiG);
+    // pivot[1] += 10.f;
+    if (height >= (scene.m[1].pivot[1] - 10.f)) { 
+        Mat4x4 dr = translationMatrix(0, height, 0);
         scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
         // placeMesh(&scene.m[1], pivot);
-        scene.m[1].pivot += pivot;
+        scene.m[1].pivot[1] += height;
+        printf("Clause 1    ");
+        logVec4f(scene.m[1].pivot);
+    } else {
+        Mat4x4 dr = translationMatrix(0, -height, 0);
+        scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
+        // placeMesh(&scene.m[1], pivot);
+        scene.m[1].pivot[1] -= height;
+        printf("Clause 2    ");
+        logVec4f(scene.m[1].pivot);
     }
-    // system("clear\n");
+    // printf("pivot    ");
     // logVec4f(pivot);
 
-    // printf("height: %f    \n", height);
-    logVec4f(scene.m[1].pivot);
+    // printf("mesh pos    ");
+    // logVec4f(scene.m[1].pivot);
+
+     /* FINDING HEIGHT MAP INDEXES. */
+    // vec4i pos = __builtin_convertvector((scene.m[1].pivot / 200.f) * 100, vec4i);
+    // logVec4i(pos);
 
     // if (AdjustShadow) {
         int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };

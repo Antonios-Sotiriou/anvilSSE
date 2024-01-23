@@ -52,7 +52,7 @@ const void initWorldObjects(Scene *s) {
 
     s->m[1].scale = 10.f;
     // s->m[1].pivot[0] = 100.f;
-    s->m[1].pivot[1] = 30.f;
+    s->m[1].pivot[1] = 0.f;
     s->m[1].cull = 1;
     s->m[1].lodlevels = 5;
     // s->m[1].visible = 1;
