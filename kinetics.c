@@ -22,10 +22,13 @@ const void rotate_z(Mesh *c, const float angle) {
 const void rotate_origin(Mesh *c, const float angle, float x, float y, float z) {
     vec4f axis = { x, y, z };
     Quat n = setQuat(0, c->pivot);
-
+    // #include "headers/logging.h"
+    // logQuat(n);
     Quat xrot = rotationQuat(angle, axis);
     Mat4x4 m = MatfromQuat(xrot, n.v);
-
+    // logQuat(xrot);
+    c->Q = multiplyQuats(c->Q, xrot);
+    // logQuat(c->Q);
     c->v = setvecsarrayxm(c->v, c->v_indexes, m);
     c->n = setvecsarrayxm(c->n, c->n_indexes, m);
 }

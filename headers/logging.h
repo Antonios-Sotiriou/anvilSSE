@@ -1,7 +1,7 @@
 #ifndef _LOGGING_H
 #define _LOGGING_H 1
 
-#ifndef _OBJECTS_H
+#ifndef _ANVIL_STRUCTS_H
     #include "anvil_structs.h"
 #endif
 

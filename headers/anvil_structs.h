@@ -42,6 +42,11 @@ typedef struct {
     vec4f m[4];
 } Mat4x4;
 
+typedef struct {
+    float w;
+    vec4f v;
+} Quat;
+
 /* Material struct to hold the specific for each material values. */
 typedef struct {
     char name[24];
@@ -77,8 +82,9 @@ typedef struct {
     vec2f *t;
     unsigned int *f;
     // void (*drawMesh)(void *args);
-    int v_indexes, n_indexes, t_indexes, f_indexes, cull, lodlevels, meshlod, visible, type, floating, relaxing;
+    int v_indexes, n_indexes, t_indexes, f_indexes, cull, lodlevels, meshlod, visible, type, floating, relaxing, grounded;
     float scale;
+    Quat Q;
     Material material;
 } Mesh;
 

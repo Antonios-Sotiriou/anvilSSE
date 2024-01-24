@@ -32,6 +32,7 @@ const void initWorldObjects(Scene *s) {
     s->m[0].cull = 1;
     s->m[0].lodlevels = 0;
     // s->m[0].visible = 1;
+    s->m[0].Q = unitQuat();
     reWorldMesh(&s->m[0]);
 
     // # include "headers/logging.h"
@@ -56,6 +57,7 @@ const void initWorldObjects(Scene *s) {
     s->m[1].cull = 1;
     s->m[1].lodlevels = 5;
     // s->m[1].visible = 1;
+    s->m[1].Q = unitQuat();
 
     /* ######################################################################################################## */
     // memcpy(s->m[2].name, "basic_terrain", sizeof("basic_terrain"));

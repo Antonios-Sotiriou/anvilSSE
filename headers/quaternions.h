@@ -13,11 +13,6 @@
     #include <math.h>
 #endif
 
-typedef struct {
-    float w;
-    vec4f v;
-} Quat;
-
 Quat unitQuat(void);
 Quat setQuat(const float w, const vec4f vec);
 void normalizeQuat(Quat *q);

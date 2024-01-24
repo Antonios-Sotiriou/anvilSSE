@@ -5,6 +5,10 @@
     #include "anvil_structs.h"
 #endif
 
+#ifndef _QUATERNIONS_H
+    #include "quaternions.h"
+#endif
+
 #ifndef _MATRICES_H
     #include "matrices.h"
 #endif

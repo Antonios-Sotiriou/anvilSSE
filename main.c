@@ -31,6 +31,7 @@ int SCANLINE = 0;
 
 /* Project specific headers */
 #include "headers/anvil_structs.h"
+#include "headers/quaternions.h"
 #include "headers/database.h"
 #include "headers/matrices.h"
 #include "headers/kinetics.h"
@@ -465,28 +466,20 @@ const static void project() {
 
     /* Probably at this point i must implement Height Map. */
     const float height = getTerrainHeight(&scene, &scene.m[1].pivot);
+    float height_diff = height - (scene.m[1].pivot[1] - 10.f);
     system("clear\n");
-    printf("height: %f    \n", height);
-    // vec4f antiG = { 0.f, 0.01f, 0.f };
-    // vec4f pivot = (height * antiG);
-    // pivot[1] += 10.f;
-    if (height >= (scene.m[1].pivot[1] - 10.f)) { 
-        Mat4x4 dr = translationMatrix(0, height, 0);
+    printf("height: %f\n", height);
+    if (height_diff > 0) {;
+        Mat4x4 dr = translationMatrix(0, height_diff, 0);
         scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
         // placeMesh(&scene.m[1], pivot);
-        scene.m[1].pivot[1] += height;
-        printf("Clause 1    ");
-        logVec4f(scene.m[1].pivot);
-    } else {
-        Mat4x4 dr = translationMatrix(0, -height, 0);
+        scene.m[1].pivot[1] += height_diff;
+    } else if (height_diff < 0) {
+        Mat4x4 dr = translationMatrix(0, height_diff, 0);
         scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
-        // placeMesh(&scene.m[1], pivot);
-        scene.m[1].pivot[1] -= height;
-        printf("Clause 2    ");
-        logVec4f(scene.m[1].pivot);
+    //     // placeMesh(&scene.m[1], pivot);
+        scene.m[1].pivot[1] += height_diff;
     }
-    // printf("pivot    ");
-    // logVec4f(pivot);
 
     // printf("mesh pos    ");
     // logVec4f(scene.m[1].pivot);

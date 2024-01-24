@@ -174,7 +174,9 @@ const void adoptdetailTexture(Mesh *m) {
 const void reWorldMesh(Mesh *m) {
     Mat4x4 sclMatrix, trMatrix, posMatrix;
 
-    sclMatrix = scaleMatrix(m->scale);
+    vec4f pos = { 0 };
+    Mat4x4 mfQ = MatfromQuat(m->Q, pos);
+    sclMatrix = mxm(mfQ, scaleMatrix(m->scale));
     trMatrix = translationMatrix(m->pivot[0], m->pivot[1], m->pivot[2]);
     posMatrix = mxm(sclMatrix, trMatrix);
 
