@@ -303,34 +303,34 @@ const static void keypress(XEvent *event) {
             printf("SpecularStrength: %f\n", SpecularStrength);
             break;
         case 65430 : sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
-            scene.m[1].pivot[0] -= sunMov;
+            scene.m[4].pivot[0] -= sunMov;
             Mat4x4 ar = translationMatrix(-sunMov, 0.0f, 0.0f);
-            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, ar);
+            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, ar);
             break;
         case 65432 : sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
-            scene.m[1].pivot[0] += sunMov;
+            scene.m[4].pivot[0] += sunMov;
             Mat4x4 br = translationMatrix(sunMov, 0.0f, 0.0f);
-            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, br);
+            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, br);
             break;
         case 65434 : sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
-            scene.m[1].pivot[1] += sunMov;
+            scene.m[4].pivot[1] += sunMov;
             Mat4x4 er = translationMatrix(0.0f, sunMov, 0.0f);
-            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, er);
+            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, er);
             break;
         case 65435 : sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
-            scene.m[1].pivot[1] -= sunMov;
+            scene.m[4].pivot[1] -= sunMov;
             Mat4x4 fr = translationMatrix(0.0f, -sunMov, 0.0f);
-            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, fr);
+            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, fr);
             break;
         case 65431 : sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
-            scene.m[1].pivot[2] += sunMov;
+            scene.m[4].pivot[2] += sunMov;
             Mat4x4 cr = translationMatrix(0.0f, 0.0f, sunMov);
-            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, cr);
+            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, cr);
             break;
         case 65433 : sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
-            scene.m[1].pivot[2] -= sunMov;
+            scene.m[4].pivot[2] -= sunMov;
             Mat4x4 dr = translationMatrix(0.0f, 0.0f, -sunMov);
-            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
+            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, dr);
             break;
         case 120 : rotate_x(&scene.m[1], 1);                     /* x */
             break;
@@ -443,7 +443,7 @@ static void *cascade(void *args) {
 const static void project() {
 
     frustumCulling(scene.m, scene.m_indexes);
-
+    // system("clear\n");
     for (int i = 0; i < scene.m_indexes; i++) {
         if (scene.m[i].visible) {
             adoptdetailMesh(&scene.m[i]);
@@ -465,24 +465,17 @@ const static void project() {
     }
 
     /* Probably at this point i must implement Height Map. */
-    const float height = getTerrainHeight(&scene, &scene.m[1].pivot);
-    float height_diff = height - (scene.m[1].pivot[1] - 10.f);
-    system("clear\n");
-    printf("height: %f\n", height);
+    const float height = getTerrainHeight(&scene, &scene.m[4].pivot);
+    float height_diff = height - (scene.m[4].pivot[1] - 10.f);
     if (height_diff > 0) {;
         Mat4x4 dr = translationMatrix(0, height_diff, 0);
-        scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
-        // placeMesh(&scene.m[1], pivot);
-        scene.m[1].pivot[1] += height_diff;
+        scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, dr);
+        scene.m[4].pivot[1] += height_diff;
     } else if (height_diff < 0) {
         Mat4x4 dr = translationMatrix(0, height_diff, 0);
-        scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
-    //     // placeMesh(&scene.m[1], pivot);
-        scene.m[1].pivot[1] += height_diff;
+        scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, dr);
+        scene.m[4].pivot[1] += height_diff;
     }
-
-    // printf("mesh pos    ");
-    // logVec4f(scene.m[1].pivot);
 
      /* FINDING HEIGHT MAP INDEXES. */
     // vec4i pos = __builtin_convertvector((scene.m[1].pivot / 200.f) * 100, vec4i);

@@ -312,7 +312,6 @@ const void createTerrain(Mesh *c, int vrows, int vcols) {
     c->n_indexes = emvadon;
     c->t_indexes = emvadon;
     c->f_indexes = num_of_faces;
-    printf("reached this spot\n");
 }
 
 

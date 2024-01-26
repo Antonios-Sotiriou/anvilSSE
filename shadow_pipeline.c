@@ -353,22 +353,28 @@ const float shadowTest(vec4f frag, vec4f nml) {
     float x = frag[0];
     float y = frag[1];
     float z = frag[2];
+    z = 1.f / z;
 
     /* Transform to Screen space coordinates. */
     x = (1.0 + x) * (main_wa.width >> 1);
     if ( (x < 0) || (x >= main_wa.width) )
-        return 1.f;
+        return 0.f;
 
     y = (1.0 + y) * (main_wa.height >> 1);
     if ( (y < 0) || (y >= main_wa.height) )
-        return 1.f;
-
-    z = 1.f / z;
-
-    if ( z < shadow_buffer[sm_index][((int)y * main_wa.width) + (int)x] + shadow_bias)
         return 0.f;
 
-    return 1.f;
+    float shadow = 0.0;
+    for (int v = -1; v <= 1; v++) {
+        for (int u = -1; u <= 1; u++) {
+            x += u, y += v;
+            float pcfDepth = shadow_buffer[sm_index][((int)y * main_wa.width) + (int)x];
+            shadow += z + 0.005 < pcfDepth ? 1.f : 0.f;
+        }
+    }
+    shadow /= 9.f;
+
+    return shadow;
 }
 /* Releases all members of the given inside Shadow pipeline lvl 1 Mesh. */
 const static void releaseMeshShadowStepOne(MeshShadowStepOne *c) {
