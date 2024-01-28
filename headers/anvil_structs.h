@@ -76,15 +76,15 @@ typedef struct {
 /* General Mesh struct from which the scene consists. It holds all the information before the graphic pipeline. */
 typedef struct {
     char name[24];
-    vec4f pivot, rotation;
+    vec4f pivot;
     vec4f *v;
     vec4f *n;
     vec2f *t;
     unsigned int *f;
+    Quat Q;
     // void (*drawMesh)(void *args);
     int v_indexes, n_indexes, t_indexes, f_indexes, cull, lodlevels, meshlod, visible, type, floating, relaxing, grounded;
     float scale;
-    Quat Q;
     Material material;
 } Mesh;
 

@@ -114,7 +114,7 @@ Light sunlight = {
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
 };
-const float sunMov = 1.f;
+const float sunMov = 10.f;
 
 /* Global Matrices */
 Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
@@ -313,9 +313,12 @@ const static void keypress(XEvent *event) {
             scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, br);
             break;
         case 65434 : sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
-            scene.m[4].pivot[1] += sunMov;
-            Mat4x4 er = translationMatrix(0.0f, sunMov, 0.0f);
+            vec4f upw = { 0.f, 1.f, 0.f };
+            upw *= sunMov;
+            scene.m[4].pivot += upw;
+            Mat4x4 er = translationMatrix(upw[0], upw[1], upw[2]);
             scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, er);
+            scene.m[4].grounded = 0;
             break;
         case 65435 : sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
             scene.m[4].pivot[1] -= sunMov;
@@ -455,27 +458,26 @@ const static void project() {
     /* Probably at this point i must implement gravity. */
     // printf("time Counter: %f, DelTaTime: %f\n", TimeCounter, GravityTime);
     // if ( GravityTime >= 1 ) {
-    if (DROPBALL) {
-        GravityTime += DeltaTime;
+    // if (DROPBALL) {
         applyGravity(&scene, GravityTime);
         // GravityTime = 0;
-        // placeMesh(&scene.m[1], scene.m[1].pivot);
-        // Mat4x4 dr = translationMatrix(scene.m[1].pivot[0], scene.m[1].pivot[1], scene.m[1].pivot[2]);
-        // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
-    }
+        // placeMesh(&scene.m[4], scene.m[4].pivot);
+        // Mat4x4 dr = translationMatrix(scene.m[4].pivot[0], scene.m[4].pivot[1], scene.m[4].pivot[2]);
+        // scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, dr);
+    // }
 
     /* Probably at this point i must implement Height Map. */
-    const float height = getTerrainHeight(&scene, &scene.m[4].pivot);
-    float height_diff = height - (scene.m[4].pivot[1] - 10.f);
-    if (height_diff > 0) {;
-        Mat4x4 dr = translationMatrix(0, height_diff, 0);
-        scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, dr);
-        scene.m[4].pivot[1] += height_diff;
-    } else if (height_diff < 0) {
-        Mat4x4 dr = translationMatrix(0, height_diff, 0);
-        scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, dr);
-        scene.m[4].pivot[1] += height_diff;
-    }
+    // const float height = getTerrainHeight(&scene, &scene.m[4].pivot);
+    // float height_diff = height - (scene.m[4].pivot[1] - 10.f);
+    // if (height_diff > 0) {;
+    //     Mat4x4 dr = translationMatrix(0, height_diff, 0);
+    //     scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, dr);
+    //     scene.m[4].pivot[1] += height_diff;
+    // } else if (height_diff < 0) {
+    //     Mat4x4 dr = translationMatrix(0, height_diff, 0);
+    //     scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, dr);
+    //     scene.m[4].pivot[1] += height_diff;
+    // }
 
      /* FINDING HEIGHT MAP INDEXES. */
     // vec4i pos = __builtin_convertvector((scene.m[1].pivot / 200.f) * 100, vec4i);

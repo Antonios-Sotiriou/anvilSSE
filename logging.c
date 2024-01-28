@@ -21,8 +21,8 @@ const void logMesh(const Mesh m) {
     printf("Mesh name:     %s\n", m.name);
     printf("pivot:         ");
     logVec4f(m.pivot);
-    printf("rotation:      ");
-    logVec4f(m.rotation);
+    // printf("rotation:      ");
+    // logVec4f(m.rotation);
     printf("v:             %p -->  ", m.v);
     printf("v_indexes:     %d\n", m.v_indexes);
     printf("n:             %p -->  ", m.n);
