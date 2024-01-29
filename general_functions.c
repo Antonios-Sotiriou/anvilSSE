@@ -109,6 +109,7 @@ const void loadtexture(Mesh *m, const unsigned int lvl) {
     }
     fclose(fp);
 }
+#include "headers/logging.h"
 const void adoptdetailMesh(Mesh *m) {
     if ( m->lodlevels < 1 )
         return;
@@ -126,7 +127,7 @@ const void adoptdetailMesh(Mesh *m) {
         m->meshlod = 4;
     } else if ( (distance > (80 * m->scale)  && distance <= (100 * m->scale) ) && (m->meshlod != 5) ) {
         m->meshlod = 5;
-    } else if ( (distance > (100 * m->scale)  && distance <= (300 * m->scale) ) && (m->meshlod != 6) ) {
+    } else if ( (distance > (100 * m->scale)  && distance <= (FPlane) ) && (m->meshlod != 6) ) {
         m->meshlod = 6;
     }
 
@@ -138,6 +139,8 @@ const void adoptdetailMesh(Mesh *m) {
         loadmesh(m, m->name, m->meshlod);
         reWorldMesh(m);
     }
+    if (m->type == Player)
+        logMesh(*m);
 }
 const void adoptdetailTexture(Mesh *m) {
     if ( !m->material.texlevels )

@@ -17,6 +17,10 @@
     #include <stdio.h>
 #endif
 
+#ifndef _HEIGHT_PIPELINE_H
+    #include "height_pipeline.h"
+#endif
+
 const void applyGravity(Scene *s, const float FallTime);
 
 #endif /* _GRAVITY_H */

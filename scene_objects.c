@@ -106,7 +106,7 @@ const void initWorldObjects(Scene *s) {
     s->m[4].scale = 10.f;
 
     s->m[4].pivot[0] = 0.f;
-    s->m[4].pivot[1] = 1000.f;
+    s->m[4].pivot[1] = 10000.f;
     s->m[4].pivot[2] = 100.f;
 
     s->m[4].cull = 1;

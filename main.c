@@ -446,7 +446,7 @@ static void *cascade(void *args) {
 const static void project() {
 
     frustumCulling(scene.m, scene.m_indexes);
-    // system("clear\n");
+
     for (int i = 0; i < scene.m_indexes; i++) {
         if (scene.m[i].visible) {
             adoptdetailMesh(&scene.m[i]);
@@ -455,64 +455,32 @@ const static void project() {
         }
     }
 
-    /* Probably at this point i must implement gravity. */
-    // printf("time Counter: %f, DelTaTime: %f\n", TimeCounter, GravityTime);
-    // if ( GravityTime >= 1 ) {
-    // if (DROPBALL) {
-        applyGravity(&scene, GravityTime);
-        // GravityTime = 0;
-        // placeMesh(&scene.m[4], scene.m[4].pivot);
-        // Mat4x4 dr = translationMatrix(scene.m[4].pivot[0], scene.m[4].pivot[1], scene.m[4].pivot[2]);
-        // scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, dr);
-    // }
-
-    /* Probably at this point i must implement Height Map. */
-    // const float height = getTerrainHeight(&scene, &scene.m[4].pivot);
-    // float height_diff = height - (scene.m[4].pivot[1] - 10.f);
-    // if (height_diff > 0) {;
-    //     Mat4x4 dr = translationMatrix(0, height_diff, 0);
-    //     scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, dr);
-    //     scene.m[4].pivot[1] += height_diff;
-    // } else if (height_diff < 0) {
-    //     Mat4x4 dr = translationMatrix(0, height_diff, 0);
-    //     scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, dr);
-    //     scene.m[4].pivot[1] += height_diff;
-    // }
+    applyGravity(&scene, GravityTime);
 
      /* FINDING HEIGHT MAP INDEXES. */
     // vec4i pos = __builtin_convertvector((scene.m[1].pivot / 200.f) * 100, vec4i);
     // logVec4i(pos);
 
-    // if (AdjustShadow) {
-        int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
-        for (int i = 0; i < NUM_OF_CASCADES; i++) {
-            if (pthread_create(&threads[i], NULL, &cascade, &shadow_ids[i]))
-                fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
-        }
-        for (int i = 0; i < NUM_OF_CASCADES; i++) {
-            if (pthread_join(threads[i], NULL))
-                fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
-        }
-        AdjustShadow = 0;
-    // }
+    int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
+    for (int i = 0; i < NUM_OF_CASCADES; i++) {
+        if (pthread_create(&threads[i], NULL, &cascade, &shadow_ids[i]))
+            fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
+    }
+    for (int i = 0; i < NUM_OF_CASCADES; i++) {
+        if (pthread_join(threads[i], NULL))
+            fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
+    }
 
-    // if (AdjustScene) {
-    //     memcpy(frame_buffer, reset_buffer, FBSIZE);
-    //     memcpy(main_depth_buffer, reset_buffer, FBSIZE);
-    //     memcpy(frags_buffer, reset_frags, MAIN_EMVADON * sizeof(Fragment));
+    grafikPipeline(&scene);
 
-        grafikPipeline(&scene);
-
-        for (int i = 0; i < THREADS; i++) {
-            if (pthread_create(&threads[i], NULL, &oscillator, &thread_ids[i]))
-                fprintf(stderr, "ERROR: project() -- oscillator -- pthread_create()\n");
-        }
-        for (int i = 0; i < THREADS; i++) {
-            if (pthread_join(threads[i], NULL))
-                fprintf(stderr, "ERROR: project() -- oscillator -- pthread_join()\n");
-        }
-    //     AdjustScene = 0;
-    // }
+    for (int i = 0; i < THREADS; i++) {
+        if (pthread_create(&threads[i], NULL, &oscillator, &thread_ids[i]))
+            fprintf(stderr, "ERROR: project() -- oscillator -- pthread_create()\n");
+    }
+    for (int i = 0; i < THREADS; i++) {
+        if (pthread_join(threads[i], NULL))
+            fprintf(stderr, "ERROR: project() -- oscillator -- pthread_join()\n");
+    }
 
     drawFrame();
 }
