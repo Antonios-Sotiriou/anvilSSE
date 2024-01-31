@@ -1,15 +1,15 @@
 #include "headers/database.h"
 
 const int createMaterialDatabase(void) {
-    // FILE *fp = fopen("tables/materials.dat", "rb");
-    // if (fp) {
-    //     fprintf(stderr, "tables/materials.dat... OK!\n");
-    //     fclose(fp);
-    //     return EXIT_SUCCESS;
-    // } else {
+    FILE *fp = fopen("tables/materials.dat", "rb");
+    if (fp) {
+        fprintf(stderr, "tables/materials.dat... OK!\n");
+        fclose(fp);
+        return EXIT_SUCCESS;
+    } else {
         fprintf(stderr, "INFO: data/materials.dat not found... Creating!\n");
         FILE *fp = fopen("tables/materials.dat", "wb");
-    // }
+    }
 
     const int intensity = 128;
     Material mats[29] = {

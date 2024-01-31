@@ -115,32 +115,30 @@ const void adoptdetailMesh(Mesh *m) {
         return;
 
     const int distance = len_vec(m->pivot - lookAt.m[3]);
-    const int lcache_0 = m->meshlod;
+    const int lcache_0 = m->currentlod;
 
-    if ( (distance >= 0 && distance <= (20 * m->scale) ) && (m->meshlod != 1) ) {
-        m->meshlod = 1;
-    } else if ( (distance > (20 * m->scale)  && distance <= (40 * m->scale) ) && (m->meshlod != 2) ) {
-        m->meshlod = 2;
-    } else if ( (distance > (40 * m->scale)  && distance <= (60 * m->scale) ) && (m->meshlod != 3) ) {
-        m->meshlod = 3;
-    } else if ( (distance > (60 * m->scale)  && distance <= (80 * m->scale) ) && (m->meshlod != 4) ) {
-        m->meshlod = 4;
-    } else if ( (distance > (80 * m->scale)  && distance <= (100 * m->scale) ) && (m->meshlod != 5) ) {
-        m->meshlod = 5;
-    } else if ( (distance > (100 * m->scale)  && distance <= (FPlane) ) && (m->meshlod != 6) ) {
-        m->meshlod = 6;
+    if ( (distance >= 0 && distance <= (20 * m->scale) ) && (m->currentlod != 1) ) {
+        m->currentlod = 1;
+    } else if ( (distance > (20 * m->scale)  && distance <= (40 * m->scale) ) && (m->currentlod != 2) ) {
+        m->currentlod = 2;
+    } else if ( (distance > (40 * m->scale)  && distance <= (60 * m->scale) ) && (m->currentlod != 3) ) {
+        m->currentlod = 3;
+    } else if ( (distance > (60 * m->scale)  && distance <= (80 * m->scale) ) && (m->currentlod != 4) ) {
+        m->currentlod = 4;
+    } else if ( (distance > (80 * m->scale)  && distance <= (100 * m->scale) ) && (m->currentlod != 5) ) {
+        m->currentlod = 5;
+    } else if ( (distance > (100 * m->scale)) && (m->currentlod != 6) ) {
+        m->currentlod = 6;
     }
 
-    if (m->meshlod > m->lodlevels)
-        m->meshlod = m->lodlevels;
+    if (m->currentlod > m->lodlevels)
+        m->currentlod = m->lodlevels;
 
-    if (lcache_0 != m->meshlod) {
+    if (lcache_0 != m->currentlod) {
         releaseMesh(m);
-        loadmesh(m, m->name, m->meshlod);
+        loadmesh(m, m->name, m->currentlod);
         reWorldMesh(m);
     }
-    if (m->type == Player)
-        logMesh(*m);
 }
 const void adoptdetailTexture(Mesh *m) {
     if ( !m->material.texlevels )
@@ -165,7 +163,7 @@ const void adoptdetailTexture(Mesh *m) {
         m->material.texlod = 7;
     } else if ( (distance > (400 * m->scale)  && distance <= (500 * m->scale) ) && (m->material.texlod != 8) ) {
         m->material.texlod = 8;
-    } else if ( (distance > (500 * m->scale)  && distance < FPlane) && (m->material.texlod != 9) ) {
+    } else if ( (distance > (500 * m->scale)) && (m->material.texlod != 9) ) {
         m->material.texlod = 9;
     }
 

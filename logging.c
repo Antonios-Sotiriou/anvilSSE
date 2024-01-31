@@ -31,9 +31,10 @@ const void logMesh(const Mesh m) {
     printf("t_indexes:     %d\n", m.t_indexes);
     printf("f:             %p -->  ", m.f);
     printf("f_indexes:     %d\n", m.f_indexes);
+    logQuat(m.Q);
     printf("cull:          %d\n", m.cull);
     printf("lodlevels:     %d\n", m.lodlevels);
-    printf("meshlod:       %d\n", m.meshlod);
+    printf("meshlod:       %d\n", m.currentlod);
     printf("scale:         %f\n", m.scale);
     printf("visible:       %d\n", m.visible);
     printf("material:      %s\n\n", m.material.name);

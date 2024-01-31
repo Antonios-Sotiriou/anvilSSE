@@ -105,9 +105,9 @@ const void initWorldObjects(Scene *s) {
 
     s->m[4].scale = 10.f;
 
-    s->m[4].pivot[0] = 0.f;
-    s->m[4].pivot[1] = 10000.f;
-    s->m[4].pivot[2] = 100.f;
+    s->m[4].pivot[0] = 250.f;
+    s->m[4].pivot[1] = 0.f;
+    s->m[4].pivot[2] = 250.f;
 
     s->m[4].cull = 1;
     s->m[4].lodlevels = 5;
@@ -138,9 +138,23 @@ const void initWorldObjects(Scene *s) {
         adoptdetailTexture(&s->m[i]);
     }
 
-    // printf("Struct size Mesh: %lu\n", sizeof(Mesh) - (sizeof(Material) - sizeof(Quat)));
-    // printf("Struct size Material: %d\n", sizeof(Material));
-    // printf("Struct size Quat: %d\n", sizeof(Quat));
+    typedef struct {
+        char name[24];
+        vec4f pivot;
+        vec4f *v;
+        vec4f *n;
+        vec2f *t;
+        unsigned int *f;
+        // Quat Q;
+        // void (*drawMesh)(void *args);
+        int v_indexes, n_indexes, t_indexes, f_indexes, cull, lodlevels, meshlod, visible, type, floating, relaxing, grounded;
+        float scale;
+        // Material material;
+    } Test;
+    printf("Struct size Test: %d\n", sizeof(Test));
+    printf("Struct size Mesh: %lu\n", sizeof(Mesh) - (sizeof(Material) - sizeof(Quat)));
+    printf("Struct size Material: %d\n", sizeof(Material));
+    printf("Struct size Quat: %d\n", sizeof(Quat));
 }
 /* Teams all objects of the the world in a scene for further procesing. */
 const void createScene(Scene *s) {

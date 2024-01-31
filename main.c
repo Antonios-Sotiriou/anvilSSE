@@ -87,6 +87,8 @@ float ASPECTRATIO         = 1;
 static int FBSIZE         = 0;
 float NPlane              = 1.0f;
 float FPlane              = 20000.0f;
+float collNPlane          = 0.0f;
+float collFPlane          = 2000.0f;
 float SCALE               = 0.003f;
 float AmbientStrength     = 0.2f;
 float SpecularStrength    = 0.5f;
@@ -114,7 +116,7 @@ Light sunlight = {
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
 };
-const float sunMov = 10.f;
+const float sunMov = 1.f;
 
 /* Global Matrices */
 Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
@@ -290,11 +292,11 @@ const static void keypress(XEvent *event) {
             break;
         case 65364 : move_down(eye, 10.2);          /* down arrow */
             break;
-        case 65451 :DiffuseStrength += 0.01f;             /* + */
-            printf("DiffuseStrength: %f\n",DiffuseStrength);
+        case 65451 :collFPlane += 10.01f;             /* + */
+            printf("collFplane: %f\n",collFPlane);
             break;
-        case 65453 :DiffuseStrength -= 0.01f;             /* - */
-            printf("DiffuseStrength: %f\n", DiffuseStrength);
+        case 65453 :collFPlane -= 10.01f;             /* - */
+            printf("collFplane: %f\n", collFPlane);
             break;
         case 65450 : SpecularStrength += 0.01f;             /* * */
             printf("SpecularStrength: %f\n", SpecularStrength);
@@ -306,34 +308,52 @@ const static void keypress(XEvent *event) {
             scene.m[4].pivot[0] -= sunMov;
             Mat4x4 ar = translationMatrix(-sunMov, 0.0f, 0.0f);
             scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, ar);
+            vec4f mva = { -1.f, 0.f, 0.f };
+            scene.m[4].mvdir = mva;
+            scene.m[4].rahm = 1;
             break;
         case 65432 : sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
             scene.m[4].pivot[0] += sunMov;
             Mat4x4 br = translationMatrix(sunMov, 0.0f, 0.0f);
             scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, br);
+            vec4f mvb = { 1.f, 0.f, 0.f };
+            scene.m[4].mvdir = mvb;
+            scene.m[4].rahm = 1;
             break;
         case 65434 : sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
             vec4f upw = { 0.f, 1.f, 0.f };
             upw *= sunMov;
             scene.m[4].pivot += upw;
-            Mat4x4 er = translationMatrix(upw[0], upw[1], upw[2]);
-            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, er);
+            Mat4x4 cr = translationMatrix(upw[0], upw[1], upw[2]);
+            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, cr);
             scene.m[4].grounded = 0;
+            vec4f mvc = { 0.f, 1.f, 0.f };
+            scene.m[4].mvdir = mvc;
+            scene.m[4].rahm = 1;
             break;
         case 65435 : sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
             scene.m[4].pivot[1] -= sunMov;
-            Mat4x4 fr = translationMatrix(0.0f, -sunMov, 0.0f);
-            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, fr);
+            Mat4x4 dr = translationMatrix(0.0f, -sunMov, 0.0f);
+            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, dr);
+            vec4f mvd = { 0.f, -1.f, 0.f };
+            scene.m[4].mvdir = mvd;
+            scene.m[4].rahm = 1;
             break;
         case 65431 : sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
             scene.m[4].pivot[2] += sunMov;
-            Mat4x4 cr = translationMatrix(0.0f, 0.0f, sunMov);
-            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, cr);
+            Mat4x4 er = translationMatrix(0.0f, 0.0f, sunMov);
+            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, er);
+            vec4f mve= { 0.f, 0.f, 1.f };
+            scene.m[4].mvdir = mve;
+            scene.m[4].rahm = 1;
             break;
         case 65433 : sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
             scene.m[4].pivot[2] -= sunMov;
-            Mat4x4 dr = translationMatrix(0.0f, 0.0f, -sunMov);
-            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, dr);
+            Mat4x4 fr = translationMatrix(0.0f, 0.0f, -sunMov);
+            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, fr);
+            vec4f mvf = { 0.f, 0.f, -1.f };
+            scene.m[4].mvdir = mvf;
+            scene.m[4].rahm = 1;
             break;
         case 120 : rotate_x(&scene.m[1], 1);                     /* x */
             break;
@@ -445,7 +465,8 @@ static void *cascade(void *args) {
 }
 const static void project() {
 
-    frustumCulling(scene.m, scene.m_indexes);
+    getPossibleColliders(&scene, &scene.m[4]);
+    // frustumCulling(scene.m, scene.m_indexes);
 
     for (int i = 0; i < scene.m_indexes; i++) {
         if (scene.m[i].visible) {
