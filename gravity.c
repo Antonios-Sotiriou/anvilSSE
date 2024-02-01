@@ -1,6 +1,6 @@
 #include "headers/gravity.h"
 
-extern float DeltaTime, GravityTime;
+extern float DeltaTime;
 #include "headers/logging.h"
 const void applyGravity(Scene *s, const float FallTime) {
     Mat4x4 trans;
@@ -8,9 +8,9 @@ const void applyGravity(Scene *s, const float FallTime) {
     for (int i = 0; i < s->m_indexes; i++) {
         if ((s->m[i].type != Terrain) && (!s->m[i].grounded)) {
 
-            GravityTime += DeltaTime;
+            s->m[i].falling_time += DeltaTime;
             const vec4f pull_point = { 0.f, -1.f, 0.f };
-            const float velocity = 9.81f * GravityTime;
+            const float velocity = 9.81f * s->m[i].falling_time;
 
             vec4f pivot = (pull_point * velocity);
 
@@ -23,7 +23,7 @@ const void applyGravity(Scene *s, const float FallTime) {
             float height_diff = height - (s->m[i].pivot[1] - s->m[i].scale);
             if (height_diff >= 0) {
                 s->m[i].grounded = 1;
-                GravityTime = 0;
+                s->m[i].falling_time = 0;
             }
             if (s->m[i].grounded) {
                 Mat4x4 dr = translationMatrix(0, height_diff, 0);
@@ -37,7 +37,7 @@ const void applyGravity(Scene *s, const float FallTime) {
     float height_diff = height - (s->m[4].pivot[1] - s->m[4].scale);
     if (height_diff >= 0) {
         s->m[4].grounded = 1;
-        GravityTime = 0;
+        s->m[4].falling_time = 0;
     }
     if (s->m[4].grounded) {
         Mat4x4 dr = translationMatrix(0, height_diff, 0);

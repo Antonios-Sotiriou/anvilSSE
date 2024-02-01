@@ -1,5 +1,9 @@
 #include "headers/logging.h"
 
+const void logEvent(const XEvent e) {
+    fprintf(stdout, "event.type: %d\n", e.type);
+}
+
 const void logVec4f(const vec4f v) {
     fprintf(stdout, "x: %f    y: %f    z: %f    w: %f\n", v[0], v[1], v[2], v[3]);
 }
@@ -70,7 +74,8 @@ const void logQuat(const Quat q) {
     fprintf(stdout, "w: %f  v[x: %f, y: %f, z: %f]\n", q.w, q.v[0], q.v[1], q.v[2]);
 }
 
-const void logEvent(const XEvent e) {
-    fprintf(stdout, "event.type: %d\n", e.type);
+const void logDm(const DimensionsLimits dm) {
+    fprintf(stdout, "Dimensions Limits: minX: %f - maxX: %f | minY: %f - maxY: %f | minZ: %f - maxZ: %f\n", dm.minX, dm.maxX, dm.minY, dm.maxY, dm.minZ, dm.maxZ);
 }
+
 

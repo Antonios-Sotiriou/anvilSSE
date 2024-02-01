@@ -3,11 +3,11 @@
 const int createMaterialDatabase(void) {
     FILE *fp = fopen("tables/materials.dat", "rb");
     if (fp) {
-        fprintf(stderr, "tables/materials.dat... OK!\n");
+        // fprintf(stderr, "tables/materials.dat... OK!\n");
         fclose(fp);
         return EXIT_SUCCESS;
     } else {
-        fprintf(stderr, "INFO: data/materials.dat not found... Creating!\n");
+        // fprintf(stderr, "INFO: data/materials.dat not found... Creating!\n");
         FILE *fp = fopen("tables/materials.dat", "wb");
     }
 
@@ -69,7 +69,7 @@ const int createMaterialDatabase(void) {
             .texlvl = { "1080x562", "1080x562", "1080x562", "540x281", "270x140", "135x70", "68x35", "34x17", "17x8" }
         },
         {
-            .name = "gold",
+            .name = "gold", // There is a bug which leads to a segmentation EROOR with 1x1 resolution textures.
             .basecolor = { 1.0f, 0.8f, 0.0f, 0.0f },
             .ambient = { 0.24725f, 0.1995f, 0.0745f, 0.0f },
             .diffuse = { 0.75164f, 0.60648f, 0.22648f, 0.0f },

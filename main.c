@@ -70,7 +70,7 @@ XSetWindowAttributes sa;
 Atom wmatom[Atom_Last];
 
 /* BUFFERS. */
-u_int8_t *frame_buffer, *point_buffer, *reset_buffer;
+u_int8_t *frame_buffer, *point_buffer, *reset_buffer, *height_map;
 float *main_depth_buffer, *point_depth_buffer, *shadow_buffer[NUM_OF_CASCADES];
 Fragment *frags_buffer, *reset_frags;
 
@@ -111,7 +111,7 @@ vec4f birdview[4] = {
     { 0.0f, -1.0f, 0.0f, 0.0f }
 };
 Light sunlight = {
-    .pos = { 0.f, 100.0f, 0.f, 1.f },
+    .pos = { 250.f, 100.0f, 250.f, 1.f },
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
@@ -229,6 +229,7 @@ const static void configurenotify(XEvent *event) {
             free(frame_buffer);
             free(main_depth_buffer);
             free(reset_buffer);
+            free(height_map);
 
             free(frags_buffer);
             free(reset_frags);
@@ -465,8 +466,8 @@ static void *cascade(void *args) {
 }
 const static void project() {
 
-    getPossibleColliders(&scene, &scene.m[4]);
-    // frustumCulling(scene.m, scene.m_indexes);
+    getPossibleColliders(&scene);
+    frustumCulling(scene.m, scene.m_indexes);
 
     for (int i = 0; i < scene.m_indexes; i++) {
         if (scene.m[i].visible) {
@@ -517,6 +518,8 @@ const static void drawFrame(void) {
         main_image->data = (char*)shadow_buffer[1];
     else if (PROJECTBUFFER == 5)
         main_image->data = (char*)shadow_buffer[2];
+    else if (PROJECTBUFFER == 6)
+        main_image->data = (char*)height_map;
 
     XPutImage(displ, main_pixmap, gc, main_image, 0, 0, 0, 0, main_wa.width, main_wa.height);
     pixmapdisplay(main_pixmap, mainwin, main_wa.width, main_wa.height);
@@ -532,13 +535,6 @@ const static void initMainWindow(void) {
     XMapWindow(displ, mainwin);
     XGetWindowAttributes(displ, mainwin, &main_wa);
 }
-// const static void initMapWindow(void) {
-//     sa.event_mask = NoEventMask;
-//     sa.background_pixel = 0x000000;
-//     mapwin = XCreateWindow(displ, mainwin, WIDTH - MAP_WIDTH, 0, MAP_WIDTH, MAP_HEIGHT, 0, CopyFromParent, InputOutput, CopyFromParent, CWBackPixel | CWEventMask, &sa);
-//     XMapWindow(displ, mapwin);
-//     XGetWindowAttributes(displ, mapwin, &map_wa);
-// }
 const static void initGlobalGC(void) {
     gcvalues.foreground = 0xffffff;
     gcvalues.background = 0x000000;
@@ -582,6 +578,7 @@ const static void initBuffers(void) {
     frame_buffer = calloc(MAIN_EMVADON * 4, 1);
     main_depth_buffer = calloc(MAIN_EMVADON, 4);
     reset_buffer = calloc(MAIN_EMVADON * 4, 1);
+    readHeightmap(height_map, "textures/sun.bmp");
 
     frags_buffer = calloc(MAIN_EMVADON, sizeof(Fragment));
     reset_frags = calloc(MAIN_EMVADON, sizeof(Fragment));
@@ -695,7 +692,6 @@ const static int board(void) {
     }
 
     initMainWindow();
-    // initMapWindow();
     InitTimeCounter();
     initGlobalGC();
     pixmapcreate();

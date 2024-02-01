@@ -22,6 +22,7 @@ const void logMesh(const Mesh m);
 const void logFace(const face f, const int vec, const int tex, const int norm);
 const void logMatrix(const Mat4x4 m);
 const void logQuat(const Quat q);
+const void logDm(const DimensionsLimits dm);
 
 #endif /* _LOGGING_H */
 

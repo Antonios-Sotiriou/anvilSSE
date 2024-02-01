@@ -6,8 +6,8 @@
 #endif
 
 const int checkTerrainCollision(Mesh *m, const float terrain_height);
-const int getPossibleColliders(Scene *s, Mesh *m);
-const void collideRangeCulling(Mesh *m, const int len);
+const int getPossibleColliders(Scene *s);
+const void collideRangeCulling(Mesh *m, const int len, Mesh *cl);
 
 #endif /* _COLLISION_DETECTION_H */
 

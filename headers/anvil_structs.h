@@ -83,8 +83,8 @@ typedef struct {
     unsigned int *f;
     Quat Q;
     // void (*drawMesh)(void *args);
-    int v_indexes, n_indexes, t_indexes, f_indexes, cull, lodlevels, currentlod, visible, type, floating, relaxing, grounded, rahm;
-    float scale;
+    int v_indexes, n_indexes, t_indexes, f_indexes, cull, lodlevels, currentlod, visible, type, floating, relaxing, grounded, rahm, id;
+    float scale, falling_time;
     Material material;
 } Mesh;
 

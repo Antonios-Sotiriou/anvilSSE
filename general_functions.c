@@ -57,7 +57,6 @@ const void loadmaterial(Material *mtr, const char name[]) {
 
             if ( strncmp(mtr->name, name, strlen(name)) == 0 ) {
                 fclose(fp);
-                fprintf(stdout, "Material < %s > found... Loading!\n", name);
                 return;
             }
         }
@@ -105,6 +104,36 @@ const void loadtexture(Mesh *m, const unsigned int lvl) {
         for (int i = 0; i < texSize; i++) {
             fread(&m->material.texture[i], 3, 1, fp);
             m->material.texture[i][3] = (unsigned char)255;
+        }
+    }
+    fclose(fp);
+}
+/* Loads the appropriate Textures and importand Texture infos. */
+const void readHeightmap(char *hm, const char path[]) {
+    BMP_Header bmp_header;
+    BMP_Info info;
+
+    FILE *fp;
+    fp = fopen(path, "rb");
+
+    if (!fp){
+        fclose(fp);
+        fprintf(stderr, "Could not open file < %s >! readHeightmap() -- fopen().\n", path);
+    } else {
+        fread(&bmp_header, sizeof(BMP_Header), 1, fp);
+        fseek(fp, 14, SEEK_SET);
+        fread(&info, sizeof(BMP_Info), 1, fp);
+        fseek(fp, (14 + info.Size), SEEK_SET);
+
+        const int hmSize = info.Height * info.Width;
+
+        hm = malloc(hmSize * 4);
+        if (!hm)
+            fprintf(stderr, "Could not allocate memmory for Height map: %s. readHeightmap()\n", path);
+
+        for (int i = 0; i < hmSize; i++) {
+            fread(&hm[i], 3, 1, fp);
+            // hm[i][3] = (unsigned char)255;
         }
     }
     fclose(fp);

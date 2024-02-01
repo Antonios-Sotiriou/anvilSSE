@@ -14,8 +14,13 @@ const static void initMeshStepOne(MeshStepOne *a, Mesh *b);
 /* Passes the scene Meshes throught the graphic pipeline. */
 const void grafikPipeline(Scene *s) {
     MeshStepOne cache_0 = { 0 };
+    Material mt = { 0 };
+    loadmaterial(&mt, "obsidian");
 
     for (int i = 0; i < s->m_indexes; i++) {
+        if (s->m[i].rahm)
+            s->m[i].material = mt;
+
         if (s->m[i].visible) {
             initMeshStepOne(&cache_0, &s->m[i]);
 
