@@ -48,8 +48,8 @@ const void loadmaterial(Material *mtr, const char name[]) {
     fp = fopen("tables/materials.dat", "rb");
 
     if (!fp){
-        fclose(fp);
         fprintf(stderr, "Could not open material files < tables/%s >! loadmaterial() -- fopen().\n", name);
+        return;
     } else {
         while (!feof(fp)) {
 
@@ -84,8 +84,8 @@ const void loadtexture(Mesh *m, const unsigned int lvl) {
     fp = fopen(texpath, "rb");
 
     if (!fp){
-        fclose(fp);
         fprintf(stderr, "Could not open file < %s >! loadtexture() -- fopen().\n", texpath);
+        return;
     } else {
         fread(&bmp_header, sizeof(BMP_Header), 1, fp);
         fseek(fp, 14, SEEK_SET);
@@ -108,37 +108,6 @@ const void loadtexture(Mesh *m, const unsigned int lvl) {
     }
     fclose(fp);
 }
-/* Loads the appropriate Textures and importand Texture infos. */
-const void readHeightmap(char *hm, const char path[]) {
-    BMP_Header bmp_header;
-    BMP_Info info;
-
-    FILE *fp;
-    fp = fopen(path, "rb");
-
-    if (!fp){
-        fclose(fp);
-        fprintf(stderr, "Could not open file < %s >! readHeightmap() -- fopen().\n", path);
-    } else {
-        fread(&bmp_header, sizeof(BMP_Header), 1, fp);
-        fseek(fp, 14, SEEK_SET);
-        fread(&info, sizeof(BMP_Info), 1, fp);
-        fseek(fp, (14 + info.Size), SEEK_SET);
-
-        const int hmSize = info.Height * info.Width;
-
-        hm = malloc(hmSize * 4);
-        if (!hm)
-            fprintf(stderr, "Could not allocate memmory for Height map: %s. readHeightmap()\n", path);
-
-        for (int i = 0; i < hmSize; i++) {
-            fread(&hm[i], 3, 1, fp);
-            // hm[i][3] = (unsigned char)255;
-        }
-    }
-    fclose(fp);
-}
-#include "headers/logging.h"
 const void adoptdetailMesh(Mesh *m) {
     if ( m->lodlevels < 1 )
         return;
@@ -224,6 +193,13 @@ const void frustumCulling(Mesh *m, const int len) {
     vec4f *vec_arr;
     DimensionsLimits dm;
     for (int i = 0; i < len; i++) {
+
+        /* Thats a fix for unitialized meshes that cannot become visible due to no vectors initialization. That will be corrected with bounding boxes. */
+        if (!m[i].v_indexes) {
+            m[i].visible = 1;
+            continue;
+        }
+
         vec_arr = vecsarrayxm(m[i].v, m[i].v_indexes, worldMat);
 
         for (int j = 0; j < m[i].v_indexes; j++) {

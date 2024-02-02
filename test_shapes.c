@@ -182,8 +182,8 @@ const void createTerrain(Mesh *c, int vrows, int vcols) {
         exit(1);
     }
 
-    vrows = (vrows % 2 == 0) ? vrows + 1 : vrows;
-    vcols = (vcols % 2 == 0) ? vcols + 1 : vcols;
+    // vrows = (vrows % 2 == 0) ? vrows + 1 : vrows;
+    // vcols = (vcols % 2 == 0) ? vcols + 1 : vcols;
 
     /* Emvadon vertices. Must be 1 more than given from user in both directions to corect handle all cases with faces and quads. */
     const int emvadon = vrows * vcols;
@@ -223,8 +223,8 @@ const void createTerrain(Mesh *c, int vrows, int vcols) {
         }
 
         c->v[x][0] += x_step_cache;
-        c->v[x][1] = (float)rand() / (float)(RAND_MAX / 0.09f);
-        // c->v[x][1] = 0;
+        // c->v[x][1] = (float)rand() / (float)(RAND_MAX / 0.09f);
+        c->v[x][1] = 0;
         c->v[x][2] = z_step_cache;
         c->v[x][3] = 1.f;
 

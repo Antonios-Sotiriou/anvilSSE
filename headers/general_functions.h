@@ -103,7 +103,7 @@ const float radians(const float value);
 const DimensionsLimits getDimensionsLimits(vec4f va[], const int len);
 const void loadmaterial(Material *mtr, const char name[]);
 const void loadtexture(Mesh *m, const unsigned int lvl);
-const void readHeightmap(char *hm, const char path[]);
+const void readHeightmap(const char path[]);
 const void adoptdetailMesh(Mesh *m);
 const void adoptdetailTexture(Mesh *m);
 const void reWorldMesh(Mesh *m);

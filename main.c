@@ -61,7 +61,7 @@ enum { Pos, U, V, N, C, newPos };
 /* X Global Structures. */
 Display *displ;
 Window mainwin;
-XImage *main_image;
+XImage *main_image; //, *HM_image;
 Pixmap main_pixmap;
 GC gc;
 XGCValues gcvalues;
@@ -70,8 +70,9 @@ XSetWindowAttributes sa;
 Atom wmatom[Atom_Last];
 
 /* BUFFERS. */
-u_int8_t *frame_buffer, *point_buffer, *reset_buffer, *height_map;
+u_int8_t *frame_buffer, *point_buffer, *reset_buffer;
 float *main_depth_buffer, *point_depth_buffer, *shadow_buffer[NUM_OF_CASCADES];
+vec4c *height_map;
 Fragment *frags_buffer, *reset_frags;
 
 /* Project Global Variables. */
@@ -543,6 +544,7 @@ const static void initGlobalGC(void) {
 }
 const static void initDependedVariables(void) {
     main_image = XCreateImage(displ, main_wa.visual, main_wa.depth, ZPixmap, 0, (char*)point_buffer, main_wa.width, main_wa.height, 32, (main_wa.width * 4));
+    // HM_image = XCreateImage(displ, main_wa.visual, main_wa.depth, ZPixmap, 0, (char*)height_map, main_wa.width, main_wa.height, 32, (main_wa.width * 4));
 
     ASPECTRATIO = ((float)main_wa.width / (float)main_wa.height);
     HALFH = main_wa.height >> 1;
@@ -578,7 +580,6 @@ const static void initBuffers(void) {
     frame_buffer = calloc(MAIN_EMVADON * 4, 1);
     main_depth_buffer = calloc(MAIN_EMVADON, 4);
     reset_buffer = calloc(MAIN_EMVADON * 4, 1);
-    readHeightmap(height_map, "textures/sun.bmp");
 
     frags_buffer = calloc(MAIN_EMVADON, sizeof(Fragment));
     reset_frags = calloc(MAIN_EMVADON, sizeof(Fragment));

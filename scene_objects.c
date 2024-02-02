@@ -1,6 +1,45 @@
 #include "headers/scene_objects.h"
 
-#define MESH_NUM 1000
+#define MESH_NUM 5
+Mesh terrain_test;
+extern vec4c *height_map;
+#include "headers/logging.h"
+/* Loads the appropriate Textures and importand Texture infos. */
+const void readHeightmap(const char path[]) {
+    BMP_Header bmp_header;
+    BMP_Info info;
+
+    FILE *fp;
+    fp = fopen(path, "rb");
+
+    if (!fp){
+        fprintf(stderr, "Could not open file < %s >! readHeightmap() -- fopen().\n", path);
+        return;
+    } else {
+        fread(&bmp_header, sizeof(BMP_Header), 1, fp);
+        fseek(fp, 14, SEEK_SET);
+        fread(&info, sizeof(BMP_Info), 1, fp);
+        fseek(fp, (14 + info.Size), SEEK_SET);
+
+        const int hmSize = info.Height * info.Width;
+
+        height_map = malloc(hmSize);
+        if (!height_map)
+            fprintf(stderr, "Could not allocate memmory for Height map: %s. readHeightmap()\n", path);
+
+        createTerrain(&terrain_test, info.Width, info.Height);
+        char c;
+        for (int i = 0; i < hmSize; i++) {
+            fread(&c, 1, 1, fp);
+            printf("%d ", c);
+            // height_map[i][3] = 255;
+            // logVec4c(height_map[i]);
+            terrain_test.v[i][1] = (float)c / 255.f;//__builtin_convertvector(height_map[i] / 255, vec4f);
+        }
+        terrain_test.v_indexes = hmSize;
+    }
+    fclose(fp);
+}
 
 /* This function is responsible to position the objects in world space. */
 const void initWorldObjects(Scene *s) {
@@ -30,7 +69,11 @@ const void initWorldObjects(Scene *s) {
     // }
     /* ######################################################################################################## */
     // memcpy(s->m[0].name, "basic_terrain", sizeof("basic_terrain"));
-    createTerrain(&s->m[0], 10, 10);
+    // createTerrain(&s->m[0], 100, 100);
+    readHeightmap("textures/height_map_bn.bmp");
+
+    initMesh(&s->m[0], &terrain_test);
+    releaseMesh(&terrain_test);
     loadmaterial(&s->m[0].material, "pearl");
 
     s->m[0].type = Terrain;
@@ -65,7 +108,7 @@ const void initWorldObjects(Scene *s) {
     s->m[1].Q = unitQuat();
     reWorldMesh(&s->m[1]);
 
-    // /* ######################################################################################################## */
+    /* ######################################################################################################## */
     // memcpy(s->m[2].name, "basic_terrain", sizeof("basic_terrain"));
     createTerrain(&s->m[2], 10, 10);
     loadmaterial(&s->m[2].material, "pearl");
@@ -83,7 +126,7 @@ const void initWorldObjects(Scene *s) {
     s->m[2].Q = unitQuat();
     reWorldMesh(&s->m[2]);
 
-    // /* ######################################################################################################## */
+    /* ######################################################################################################## */
     // memcpy(s->m[3].name, "basic_terrain", sizeof("basic_terrain"));
     createTerrain(&s->m[3], 10, 10);
     loadmaterial(&s->m[3].material, "pearl");
@@ -123,29 +166,29 @@ const void initWorldObjects(Scene *s) {
     // reWorldMesh(&s->m[4]);
 
     /* ######################################################################################################## */
-    for (int i = 5; i < MESH_NUM; i++) {
-        // memcpy(s->m[i].name, "planet", sizeof("planet"));
-        createCube(&s->m[i]);
-        loadmaterial(&s->m[i].material, "jade");
+    // for (int i = 5; i < MESH_NUM; i++) {
+    //     // memcpy(s->m[i].name, "planet", sizeof("planet"));
+    //     createCube(&s->m[i]);
+    //     loadmaterial(&s->m[i].material, "jade");
 
-        s->m[i].type = MovingObject;
-        s->m[i].id = i;
+    //     s->m[i].type = MovingObject;
+    //     s->m[i].id = i;
         
-        s->m[i].scale = 1.f;
-        s->m[i].pivot[0] = (float)rand() / (float)(RAND_MAX / 400);
-        s->m[i].pivot[1] = (float)rand() / (float)(RAND_MAX / 100);
-        s->m[i].pivot[2] = (float)rand() / (float)(RAND_MAX / 400);
-        s->m[i].cull = 1;
-        s->m[i].lodlevels = 0;
-        // s->m[1].visible = 1;
-        s->m[i].Q = unitQuat();
-        reWorldMesh(&s->m[i]);
-    }
+    //     s->m[i].scale = 1.f;
+    //     s->m[i].pivot[0] = (float)rand() / (float)(RAND_MAX / 400);
+    //     s->m[i].pivot[1] = (float)rand() / (float)(RAND_MAX / 100);
+    //     s->m[i].pivot[2] = (float)rand() / (float)(RAND_MAX / 400);
+    //     s->m[i].cull = 1;
+    //     s->m[i].lodlevels = 0;
+    //     // s->m[1].visible = 1;
+    //     s->m[i].Q = unitQuat();
+    //     reWorldMesh(&s->m[i]);
+    // }
 
-    for (int i = 0; i < s->m_indexes; i++) {
-        adoptdetailMesh(&s->m[i]);
-        adoptdetailTexture(&s->m[i]);           /* Planet is not geting rendered when i comment this code. */
-    }
+    // for (int i = 0; i < s->m_indexes; i++) {
+    //     adoptdetailMesh(&s->m[i]);
+    //     adoptdetailTexture(&s->m[i]);           /* Planet is not geting rendered when i comment this code. */
+    // }
 
     // typedef struct {
     //     char name[24];
