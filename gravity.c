@@ -33,16 +33,16 @@ const void applyGravity(Scene *s, const float FallTime) {
         }
     }
 
-    const float height = getTerrainHeight(s, &s->m[4].pivot);
-    float height_diff = height - (s->m[4].pivot[1] - s->m[4].scale);
+    const float height = getTerrainHeight(s, &s->m[Player_1].pivot);
+    float height_diff = height - (s->m[1].pivot[Player_1] - s->m[Player_1].scale);
     if (height_diff >= 0) {
-        s->m[4].grounded = 1;
-        s->m[4].falling_time = 0;
+        s->m[Player_1].grounded = 1;
+        s->m[Player_1].falling_time = 0;
     }
-    if (s->m[4].grounded) {
+    if (s->m[1].grounded) {
         Mat4x4 dr = translationMatrix(0, height_diff, 0);
-        s->m[4].v = setvecsarrayxm(s->m[4].v, s->m[4].v_indexes, dr);
-        s->m[4].pivot[1] += height_diff;
+        s->m[Player_1].v = setvecsarrayxm(s->m[Player_1].v, s->m[Player_1].v_indexes, dr);
+        s->m[Player_1].pivot[Player_1] += height_diff;
     }
 }
 

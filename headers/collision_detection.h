@@ -5,9 +5,7 @@
     #include "anvil_structs.h"
 #endif
 
-const int checkTerrainCollision(Mesh *m, const float terrain_height);
-const int getPossibleColliders(Scene *s);
-const void collideRangeCulling(Mesh *m, const int len, Mesh *cl);
+const int checkVisibles(Scene *s, Mesh *m);
 
 #endif /* _COLLISION_DETECTION_H */
 

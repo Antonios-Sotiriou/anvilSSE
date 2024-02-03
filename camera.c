@@ -1,7 +1,5 @@
 #include "headers/camera.h"
 
-enum { Pos, U, V, N, C };
-
 /* Rotates the camera to look left. */
 const void look_left(vec4f *g, const float angle) {
     Quat u = setQuat(0, g[U]);

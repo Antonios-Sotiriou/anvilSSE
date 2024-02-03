@@ -1,5 +1,5 @@
 #include "headers/test_shapes.h"
-
+#include "headers/logging.h"
 const void createCube(Mesh *c) {
     const size_t face_size = sizeof(unsigned int) * 108;
     c->v = malloc(16 * 8);
@@ -173,17 +173,15 @@ const void createPlane(Mesh *c) {
     memcpy(c->t, textures, 8 * 4);
     memcpy(c->f, faces, face_size);
 }
-#include <stdio.h>
-#include "headers/logging.h"
 /* Rows and colums here are given in Quads. Consider that each quad consists of 4 vertices. */
-const void createTerrain(Mesh *c, int vrows, int vcols) {
+const void createGrid(Mesh *c, int vrows, int vcols) {
     if ( vrows == 0 || vcols == 0 ) {
-        fprintf(stderr, "Zero value for %s. test_shapes.c --> createTerrain() --> ERROR 1\n", vrows == 0 ? "vrows" : vcols == 0 ? "vcols" : "input");
+        fprintf(stderr, "Zero value for %s. createGrid() --> ERROR 1\n", vrows == 0 ? "vrows" : vcols == 0 ? "vcols" : "input");
         exit(1);
     }
 
-    // vrows = (vrows % 2 == 0) ? vrows + 1 : vrows;
-    // vcols = (vcols % 2 == 0) ? vcols + 1 : vcols;
+    vrows = (vrows % 2 == 0) ? vrows + 1 : vrows;
+    vcols = (vcols % 2 == 0) ? vcols + 1 : vcols;
 
     /* Emvadon vertices. Must be 1 more than given from user in both directions to corect handle all cases with faces and quads. */
     const int emvadon = vrows * vcols;
@@ -229,7 +227,6 @@ const void createTerrain(Mesh *c, int vrows, int vcols) {
         c->v[x][3] = 1.f;
 
         x_step_cache += step_x;
-        // logVec4f(c->v[x]);
     }
 
     /* Normals initialization. ############################## */
@@ -259,7 +256,6 @@ const void createTerrain(Mesh *c, int vrows, int vcols) {
         c->t[x][1] = tv_step_cache;
 
         tu_step_cache += step_tu;
-        // logVec2f(c->t[x]);
     }
 
     /* faces initialization. ############################## */
@@ -305,14 +301,162 @@ const void createTerrain(Mesh *c, int vrows, int vcols) {
         face_counter += 2;
     }
 
-    // for (int x = 0; x < num_of_faces; x += 9)
-    //     printf("face: %d/%d/%d    %d/%d/%d    %d/%d/%d\n", c->f[x], c->f[x+ 1], c->f[x + 2], c->f[x + 3], c->f[x + 4], c->f[x + 5], c->f[x + 6], c->f[x + 7], c->f[x + 8]);
-
     c->v_indexes = emvadon;
     c->n_indexes = emvadon;
     c->t_indexes = emvadon;
     c->f_indexes = num_of_faces;
 }
+const void createTerrain(Mesh *m, const char path[]) {
+    BMP bmp;
+    int emvadon;
+    char *data;
 
+    FILE *fp;
+    fp = fopen(path, "rb");
+
+    if (!fp){
+        fprintf(stderr, "Could not open file < %s >! readHeightmap() -- fopen().\n", path);
+        return;
+    } else {
+        fread(&bmp.header, sizeof(BMP_Header), 1, fp);
+        fseek(fp, 14, SEEK_SET);
+        fread(&bmp.info, sizeof(BMP_Info), 1, fp);
+        fseek(fp, bmp.header.Res2, SEEK_SET);
+
+        emvadon = bmp.info.Height * bmp.info.Width;
+        if (!emvadon) {
+            fprintf(stderr, "Zero value for Height map Size: %d. createTerrain() --> ERROR 1\n", emvadon);
+            return;
+        }
+        data = malloc(emvadon);
+        fread(data, emvadon, 1, fp);
+    }
+    fclose(fp);
+
+    /* Quads. */
+    const int quad_vcols = bmp.info.Width - 1;
+    const int quad_vrows = bmp.info.Height - 1;
+    const int quads = quad_vrows * quad_vcols;
+    if (!quads) {
+        fprintf(stderr, "Zero value for Quads: %d. createTerrain() --> ERROR 1\n", emvadon);
+        exit(1);
+    }
+
+    /* Faces. */
+    const int faces_per_row = quad_vrows * 2;
+    const int num_of_faces = quads * 2 * 9;
+
+    m->v = calloc(emvadon, 16);
+    m->n = calloc(emvadon, 16);
+    m->t = calloc(emvadon, 8);
+    m->f = calloc(num_of_faces, 4);
+
+    /* Vectors initialization. ############################## */ 
+    float step_x = 1.f / bmp.info.Width;
+    float step_z = 1.f / bmp.info.Height;
+    float start_x = (step_x * (bmp.info.Width * 0.5)) - 1;
+    float start_z = (step_x * (bmp.info.Height * 0.5)) - 1;
+
+    float x_step_cache = start_x;
+    float z_step_cache = start_z;
+
+    int vcols_count = bmp.info.Width;
+
+    for (int x = 0; x < emvadon; x++) {
+
+        if ( x == vcols_count ) {
+            x_step_cache = start_x;
+            z_step_cache += step_z;
+
+            vcols_count += bmp.info.Width;
+        }
+
+        m->v[x][0] += x_step_cache;
+        // c->v[x][1] = (float)rand() / (float)(RAND_MAX / 0.09f);
+        m->v[x][1] = data[x] / 255.f;
+        m->v[x][2] = z_step_cache;
+        m->v[x][3] = 1.f;
+
+        x_step_cache += step_x;
+    }
+    free(data);
+
+    /* Normals initialization. ############################## */
+    vec4f normal = { 0.f, 1.f, 0.f, 0.f };
+    for (int x = 0; x < emvadon; x++) {
+            m->n[x] = normal;
+    }
+
+    /* Textors initialization. ############################## */
+    float step_tu = 1.f / quad_vrows;
+    float step_tv = 1.f / quad_vcols;
+    float start_tu = 0.f;
+    float start_tv = 0.f;
+    float tu_step_cache = start_tu;
+    float tv_step_cache = start_tv;
+
+    int tx_count = bmp.info.Height;
+    for (int x = 0; x < emvadon; x++) {
+
+        if ( x == tx_count ) {
+            tu_step_cache = start_tu;
+            tv_step_cache += step_tv;
+
+            tx_count += bmp.info.Height;
+        }
+        m->t[x][0] = tu_step_cache;
+        m->t[x][1] = tv_step_cache;
+
+        tu_step_cache += step_tu;
+    }
+
+    /* faces initialization. ############################## */
+    int face_1_0 = 0;
+    int face_1_1 = bmp.info.Height;
+    int face_1_2 =  bmp.info.Height + 1;
+    int face_counter = 0;
+
+    for (int x = 0; x < num_of_faces; x += 18) {
+
+        if (face_counter == faces_per_row) {
+            face_1_0 += 1;
+            face_1_1 += 1;
+            face_1_2 += 1;
+
+            face_counter = 0;
+        }
+
+        /* Face 1st Up. */
+        m->f[x] = face_1_0;
+        m->f[x + 1] = face_1_0;
+
+        m->f[x + 3] = face_1_1;
+        m->f[x + 4] = face_1_1;
+
+        m->f[x + 6] = face_1_2;
+        m->f[x + 7] = face_1_2;
+
+        /* Face 2nd Down. */
+        m->f[x + 9] = face_1_0;
+        m->f[x + 10] = face_1_0;
+
+        m->f[x + 12] = face_1_2;
+        m->f[x + 13] = face_1_2;
+
+        m->f[x + 15] = face_1_0 + 1;
+        m->f[x + 16] = face_1_0 + 1;
+
+        face_1_0++;
+        face_1_1++;
+        face_1_2++;
+
+        face_counter += 2;
+    }
+
+    m->v_indexes = emvadon;
+    m->n_indexes = emvadon;
+    m->t_indexes = emvadon;
+    m->f_indexes = num_of_faces;
+}
 
 

@@ -1,5 +1,7 @@
 #include "headers/general_functions.h"
 
+const static void checkVisibility(Mesh *m, const int len, Mat4x4 vm);
+
 /* Swaping two variables a and b of any type with size. */
 const void swap(void *a, void *b, unsigned long size) {
     void *temp = malloc(size);
@@ -69,8 +71,7 @@ const void loadtexture(Mesh *m, const unsigned int lvl) {
     if (!m->material.texlevels)
         return;
 
-    BMP_Header bmp_header;
-    BMP_Info info;
+    BMP bmp;
 
     /* Free the previous allocated texture if exists. */
     if (m->material.texture)
@@ -87,15 +88,15 @@ const void loadtexture(Mesh *m, const unsigned int lvl) {
         fprintf(stderr, "Could not open file < %s >! loadtexture() -- fopen().\n", texpath);
         return;
     } else {
-        fread(&bmp_header, sizeof(BMP_Header), 1, fp);
+        fread(&bmp.header, sizeof(BMP_Header), 1, fp);
         fseek(fp, 14, SEEK_SET);
-        fread(&info, sizeof(BMP_Info), 1, fp);
-        fseek(fp, (14 + info.Size), SEEK_SET);
+        fread(&bmp.info, sizeof(BMP_Info), 1, fp);
+        fseek(fp, (14 + bmp.info.Size), SEEK_SET);
 
         /* Subtract 1 from Texture width and height because counting starts from 0; */
-        m->material.texture_height = info.Height;
-        m->material.texture_width = info.Width;
-        const int texSize = info.Height * info.Width;
+        m->material.texture_height = bmp.info.Height;
+        m->material.texture_width = bmp.info.Width;
+        const int texSize = bmp.info.Height * bmp.info.Width;
 
         m->material.texture = malloc(texSize * 4);
         if (!m->material.texture)
@@ -229,6 +230,60 @@ const void frustumCulling(Mesh *m, const int len) {
         if ( ((min[2] > FPlane) || (max[2] < NPlane)) ||
              ((min[1] > 1000) || (max[1] < 0)) ||
              ((min[0] > 1000) || (max[0] < 0)) ) {
+
+            free(vec_arr);
+            m[i].visible = 0;
+            continue;
+        }
+        free(vec_arr);
+        m[i].visible = 1;
+    }
+}
+const int checkVisibles(Scene *s, Mesh *m) {
+    vec4f up = { 0.f, -1.f, 0.f };
+    vec4f u = cross_product(m->mvdir, up);
+    vec4f v = cross_product(u, m->mvdir);
+
+    Mat4x4 collMat;
+    Mat4x4 lk = lookat(m->pivot, u, v, m->mvdir);
+
+    if (!PROJECTIONVIEW)
+        collMat = mxm(inverse_mat(lk), perspMat);
+    else
+        collMat = mxm(inverse_mat(lk), orthoMat);
+
+    checkVisibility(s->m, s->m_indexes, collMat);
+}
+const static void checkVisibility(Mesh *m, const int len, Mat4x4 vm) {
+    vec4f *vec_arr;
+    DimensionsLimits dm;
+
+    for (int i = 0; i < len; i++) {
+
+        /* Thats a fix for unitialized meshes that cannot become visible due to no vectors initialization. That will be corrected with bounding boxes. */
+        if (!m[i].v_indexes) {
+            m[i].visible = 1;
+            continue;
+        }
+
+        vec_arr = vecsarrayxm(m[i].v, m[i].v_indexes, vm);
+
+        if (!PROJECTIONVIEW)
+            for (int j = 0; j < m[i].v_indexes; j++) {
+                /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
+                float z = vec_arr[j][2];
+
+                if (vec_arr[j][3] > 0) {
+                    vec_arr[j] /= vec_arr[j][3];
+                    vec_arr[j][2] = z;
+                }
+            }
+
+        dm = getDimensionsLimits(vec_arr, m[i].v_indexes);
+
+        if ( ((dm.minZ > FPlane ) || (dm.maxZ < NPlane)) ||
+            ((dm.minY > 1) || (dm.maxY < -1)) ||
+            ((dm.minX > 1) || (dm.maxX < -1)) ) {
 
             free(vec_arr);
             m[i].visible = 0;

@@ -13,6 +13,18 @@
     #include "anvil_flags.h"
 #endif
 
+#ifndef _COORDSYS_ENUM
+    #define _COORDSYS_ENUM 1
+    typedef enum { Pos, U, V, N, C, newPos } CoordSys;
+#endif
+
+#ifndef _SCENE_MEMBERS_ENUM
+    #define _SCENE_MEMBERS_ENUM 1
+    typedef enum { Terrain_1, Player_1 } sceneMembers;
+#endif
+
+// extern test t;
+
 /* Primitive struct vec4 with 4 x 8bits unsigned char as members */
 typedef unsigned char vec4c __attribute__((vector_size(4)));
 
@@ -162,6 +174,65 @@ typedef struct {
     int state, tex_x, tex_y;
     // void (*drawMesh)(int, int);
 } Fragment;
+
+/* BMP Image file reading structs. */
+typedef struct {
+    unsigned short Type;
+    unsigned int Size;
+    unsigned short Res1;
+    unsigned short Res2;
+    unsigned int OffSet;
+} BMP_Header;
+typedef struct {
+    int RedX;
+    int RedY;
+    int RedZ;
+} Red;
+typedef struct {
+    int BlueX;
+    int BlueY;
+    int BlueZ;
+} Blue;
+typedef struct {
+    int GreenX;
+    int GreenY;
+    int GreenZ;
+} Green;
+typedef struct {
+    Red red_coords;
+    Green green_coords;
+    Blue blue_coords;
+} CS_EndPoints;
+typedef struct {
+    unsigned int Size;
+    signed int Width;
+    signed int Height;
+    unsigned short Planes;
+    unsigned short BitsPerPixel;
+    unsigned int compression;
+    unsigned int SizeOfBitmap;
+    long  HorzResolution;
+    long VertResolution;
+    unsigned int ColorsUsed;
+    unsigned int ColorsImportant;
+    unsigned int RedMask;
+    unsigned int GreenMask;
+    unsigned int BlueMask;
+    unsigned int AlphaMask;
+    unsigned int CSType;
+    CS_EndPoints CSEndPoints;
+    unsigned int GammaRed;
+    unsigned int GammaGreen;
+    unsigned int GammaBlue;
+    unsigned int Intent;
+    unsigned int ProfileData;
+    unsigned int ProfileSize;
+	unsigned int Reserved;
+} BMP_Info ;
+typedef struct {
+    BMP_Header header;
+    BMP_Info info;
+} BMP;
 
 #endif /* _ANVIL_STRUCTS_H */
 

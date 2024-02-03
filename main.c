@@ -47,7 +47,6 @@ int SCANLINE = 0;
 #include "headers/draw_functions.h"
 
 enum { Win_Close, Win_Name, Atom_Type, Atom_Last};
-enum { Pos, U, V, N, C, newPos };
 
 #define WIDTH                     1000
 #define HEIGHT                    1000
@@ -72,7 +71,6 @@ Atom wmatom[Atom_Last];
 /* BUFFERS. */
 u_int8_t *frame_buffer, *point_buffer, *reset_buffer;
 float *main_depth_buffer, *point_depth_buffer, *shadow_buffer[NUM_OF_CASCADES];
-vec4c *height_map;
 Fragment *frags_buffer, *reset_frags;
 
 /* Project Global Variables. */
@@ -104,15 +102,8 @@ vec4f camera[N + 1] = {
     { 0.0f, -1.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 1.0f, 0.0f }
 };
-/* Bird view Camera for heightmap. */
-vec4f birdview[4] = {
-    { 0.0f, 1000.0f, 0.0f, 1.0f },
-    { 1.0f, 0.0f, 0.0f, 0.0f },
-    { 0.0f, 0.0f, -1.0f, 0.0f },
-    { 0.0f, -1.0f, 0.0f, 0.0f }
-};
 Light sunlight = {
-    .pos = { 250.f, 100.0f, 250.f, 1.f },
+    .pos = { 0.f, 100.0f, 0.f, 1.f },
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
@@ -230,7 +221,6 @@ const static void configurenotify(XEvent *event) {
             free(frame_buffer);
             free(main_depth_buffer);
             free(reset_buffer);
-            free(height_map);
 
             free(frags_buffer);
             free(reset_frags);
@@ -273,10 +263,10 @@ const static void keypress(XEvent *event) {
     // system("clear\n");
     switch (keysym) {
         case 97 : look_left(eye, 0.2);             /* a */
-            // rotate_light_cam(&scene.m[4], camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
+            // rotate_light_cam(&scene.m[1], camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
             break;
         case 100 : look_right(eye, 0.2);           /* d */
-            // rotate_light_cam(&scene.m[4], camera[0], -2.0f, 0.0f, 1.0f, 0.0f);
+            // rotate_light_cam(&scene.m[1], camera[0], -2.0f, 0.0f, 1.0f, 0.0f);
             break;
         case 113 : look_up(eye, 2.2);              /* q */
             break;
@@ -307,55 +297,55 @@ const static void keypress(XEvent *event) {
             printf("SpecularStrength: %f\n", SpecularStrength);
             break;
         case 65430 : sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
-            scene.m[4].pivot[0] -= sunMov;
+            scene.m[1].pivot[0] -= sunMov;
             Mat4x4 ar = translationMatrix(-sunMov, 0.0f, 0.0f);
-            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, ar);
+            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, ar);
             vec4f mva = { -1.f, 0.f, 0.f };
-            scene.m[4].mvdir = mva;
-            scene.m[4].rahm = 1;
+            scene.m[1].mvdir = mva;
+            scene.m[1].rahm = 1;
             break;
         case 65432 : sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
-            scene.m[4].pivot[0] += sunMov;
+            scene.m[1].pivot[0] += sunMov;
             Mat4x4 br = translationMatrix(sunMov, 0.0f, 0.0f);
-            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, br);
+            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, br);
             vec4f mvb = { 1.f, 0.f, 0.f };
-            scene.m[4].mvdir = mvb;
-            scene.m[4].rahm = 1;
+            scene.m[1].mvdir = mvb;
+            scene.m[1].rahm = 1;
             break;
         case 65434 : sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
             vec4f upw = { 0.f, 1.f, 0.f };
             upw *= sunMov;
-            scene.m[4].pivot += upw;
+            scene.m[1].pivot += upw;
             Mat4x4 cr = translationMatrix(upw[0], upw[1], upw[2]);
-            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, cr);
-            scene.m[4].grounded = 0;
+            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, cr);
+            scene.m[1].grounded = 0;
             vec4f mvc = { 0.f, 1.f, 0.f };
-            scene.m[4].mvdir = mvc;
-            scene.m[4].rahm = 1;
+            scene.m[1].mvdir = mvc;
+            scene.m[1].rahm = 1;
             break;
         case 65435 : sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
-            scene.m[4].pivot[1] -= sunMov;
+            scene.m[1].pivot[1] -= sunMov;
             Mat4x4 dr = translationMatrix(0.0f, -sunMov, 0.0f);
-            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, dr);
+            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
             vec4f mvd = { 0.f, -1.f, 0.f };
-            scene.m[4].mvdir = mvd;
-            scene.m[4].rahm = 1;
+            scene.m[1].mvdir = mvd;
+            scene.m[1].rahm = 1;
             break;
         case 65431 : sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
-            scene.m[4].pivot[2] += sunMov;
+            scene.m[1].pivot[2] += sunMov;
             Mat4x4 er = translationMatrix(0.0f, 0.0f, sunMov);
-            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, er);
+            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, er);
             vec4f mve= { 0.f, 0.f, 1.f };
-            scene.m[4].mvdir = mve;
-            scene.m[4].rahm = 1;
+            scene.m[1].mvdir = mve;
+            scene.m[1].rahm = 1;
             break;
         case 65433 : sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
-            scene.m[4].pivot[2] -= sunMov;
+            scene.m[1].pivot[2] -= sunMov;
             Mat4x4 fr = translationMatrix(0.0f, 0.0f, -sunMov);
-            scene.m[4].v = setvecsarrayxm(scene.m[4].v, scene.m[4].v_indexes, fr);
+            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, fr);
             vec4f mvf = { 0.f, 0.f, -1.f };
-            scene.m[4].mvdir = mvf;
-            scene.m[4].rahm = 1;
+            scene.m[1].mvdir = mvf;
+            scene.m[1].rahm = 1;
             break;
         case 120 : rotate_x(&scene.m[1], 1);                     /* x */
             break;
@@ -467,7 +457,9 @@ static void *cascade(void *args) {
 }
 const static void project() {
 
-    getPossibleColliders(&scene);
+    /* Check what is visible from given point. */
+    // checkVisibles(&scene, &scene.m[1]);
+    // getPossibleColliders(&scene);
     frustumCulling(scene.m, scene.m_indexes);
 
     for (int i = 0; i < scene.m_indexes; i++) {
@@ -481,6 +473,7 @@ const static void project() {
     applyGravity(&scene, GravityTime);
 
      /* FINDING HEIGHT MAP INDEXES. */
+    getTerrainHeightTest(&scene.m[Terrain_1], scene.m[Player_1].pivot);
     // vec4i pos = __builtin_convertvector((scene.m[1].pivot / 200.f) * 100, vec4i);
     // logVec4i(pos);
 
@@ -520,7 +513,7 @@ const static void drawFrame(void) {
     else if (PROJECTBUFFER == 5)
         main_image->data = (char*)shadow_buffer[2];
     else if (PROJECTBUFFER == 6)
-        main_image->data = (char*)height_map;
+        main_image->data = NULL;
 
     XPutImage(displ, main_pixmap, gc, main_image, 0, 0, 0, 0, main_wa.width, main_wa.height);
     pixmapdisplay(main_pixmap, mainwin, main_wa.width, main_wa.height);

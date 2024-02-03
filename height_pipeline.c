@@ -60,6 +60,15 @@ const static float checkIfInside(face *f, vec4i pv) {
     // printf("Outside\n");
     return 0;
 }
+const float getTerrainHeightTest(Mesh *terrain, vec4f coords) {
+    int quads = 99;
+    // logVec4f(coords);
+    vec4i pos = __builtin_convertvector((coords / (terrain->scale)) * 100, vec4i);
+    const int quad_index = (pos[2] * 99) + pos[0];
+    printf("Quad index: %d\n", quad_index);
+    printf("Tri index: %d,    %d\n", quad_index, quad_index + 1);
+    // logVec4i(pos);
+}
 
 
 

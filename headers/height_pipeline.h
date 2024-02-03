@@ -22,6 +22,7 @@
 #endif
 
 const float getTerrainHeight(Scene *s, vec4f *pivot);
+const float getTerrainHeightTest(Mesh *terrain, vec4f coords);
 
 #endif /* _HEIGHT_MAP_H */
 

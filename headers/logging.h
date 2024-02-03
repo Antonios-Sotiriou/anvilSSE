@@ -23,6 +23,10 @@ const void logFace(const face f, const int vec, const int tex, const int norm);
 const void logMatrix(const Mat4x4 m);
 const void logQuat(const Quat q);
 const void logDm(const DimensionsLimits dm);
+const void logBMP_Header(const BMP_Header bmp_h);
+const void logBMP_EndPoints(const CS_EndPoints cse);
+const void logBMP_Info(const BMP_Info bmp_i);
+const void logBMP(const BMP bmp);
 
 #endif /* _LOGGING_H */
 
