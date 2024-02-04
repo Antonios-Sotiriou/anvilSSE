@@ -19,7 +19,7 @@ const void applyGravity(Scene *s, const float FallTime) {
 
             s->m[i].pivot += pivot;
 
-            const float height = getTerrainHeight(s, &s->m[i].pivot);
+            const float height = getTerrainHeightTest(&s->m[0], s->m[i].pivot);
             float height_diff = height - (s->m[i].pivot[1] - s->m[i].scale);
             if (height_diff >= 0) {
                 s->m[i].grounded = 1;
@@ -33,7 +33,7 @@ const void applyGravity(Scene *s, const float FallTime) {
         }
     }
 
-    const float height = getTerrainHeight(s, &s->m[Player_1].pivot);
+    const float height = getTerrainHeightTest(&s->m[0], s->m[Player_1].pivot);
     float height_diff = height - (s->m[1].pivot[Player_1] - s->m[Player_1].scale);
     if (height_diff >= 0) {
         s->m[Player_1].grounded = 1;
@@ -42,7 +42,7 @@ const void applyGravity(Scene *s, const float FallTime) {
     if (s->m[1].grounded) {
         Mat4x4 dr = translationMatrix(0, height_diff, 0);
         s->m[Player_1].v = setvecsarrayxm(s->m[Player_1].v, s->m[Player_1].v_indexes, dr);
-        s->m[Player_1].pivot[Player_1] += height_diff;
+        s->m[Player_1].pivot[1] += height_diff;
     }
 }
 

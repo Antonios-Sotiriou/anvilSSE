@@ -53,6 +53,7 @@ const void adoptdetailTexture(Mesh *m);
 const void reWorldMesh(Mesh *m);
 const void placeMesh(Mesh *m, const vec4f pos);
 const void frustumCulling(Mesh *m, const int len);
+const int checkVisibles(Scene *s, Mesh *m);
 const void initMesh(Mesh *a, const Mesh *b);
 const void releaseMesh(Mesh *m);
 

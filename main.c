@@ -108,7 +108,7 @@ Light sunlight = {
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
 };
-const float sunMov = 1.f;
+const float sunMov = 10.0f;
 
 /* Global Matrices */
 Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
@@ -473,7 +473,7 @@ const static void project() {
     applyGravity(&scene, GravityTime);
 
      /* FINDING HEIGHT MAP INDEXES. */
-    getTerrainHeightTest(&scene.m[Terrain_1], scene.m[Player_1].pivot);
+    // getTerrainHeightTest(&scene.m[Terrain_1], scene.m[Player_1].pivot);
     // vec4i pos = __builtin_convertvector((scene.m[1].pivot / 200.f) * 100, vec4i);
     // logVec4i(pos);
 

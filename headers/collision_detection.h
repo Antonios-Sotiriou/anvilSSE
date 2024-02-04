@@ -5,7 +5,7 @@
     #include "anvil_structs.h"
 #endif
 
-const int checkVisibles(Scene *s, Mesh *m);
+
 
 #endif /* _COLLISION_DETECTION_H */
 
