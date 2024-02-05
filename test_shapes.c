@@ -333,6 +333,24 @@ const void createTerrain(Mesh *m, const char path[]) {
     }
     fclose(fp);
 
+    /* Populate the gloabal TerrainInfo struct with infos. */
+    tf.vecWidth = bmp.info.Width;
+    tf.vecHeight = bmp.info.Height;
+    tf.quadCols = tf.vecWidth - 1;
+    tf.quadRows = tf.vecHeight - 1;
+    tf.quadsArea = tf.quadRows * tf.quadCols;
+    tf.quads = calloc(tf.quadsArea, sizeof(Quad));
+
+    // for (int i = 0; i < tf.quadsArea; i++) {
+    //     tf.quads[i].mems = calloc(1, 4);
+    //     // tf.quads[i].mems_indexes = 0;
+    //     // tf.quads[i].mems[3] = tf.quadsArea - i;
+    //     // printf("index %d: %d\n", i, tf.quads[i].mems_indexes);
+    // }
+    // for (int x = 0; x < 10; x++)
+    //     printf("test: %d\n", tf.quads[0].mems[x]);
+    // printf("sizes: %d,    %d,    %d\n", sizeof(tf.quads), sizeof(tf.quads[0], sizeof(tf.quads[0].mems[0])));
+
     /* Quads. */
     const int quad_vcols = bmp.info.Width - 1;
     const int quad_vrows = bmp.info.Height - 1;

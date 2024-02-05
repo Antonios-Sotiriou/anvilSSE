@@ -95,7 +95,7 @@ typedef struct {
     unsigned int *f;
     Quat Q;
     // void (*drawMesh)(void *args);
-    int v_indexes, n_indexes, t_indexes, f_indexes, cull, lodlevels, currentlod, visible, type, floating, relaxing, grounded, rahm, id;
+    int v_indexes, n_indexes, t_indexes, f_indexes, cull, lodlevels, currentlod, visible, type, floating, relaxing, grounded, rahm, quadIndex, id; /* as id we use the index of the mesh in the scene. */
     float scale, falling_time;
     Material material;
 } Mesh;
@@ -113,25 +113,6 @@ typedef struct {
     face *f;
     int f_indexes, cull;
 } MeshStepTwo;
-
-/* Base Height face aka(triangle) struct. */
-typedef struct {
-    vec4f v[3];
-    vec4f vn[3];
-} Heightface;
-
-// /* Inside height pipeline struct. Holds necessery data for the 1st step of the height pipeline. */
-typedef struct {
-    vec4f *v;
-    vec4f *n;
-    int v_indexes, n_indexes, cull;
-} MeshHeightStepOne;
-
-/* Inside height pipeline struct. Holds necessery data for the 2nd step of the height pipeline. */
-typedef struct {
-    Heightface *f;
-    int f_indexes, cull;
-} MeshHeightStepTwo;
 
 /* Base Shadow face aka(triangle) struct. */
 typedef struct {
@@ -156,6 +137,17 @@ typedef struct {
     int m_indexes;
 } Scene;
 
+typedef struct {
+    unsigned int *mems;
+    unsigned int mems_indexes;
+} Quad;
+
+/* Struct to hold usefull Terrain information to be available throught the program after we release the height map. */
+typedef struct {
+    Quad *quads;    /* This pointer to pointer holds the ids of the meshes that belong to each quad index. */
+    int vecWidth, vecHeight, quadsArea, quadRows, quadCols;
+} TerrainInfo;
+
 /* Light struct to create different kind of light sources. */
 typedef struct {
     vec4f pos, u, v, n, newPos;
@@ -172,7 +164,6 @@ typedef struct {
     vec4f pos, nrm;
     Material *mtr;
     int state, tex_x, tex_y;
-    // void (*drawMesh)(int, int);
 } Fragment;
 
 /* BMP Image file reading structs. */

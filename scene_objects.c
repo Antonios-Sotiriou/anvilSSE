@@ -1,6 +1,6 @@
 #include "headers/scene_objects.h"
 
-#define MESH_NUM 2
+#define MESH_NUM 100
 
 /* This function is responsible to position the objects in world space. */
 const void initWorldObjects(Scene *s) {
@@ -45,23 +45,23 @@ const void initWorldObjects(Scene *s) {
     // reWorldMesh(&s->m[4]);
 
     /* ######################################################################################################## */
-    // for (int i = 2; i < MESH_NUM; i++) {
-    //     createCube(&s->m[i]);
-    //     loadmaterial(&s->m[i].material, "jade");
+    for (int i = 2; i < MESH_NUM; i++) {
+        createCube(&s->m[i]);
+        loadmaterial(&s->m[i].material, "jade");
 
-    //     s->m[i].type = MovingObject;
-    //     s->m[i].id = i;
+        s->m[i].type = MovingObject;
+        s->m[i].id = i;
         
-    //     s->m[i].scale = 1.f;
-    //     s->m[i].pivot[0] = (float)rand() / (float)(RAND_MAX / 400);
-    //     s->m[i].pivot[1] = (float)rand() / (float)(RAND_MAX / 100);
-    //     s->m[i].pivot[2] = (float)rand() / (float)(RAND_MAX / 400);
-    //     s->m[i].cull = 1;
-    //     s->m[i].lodlevels = 0;
-    //     // s->m[1].visible = 1;
-    //     s->m[i].Q = unitQuat();
-    //     reWorldMesh(&s->m[i]);
-    // }
+        s->m[i].scale = 1.f;
+        s->m[i].pivot[0] = (float)rand() / (float)(RAND_MAX / 400);
+        s->m[i].pivot[1] = (float)rand() / (float)(RAND_MAX / 100);
+        s->m[i].pivot[2] = (float)rand() / (float)(RAND_MAX / 400);
+        s->m[i].cull = 1;
+        s->m[i].lodlevels = 0;
+        // s->m[1].visible = 1;
+        s->m[i].Q = unitQuat();
+        reWorldMesh(&s->m[i]);
+    }
 }
 /* Teams all objects of the the world in a scene for further procesing. */
 const void createScene(Scene *s) {

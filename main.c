@@ -41,7 +41,7 @@ int SCANLINE = 0;
 #include "headers/clipping.h"
 #include "headers/shadow_pipeline.h"
 #include "headers/grafik_pipeline.h"
-#include "headers/height_pipeline.h"
+#include "headers/terrain_functions.h"
 #include "headers/collision_detection.h"
 #include "headers/camera.h"
 #include "headers/draw_functions.h"
@@ -115,6 +115,8 @@ Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[
 
 /* Anvil global Objects Meshes and Scene. */
 Scene scene = { 0 };
+/* Terrain info struct is populated with data when terrain is created(createTerrain()). */
+TerrainInfo tf;
 
 /* X11 and mainwindow Global variables. */
 static int INIT = 0;
@@ -229,6 +231,12 @@ const static void configurenotify(XEvent *event) {
             free(shadow_buffer[0]);
             free(shadow_buffer[1]);
             free(shadow_buffer[2]);
+
+            for (int i = 0; i < tf.quadsArea; i++) {
+                if (&tf.quads[i])
+                    free(&tf.quads[i]);
+            }
+            free(tf.quads);
 
             free(main_image);
 
@@ -471,11 +479,9 @@ const static void project() {
     }
 
     applyGravity(&scene, GravityTime);
-
-     /* FINDING HEIGHT MAP INDEXES. */
-    // getTerrainHeightTest(&scene.m[Terrain_1], scene.m[Player_1].pivot);
-    // vec4i pos = __builtin_convertvector((scene.m[1].pivot / 200.f) * 100, vec4i);
-    // logVec4i(pos);
+    // printf("Quad index: %d\n", scene.m[Player_1].quadIndex);
+    addMeshToQuad(&scene.m[Player_1]);
+    printQuad(198);
 
     int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
     for (int i = 0; i < NUM_OF_CASCADES; i++) {
