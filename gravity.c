@@ -19,7 +19,7 @@ const void applyGravity(Scene *s, const float FallTime) {
 
             s->m[i].pivot += pivot;
 
-            const float height = getTerrainHeight(&s->m[0], s->m[i].pivot, &s->m[i]);
+            const float height = getTerrainHeight(&s->m[Terrain_1], s->m[i].pivot, &s->m[i]);
             addMeshToQuad(&s->m[i]);
             float height_diff = height - (s->m[i].pivot[1] - s->m[i].scale);
             if (height_diff >= 0) {
@@ -34,7 +34,7 @@ const void applyGravity(Scene *s, const float FallTime) {
         }
     }
 
-    const float height = getTerrainHeight(&s->m[0], s->m[Player_1].pivot, &s->m[Player_1]);
+    const float height = getTerrainHeight(&s->m[Terrain_1], s->m[Player_1].pivot, &s->m[Player_1]);
     float height_diff = height - (s->m[1].pivot[Player_1] - s->m[Player_1].scale);
     if (height_diff >= 0) {
         s->m[Player_1].grounded = 1;

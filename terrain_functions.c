@@ -2,6 +2,9 @@
 
 const static vec4i hmask = { 1, 2, 0, 3 };
 
+const void initTerrainInfo(TerrainInfo *t) {
+    t->quads = calloc(t->quadsArea, sizeof(Quad));
+}
 /* Retrieves Terrain *t height at given coords and, sets given meshes *m terain quadIndex to the id of the quad at those coords. */
 const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m) {
     float quad_len = t->scale / tf.vecWidth;
@@ -9,7 +12,8 @@ const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m) {
 
     vec4f t_coords = coords - (t->pivot - (t->scale / 2.f));
     if ( (t_coords[0] >= t_limit || t_coords[0] < 0) || (t_coords[2] >= t_limit || t_coords[2] < 0) ) {
-        fprintf(stderr, "Out of terrain Limits -- getTerrainHeight.\n");
+        fprintf(stderr, "Out of terrain Limits -- getTerrainHeight().\n");
+        m->quadIndex = -1;
         return 0;
     } 
 
@@ -72,38 +76,43 @@ const int getTerrainQuadIndex(Mesh *t, vec4f coords) {
 
     return (pos[2] * tf.quadRows) + pos[0];
 }
+/* Adds a Mesh to the Quad that is standing on to, if its not already a member of this Quad. */
 const void addMeshToQuad(Mesh *m) {
-    int initFirst = 0;
-    if (!tf.quads[m->quadIndex].mems) {
-        tf.quads[m->quadIndex].mems = calloc(1, 4);
-        tf.quads[m->quadIndex].mems_indexes = 1;
-        initFirst = 1;
-    }
-    if (!initFirst) {
-        for (int i = 0; i < tf.quads[m->quadIndex].mems_indexes; i++) {
-            if (tf.quads[m->quadIndex].mems[i] == m->id)
-                return;
-        }
-    }
-    if (!initFirst) {
-        tf.quads[m->quadIndex].mems = realloc(tf.quads[m->quadIndex].mems, (tf.quads[m->quadIndex].mems_indexes + 1) * 4);
-        tf.quads[m->quadIndex].mems[tf.quads[m->quadIndex].mems_indexes + 1] = m->id;
-        tf.quads[m->quadIndex].mems_indexes += 1;
+    const int quad_index = m->quadIndex;
+
+    if (quad_index < 0) {
+        /* Mesh is out of terrain if its quadIndex is less than Zero. */
         return;
     }
-    tf.quads[m->quadIndex].mems[0] = m->id;
-}
-const void printQuad(const int quad_index) {
-    for (int i = 0; i < tf.quads[quad_index].mems_indexes; i++) {
-        if (!tf.quads[quad_index].mems) {
-            fprintf(stdout, "Quad %d has no members.\n", quad_index);
-            return;
-        } else {
-            if (i == 0)
-                printf("Quad %d members: ", quad_index);
-            printf("%d, ", tf.quads[quad_index].mems[i]);
-        }
+
+    if (!tf.quads[quad_index].mems) {
+        /* Quad had not previous members in it so we must allocate memory for the new member. */
+        tf.quads[quad_index].mems = calloc(1, 4);
+        tf.quads[quad_index].mems_indexes = 1;
+        tf.quads[quad_index].mems[0] = m->id;
+        return;
     }
+    for (int i = 0; i < tf.quads[quad_index].mems_indexes; i++) {
+        if (tf.quads[quad_index].mems[i] == m->id)
+            /* Mesh is already a member of the Quad. */
+            return;
+    }
+    /* Increase the size of Quad members pointer to add the new member.Increment the necessery values also. */
+    tf.quads[quad_index].mems = realloc(tf.quads[quad_index].mems, (tf.quads[quad_index].mems_indexes + 1) * 4);
+    tf.quads[quad_index].mems[tf.quads[quad_index].mems_indexes] = m->id;
+    tf.quads[quad_index].mems_indexes += 1;
+}
+/* Prints the members of given Quad index. */
+const void printQuad(const int quad_index) {
+    if (!tf.quads[quad_index].mems) {
+        fprintf(stderr, "Quad %d has no members.\n", quad_index);
+        return;
+    }
+    printf("Quad %d members: ", quad_index);
+    for (int i = 0; i < tf.quads[quad_index].mems_indexes; i++) {
+        printf("%d, ", tf.quads[quad_index].mems[i]);
+    }
+    printf(": quad indexes: %d", tf.quads[quad_index].mems_indexes);
     printf("\n");
 }
 

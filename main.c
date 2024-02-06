@@ -192,6 +192,12 @@ const static void clientmessage(XEvent *event) {
         free(shadow_buffer[1]);
         free(shadow_buffer[2]);
 
+        for (int i = 0; i < tf.quadsArea; i++) {
+            if (tf.quads[i].mems)
+                free(tf.quads[i].mems);
+        }
+        free(tf.quads);
+
         free(main_image);
         XFreeGC(displ, gc);
         XFreePixmap(displ, main_pixmap);
@@ -231,12 +237,6 @@ const static void configurenotify(XEvent *event) {
             free(shadow_buffer[0]);
             free(shadow_buffer[1]);
             free(shadow_buffer[2]);
-
-            for (int i = 0; i < tf.quadsArea; i++) {
-                if (&tf.quads[i])
-                    free(&tf.quads[i]);
-            }
-            free(tf.quads);
 
             free(main_image);
 
@@ -481,7 +481,7 @@ const static void project() {
     applyGravity(&scene, GravityTime);
     // printf("Quad index: %d\n", scene.m[Player_1].quadIndex);
     addMeshToQuad(&scene.m[Player_1]);
-    printQuad(198);
+    printQuad(scene.m[Player_1].quadIndex);
 
     int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
     for (int i = 0; i < NUM_OF_CASCADES; i++) {
@@ -704,6 +704,8 @@ const static int board(void) {
 
     createScene(&scene);     /*  Scene creation must happen after world objects initialization.    */
     initWorldObjects(&scene);
+
+    // initTerrainInfo(&tf);
 
     /* Announcing to event despatcher that starting initialization is done. We send a Keyress event to Despatcher to awake Projection. */
     announceReadyState();
