@@ -142,6 +142,12 @@ typedef struct {
     unsigned int mems_indexes;
 } Quad;
 
+typedef struct {
+    vec4f normal;
+    int quad_index;
+    float height;
+} TerrainPointInfo;
+
 /* Struct to hold usefull Terrain information to be available throught the program after we release the height map. */
 typedef struct {
     Quad *quads;    /* This pointer to pointer holds the ids of the meshes that belong to each quad index. */

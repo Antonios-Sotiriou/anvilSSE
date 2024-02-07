@@ -5,7 +5,15 @@
     #include "anvil_structs.h"
 #endif
 
+#ifndef _MATRICES_H
+    #include "matrices.h"
+#endif
 
+#ifndef _TERRAIN_FUNCTIONS_H
+    #include "terrain_functions.h"
+#endif
+
+const void objectTerrainCollision(Mesh *terrain, Mesh *object);
 
 #endif /* _COLLISION_DETECTION_H */
 

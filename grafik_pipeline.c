@@ -14,14 +14,13 @@ const static void initMeshStepOne(MeshStepOne *a, Mesh *b);
 /* Passes the scene Meshes throught the graphic pipeline. */
 const void grafikPipeline(Scene *s) {
     MeshStepOne cache_0 = { 0 };
-    // Material mt = { 0 };
-    // loadmaterial(&mt, "obsidian");
 
     for (int i = 0; i < s->m_indexes; i++) {
-        // if (s->m[i].rahm)
-        //     s->m[i].material = mt;
 
-        if (s->m[i].visible) {
+        if (frustumCulling(&s->m[i], 1, worldMat)) {
+            adoptdetailMesh(&s->m[i]);
+            adoptdetailTexture(&s->m[i]);
+
             initMeshStepOne(&cache_0, &s->m[i]);
 
             cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, worldMat);

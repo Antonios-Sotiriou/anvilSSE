@@ -72,52 +72,58 @@ const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
         ortholightMat[i] = mxm(lview, createOrthoMatrixFromLimits(dl));
     }
 }
+#include "headers/logging.h"
 /* ################################################### CASCADE SHADOW MAPPING FINISH ################################################ */
 const void shadowPipeline(Scene *s, const unsigned int sm_index) {
     MeshShadowStepOne cache_0 = { 0 };
 
     for (int i = 0; i < s->m_indexes; i++) {
-        initMeshShadowStepOne(&cache_0, &s->m[i]);
 
-        cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, ortholightMat[sm_index]);
+        if (frustumCulling(&s->m[i], 0, ortholightMat[sm_index])) {
 
-        MeshShadowStepTwo cache_1 = assemblyfacesShadow(&cache_0, s->m[i].f, s->m[i].f_indexes);
-        releaseMeshShadowStepOne(&cache_0);
+            initMeshShadowStepOne(&cache_0, &s->m[i]);
 
-        /* At this Point triangles must be shadowclipped against near plane. */
-        vec4f plane_near_p = { 0.0f, 0.0f, NPlane },
-                plane_near_n = { 0.0f, 0.0f, 1.0f };
-        cache_1 = shadowclipp(&cache_1, plane_near_p, plane_near_n);
-        if (!cache_1.f_indexes) {
+            cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, ortholightMat[sm_index]);
+
+            MeshShadowStepTwo cache_1 = assemblyfacesShadow(&cache_0, s->m[i].f, s->m[i].f_indexes);
+            releaseMeshShadowStepOne(&cache_0);
+
+            /* At this Point triangles must be shadowclipped against near plane. */
+            vec4f plane_near_p = { 0.0f, 0.0f, NPlane },
+                    plane_near_n = { 0.0f, 0.0f, 1.0f };
+            cache_1 = shadowclipp(&cache_1, plane_near_p, plane_near_n);
+            if (!cache_1.f_indexes) {
+                releaseMeshShadowStepTwo(&cache_1);
+                continue;
+            }
+
+            /* Clipping against far Plane in View Space. */
+            vec4f plane_far_p = { 0.0f, 0.0f,  FPlane},
+                    plane_far_n = { 0.0f, 0.0f, -1.0f };
+            cache_1 = shadowclipp(&cache_1, plane_far_p, plane_far_n);
+            if (!cache_1.f_indexes) {
+                releaseMeshShadowStepTwo(&cache_1);
+                continue;
+            }
+
+            /* Applying Backface culling before we proceed to full frustum shadowclipping. */
+            if (cache_1.cull)
+                cache_1 = shadowculling(cache_1, cache_1.f_indexes);
+            if (!cache_1.f_indexes) {
+                releaseMeshShadowStepTwo(&cache_1);
+                continue;
+            }
+
+            /* Sending to translation from NDC to Screen Coordinates. */
+            if (!shadowtoscreen(&cache_1, cache_1.f_indexes)) {
+                releaseMeshShadowStepTwo(&cache_1);
+                continue;
+            }
+
+            createShadowmap(&cache_1, sm_index);
             releaseMeshShadowStepTwo(&cache_1);
-            continue;
         }
-
-        /* Clipping against far Plane in View Space. */
-        vec4f plane_far_p = { 0.0f, 0.0f,  FPlane},
-                plane_far_n = { 0.0f, 0.0f, -1.0f };
-        cache_1 = shadowclipp(&cache_1, plane_far_p, plane_far_n);
-        if (!cache_1.f_indexes) {
-            releaseMeshShadowStepTwo(&cache_1);
-            continue;
-        }
-
-        /* Applying Backface culling before we proceed to full frustum shadowclipping. */
-        if (cache_1.cull)
-            cache_1 = shadowculling(cache_1, cache_1.f_indexes);
-        if (!cache_1.f_indexes) {
-            releaseMeshShadowStepTwo(&cache_1);
-            continue;
-        }
-
-        /* Sending to translation from NDC to Screen Coordinates. */
-        if (!shadowtoscreen(&cache_1, cache_1.f_indexes)) {
-            releaseMeshShadowStepTwo(&cache_1);
-            continue;
-        }
-
-        createShadowmap(&cache_1, sm_index);
-        releaseMeshShadowStepTwo(&cache_1);
+        // releaseMesh(&cache_v);
     }
 }
 /* Assosiates vertices coordinate values from vector array through indexes. */

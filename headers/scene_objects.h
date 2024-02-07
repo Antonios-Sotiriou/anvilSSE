@@ -17,6 +17,10 @@
     #include "test_shapes.h"
 #endif
 
+#ifndef _TERRAIN_FUNCTIONS_H
+    #include "terrain_functions.h"
+#endif
+
 const void initWorldObjects(Scene *s);
 const void createScene(Scene *s);
 const void releaseScene(Scene *s);

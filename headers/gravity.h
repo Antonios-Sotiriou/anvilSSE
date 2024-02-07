@@ -17,11 +17,18 @@
     #include <stdio.h>
 #endif
 
+#ifndef _COLLISION_DETECTION_H
+    #include "collision_detection.h"
+#endif
+
 #ifndef _TERRAIN_FUNCTIONS_H
     #include "terrain_functions.h"
 #endif
 
-const void applyGravity(Scene *s, const float FallTime);
+/* Define in main.c. */
+extern float DeltaTime;
+
+const void applyGravity(Scene *s);
 
 #endif /* _GRAVITY_H */
 

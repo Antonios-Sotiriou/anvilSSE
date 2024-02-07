@@ -2,8 +2,11 @@
 
 const static vec4i hmask = { 1, 2, 0, 3 };
 
-const void initTerrainInfo(TerrainInfo *t) {
-    t->quads = calloc(t->quadsArea, sizeof(Quad));
+/* Assigns the Terrain *t quad index to the given mesh. */
+const void initMeshQuadInfo(Mesh *t, Mesh *m) {
+    const int quad_index = getTerrainQuadIndex(t, m->pivot);
+    m->quadIndex = quad_index;
+    addMeshToQuad(m);
 }
 /* Retrieves Terrain *t height at given coords and, sets given meshes *m terain quadIndex to the id of the quad at those coords. */
 const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m) {
@@ -20,9 +23,10 @@ const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m) {
     /* Function to get t quads indexes. */
     vec4i pos = __builtin_convertvector((t_coords / (t->scale)) * (float)tf.vecWidth, vec4i);
     const int quad_index = (pos[2] * tf.quadRows) + pos[0];
+
     /* Set meshes m quadIndex to index. */
     m->quadIndex = quad_index;
-    // printf("Quad index: %d\n", quad_index);
+
     /* Every quad has two faces incrementally. Every face constists of 9 indexes for vectors, normals, textors.
         So to get the right index we multiply faces with 9, because indexes are stored raw until now. */
     const int Upperface = (quad_index * 2) * 9;
@@ -31,11 +35,10 @@ const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m) {
     /* FInd in which triangle we are. */
     float x = ((t_coords[0] / quad_len));
     float z = ((t_coords[2] / quad_len));
-    x = x > 1.f ? x - pos[0] : x;
-    z = z > 1.f ? z - pos[2] : z;
+    x = x >= 1.f ? x - pos[0] : x;
+    z = z >= 1.f ? z - pos[2] : z;
 
     face f;
-    float result;
     if (x - z <= 0) {
         f.v[0] = t->v[t->f[Upperface]];
         f.v[1] = t->v[t->f[Upperface + 3]];
@@ -102,8 +105,34 @@ const void addMeshToQuad(Mesh *m) {
     tf.quads[quad_index].mems[tf.quads[quad_index].mems_indexes] = m->id;
     tf.quads[quad_index].mems_indexes += 1;
 }
+/* Removes a mesh id from the TerrainInfo global Quad memmbers array. */
+const void removeMeshFromQuad(Mesh *m) {
+    const int quad_index = m->quadIndex;
+    if (quad_index < 0) {
+        /* Mesh is out of terrain if its quadIndex is less than Zero. */
+        return;
+    }
+    const int num_of_indexes = tf.quads[quad_index].mems_indexes - 1;
+
+    unsigned int *new_array = calloc(num_of_indexes, 4);
+
+    int inc = 0;
+    for (int i = 0; i < tf.quads[quad_index].mems_indexes; i++) {
+        if (tf.quads[quad_index].mems[i] != m->id) {
+            new_array[inc] = tf.quads[quad_index].mems[i];
+            inc++;
+        }
+    }
+    free(tf.quads[quad_index].mems);
+    tf.quads[quad_index].mems = realloc(new_array, (num_of_indexes * 4));
+    tf.quads[quad_index].mems_indexes = num_of_indexes;
+}
 /* Prints the members of given Quad index. */
 const void printQuad(const int quad_index) {
+    if (quad_index < 0) {
+        /* Mesh is out of terrain if its quadIndex is less than Zero. */
+        return;
+    }
     if (!tf.quads[quad_index].mems) {
         fprintf(stderr, "Quad %d has no members.\n", quad_index);
         return;

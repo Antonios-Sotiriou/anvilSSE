@@ -1,6 +1,6 @@
 #include "headers/general_functions.h"
 
-const static void checkVisibility(Mesh *m, const int len, Mat4x4 vm);
+const static void checkVisibility(Mesh *m, const int len, Mat4x4 vm, const int viewProj);
 
 /* Swaping two variables a and b of any type with size. */
 const void swap(void *a, void *b, unsigned long size) {
@@ -190,20 +190,21 @@ const void placeMesh(Mesh *m, const vec4f pos) {
     m->n = setvecsarrayxm(m->n, m->n_indexes, trMatrix);
     m->pivot = pos;
 }
-const void frustumCulling(Mesh *m, const int len) {
+/* Cull Mesh to view frustum. viewProj: (1 for Prespective and 0 for orthographic Projection). Thats for the perspective divide usefull.viewMat the matrix of the point of view. */
+const int frustumCulling(Mesh *m, const int viewProj, Mat4x4 viewMat) {
     vec4f *vec_arr;
     DimensionsLimits dm;
-    for (int i = 0; i < len; i++) {
 
-        /* Thats a fix for unitialized meshes that cannot become visible due to no vectors initialization. That will be corrected with bounding boxes. */
-        if (!m[i].v_indexes) {
-            m[i].visible = 1;
-            continue;
-        }
+    /* Thats a fix for unitialized meshes that cannot become visible due to no vectors initialization. That will be corrected with bounding boxes. */
+    if (!m->v_indexes) {
+        m->visible = 1;
+        return 1;
+    }
 
-        vec_arr = vecsarrayxm(m[i].v, m[i].v_indexes, worldMat);
+    vec_arr = vecsarrayxm(m->v, m->v_indexes, viewMat);
 
-        for (int j = 0; j < m[i].v_indexes; j++) {
+    if (viewProj) {
+        for (int j = 0; j < m->v_indexes; j++) {
             /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
             float z = vec_arr[j][2];
 
@@ -212,34 +213,36 @@ const void frustumCulling(Mesh *m, const int len) {
                 vec_arr[j][2] = z;
             }
         }
-
-        dm = getDimensionsLimits(vec_arr, m[i].v_indexes);
-
-        vec4f min = { dm.minX, dm.minY, dm.minZ, 1.f };
-        vec4f max = { dm.maxX, dm.maxY, dm.maxZ, 1.f };
-
-
-        min[0] = ((1 + min[0]) * HALFW) + 0.5;
-        min[1] = ((1 + min[1]) * HALFH) + 0.5;
-
-        max[0] = ((1 + max[0]) * HALFW) + 0.5;
-        max[1] = ((1 + max[1]) * HALFH) + 0.5;
-
-        // XDrawRectangle(displ, mainwin, gc, min[0], min[1], max[0] - min[0], max[1] - min[1]);
-
-        if ( ((min[2] > FPlane) || (max[2] < NPlane)) ||
-             ((min[1] > 1000) || (max[1] < 0)) ||
-             ((min[0] > 1000) || (max[0] < 0)) ) {
-
-            free(vec_arr);
-            m[i].visible = 0;
-            continue;
-        }
-        free(vec_arr);
-        m[i].visible = 1;
     }
+
+    dm = getDimensionsLimits(vec_arr, m->v_indexes);
+
+    vec4f min = { dm.minX, dm.minY, dm.minZ, 1.f };
+    vec4f max = { dm.maxX, dm.maxY, dm.maxZ, 1.f };
+
+
+    min[0] = ((1 + min[0]) * HALFW) + 0.5;
+    min[1] = ((1 + min[1]) * HALFH) + 0.5;
+
+    max[0] = ((1 + max[0]) * HALFW) + 0.5;
+    max[1] = ((1 + max[1]) * HALFH) + 0.5;
+
+    // XDrawRectangle(displ, mainwin, gc, min[0], min[1], max[0] - min[0], max[1] - min[1]);
+
+    if ( ((min[2] > FPlane) || (max[2] < NPlane)) ||
+            ((min[1] > 1000) || (max[1] < 0)) ||
+            ((min[0] > 1000) || (max[0] < 0)) ) {
+
+        free(vec_arr);
+        m->visible = 0;
+        return 0;
+    }
+    free(vec_arr);
+    m->visible = 1;
+    return 1;
 }
-const int checkVisibles(Scene *s, Mesh *m) {
+/* Check and set visibillity of scene objects seen from given meshes pivot point and direction. viewProj: (1 for Prespective and 0 for orthographic Projection).*/
+const int checkVisibles(Scene *s, Mesh *m, const int viewProj) {
     vec4f up = { 0.f, -1.f, 0.f };
     vec4f u = cross_product(m->mvdir, up);
     vec4f v = cross_product(u, m->mvdir);
@@ -247,14 +250,14 @@ const int checkVisibles(Scene *s, Mesh *m) {
     Mat4x4 collMat;
     Mat4x4 lk = lookat(m->pivot, u, v, m->mvdir);
 
-    if (!PROJECTIONVIEW)
+    if (viewProj)
         collMat = mxm(inverse_mat(lk), perspMat);
     else
         collMat = mxm(inverse_mat(lk), orthoMat);
 
-    checkVisibility(s->m, s->m_indexes, collMat);
+    checkVisibility(s->m, s->m_indexes, collMat, viewProj);
 }
-const static void checkVisibility(Mesh *m, const int len, Mat4x4 vm) {
+const static void checkVisibility(Mesh *m, const int len, Mat4x4 vm, const int viewProj) {
     vec4f *vec_arr;
     DimensionsLimits dm;
 
@@ -268,7 +271,7 @@ const static void checkVisibility(Mesh *m, const int len, Mat4x4 vm) {
 
         vec_arr = vecsarrayxm(m[i].v, m[i].v_indexes, vm);
 
-        if (!PROJECTIONVIEW)
+        if (!viewProj)
             for (int j = 0; j < m[i].v_indexes; j++) {
                 /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
                 float z = vec_arr[j][2];
@@ -315,7 +318,6 @@ const void initMesh(Mesh *a, const Mesh *b) {
 
     a->f = malloc(fsize);
     memcpy(a->f, b->f, fsize);
-    a->f_indexes = b->f_indexes;
 }
 /* Releases all members of the given Mesh. */
 const void releaseMesh(Mesh *m) {

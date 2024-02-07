@@ -26,8 +26,8 @@ int *thread_ids;
 /* ############################################## MULTITHREADING ################################################################### */
 
 /* CHOOSE WITH WHICH FUNCTION TO RASTERIZE. */
-int EDGEFUNC = 1;
-int SCANLINE = 0;
+int EDGEFUNC = 0;
+int SCANLINE = 1;
 
 /* Project specific headers */
 #include "headers/anvil_structs.h"
@@ -311,6 +311,7 @@ const static void keypress(XEvent *event) {
             vec4f mva = { -1.f, 0.f, 0.f };
             scene.m[1].mvdir = mva;
             scene.m[1].rahm = 1;
+            // rotate_origin(&scene.m[Player_1], -10, 0.0f, 0.0f, 1.0f);
             break;
         case 65432 : sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
             scene.m[1].pivot[0] += sunMov;
@@ -319,6 +320,7 @@ const static void keypress(XEvent *event) {
             vec4f mvb = { 1.f, 0.f, 0.f };
             scene.m[1].mvdir = mvb;
             scene.m[1].rahm = 1;
+            // rotate_origin(&scene.m[Player_1], 10, 0.0f, 0.0f, 1.0f);
             break;
         case 65434 : sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
             vec4f upw = { 0.f, 1.f, 0.f };
@@ -330,6 +332,7 @@ const static void keypress(XEvent *event) {
             vec4f mvc = { 0.f, 1.f, 0.f };
             scene.m[1].mvdir = mvc;
             scene.m[1].rahm = 1;
+            scene.m[1].falling_time = -0.5;
             break;
         case 65435 : sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
             scene.m[1].pivot[1] -= sunMov;
@@ -355,7 +358,7 @@ const static void keypress(XEvent *event) {
             scene.m[1].mvdir = mvf;
             scene.m[1].rahm = 1;
             break;
-        case 120 : rotate_x(&scene.m[1], 1);                     /* x */
+        case 120 : rotate_x(&scene.m[0], 1);                     /* x */
             break;
         case 121 : rotate_y(&scene.m[0], 1);                     /* y */
             break;
@@ -365,7 +368,7 @@ const static void keypress(XEvent *event) {
             vec4f center = { 0.f, 0.f, 0.f, 0.f };
             rotate_light(&sunlight, center, 1, 0.0f, 1.0f, 0.0f);        /* r */
             break;
-        case 99 : rotate_origin(&scene.m[1], 1, 1.0f, 0.0f, 0.0f);  /* c */
+        case 99 : rotate_origin(&scene.m[Player_1], 10, 1.0f, 0.0f, 0.0f);  /* c */
             break;
         case 43 : AmbientStrength += 0.01;                                    /* + */
             printf("AmbientStrength: %f\n", AmbientStrength);
@@ -466,22 +469,27 @@ static void *cascade(void *args) {
 const static void project() {
 
     /* Check what is visible from given point. */
-    // checkVisibles(&scene, &scene.m[1]);
-    // getPossibleColliders(&scene);
-    frustumCulling(scene.m, scene.m_indexes);
+    // checkVisibles(&scene, &scene.m[1], 0);
 
-    for (int i = 0; i < scene.m_indexes; i++) {
-        if (scene.m[i].visible) {
-            adoptdetailMesh(&scene.m[i]);
-            adoptdetailTexture(&scene.m[i]);
-            // logMesh(scene.m[i]);
-        }
-    }
+    // frustumCulling(scene.m, scene.m_indexes);
 
-    applyGravity(&scene, GravityTime);
-    // printf("Quad index: %d\n", scene.m[Player_1].quadIndex);
+    // for (int i = 0; i < scene.m_indexes; i++) {
+    //     if (scene.m[i].visible) {
+    //         adoptdetailMesh(&scene.m[i]);
+    //         adoptdetailTexture(&scene.m[i]);
+    //         // logMesh(scene.m[i]);
+    //     }
+    // }
+
+    applyGravity(&scene);
+
+    if (scene.m[Player_1].rahm)
+        objectTerrainCollision(&scene.m[Terrain_1], &scene.m[Player_1]);
+
     addMeshToQuad(&scene.m[Player_1]);
-    printQuad(scene.m[Player_1].quadIndex);
+    // printQuad(scene.m[Player_1].quadIndex);
+    removeMeshFromQuad(&scene.m[Player_1]);
+    // printQuad(scene.m[Player_1].quadIndex);
 
     int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
     for (int i = 0; i < NUM_OF_CASCADES; i++) {
@@ -518,8 +526,6 @@ const static void drawFrame(void) {
         main_image->data = (char*)shadow_buffer[1];
     else if (PROJECTBUFFER == 5)
         main_image->data = (char*)shadow_buffer[2];
-    else if (PROJECTBUFFER == 6)
-        main_image->data = NULL;
 
     XPutImage(displ, main_pixmap, gc, main_image, 0, 0, 0, 0, main_wa.width, main_wa.height);
     pixmapdisplay(main_pixmap, mainwin, main_wa.width, main_wa.height);

@@ -24,10 +24,11 @@
 /* Defined in main.c. */
 extern TerrainInfo tf;
 
-const void initTerrainInfo(TerrainInfo *t);
+const void initMeshQuadInfo(Mesh *t, Mesh *m);
 const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m);
 const int getTerrainQuadIndex(Mesh *t, vec4f coords);
 const void addMeshToQuad(Mesh *m);
+const void removeMeshFromQuad(Mesh *m);
 const void printQuad(const int quad_index);
 
 #endif /* _TERRAIN_FUNCTIONS_H */
