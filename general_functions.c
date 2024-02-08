@@ -109,13 +109,14 @@ const void loadtexture(Mesh *m, const unsigned int lvl) {
     }
     fclose(fp);
 }
+#include "headers/logging.h"
 const void adoptdetailMesh(Mesh *m) {
     if ( m->lodlevels < 1 )
         return;
 
     const int distance = len_vec(m->pivot - lookAt.m[3]);
     const int lcache_0 = m->currentlod;
-
+    // printf("Step 1\n");
     if ( (distance >= 0 && distance <= (20 * m->scale) ) && (m->currentlod != 1) ) {
         m->currentlod = 1;
     } else if ( (distance > (20 * m->scale)  && distance <= (40 * m->scale) ) && (m->currentlod != 2) ) {
@@ -136,7 +137,7 @@ const void adoptdetailMesh(Mesh *m) {
     if (lcache_0 != m->currentlod) {
         releaseMesh(m);
         loadmesh(m, m->name, m->currentlod);
-        reWorldMesh(m);
+        // printf("Hit this spot\n");
     }
 }
 const void adoptdetailTexture(Mesh *m) {
@@ -169,19 +170,21 @@ const void adoptdetailTexture(Mesh *m) {
     const int index = m->material.texlod - 1;
     if (strcmp(m->material.texlvl[lcache_0], m->material.texlvl[index]) != 0) {
         loadtexture(m, index);
+        printf("Hit this spot\n");
     }
 }
-const void reWorldMesh(Mesh *m) {
-    Mat4x4 sclMatrix, trMatrix, posMatrix;
+const void enWorldMesh(Mesh *m) {
+    Mat4x4 sclMatrix, trMatrix, vectorsMatrix, normalsMatrix;
 
     vec4f pos = { 0 };
     Mat4x4 mfQ = MatfromQuat(m->Q, pos);
     sclMatrix = mxm(mfQ, scaleMatrix(m->scale));
     trMatrix = translationMatrix(m->pivot[0], m->pivot[1], m->pivot[2]);
-    posMatrix = mxm(sclMatrix, trMatrix);
+    vectorsMatrix = mxm(mxm(sclMatrix, trMatrix), worldMat);
+    normalsMatrix = mxm(mxm(sclMatrix, trMatrix), viewMat);
 
-    m->v = setvecsarrayxm(m->v, m->v_indexes, posMatrix);
-    m->n = setvecsarrayxm(m->n, m->n_indexes, posMatrix);
+    m->v = setvecsarrayxm(m->v, m->v_indexes, vectorsMatrix);
+    m->n = setvecsarrayxm(m->n, m->n_indexes, normalsMatrix);
 }
 const void placeMesh(Mesh *m, const vec4f pos) {
     Mat4x4 trMatrix = translationMatrix(pos[0], pos[1], pos[2]);
@@ -191,27 +194,24 @@ const void placeMesh(Mesh *m, const vec4f pos) {
     m->pivot = pos;
 }
 /* Cull Mesh to view frustum. viewProj: (1 for Prespective and 0 for orthographic Projection). Thats for the perspective divide usefull.viewMat the matrix of the point of view. */
-const int frustumCulling(Mesh *m, const int viewProj, Mat4x4 viewMat) {
-    vec4f *vec_arr;
-    DimensionsLimits dm;
-
+const int frustumCulling(Mesh *m) {
     /* Thats a fix for unitialized meshes that cannot become visible due to no vectors initialization. That will be corrected with bounding boxes. */
     if (!m->v_indexes) {
         m->visible = 1;
         return 1;
     }
 
-    vec_arr = vecsarrayxm(m->v, m->v_indexes, viewMat);
+    vec4f *vec_arr = malloc(m->v_indexes * 16);
+    memcpy(vec_arr, m->v, m->v_indexes * 16);
+    DimensionsLimits dm;
 
-    if (viewProj) {
-        for (int j = 0; j < m->v_indexes; j++) {
-            /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
-            float z = vec_arr[j][2];
+    for (int j = 0; j < m->v_indexes; j++) {
+        /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
+        float z = vec_arr[j][2];
 
-            if (vec_arr[j][3] > 0) {
-                vec_arr[j] /= vec_arr[j][3];
-                vec_arr[j][2] = z;
-            }
+        if (vec_arr[j][3] > 0) {
+            vec_arr[j] /= vec_arr[j][3];
+            vec_arr[j][2] = z;
         }
     }
 

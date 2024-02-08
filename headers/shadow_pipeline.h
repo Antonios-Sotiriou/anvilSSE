@@ -27,6 +27,9 @@
 
 /* Defined in main.c. */
 extern int HALFH, HALFW, PROJECTIONVIEW;
+extern unsigned int SMA;
+extern unsigned int SMB;
+extern unsigned int SMC;
 extern float FPlane, NPlane, ASPECTRATIO;
 extern XWindowAttributes main_wa;
 extern Mat4x4 ortholightMat[3], viewMat,  *point_mat;

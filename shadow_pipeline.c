@@ -1,5 +1,6 @@
 #include "headers/shadow_pipeline.h"
 
+const static void enShadowMesh(Mesh *m, const Mat4x4 lightMat);
 const static MeshShadowStepTwo assemblyfacesShadow(MeshShadowStepOne *m, unsigned int *indices, const int len);
 const static MeshShadowStepTwo shadowculling(const MeshShadowStepTwo c, const int len);
 const static float shadow_winding(const Shadowface f);
@@ -51,13 +52,13 @@ const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
     DimensionsLimits dl;
     vec4f *fr[3] = {
         worldSpaceFrustum(NPlane, 100.f),
-        worldSpaceFrustum(100.f, 300.f),
-        worldSpaceFrustum(300.f, 600.f)
+        worldSpaceFrustum(100, 300.f),
+        worldSpaceFrustum(300, 600.f)
     };
     Mat4x4 lm[3] = {
-        lookat(eye[0] + (sunlight.pos + (eye[3] * 100.f)), sunlight.u, sunlight.v, sunlight.n),//100.f
-        lookat(eye[0] + (sunlight.pos + (eye[3] * 300.f)), sunlight.u, sunlight.v, sunlight.n),//460.f
-        lookat(eye[0] + (sunlight.pos + (eye[3] * 600.f)), sunlight.u, sunlight.v, sunlight.n)//1260.f
+        lookat(eye[0] + (eye[3] * (float)SMA), sunlight.u, sunlight.v, sunlight.n),//100.f
+        lookat(eye[0] + (eye[3] * (float)SMB), sunlight.u, sunlight.v, sunlight.n),//460.f
+        lookat(eye[0] + (eye[3] * (float)SMC), sunlight.u, sunlight.v, sunlight.n)//1260.f
     };
 
     for (int i = 0; i < num_of_cascades; i++) {
@@ -72,20 +73,21 @@ const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
         ortholightMat[i] = mxm(lview, createOrthoMatrixFromLimits(dl));
     }
 }
-#include "headers/logging.h"
 /* ################################################### CASCADE SHADOW MAPPING FINISH ################################################ */
 const void shadowPipeline(Scene *s, const unsigned int sm_index) {
+    Mesh cache_v = { 0 };
     MeshShadowStepOne cache_0 = { 0 };
 
     for (int i = 0; i < s->m_indexes; i++) {
+        initMesh(&cache_v, &s->m[i]);
+        enShadowMesh(&cache_v, ortholightMat[sm_index]);
 
-        if (frustumCulling(&s->m[i], 0, ortholightMat[sm_index])) {
+        if (frustumCulling(&cache_v)) {
 
-            initMeshShadowStepOne(&cache_0, &s->m[i]);
+            initMeshShadowStepOne(&cache_0, &cache_v);
 
-            cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, ortholightMat[sm_index]);
-
-            MeshShadowStepTwo cache_1 = assemblyfacesShadow(&cache_0, s->m[i].f, s->m[i].f_indexes);
+            MeshShadowStepTwo cache_1 = assemblyfacesShadow(&cache_0, cache_v.f, cache_v.f_indexes);
+            releaseMesh(&cache_v);
             releaseMeshShadowStepOne(&cache_0);
 
             /* At this Point triangles must be shadowclipped against near plane. */
@@ -122,9 +124,19 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
 
             createShadowmap(&cache_1, sm_index);
             releaseMeshShadowStepTwo(&cache_1);
+        } else {
+            releaseMesh(&cache_v);
         }
-        // releaseMesh(&cache_v);
     }
+}
+const static void enShadowMesh(Mesh *m, const Mat4x4 lightMat) {
+    Mat4x4 sclMatrix, trMatrix, vectorsMatrix;
+
+    sclMatrix = scaleMatrix(m->scale);
+    trMatrix = translationMatrix(m->pivot[0], m->pivot[1], m->pivot[2]);
+    vectorsMatrix = mxm(mxm(sclMatrix, trMatrix), lightMat);
+
+    m->v = setvecsarrayxm(m->v, m->v_indexes, vectorsMatrix);
 }
 /* Assosiates vertices coordinate values from vector array through indexes. */
 const static MeshShadowStepTwo assemblyfacesShadow(MeshShadowStepOne *m, unsigned int *indices, const int len) {

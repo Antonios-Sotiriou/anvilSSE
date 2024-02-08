@@ -25,8 +25,6 @@ const void logMesh(const Mesh m) {
     printf("Mesh name:     %s\n", m.name);
     printf("pivot:         ");
     logVec4f(m.pivot);
-    // printf("rotation:      ");
-    // logVec4f(m.rotation);
     printf("v:             %p -->  ", m.v);
     printf("v_indexes:     %d\n", m.v_indexes);
     printf("n:             %p -->  ", m.n);
@@ -41,7 +39,44 @@ const void logMesh(const Mesh m) {
     printf("meshlod:       %d\n", m.currentlod);
     printf("scale:         %f\n", m.scale);
     printf("visible:       %d\n", m.visible);
-    printf("material:      %s\n\n", m.material.name);
+    logMaterial(m.material);
+}
+
+const void logMaterial(const Material mt) {
+        printf("Material: {\n");
+        printf("    name          : %s\n", mt.name);
+        printf("    basecolor     : ");
+        logVec4f(mt.basecolor);
+        printf("    ambient       : ");
+        logVec4f(mt.ambient);
+        printf("    diffuse       : ");
+        logVec4f(mt.diffuse);
+        printf("    specular      : ");
+        logVec4f(mt.specular);
+        printf("    shinniness    : %f\n", mt.shinniness);
+        printf("    reflect       : %d\n", mt.reflect);
+        printf("    texlevels     : %d\n", mt.texlevels);
+        printf("    texlod        : %d\n", mt.texlod);
+        printf("    texture_height: %d\n", mt.texture_height);
+        printf("    texture_width : %d\n", mt.texture_width);
+        printf("    texture       : %p\n", mt.texture);
+        printf("    texlvl[9][10] : ");
+        for (int i = 0; i < 9; i++) {
+            printf("%s", mt.texlvl[i]);
+        }
+        printf("\n");
+        printf("}\n");
+
+    // char name[24];
+    // vec4f basecolor;
+    // vec4f ambient;
+    // vec4f diffuse;
+    // vec4f specular;
+    // float shinniness;
+    // int reflect, texlevels, texlod;
+    // signed int texture_height, texture_width;
+    // vec4c *texture;
+    // char texlvl[9][10];
 }
 
 /* Logging Triangle values.If vec = 1 loggs vec4 values, if tex Texture, if norm Normal. */
@@ -68,6 +103,7 @@ const void logMatrix(const Mat4x4 m) {
         }
         fprintf(stdout, "\n");
     }
+    fprintf(stdout, "\n");
 }
 
 const void logQuat(const Quat q) {

@@ -12,9 +12,6 @@ const void applyGravity(Scene *s) {
 
             vec4f pivot = (pull_point * velocity);
 
-            trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
-            s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
-
             s->m[i].pivot += pivot;
 
             objectTerrainCollision(&s->m[Terrain_1], &s->m[i]);

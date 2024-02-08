@@ -126,6 +126,11 @@ int HALFH = 0; // Half height of the screen; This variable is initialized in con
 int MAIN_EMVADON, MAP_EMVADON;
 int DEBUG = 0;
 
+int INCORDEC = -1;
+unsigned int SMA = 100;
+unsigned int SMB = 300;
+unsigned int SMC = 600;
+
 /* Display usefull measurements. */
 float			        TimeCounter, LastFrameTimeCounter, DeltaTime, GravityTime, prevTime = 0.0, FPS;
 struct timeval		    tv, tv0;
@@ -269,7 +274,12 @@ const static void keypress(XEvent *event) {
     // printf("Key Pressed: %ld\n", keysym);
     // printf("\x1b[H\x1b[J");
     // system("clear\n");
+
     switch (keysym) {
+        case 65505 : INCORDEC = INCORDEC == -1 ? 1 : -1; break;
+        case 49 : SMA += INCORDEC; break;
+        case 50 : SMB += INCORDEC; break;
+        case 51 : SMC += INCORDEC; break;
         case 97 : look_left(eye, 0.2);             /* a */
             // rotate_light_cam(&scene.m[1], camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
             break;
@@ -306,8 +316,8 @@ const static void keypress(XEvent *event) {
             break;
         case 65430 : sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
             scene.m[1].pivot[0] -= sunMov;
-            Mat4x4 ar = translationMatrix(-sunMov, 0.0f, 0.0f);
-            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, ar);
+            // Mat4x4 ar = translationMatrix(-sunMov, 0.0f, 0.0f);
+            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, ar);
             vec4f mva = { -1.f, 0.f, 0.f };
             scene.m[1].mvdir = mva;
             scene.m[1].rahm = 1;
@@ -315,8 +325,8 @@ const static void keypress(XEvent *event) {
             break;
         case 65432 : sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
             scene.m[1].pivot[0] += sunMov;
-            Mat4x4 br = translationMatrix(sunMov, 0.0f, 0.0f);
-            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, br);
+            // Mat4x4 br = translationMatrix(sunMov, 0.0f, 0.0f);
+            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, br);
             vec4f mvb = { 1.f, 0.f, 0.f };
             scene.m[1].mvdir = mvb;
             scene.m[1].rahm = 1;
@@ -326,8 +336,8 @@ const static void keypress(XEvent *event) {
             vec4f upw = { 0.f, 1.f, 0.f };
             upw *= sunMov;
             scene.m[1].pivot += upw;
-            Mat4x4 cr = translationMatrix(upw[0], upw[1], upw[2]);
-            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, cr);
+            // Mat4x4 cr = translationMatrix(upw[0], upw[1], upw[2]);
+            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, cr);
             scene.m[1].grounded = 0;
             vec4f mvc = { 0.f, 1.f, 0.f };
             scene.m[1].mvdir = mvc;
@@ -336,24 +346,24 @@ const static void keypress(XEvent *event) {
             break;
         case 65435 : sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
             scene.m[1].pivot[1] -= sunMov;
-            Mat4x4 dr = translationMatrix(0.0f, -sunMov, 0.0f);
-            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
+            // Mat4x4 dr = translationMatrix(0.0f, -sunMov, 0.0f);
+            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
             vec4f mvd = { 0.f, -1.f, 0.f };
             scene.m[1].mvdir = mvd;
             scene.m[1].rahm = 1;
             break;
         case 65431 : sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
             scene.m[1].pivot[2] += sunMov;
-            Mat4x4 er = translationMatrix(0.0f, 0.0f, sunMov);
-            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, er);
+            // Mat4x4 er = translationMatrix(0.0f, 0.0f, sunMov);
+            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, er);
             vec4f mve= { 0.f, 0.f, 1.f };
             scene.m[1].mvdir = mve;
             scene.m[1].rahm = 1;
             break;
         case 65433 : sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
             scene.m[1].pivot[2] -= sunMov;
-            Mat4x4 fr = translationMatrix(0.0f, 0.0f, -sunMov);
-            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, fr);
+            // Mat4x4 fr = translationMatrix(0.0f, 0.0f, -sunMov);
+            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, fr);
             vec4f mvf = { 0.f, 0.f, -1.f };
             scene.m[1].mvdir = mvf;
             scene.m[1].rahm = 1;
@@ -368,7 +378,9 @@ const static void keypress(XEvent *event) {
             vec4f center = { 0.f, 0.f, 0.f, 0.f };
             rotate_light(&sunlight, center, 1, 0.0f, 1.0f, 0.0f);        /* r */
             break;
-        case 99 : rotate_origin(&scene.m[Player_1], 10, 1.0f, 0.0f, 0.0f);  /* c */
+        case 99 : //rotate_origin(&scene.m[Player_1], 10, 1.0f, 0.0f, 0.0f);  /* c */
+            vec4f axis = { 1.f, 0.f, 0.f, 0.f };
+            scene.m[Player_1].Q = rotationQuat(10, axis);
             break;
         case 43 : AmbientStrength += 0.01;                                    /* + */
             printf("AmbientStrength: %f\n", AmbientStrength);
@@ -379,7 +391,7 @@ const static void keypress(XEvent *event) {
             // orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, 0.01f, 0.1f);
             break;
         case 112 :
-            if (PROJECTBUFFER == 6)
+            if (PROJECTBUFFER == 5)
                 PROJECTBUFFER = 0;
             PROJECTBUFFER++;
             if (PROJECTBUFFER == 1) {
@@ -388,8 +400,6 @@ const static void keypress(XEvent *event) {
                 fprintf(stderr, "Projecting Depth buffer -- PROJECTBUFFER: %d\n", PROJECTBUFFER);
             } else if (PROJECTBUFFER == 3) {
                 fprintf(stderr, "Projecting Shadow buffer -- PROJECTBUFFER: %d\n", PROJECTBUFFER);
-            } else if (PROJECTBUFFER == 6) {
-                fprintf(stderr, "Projecting Height map -- PROJECTBUFFER: %d\n", PROJECTBUFFER);
             }
             break;
         case 65507 :
@@ -422,17 +432,13 @@ const static void keypress(XEvent *event) {
     sunlight.newPos = vecxm(sunlight.pos, viewMat);
 
     /* At this point must be created probably the height map. */
-
+    printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
     createCascadeShadowMatrices(NUM_OF_CASCADES);
 
     if (!PROJECTIONVIEW)
         worldMat = mxm(viewMat, perspMat);
     else
         worldMat = mxm(viewMat, orthoMat);
-
-    // scene.m[0].v = worldSpaceFrustum(NPlane, 100.f);
-    // scene.m[1].v = worldSpaceFrustum(100.f, 300.f);
-    // scene.m[2].v = worldSpaceFrustum(300.f, 600.f);
 
     AdjustShadow++;
     AdjustScene++;
@@ -549,7 +555,6 @@ const static void initGlobalGC(void) {
 }
 const static void initDependedVariables(void) {
     main_image = XCreateImage(displ, main_wa.visual, main_wa.depth, ZPixmap, 0, (char*)point_buffer, main_wa.width, main_wa.height, 32, (main_wa.width * 4));
-    // HM_image = XCreateImage(displ, main_wa.visual, main_wa.depth, ZPixmap, 0, (char*)height_map, main_wa.width, main_wa.height, 32, (main_wa.width * 4));
 
     ASPECTRATIO = ((float)main_wa.width / (float)main_wa.height);
     HALFH = main_wa.height >> 1;

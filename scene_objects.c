@@ -22,7 +22,6 @@ const void initWorldObjects(Scene *s) {
     s->m[0].cull = 1;
     s->m[0].lodlevels = 0;
     s->m[0].Q = unitQuat();
-    reWorldMesh(&s->m[0]);
 
     /* ######################################################################################################## */
     memcpy(s->m[1].name, "planet", sizeof("planet"));
@@ -42,7 +41,6 @@ const void initWorldObjects(Scene *s) {
     // s->m[1].visible = 1;
     // s->m[1].material.reflect = 1;
     s->m[1].Q = unitQuat();
-    // reWorldMesh(&s->m[4]);
 
     /* ######################################################################################################## */
     for (int i = 2; i < MESH_NUM; i++) {
@@ -60,7 +58,6 @@ const void initWorldObjects(Scene *s) {
         s->m[i].lodlevels = 0;
         // s->m[1].visible = 1;
         s->m[i].Q = unitQuat();
-        reWorldMesh(&s->m[i]);
     }
 }
 /* Teams all objects of the the world in a scene for further procesing. */

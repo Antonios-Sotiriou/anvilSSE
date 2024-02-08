@@ -34,7 +34,7 @@
 #endif
 
 /* Define in main.c */
-extern Mat4x4 lookAt, worldMat, perspMat, orthoMat;
+extern Mat4x4 lookAt, worldMat, viewMat, perspMat, orthoMat;
 extern float FPlane, NPlane;
 extern int HALFW, HALFH, PROJECTIONVIEW;
 
@@ -50,9 +50,9 @@ const void loadtexture(Mesh *m, const unsigned int lvl);
 const void readHeightmap(const char path[]);
 const void adoptdetailMesh(Mesh *m);
 const void adoptdetailTexture(Mesh *m);
-const void reWorldMesh(Mesh *m);
+const void enWorldMesh(Mesh *m);
 const void placeMesh(Mesh *m, const vec4f pos);
-const int frustumCulling(Mesh *m, const int viewProj, Mat4x4 viewMat);
+const int frustumCulling(Mesh *m);
 const int checkVisibles(Scene *s, Mesh *m, const int viewProj);
 const void initMesh(Mesh *a, const Mesh *b);
 const void releaseMesh(Mesh *m);

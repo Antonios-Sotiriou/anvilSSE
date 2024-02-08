@@ -19,6 +19,7 @@ const void logVec4i(const vec4i v);
 const void logVec4c(const vec4c v);
 const void logVec2f(const vec2f v);
 const void logMesh(const Mesh m);
+const void logMaterial(const Material mt);
 const void logFace(const face f, const int vec, const int tex, const int norm);
 const void logMatrix(const Mat4x4 m);
 const void logQuat(const Quat q);
