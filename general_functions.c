@@ -109,14 +109,13 @@ const void loadtexture(Mesh *m, const unsigned int lvl) {
     }
     fclose(fp);
 }
-#include "headers/logging.h"
 const void adoptdetailMesh(Mesh *m) {
     if ( m->lodlevels < 1 )
         return;
 
     const int distance = len_vec(m->pivot - lookAt.m[3]);
     const int lcache_0 = m->currentlod;
-    // printf("Step 1\n");
+
     if ( (distance >= 0 && distance <= (20 * m->scale) ) && (m->currentlod != 1) ) {
         m->currentlod = 1;
     } else if ( (distance > (20 * m->scale)  && distance <= (40 * m->scale) ) && (m->currentlod != 2) ) {
@@ -137,7 +136,7 @@ const void adoptdetailMesh(Mesh *m) {
     if (lcache_0 != m->currentlod) {
         releaseMesh(m);
         loadmesh(m, m->name, m->currentlod);
-        // printf("Hit this spot\n");
+        printf("adoptDetailMesh()\n");
     }
 }
 const void adoptdetailTexture(Mesh *m) {
@@ -170,7 +169,7 @@ const void adoptdetailTexture(Mesh *m) {
     const int index = m->material.texlod - 1;
     if (strcmp(m->material.texlvl[lcache_0], m->material.texlvl[index]) != 0) {
         loadtexture(m, index);
-        printf("Hit this spot\n");
+        printf("adoptDetailTexture()\n");
     }
 }
 const void enWorldMesh(Mesh *m) {
@@ -180,7 +179,7 @@ const void enWorldMesh(Mesh *m) {
     Mat4x4 mfQ = MatfromQuat(m->Q, pos);
     sclMatrix = mxm(mfQ, scaleMatrix(m->scale));
     trMatrix = translationMatrix(m->pivot[0], m->pivot[1], m->pivot[2]);
-    vectorsMatrix = mxm(mxm(sclMatrix, trMatrix), worldMat);
+    vectorsMatrix = mxm(sclMatrix, trMatrix);
     normalsMatrix = mxm(mxm(sclMatrix, trMatrix), viewMat);
 
     m->v = setvecsarrayxm(m->v, m->v_indexes, vectorsMatrix);
@@ -193,7 +192,7 @@ const void placeMesh(Mesh *m, const vec4f pos) {
     m->n = setvecsarrayxm(m->n, m->n_indexes, trMatrix);
     m->pivot = pos;
 }
-/* Cull Mesh to view frustum. viewProj: (1 for Prespective and 0 for orthographic Projection). Thats for the perspective divide usefull.viewMat the matrix of the point of view. */
+/* Cull Mesh to view frustum. proj: (1 for Prespective and 0 for orthographic Projection). Thats for the perspective divide usefull.viewMat the matrix of the point of view. */
 const int frustumCulling(Mesh *m) {
     /* Thats a fix for unitialized meshes that cannot become visible due to no vectors initialization. That will be corrected with bounding boxes. */
     if (!m->v_indexes) {
@@ -306,15 +305,12 @@ const void initMesh(Mesh *a, const Mesh *b) {
 
     a->v = malloc(vsize);
     memcpy(a->v, b->v, vsize);
-    a->v_indexes = b->v_indexes;
 
     a->n = malloc(nsize);
     memcpy(a->n, b->n, nsize);
-    a->n_indexes = b->n_indexes;
 
     a->t = malloc(tsize);
     memcpy(a->t, b->t, tsize);
-    a->t_indexes = b->t_indexes;
 
     a->f = malloc(fsize);
     memcpy(a->f, b->f, fsize);

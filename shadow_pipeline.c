@@ -73,6 +73,7 @@ const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
         ortholightMat[i] = mxm(lview, createOrthoMatrixFromLimits(dl));
     }
 }
+#include "headers/logging.h"
 /* ################################################### CASCADE SHADOW MAPPING FINISH ################################################ */
 const void shadowPipeline(Scene *s, const unsigned int sm_index) {
     Mesh cache_v = { 0 };
@@ -80,8 +81,8 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
 
     for (int i = 0; i < s->m_indexes; i++) {
         initMesh(&cache_v, &s->m[i]);
-        enShadowMesh(&cache_v, ortholightMat[sm_index]);
 
+        cache_v.v = setvecsarrayxm(cache_v.v, cache_v.v_indexes, ortholightMat[sm_index]);
         if (frustumCulling(&cache_v)) {
 
             initMeshShadowStepOne(&cache_0, &cache_v);
@@ -124,9 +125,8 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
 
             createShadowmap(&cache_1, sm_index);
             releaseMeshShadowStepTwo(&cache_1);
-        } else {
+        } else
             releaseMesh(&cache_v);
-        }
     }
 }
 const static void enShadowMesh(Mesh *m, const Mat4x4 lightMat) {
@@ -349,7 +349,7 @@ const static void shadowface(Shadowface *f, const Srt srt[], const unsigned int 
 }
 const float shadowTest(vec4f frag, vec4f nml) {
     int sm_index;
-    if (frag[2] >= 0.f && frag[2] <= 100.f)
+    if (frag[2] <= 100.f)
         sm_index = 0;
     else if (frag[2] > 100.f && frag[2] <= 300.f)
         sm_index = 1;
@@ -360,39 +360,30 @@ const float shadowTest(vec4f frag, vec4f nml) {
     // if ( dot > -0.2 && dot < 0.2 )
     //     return 0;
     // printf("dot: %f\n", dot);
-    /* Transform to Model space coordinates. */
     // logVec4f(norm_vec(sunlight.newPos));
+
+    /* Transform to Model space coordinates. */ /* Transform to Light space coordinates. */
     frag[3] = 1.f;
-    frag = vecxm(frag, *point_mat);
-
-    /* Transform to Light space coordinates. */
-    frag = vecxm(frag, ortholightMat[sm_index]);
-
-    float x = frag[0];
-    float y = frag[1];
-    float z = frag[2];
-    z = 1.f / z;
+    frag = vecxm(frag, mxm(*point_mat, ortholightMat[sm_index]));
 
     /* Transform to Screen space coordinates. */
-    x = (1.0 + x) * (main_wa.width >> 1);
-    if ( (x < 0) || (x >= main_wa.width) )
-        return 0.f;
-
-    y = (1.0 + y) * (main_wa.height >> 1);
-    if ( (y < 0) || (y >= main_wa.height) )
-        return 0.f;
+    frag[0] = (1.0 + frag[0]) * (main_wa.width >> 1);
+    frag[1] = (1.0 + frag[1]) * (main_wa.height >> 1);
+    frag[2] = 1.f / frag[2];
 
     float shadow = 0.0;
     for (int v = -1; v <= 1; v++) {
         for (int u = -1; u <= 1; u++) {
-            x += u, y += v;
-            float pcfDepth = shadow_buffer[sm_index][((int)y * main_wa.width) + (int)x];
-            shadow += z + 0.005 < pcfDepth ? 1.f : 0.f;
+            frag[0] += u, frag[1] += v;
+            if ( (frag[0] < 0 || frag[0] > main_wa.width) || (frag[1] < 0 || frag[1] > main_wa.height) )
+                return 0.f;
+
+            float pcfDepth = shadow_buffer[sm_index][((int)frag[1] * main_wa.width) + (int)frag[0]];
+            shadow += frag[2] + 0.005 < pcfDepth ? 1.f : 0.f;
         }
     }
-    shadow /= 9.f;
 
-    return shadow;
+    return shadow / 9.f;
 }
 /* Releases all members of the given inside Shadow pipeline lvl 1 Mesh. */
 const static void releaseMeshShadowStepOne(MeshShadowStepOne *c) {

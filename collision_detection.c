@@ -2,6 +2,7 @@
 
 const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
     const float height = getTerrainHeight(terrain, object->pivot, object);
+
     float height_diff = height - (object->pivot[1] - object->scale);
     if (height_diff >= 0) {
         object->grounded = 1;

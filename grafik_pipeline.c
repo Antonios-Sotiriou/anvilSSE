@@ -1,7 +1,5 @@
 #include "headers/grafik_pipeline.h"
 
-#include "headers/frustum_map.h"
-
 const static MeshStepTwo assemblyfaces(MeshStepOne *m, unsigned int *indices, const int len);
 const static void ppdiv(MeshStepTwo *m, const int len);
 const static MeshStepTwo bfculling(const MeshStepTwo m, const int len);
@@ -14,23 +12,17 @@ const static void initMeshStepOne(MeshStepOne *a, Mesh *b);
 /* Passes the scene Meshes throught the graphic pipeline. */
 #include "headers/logging.h"
 const void grafikPipeline(Scene *s) {
-    Mesh cache_v = { 0 };
     MeshStepOne cache_0 = { 0 };
 
     for (int i = 0; i < s->m_indexes; i++) {
-        adoptdetailMesh(&s->m[i]);
-        adoptdetailTexture(&s->m[i]);
 
-        initMesh(&cache_v, &s->m[i]);
-        enWorldMesh(&cache_v);
+        s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, worldMat);
+        if (frustumCulling(&s->m[i])) { /* Scene doenst save the info needed. */
 
-        if (frustumCulling(&cache_v)) { /* Scene doenst save the info needed. */
-
-            initMeshStepOne(&cache_0, &cache_v);
+            initMeshStepOne(&cache_0, &s->m[i]);
 
             /* Assembly and create the faces from the mesh vertices, normals and texture arrays, through the indexes. */
-            MeshStepTwo cache_1 = assemblyfaces(&cache_0, cache_v.f, cache_v.f_indexes);
-            releaseMesh(&cache_v);
+            MeshStepTwo cache_1 = assemblyfaces(&cache_0, s->m[i].f, s->m[i].f_indexes);
             releaseMeshStepOne(&cache_0);
 
             /* Clipping against near Plane in View Space. */
@@ -71,8 +63,6 @@ const void grafikPipeline(Scene *s) {
 
             rasterize(&cache_1, &s->m[i].material);
             releaseMeshStepTwo(&cache_1);
-        } else {
-            releaseMesh(&cache_v);
         }
     }
 }

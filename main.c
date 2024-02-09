@@ -114,7 +114,7 @@ const float sunMov = 10.0f;
 Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
 
 /* Anvil global Objects Meshes and Scene. */
-Scene scene = { 0 };
+Scene scene = { 0 }, scene_cache = { 0 };
 /* Terrain info struct is populated with data when terrain is created(createTerrain()). */
 TerrainInfo tf;
 
@@ -184,6 +184,7 @@ const static void clientmessage(XEvent *event) {
     if (event->xclient.data.l[0] == wmatom[Win_Close]) {
 
         releaseScene(&scene);
+        // releaseScene(&scene_cache);
 
         free(frame_buffer);
         free(main_depth_buffer);
@@ -316,8 +317,8 @@ const static void keypress(XEvent *event) {
             break;
         case 65430 : sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
             scene.m[1].pivot[0] -= sunMov;
-            // Mat4x4 ar = translationMatrix(-sunMov, 0.0f, 0.0f);
-            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, ar);
+            vec4f axisa = { 0.f, 0.f, 1.f, 0.f };
+            scene.m[Player_1].Q = multiplyQuats(scene.m[Player_1].Q, rotationQuat(-10, axisa));
             vec4f mva = { -1.f, 0.f, 0.f };
             scene.m[1].mvdir = mva;
             scene.m[1].rahm = 1;
@@ -325,19 +326,16 @@ const static void keypress(XEvent *event) {
             break;
         case 65432 : sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
             scene.m[1].pivot[0] += sunMov;
-            // Mat4x4 br = translationMatrix(sunMov, 0.0f, 0.0f);
-            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, br);
+            vec4f axisb = { 0.f, 0.f, 1.f, 0.f };
+            scene.m[Player_1].Q = multiplyQuats(scene.m[Player_1].Q, rotationQuat(10, axisb));
             vec4f mvb = { 1.f, 0.f, 0.f };
             scene.m[1].mvdir = mvb;
             scene.m[1].rahm = 1;
-            // rotate_origin(&scene.m[Player_1], 10, 0.0f, 0.0f, 1.0f);
             break;
         case 65434 : sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
             vec4f upw = { 0.f, 1.f, 0.f };
             upw *= sunMov;
             scene.m[1].pivot += upw;
-            // Mat4x4 cr = translationMatrix(upw[0], upw[1], upw[2]);
-            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, cr);
             scene.m[1].grounded = 0;
             vec4f mvc = { 0.f, 1.f, 0.f };
             scene.m[1].mvdir = mvc;
@@ -346,24 +344,22 @@ const static void keypress(XEvent *event) {
             break;
         case 65435 : sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
             scene.m[1].pivot[1] -= sunMov;
-            // Mat4x4 dr = translationMatrix(0.0f, -sunMov, 0.0f);
-            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
             vec4f mvd = { 0.f, -1.f, 0.f };
             scene.m[1].mvdir = mvd;
             scene.m[1].rahm = 1;
             break;
         case 65431 : sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
             scene.m[1].pivot[2] += sunMov;
-            // Mat4x4 er = translationMatrix(0.0f, 0.0f, sunMov);
-            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, er);
+            vec4f axise = { 1.f, 0.f, 0.f, 0.f };
+            scene.m[Player_1].Q = multiplyQuats(scene.m[Player_1].Q, rotationQuat(-10, axise));
             vec4f mve= { 0.f, 0.f, 1.f };
             scene.m[1].mvdir = mve;
             scene.m[1].rahm = 1;
             break;
         case 65433 : sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
             scene.m[1].pivot[2] -= sunMov;
-            // Mat4x4 fr = translationMatrix(0.0f, 0.0f, -sunMov);
-            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, fr);
+            vec4f axisf = { 1.f, 0.f, 0.f, 0.f };
+            scene.m[Player_1].Q = multiplyQuats(scene.m[Player_1].Q, rotationQuat(10, axisf));
             vec4f mvf = { 0.f, 0.f, -1.f };
             scene.m[1].mvdir = mvf;
             scene.m[1].rahm = 1;
@@ -380,7 +376,8 @@ const static void keypress(XEvent *event) {
             break;
         case 99 : //rotate_origin(&scene.m[Player_1], 10, 1.0f, 0.0f, 0.0f);  /* c */
             vec4f axis = { 1.f, 0.f, 0.f, 0.f };
-            scene.m[Player_1].Q = rotationQuat(10, axis);
+            scene.m[Player_1].Q = multiplyQuats(scene.m[Player_1].Q, rotationQuat(10, axis));
+            // scene.m[Player_1].Q = rotationQuat(10, axis);
             break;
         case 43 : AmbientStrength += 0.01;                                    /* + */
             printf("AmbientStrength: %f\n", AmbientStrength);
@@ -431,17 +428,13 @@ const static void keypress(XEvent *event) {
     viewMat = inverse_mat(lookAt);
     sunlight.newPos = vecxm(sunlight.pos, viewMat);
 
-    /* At this point must be created probably the height map. */
-    printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
+    // printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
     createCascadeShadowMatrices(NUM_OF_CASCADES);
 
     if (!PROJECTIONVIEW)
         worldMat = mxm(viewMat, perspMat);
     else
         worldMat = mxm(viewMat, orthoMat);
-
-    AdjustShadow++;
-    AdjustScene++;
 }
 static void *oscillator(void *args) {
 
@@ -468,35 +461,50 @@ static void *cascade(void *args) {
     int shadow_id = *(int*)args;
 
     memcpy(shadow_buffer[shadow_id], reset_buffer, FBSIZE);
-    shadowPipeline(&scene, shadow_id);
+    shadowPipeline(&scene_cache, shadow_id);
 
     return (void*)args;
 }
+const void saveValuesToScene(Scene *a, const Scene *b) {
+    for (int i = 0; i < b->m_indexes; i++) {
+        a->m[i].pivot = b->m[i].pivot;
+        a->m[i].Q = b->m[i].Q;
+
+        a->m[i].floating = b->m[i].floating;
+        a->m[i].relaxing = b->m[i].relaxing;
+        a->m[i].grounded = b->m[i].grounded;
+        a->m[i].rahm = b->m[i].rahm;
+        a->m[i].quadIndex = b->m[i].quadIndex;
+
+        a->m[i].scale = b->m[i].scale;
+        a->m[i].falling_time = b->m[i].falling_time;
+    }
+}
 const static void project() {
+  
+    scene_cache.m = malloc(scene.m_indexes * sizeof(Mesh));
+    scene_cache.m_indexes = scene.m_indexes;
+    for (int i = 0; i < scene.m_indexes; i++) {
+        adoptdetailMesh(&scene.m[i]);
+        adoptdetailTexture(&scene.m[i]);
 
-    /* Check what is visible from given point. */
-    // checkVisibles(&scene, &scene.m[1], 0);
+        initMesh(&scene_cache.m[i], &scene.m[i]);
+        enWorldMesh(&scene_cache.m[i]);
+    }
 
-    // frustumCulling(scene.m, scene.m_indexes);
+    applyGravity(&scene_cache); /* need world space */
 
-    // for (int i = 0; i < scene.m_indexes; i++) {
-    //     if (scene.m[i].visible) {
-    //         adoptdetailMesh(&scene.m[i]);
-    //         adoptdetailTexture(&scene.m[i]);
-    //         // logMesh(scene.m[i]);
-    //     }
-    // }
+    if (scene_cache.m[Player_1].rahm)
+        objectTerrainCollision(&scene_cache.m[Terrain_1], &scene_cache.m[Player_1]);
 
-    applyGravity(&scene);
-
-    if (scene.m[Player_1].rahm)
-        objectTerrainCollision(&scene.m[Terrain_1], &scene.m[Player_1]);
-
-    addMeshToQuad(&scene.m[Player_1]);
+    addMeshToQuad(&scene_cache.m[Player_1]);
     // printQuad(scene.m[Player_1].quadIndex);
-    removeMeshFromQuad(&scene.m[Player_1]);
+    removeMeshFromQuad(&scene_cache.m[Player_1]);
     // printQuad(scene.m[Player_1].quadIndex);
+    // logVec4f(scene_cache.m[Player_1].pivot);
+    saveValuesToScene(&scene, &scene_cache);
 
+    /* Draw in parallel the 3 Cascade shadow maps. */
     int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
     for (int i = 0; i < NUM_OF_CASCADES; i++) {
         if (pthread_create(&threads[i], NULL, &cascade, &shadow_ids[i]))
@@ -507,7 +515,7 @@ const static void project() {
             fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
     }
 
-    grafikPipeline(&scene);
+    grafikPipeline(&scene_cache);
 
     for (int i = 0; i < THREADS; i++) {
         if (pthread_create(&threads[i], NULL, &oscillator, &thread_ids[i]))
@@ -519,6 +527,9 @@ const static void project() {
     }
 
     drawFrame();
+    for (int i = 0; i < scene_cache.m_indexes; i++)
+        releaseMesh(&scene_cache.m[i]);
+    free(scene_cache.m);
 }
 /* Writes the final Pixel values on screen. */
 const static void drawFrame(void) {
@@ -737,7 +748,7 @@ const static int board(void) {
             if (handler[event.type])
                 handler[event.type](&event);
         }
-        usleep(0);
+        usleep(1000);
     }
 
     return EXIT_SUCCESS;

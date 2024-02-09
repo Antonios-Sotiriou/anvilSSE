@@ -1,9 +1,9 @@
 #include "headers/gravity.h"
 
 const void applyGravity(Scene *s) {
-    Mat4x4 trans;
     /* Apply Gravitanional forces to Specific or all meshes. EXCEPT TERRAIN. */
     for (int i = 0; i < s->m_indexes; i++) {
+
         if ((s->m[i].type != Terrain) && (!s->m[i].grounded)) {
 
             s->m[i].falling_time += DeltaTime;

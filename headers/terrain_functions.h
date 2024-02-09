@@ -25,7 +25,7 @@
 extern TerrainInfo tf;
 
 const void initMeshQuadInfo(Mesh *t, Mesh *m);
-const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m);
+const float getTerrainHeight(Mesh *terrain, vec4f coords, Mesh *m);
 const int getTerrainQuadIndex(Mesh *t, vec4f coords);
 const void addMeshToQuad(Mesh *m);
 const void removeMeshFromQuad(Mesh *m);
