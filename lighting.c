@@ -41,7 +41,7 @@ const void phong(Fragment *fr) {
         }
     }
     fragcolor = __builtin_convertvector((((specular + diffuse) * (ambient + (1.f - shadow))) * basecolor) * 255, vec4c);
-
+    // fragcolor = __builtin_convertvector((((specular + diffuse) * (ambient + (1.f * shadow))) * basecolor) * 255, vec4c);
     // fragcolor = __builtin_convertvector(basecolor * 255, vec4c);
     memcpy(&point_buffer[(int)((fr->pos[1] * point_attrib->width * 4) + (fr->pos[0] * 4))], &fragcolor, 4);
 }

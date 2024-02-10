@@ -52,13 +52,13 @@ const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
     DimensionsLimits dl;
     vec4f *fr[3] = {
         worldSpaceFrustum(NPlane, 100.f),
-        worldSpaceFrustum(100, 300.f),
-        worldSpaceFrustum(300, 600.f)
+        worldSpaceFrustum(NPlane, 150.f),
+        worldSpaceFrustum(NPlane, 200.f)
     };
     Mat4x4 lm[3] = {
-        lookat(eye[0] + (eye[3] * (float)SMA), sunlight.u, sunlight.v, sunlight.n),//100.f
-        lookat(eye[0] + (eye[3] * (float)SMB), sunlight.u, sunlight.v, sunlight.n),//460.f
-        lookat(eye[0] + (eye[3] * (float)SMC), sunlight.u, sunlight.v, sunlight.n)//1260.f
+        lookat(eye[0] + (eye[3] * (float)SMA), sunlight.u, sunlight.v, sunlight.n),//0.f
+        lookat(eye[0] + (eye[3] * (float)SMB), sunlight.u, sunlight.v, sunlight.n),//158.f
+        lookat(eye[0] + (eye[3] * (float)SMC), sunlight.u, sunlight.v, sunlight.n) //316.f
     };
 
     for (int i = 0; i < num_of_cascades; i++) {
@@ -69,7 +69,8 @@ const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
 
         dl = getDimensionsLimits(fr[i], 8);
         free(fr[i]);
-
+        // Mat4x4 orm = orthographicMatrix(dl.minX, dl.maxX, dl.minY, dl.maxY, 0.f, 100.f);
+        // ortholightMat[i] = mxm(lview, orm);
         ortholightMat[i] = mxm(lview, createOrthoMatrixFromLimits(dl));
     }
 }
@@ -348,13 +349,8 @@ const static void shadowface(Shadowface *f, const Srt srt[], const unsigned int 
     }
 }
 const float shadowTest(vec4f frag, vec4f nml) {
-    int sm_index;
-    if (frag[2] <= 100.f)
-        sm_index = 0;
-    else if (frag[2] > 100.f && frag[2] <= 300.f)
-        sm_index = 1;
-    else if (frag[2] > 300.f)
-        sm_index = 2;
+    int sm_index;          //88                //88              //246
+    sm_index = (frag[2] <= STA) ? 0 : (frag[2] > STB && frag[2] <= STC) ? 1 : 2;
 
     // float dot = dot_product(norm_vec(sunlight.newPos), nml);
     // if ( dot > -0.2 && dot < 0.2 )
@@ -379,7 +375,7 @@ const float shadowTest(vec4f frag, vec4f nml) {
                 return 0.f;
 
             float pcfDepth = shadow_buffer[sm_index][((int)frag[1] * main_wa.width) + (int)frag[0]];
-            shadow += frag[2] + 0.005 < pcfDepth ? 1.f : 0.f;
+            shadow += frag[2] + shadow_bias < pcfDepth ? 1.f : 0.f;
         }
     }
 

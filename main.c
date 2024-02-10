@@ -92,7 +92,7 @@ float SCALE               = 0.003f;
 float AmbientStrength     = 0.2f;
 float SpecularStrength    = 0.5f;
 float DiffuseStrength     = 0.5f;
-float shadow_bias         = -0.0003f;//0.003105;//0.002138;//0.000487f;
+float shadow_bias         = -0.001f;//0.003105;//0.002138;//0.000487f;
 
 /* Main Camera. Player */
 vec4f *eye;
@@ -127,9 +127,12 @@ int MAIN_EMVADON, MAP_EMVADON;
 int DEBUG = 0;
 
 int INCORDEC = -1;
-unsigned int SMA = 100;
-unsigned int SMB = 300;
-unsigned int SMC = 600;
+unsigned int SMA = 0;
+unsigned int SMB = 158;
+unsigned int SMC = 316;
+unsigned int STA = 88;
+unsigned int STB = 247;
+unsigned int STC = 316;
 
 /* Display usefull measurements. */
 float			        TimeCounter, LastFrameTimeCounter, DeltaTime, GravityTime, prevTime = 0.0, FPS;
@@ -273,7 +276,7 @@ const static void keypress(XEvent *event) {
         eye = (vec4f*)&camera;
 
     // printf("Key Pressed: %ld\n", keysym);
-    // printf("\x1b[H\x1b[J");
+    printf("\x1b[H\x1b[J");
     // system("clear\n");
 
     switch (keysym) {
@@ -281,6 +284,9 @@ const static void keypress(XEvent *event) {
         case 49 : SMA += INCORDEC; break;
         case 50 : SMB += INCORDEC; break;
         case 51 : SMC += INCORDEC; break;
+        case 48 : STA += INCORDEC; break;
+        case 57 : STB += INCORDEC; break;
+        case 56 : STC += INCORDEC; break;
         case 97 : look_left(eye, 0.2);             /* a */
             // rotate_light_cam(&scene.m[1], camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
             break;
@@ -291,9 +297,9 @@ const static void keypress(XEvent *event) {
             break;
         case 101 : look_down(eye, 2.2);            /* e */
             break;
-        case 119 : move_forward(eye, 12.2);         /* w */
+        case 119 : move_forward(eye, 1.f);         /* w */
             break;
-        case 115 : move_backward(eye, 12.2);        /* s */
+        case 115 : move_backward(eye, 1.f);        /* s */
             break;
         case 65361 : move_left(eye, 12.2);          /* left arrow */
             break;
@@ -303,11 +309,11 @@ const static void keypress(XEvent *event) {
             break;
         case 65364 : move_down(eye, 10.2);          /* down arrow */
             break;
-        case 65451 :collFPlane += 10.01f;             /* + */
-            printf("collFplane: %f\n",collFPlane);
+        case 65451 :shadow_bias += 0.0001;             /* + */
+            printf("shadow_bias: %f\n", shadow_bias);
             break;
-        case 65453 :collFPlane -= 10.01f;             /* - */
-            printf("collFplane: %f\n", collFPlane);
+        case 65453 :shadow_bias -= 0.0001;             /* - */
+            printf("shadow_bias: %f\n", shadow_bias);
             break;
         case 65450 : SpecularStrength += 0.01f;             /* * */
             printf("SpecularStrength: %f\n", SpecularStrength);
@@ -322,7 +328,6 @@ const static void keypress(XEvent *event) {
             vec4f mva = { -1.f, 0.f, 0.f };
             scene.m[1].mvdir = mva;
             scene.m[1].rahm = 1;
-            // rotate_origin(&scene.m[Player_1], -10, 0.0f, 0.0f, 1.0f);
             break;
         case 65432 : sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
             scene.m[1].pivot[0] += sunMov;
@@ -381,11 +386,9 @@ const static void keypress(XEvent *event) {
             break;
         case 43 : AmbientStrength += 0.01;                                    /* + */
             printf("AmbientStrength: %f\n", AmbientStrength);
-            // orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, 0.01f, 0.1f);
             break;
         case 45 : AmbientStrength -= 0.01;                                   /* - */
             printf("AmbientStrength: %f\n", AmbientStrength);
-            // orthoMat = orthographicMatrix(SCALE, SCALE, 0.0f, 0.0f, 0.01f, 0.1f);
             break;
         case 112 :
             if (PROJECTBUFFER == 5)
@@ -428,13 +431,17 @@ const static void keypress(XEvent *event) {
     viewMat = inverse_mat(lookAt);
     sunlight.newPos = vecxm(sunlight.pos, viewMat);
 
-    // printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
+    printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
+    printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
     createCascadeShadowMatrices(NUM_OF_CASCADES);
 
     if (!PROJECTIONVIEW)
         worldMat = mxm(viewMat, perspMat);
     else
         worldMat = mxm(viewMat, orthoMat);
+
+    // logVec4f(scene_cache.m[Player_1].pivot);
+    // logVec4f(camera[Pos]);
 }
 static void *oscillator(void *args) {
 
@@ -496,7 +503,7 @@ const static void project() {
 
     if (scene_cache.m[Player_1].rahm)
         objectTerrainCollision(&scene_cache.m[Terrain_1], &scene_cache.m[Player_1]);
-
+    
     addMeshToQuad(&scene_cache.m[Player_1]);
     // printQuad(scene.m[Player_1].quadIndex);
     removeMeshFromQuad(&scene_cache.m[Player_1]);
