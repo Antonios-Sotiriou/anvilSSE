@@ -52,8 +52,8 @@ const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
     DimensionsLimits dl;
     vec4f *fr[3] = {
         worldSpaceFrustum(NPlane, 100.f),
-        worldSpaceFrustum(NPlane, 150.f),
-        worldSpaceFrustum(NPlane, 200.f)
+        worldSpaceFrustum(NPlane, 250.f),
+        worldSpaceFrustum(NPlane, 500.f)
     };
     Mat4x4 lm[3] = {
         lookat(eye[0] + (eye[3] * (float)SMA), sunlight.u, sunlight.v, sunlight.n),//0.f
@@ -69,8 +69,7 @@ const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
 
         dl = getDimensionsLimits(fr[i], 8);
         free(fr[i]);
-        // Mat4x4 orm = orthographicMatrix(dl.minX, dl.maxX, dl.minY, dl.maxY, 0.f, 100.f);
-        // ortholightMat[i] = mxm(lview, orm);
+
         ortholightMat[i] = mxm(lview, createOrthoMatrixFromLimits(dl));
     }
 }
@@ -349,19 +348,18 @@ const static void shadowface(Shadowface *f, const Srt srt[], const unsigned int 
     }
 }
 const float shadowTest(vec4f frag, vec4f nml) {
-    int sm_index;          //88                //88              //246
-    sm_index = (frag[2] <= STA) ? 0 : (frag[2] > STB && frag[2] <= STC) ? 1 : 2;
-
-    // float dot = dot_product(norm_vec(sunlight.newPos), nml);
-    // if ( dot > -0.2 && dot < 0.2 )
-    //     return 0;
-    // printf("dot: %f\n", dot);
-    // logVec4f(norm_vec(sunlight.newPos));
+    unsigned int sm_index;          //88                //88              //246
+    sm_index = (frag[2] <= STA) ? 0 : (frag[2] > STB && frag[2] <= STC) ? 1 : (frag[2] > STC && frag[2] <= 1000) ? 2 : 3;
+    if (sm_index > 2)
+        return 0;
 
     /* Transform to Model space coordinates. */ /* Transform to Light space coordinates. */
     frag[3] = 1.f;
     frag = vecxm(frag, mxm(*point_mat, ortholightMat[sm_index]));
-
+    // float bias =  shadow_bias * dot_product(frag, ortholightMat[sm_index].m[3]);
+    // if (bias > 0.05)
+    //     return 0;
+    float bias = shadow_bias * (10 - sm_index);
     /* Transform to Screen space coordinates. */
     frag[0] = (1.0 + frag[0]) * (main_wa.width >> 1);
     frag[1] = (1.0 + frag[1]) * (main_wa.height >> 1);
@@ -370,12 +368,15 @@ const float shadowTest(vec4f frag, vec4f nml) {
     float shadow = 0.0;
     for (int v = -1; v <= 1; v++) {
         for (int u = -1; u <= 1; u++) {
-            frag[0] += u, frag[1] += v;
-            if ( (frag[0] < 0 || frag[0] > main_wa.width) || (frag[1] < 0 || frag[1] > main_wa.height) )
-                return 0.f;
+
+            if ( (frag[0] > 0 && frag[0] < main_wa.width) && (frag[1] > 0 && frag[1] < main_wa.height) )
+                frag[0] += u, frag[1] += v;
+            else
+                return 0;
+
 
             float pcfDepth = shadow_buffer[sm_index][((int)frag[1] * main_wa.width) + (int)frag[0]];
-            shadow += frag[2] + shadow_bias < pcfDepth ? 1.f : 0.f;
+            shadow += frag[2] + bias < pcfDepth ? 1.f : 0.f;
         }
     }
 

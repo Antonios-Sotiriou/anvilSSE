@@ -6,8 +6,8 @@
 const void initWorldObjects(Scene *s) {
     /* ######################################################################################################## */
     // memcpy(s->m[0].name, "basic_terrain", sizeof("basic_terrain"));
-    createGrid(&s->m[0], 10, 10);
-    // createTerrain(&s->m[0], "textures/height_map_10x10.bmp");
+    // createGrid(&s->m[0], 10, 10);
+    createTerrain(&s->m[0], "textures/height_map_bn1.bmp");
     loadmaterial(&s->m[0].material, "pearl");
 
     s->m[0].type = Terrain;
@@ -15,17 +15,18 @@ const void initWorldObjects(Scene *s) {
 
     s->m[0].scale = 1000.f;
 
-    s->m[0].pivot[0] = 0.f;
+    s->m[0].pivot[0] = 500.f;
     s->m[0].pivot[1] = 0.f;
-    s->m[0].pivot[2] = 0.f;
+    s->m[0].pivot[2] = 500.f;
 
     s->m[0].cull = 1;
     s->m[0].lodlevels = 0;
+    s->m[0].material.reflect = 0;
     s->m[0].Q = unitQuat();
 
     /* ######################################################################################################## */
     memcpy(s->m[1].name, "planet", sizeof("planet"));
-    loadmaterial(&s->m[1].material, "stones");
+    loadmaterial(&s->m[1].material, "earth");
 
     s->m[1].type = Player;
     s->m[1].id = 1;

@@ -24,8 +24,8 @@ const void phong(Fragment *fr) {
     vec4f nm = norm_vec(fr->nrm);
 
     /* Applying shadow test by transforming View Space coordinates to light Space. */
-    float shadow = shadowTest(pixel, nm);
     vec4f lightdir = norm_vec(sunlight.newPos - pixel);
+    float shadow = shadowTest(pixel, lightdir);
     float diff = dot_product(lightdir, nm);
     if ( diff > 0 ) {
         diffuse = sunlight.material.diffuse * (diff * (basecolor * DiffuseStrength));

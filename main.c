@@ -60,7 +60,7 @@ enum { Win_Close, Win_Name, Atom_Type, Atom_Last};
 /* X Global Structures. */
 Display *displ;
 Window mainwin;
-XImage *main_image; //, *HM_image;
+XImage *main_image;
 Pixmap main_pixmap;
 GC gc;
 XGCValues gcvalues;
@@ -89,10 +89,10 @@ float FPlane              = 20000.0f;
 float collNPlane          = 0.0f;
 float collFPlane          = 2000.0f;
 float SCALE               = 0.003f;
-float AmbientStrength     = 0.2f;
+float AmbientStrength     = 0.5f;
 float SpecularStrength    = 0.5f;
-float DiffuseStrength     = 0.5f;
-float shadow_bias         = -0.001f;//0.003105;//0.002138;//0.000487f;
+float DiffuseStrength     = 1.f;
+float shadow_bias         = 0.000001f;;
 
 /* Main Camera. Player */
 vec4f *eye;
@@ -103,7 +103,7 @@ vec4f camera[N + 1] = {
     { 0.0f, 0.0f, 1.0f, 0.0f }
 };
 Light sunlight = {
-    .pos = { 0.f, 100.0f, 0.f, 1.f },
+    .pos = { 0.f, 10000.0f, 0.f, 1.f },
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
@@ -127,12 +127,12 @@ int MAIN_EMVADON, MAP_EMVADON;
 int DEBUG = 0;
 
 int INCORDEC = -1;
-unsigned int SMA = 0;
-unsigned int SMB = 158;
-unsigned int SMC = 316;
-unsigned int STA = 88;
-unsigned int STB = 247;
-unsigned int STC = 316;
+unsigned int SMA = 8;    //0
+unsigned int SMB = 262;//265;    //176
+unsigned int SMC = 627;//709;    //352
+unsigned int STA = 88;    //88
+unsigned int STB = 88;    //88
+unsigned int STC = 360;    //264
 
 /* Display usefull measurements. */
 float			        TimeCounter, LastFrameTimeCounter, DeltaTime, GravityTime, prevTime = 0.0, FPS;
@@ -309,10 +309,10 @@ const static void keypress(XEvent *event) {
             break;
         case 65364 : move_down(eye, 10.2);          /* down arrow */
             break;
-        case 65451 :shadow_bias += 0.0001;             /* + */
+        case 65451 :shadow_bias += 0.00001;             /* + */
             printf("shadow_bias: %f\n", shadow_bias);
             break;
-        case 65453 :shadow_bias -= 0.0001;             /* - */
+        case 65453 :shadow_bias -= 0.00001;             /* - */
             printf("shadow_bias: %f\n", shadow_bias);
             break;
         case 65450 : SpecularStrength += 0.01f;             /* * */
@@ -440,7 +440,7 @@ const static void keypress(XEvent *event) {
     else
         worldMat = mxm(viewMat, orthoMat);
 
-    // logVec4f(scene_cache.m[Player_1].pivot);
+    logVec4f(vecxm(scene.m[Player_1].pivot, viewMat));
     // logVec4f(camera[Pos]);
 }
 static void *oscillator(void *args) {
