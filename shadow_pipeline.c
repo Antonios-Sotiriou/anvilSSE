@@ -268,12 +268,6 @@ const static void shadowface(Shadowface *f, const Srt srt[], const unsigned int 
         swap(&za, &zb, 4);
     }
 
-    // vec4f lightpos = norm_vec(vecxm(sunlight.pos, lightMat));
-    // float dot = dot_product(lightpos, f->fn);
-    // printf("dot_product: %f\n", dot);
-    // if (dot > 0 && dot < 0.00025)
-    //     return;
-
     const int y_start = ys[0];
     const int y_end1 = ys[1];
     const int y_end2 = ys[2];
@@ -353,13 +347,14 @@ const float shadowTest(vec4f frag, vec4f nml) {
     if (sm_index > 2)
         return 0;
 
+    // float bias[3] = { 0.0007, 0.003, 0.0076 };
+    // // bias 0 = 0.0007,    bias 1 = 0.003,    bias 2 = 0.0076;
+    // shadow_bias = sm_index < 2 ? bias[sm_index] : shadow_bias;
+
     /* Transform to Model space coordinates. */ /* Transform to Light space coordinates. */
     frag[3] = 1.f;
     frag = vecxm(frag, mxm(*point_mat, ortholightMat[sm_index]));
-    // float bias =  shadow_bias * dot_product(frag, ortholightMat[sm_index].m[3]);
-    // if (bias > 0.05)
-    //     return 0;
-    float bias = shadow_bias * (10 - sm_index);
+
     /* Transform to Screen space coordinates. */
     frag[0] = (1.0 + frag[0]) * (main_wa.width >> 1);
     frag[1] = (1.0 + frag[1]) * (main_wa.height >> 1);
@@ -376,7 +371,7 @@ const float shadowTest(vec4f frag, vec4f nml) {
 
 
             float pcfDepth = shadow_buffer[sm_index][((int)frag[1] * main_wa.width) + (int)frag[0]];
-            shadow += frag[2] + bias < pcfDepth ? 1.f : 0.f;
+            shadow += frag[2] + shadow_bias < pcfDepth ? 1.f : 0.f;
         }
     }
 

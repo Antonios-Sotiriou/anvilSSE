@@ -1,7 +1,25 @@
 #include "headers/logging.h"
 
 const void logEvent(const XEvent e) {
-    fprintf(stdout, "event.type: %d\n", e.type);
+    printf("Event {\n");
+    fprintf(stdout, "    type        : %d\n", e.type);
+    fprintf(stdout, "    pad         : %d\n", e.pad);
+    fprintf(stdout, "    display     : %p\n", e.xkey.display);
+    fprintf(stdout, "    keycode     : %d\n", e.xkey.keycode);
+    fprintf(stdout, "    root        : %p\n", e.xkey.root);
+    fprintf(stdout, "    same_screen : %d\n", e.xkey.same_screen);
+    fprintf(stdout, "    send_event  : %d\n", e.xkey.send_event);
+    fprintf(stdout, "    serial      : %d\n", e.xkey.serial);
+    fprintf(stdout, "    state       : %d\n", e.xkey.state);
+    fprintf(stdout, "    subwindow   : %p\n", e.xkey.subwindow);
+    fprintf(stdout, "    time        : %d\n", e.xkey.time);
+    fprintf(stdout, "    type        : %d\n", e.xkey.type);
+    fprintf(stdout, "    window      : %p\n", e.xkey.window);
+    fprintf(stdout, "    x           : %d\n", e.xkey.x);
+    fprintf(stdout, "    y           : %d\n", e.xkey.y);
+    fprintf(stdout, "    x_root      : %d\n", e.xkey.x_root);
+    fprintf(stdout, "    y_root      : %d\n", e.xkey.y_root);
+    printf("}\n");
 }
 
 const void logVec4f(const vec4f v) {
@@ -66,17 +84,6 @@ const void logMaterial(const Material mt) {
         }
         printf("\n");
         printf("}\n");
-
-    // char name[24];
-    // vec4f basecolor;
-    // vec4f ambient;
-    // vec4f diffuse;
-    // vec4f specular;
-    // float shinniness;
-    // int reflect, texlevels, texlod;
-    // signed int texture_height, texture_width;
-    // vec4c *texture;
-    // char texlvl[9][10];
 }
 
 /* Logging Triangle values.If vec = 1 loggs vec4 values, if tex Texture, if norm Normal. */

@@ -53,7 +53,7 @@ enum { Win_Close, Win_Name, Atom_Type, Atom_Last};
 #define MAP_WIDTH                 200
 #define MAP_HEIGHT                200
 #define POINTERMASKS              ( ButtonPressMask )
-#define KEYBOARDMASKS             ( KeyPressMask )
+#define KEYBOARDMASKS             ( KeyPressMask | KeyReleaseMask )
 #define EXPOSEMASKS               ( StructureNotifyMask )
 #define NUM_OF_CASCADES           3
 
@@ -91,8 +91,8 @@ float collFPlane          = 2000.0f;
 float SCALE               = 0.003f;
 float AmbientStrength     = 0.5f;
 float SpecularStrength    = 0.5f;
-float DiffuseStrength     = 1.f;
-float shadow_bias         = 0.000001f;;
+float DiffuseStrength     = 0.5f;
+float shadow_bias         = 0.0003f; // shadow_map 1 0.000715
 
 /* Main Camera. Player */
 vec4f *eye;
@@ -103,7 +103,7 @@ vec4f camera[N + 1] = {
     { 0.0f, 0.0f, 1.0f, 0.0f }
 };
 Light sunlight = {
-    .pos = { 0.f, 10000.0f, 0.f, 1.f },
+    .pos = { 0.f, 1000.0f, 0.f, 1.f },
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
@@ -180,6 +180,7 @@ static void (*handler[LASTEvent]) (XEvent *event) = {
     [ConfigureNotify] = configurenotify,
     [ButtonPress] = buttonpress,
     [KeyPress] = keypress,
+    [KeyRelease] = keypress,
 };
 
 const static void clientmessage(XEvent *event) {
@@ -276,8 +277,9 @@ const static void keypress(XEvent *event) {
         eye = (vec4f*)&camera;
 
     // printf("Key Pressed: %ld\n", keysym);
-    printf("\x1b[H\x1b[J");
+    // printf("\x1b[H\x1b[J");
     // system("clear\n");
+    logEvent(*event);
 
     switch (keysym) {
         case 65505 : INCORDEC = INCORDEC == -1 ? 1 : -1; break;
@@ -309,10 +311,10 @@ const static void keypress(XEvent *event) {
             break;
         case 65364 : move_down(eye, 10.2);          /* down arrow */
             break;
-        case 65451 :shadow_bias += 0.00001;             /* + */
+        case 65451 :shadow_bias += 0.0001;             /* + */
             printf("shadow_bias: %f\n", shadow_bias);
             break;
-        case 65453 :shadow_bias -= 0.00001;             /* - */
+        case 65453 :shadow_bias -= 0.0001;             /* - */
             printf("shadow_bias: %f\n", shadow_bias);
             break;
         case 65450 : SpecularStrength += 0.01f;             /* * */
@@ -431,17 +433,14 @@ const static void keypress(XEvent *event) {
     viewMat = inverse_mat(lookAt);
     sunlight.newPos = vecxm(sunlight.pos, viewMat);
 
-    printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
-    printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
+    // printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
+    // printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
     createCascadeShadowMatrices(NUM_OF_CASCADES);
 
     if (!PROJECTIONVIEW)
         worldMat = mxm(viewMat, perspMat);
     else
         worldMat = mxm(viewMat, orthoMat);
-
-    logVec4f(vecxm(scene.m[Player_1].pivot, viewMat));
-    // logVec4f(camera[Pos]);
 }
 static void *oscillator(void *args) {
 
@@ -751,6 +750,7 @@ const static int board(void) {
         while(XPending(displ)) {
 
             XNextEvent(displ, &event);
+            
 
             if (handler[event.type])
                 handler[event.type](&event);
