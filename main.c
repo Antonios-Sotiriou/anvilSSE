@@ -279,7 +279,7 @@ const static void keypress(XEvent *event) {
     // printf("Key Pressed: %ld\n", keysym);
     // printf("\x1b[H\x1b[J");
     // system("clear\n");
-    logEvent(*event);
+    // logEvent(*event);
 
     switch (keysym) {
         case 65505 : INCORDEC = INCORDEC == -1 ? 1 : -1; break;
@@ -441,6 +441,8 @@ const static void keypress(XEvent *event) {
         worldMat = mxm(viewMat, perspMat);
     else
         worldMat = mxm(viewMat, orthoMat);
+
+    // logVec4f(camera[0]);
 }
 static void *oscillator(void *args) {
 
@@ -737,6 +739,10 @@ const static int board(void) {
 
     /* Announcing to event despatcher that starting initialization is done. We send a Keyress event to Despatcher to awake Projection. */
     announceReadyState();
+    int move = 1;
+    int event_id = 0;
+    // printf("Connection Number: %d\n", XConnectionNumber(displ));
+    // select()
 
     while (RUNNING) {
 
@@ -747,15 +753,40 @@ const static int board(void) {
         project();
         // end(start_time);
 
-        while(XPending(displ)) {
+        // printf("\x1b[H\x1b[J");
+        move += XCheckTypedEvent(displ, KeyPress, &event);
+        event_id = event.xkey.keycode;
+        // while(move) {
+            // printf("\x1b[H\x1b[J");
+            // XFlush(displ);
+            // printf("XPending       : %d\n", XPending(displ));
+            // printf("XCheckMaskEvent: %d\n", XCheckMaskEvent(displ, POINTERMASKS | KEYBOARDMASKS | EXPOSEMASKS, &event));
+            // printf("XEventsQueued  : %d\n", XEventsQueued(displ, QueuedAfterFlush));
+        move -= XCheckTypedEvent(displ, KeyRelease, &event);
 
-            XNextEvent(displ, &event);
-            
+        if (move <= 0 || move > 2)
+            event.type = 0, move = 0;
+        if (event_id != event.xkey.keycode)
+            event.xkey.keycode = event_id;
 
-            if (handler[event.type])
-                handler[event.type](&event);
-        }
-        usleep(1000);
+            // XSync(displ, 1);
+            // XCheckTypedEvent(displ, KeyRelease, &event);
+            // XNextEvent(displ, &event);
+            // logEvent(event);
+            printf("move: %d\n", move);
+        // }
+        XCheckMaskEvent(displ, EXPOSEMASKS | POINTERMASKS, &event);
+        XCheckTypedEvent(displ, ClientMessage, &event);
+        // XSync(displ, 1);
+
+        if (handler[event.type])
+            handler[event.type](&event);
+
+        usleep(0);
+
+        if (XPending(displ) >= 3)
+            XSync(displ, 1);
+            // XFlush(displ);
     }
 
     return EXIT_SUCCESS;
