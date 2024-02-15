@@ -180,7 +180,7 @@ static void (*handler[LASTEvent]) (XEvent *event) = {
     [ConfigureNotify] = configurenotify,
     [ButtonPress] = buttonpress,
     [KeyPress] = keypress,
-    [KeyRelease] = keypress,
+    // [KeyRelease] = keypress,
 };
 
 const static void clientmessage(XEvent *event) {
@@ -258,6 +258,7 @@ const static void configurenotify(XEvent *event) {
             INIT = 1;
         }
     }
+    XSync(displ, 1);
 }
 const static void buttonpress(XEvent *event) {
 
@@ -303,13 +304,13 @@ const static void keypress(XEvent *event) {
             break;
         case 115 : move_backward(eye, 1.f);        /* s */
             break;
-        case 65361 : move_left(eye, 12.2);          /* left arrow */
+        case 65361 : move_left(eye, 1.f);          /* left arrow */
             break;
-        case 65363 : move_right(eye, 12.2);         /* right arrow */
+        case 65363 : move_right(eye, 1.f);         /* right arrow */
             break;
-        case 65362 : move_up(eye, 10.2);            /* up arror */
+        case 65362 : move_up(eye, 1.f);            /* up arror */
             break;
-        case 65364 : move_down(eye, 10.2);          /* down arrow */
+        case 65364 : move_down(eye, 1.f);          /* down arrow */
             break;
         case 65451 :shadow_bias += 0.0001;             /* + */
             printf("shadow_bias: %f\n", shadow_bias);
@@ -713,7 +714,7 @@ const static int board(void) {
         return EXIT_FAILURE;
     }
 
-    XEvent event;
+    XEvent event, event_cache;
 
     displ = XOpenDisplay(NULL);
     if (displ == NULL) {
@@ -741,6 +742,9 @@ const static int board(void) {
     announceReadyState();
     int move = 1;
     int event_id = 0;
+    int sec_in_cache = 0;
+    int time_cache = 0;
+    
     // printf("Connection Number: %d\n", XConnectionNumber(displ));
     // select()
 
@@ -753,40 +757,66 @@ const static int board(void) {
         project();
         // end(start_time);
 
-        // printf("\x1b[H\x1b[J");
-        move += XCheckTypedEvent(displ, KeyPress, &event);
-        event_id = event.xkey.keycode;
-        // while(move) {
-            // printf("\x1b[H\x1b[J");
-            // XFlush(displ);
-            // printf("XPending       : %d\n", XPending(displ));
-            // printf("XCheckMaskEvent: %d\n", XCheckMaskEvent(displ, POINTERMASKS | KEYBOARDMASKS | EXPOSEMASKS, &event));
-            // printf("XEventsQueued  : %d\n", XEventsQueued(displ, QueuedAfterFlush));
-        move -= XCheckTypedEvent(displ, KeyRelease, &event);
+        // XCheckTypedEvent(displ, KeyPress, &event_a);
+        // if (XCheckTypedEvent(displ, KeyRelease, &event_b))
 
-        if (move <= 0 || move > 2)
-            event.type = 0, move = 0;
-        if (event_id != event.xkey.keycode)
-            event.xkey.keycode = event_id;
+        printf("\x1b[H\x1b[J");
 
-            // XSync(displ, 1);
-            // XCheckTypedEvent(displ, KeyRelease, &event);
-            // XNextEvent(displ, &event);
-            // logEvent(event);
-            printf("move: %d\n", move);
-        // }
+        // printf("XPending       : %d\n", XPending(displ));
+
+        XCheckTypedEvent(displ, KeyPress, &event);
+        XCheckTypedEvent(displ, KeyRelease, &event_cache);
+        // printf("event      : keycode %d | serial %d  |  time %d\n", event.xkey.keycode, event.xkey.serial, event.xkey.time);
+        // printf("event_cache: keycode %d | serial %d  |  time %d\n", event_cache.xkey.keycode, event_cache.xkey.serial, event_cache.xkey.time);
+
+        if (event.type == KeyPress) {
+            sec_in_cache++;
+            time_cache = event.xkey.time;
+            if ( event.xkey.keycode == event_cache.xkey.keycode ) {
+                if ( event_cache.xkey.time > event.xkey.time ) {
+                    printf("KeyReleased\n");
+                    printf("Different Types:  event: %d | event_cache %d\n", event.type, event_cache.type);
+                    memset(&event, 0, sizeof(XEvent));
+                    //sec_in_cache = 0;
+                } else if ( event_cache.xkey.time == event.xkey.time ) {
+                    printf("KeyHold\n");
+                    printf("Different Types:  event: %d | event_cache %d\n", event.type, event_cache.type);
+                } else {
+                    printf("Same KeyPressed\n");
+                    printf("Different Types:  event: %d | event_cache %d\n", event.type, event_cache.type);
+                    // event = event_cache;
+                    // event.type = 2;
+                    // if (in_cache)
+                    //     event.type = 0;
+                    // in_cache = 0;
+                }
+            } else if ( event.xkey.keycode != event_cache.xkey.keycode ) {
+                // sec_in_cache++;
+                // // if (sec_in_cache > 2)
+                // //     memset(&event, 0, sizeof(XEvent));
+                // printf("KeyPressed : sec_in_cache %d\n", sec_in_cache);
+                printf("Different Types:  event: %d | event_cache %d\n", event.type, event_cache.type);
+            }
+        }
+        // memset(&event, 0, sizeof(XEvent));
+        // if (!XPending(displ))
+        //     memset(&event, 0, sizeof(XEvent));
+
         XCheckMaskEvent(displ, EXPOSEMASKS | POINTERMASKS, &event);
         XCheckTypedEvent(displ, ClientMessage, &event);
-        // XSync(displ, 1);
-
+        logEvent(event);
+        logEvent(event_cache);
+        // if (time_cache == event.xkey.time)
+        //     sec_in_cache++;
+        // if (sec_in_cache > 2) {
+        //     memset(&event, 0, sizeof(XEvent));
+        //     sec_in_cache = 0;
+        // }
+        printf("KeyPressed : sec_in_cache %d\n", sec_in_cache);
         if (handler[event.type])
             handler[event.type](&event);
 
         usleep(0);
-
-        if (XPending(displ) >= 3)
-            XSync(displ, 1);
-            // XFlush(displ);
     }
 
     return EXIT_SUCCESS;
