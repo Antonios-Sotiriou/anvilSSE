@@ -745,6 +745,13 @@ const static int board(void) {
 
     while (RUNNING) {
 
+        // clock_t start_time = start();
+        UpdateTimeCounter();
+        CalculateFPS();
+        displayInfo();
+        project();
+        // end(start_time);
+
         // printf("\x1b[H\x1b[J");
 
         // if ( (key_P | key_R) == 0 ) {
@@ -773,13 +780,6 @@ const static int board(void) {
         if (handler[event.type]) {
             handler[event.type](&event);
         }
-
-        // clock_t start_time = start();
-        UpdateTimeCounter();
-        CalculateFPS();
-        displayInfo();
-        project();
-        // end(start_time);
 
         usleep(0);
     }
