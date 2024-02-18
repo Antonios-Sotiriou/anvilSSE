@@ -34,6 +34,9 @@ extern float *shadow_buffer[3], shadow_bias;
 extern Light sunlight;
 extern vec4f *eye, camera[4];
 
+/* For investigating shadow maps. Defined in main.c */
+extern unsigned int SMA, SMB, SMC, STA, STB ,STC;
+
 vec4f *worldSpaceFrustum(const float np, const float fp);
 const Mat4x4 createOrthoMatrixFromLimits(const DimensionsLimits dl);
 const void createCascadeShadowMatrices(const unsigned int num_of_cascades);

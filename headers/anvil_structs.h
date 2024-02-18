@@ -97,6 +97,7 @@ typedef struct {
     // void (*drawMesh)(void *args);
     int v_indexes, n_indexes, t_indexes, f_indexes, cull, lodlevels, currentlod, visible, type, floating, relaxing, grounded, rahm, quadIndex, id; /* as id we use the index of the mesh in the scene. */
     float scale, falling_time;
+    DimensionsLimits BB;
     Material material;
 } Mesh;
 

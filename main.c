@@ -92,7 +92,15 @@ float SCALE               = 0.003f;
 float AmbientStrength     = 0.2f;
 float SpecularStrength    = 0.5f;
 float DiffuseStrength     = 0.5f;
-float shadow_bias         = -0.0003f;//0.003105;//0.002138;//0.000487f;
+float shadow_bias         = 0.0003f;//0.003105;//0.002138;//0.000487f;
+/* For investigating shadow map usefull global variables. */
+int INCORDEC = -1;
+unsigned int SMA = 8;    //0
+unsigned int SMB = 262;//265;    //176
+unsigned int SMC = 627;//709;    //352
+unsigned int STA = 88;    //88
+unsigned int STB = 88;    //88
+unsigned int STC = 360;    //264
 
 /* Main Camera. Player */
 vec4f *eye;
@@ -270,6 +278,13 @@ const static void keypress(XEvent *event) {
     // printf("\x1b[H\x1b[J");
     // system("clear\n");
     switch (keysym) {
+        case 65505 : INCORDEC = INCORDEC == -1 ? 1 : -1; break;
+        case 49 : SMA += INCORDEC; break;
+        case 50 : SMB += INCORDEC; break;
+        case 51 : SMC += INCORDEC; break;
+        case 48 : STA += INCORDEC; break;
+        case 57 : STB += INCORDEC; break;
+        case 56 : STC += INCORDEC; break;
         case 97 : look_left(eye, 0.2);             /* a */
             // rotate_light_cam(&scene.m[1], camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
             break;
@@ -306,20 +321,28 @@ const static void keypress(XEvent *event) {
             break;
         case 65430 : sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
             scene.m[1].pivot[0] -= sunMov;
-            Mat4x4 ar = translationMatrix(-sunMov, 0.0f, 0.0f);
+            Quat xrot = rotationQuat(10, sunlight.u);
+            Mat4x4 m = MatfromQuat(xrot, scene.m[1].pivot);
+            Mat4x4 ar = mxm(m, translationMatrix(-sunMov, 0.0f, 0.0f));
             scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, ar);
+            scene.m[1].n = setvecsarrayxm(scene.m[1].n, scene.m[1].n_indexes, ar);
             vec4f mva = { -1.f, 0.f, 0.f };
             scene.m[1].mvdir = mva;
             scene.m[1].rahm = 1;
+            scene.m[1].Q = multiplyQuats(scene.m[1].Q, xrot);
             // rotate_origin(&scene.m[Player_1], -10, 0.0f, 0.0f, 1.0f);
             break;
         case 65432 : sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
             scene.m[1].pivot[0] += sunMov;
-            Mat4x4 br = translationMatrix(sunMov, 0.0f, 0.0f);
+            Quat xrotr = rotationQuat(-10, sunlight.u);
+            Mat4x4 mr = MatfromQuat(xrotr, scene.m[1].pivot);
+            Mat4x4 br = mxm(mr, translationMatrix(sunMov, 0.0f, 0.0f));
             scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, br);
+            scene.m[1].n = setvecsarrayxm(scene.m[1].n, scene.m[1].n_indexes, br);
             vec4f mvb = { 1.f, 0.f, 0.f };
             scene.m[1].mvdir = mvb;
             scene.m[1].rahm = 1;
+            scene.m[1].Q = multiplyQuats(scene.m[1].Q, xrotr);
             // rotate_origin(&scene.m[Player_1], 10, 0.0f, 0.0f, 1.0f);
             break;
         case 65434 : sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
@@ -480,6 +503,9 @@ const static void project() {
     //         // logMesh(scene.m[i]);
     //     }
     // }
+
+    /* At this spot shall be implemented collision between objects as a primitive implementation. */
+    // objectEnvironmentCollision()
 
     applyGravity(&scene);
 
