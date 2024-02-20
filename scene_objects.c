@@ -27,11 +27,12 @@ const void initWorldObjects(Scene *s) {
     /* ######################################################################################################## */
     memcpy(s->m[1].name, "planet", sizeof("planet"));
     loadmaterial(&s->m[1].material, "stones");
+    // loadmesh(&s->m[1], s->m[1].name, 1);
 
     s->m[1].type = Player;
     s->m[1].id = 1;
 
-    s->m[1].scale = 10.f;
+    s->m[1].scale = 1.f;
 
     s->m[1].pivot[0] = 0.f;
     s->m[1].pivot[1] = 0.f;
@@ -42,7 +43,7 @@ const void initWorldObjects(Scene *s) {
     // s->m[1].visible = 1;
     // s->m[1].material.reflect = 1;
     s->m[1].Q = unitQuat();
-    // reWorldMesh(&s->m[4]);
+    // reWorldMesh(&s->m[1]);
 
     /* ######################################################################################################## */
     for (int i = 2; i < MESH_NUM; i++) {

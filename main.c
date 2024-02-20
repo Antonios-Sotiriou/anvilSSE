@@ -23,6 +23,8 @@
 #define THREADS 8
 pthread_t threads[THREADS];
 int *thread_ids;
+vec4f test_v = { 0.f, 0.f, 1.f, 0.f };
+float rahm = 0;
 /* ############################################## MULTITHREADING ################################################################### */
 
 /* CHOOSE WITH WHICH FUNCTION TO RASTERIZE. */
@@ -116,7 +118,7 @@ Light sunlight = {
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
 };
-const float sunMov = 10.0f;
+const float sunMov = 1.0f;
 
 /* Global Matrices */
 Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
@@ -491,31 +493,20 @@ static void *cascade(void *args) {
 }
 const static void project() {
 
-    /* Check what is visible from given point. */
-    // checkVisibles(&scene, &scene.m[1], 0);
-
-    // frustumCulling(scene.m, scene.m_indexes);
-
-    // for (int i = 0; i < scene.m_indexes; i++) {
-    //     if (scene.m[i].visible) {
-    //         adoptdetailMesh(&scene.m[i]);
-    //         adoptdetailTexture(&scene.m[i]);
-    //         // logMesh(scene.m[i]);
-    //     }
-    // }
-
-    /* At this spot shall be implemented collision between objects as a primitive implementation. */
-    // objectEnvironmentCollision()
+    applyForces(&scene);
 
     applyGravity(&scene);
 
     if (scene.m[Player_1].rahm)
         objectTerrainCollision(&scene.m[Terrain_1], &scene.m[Player_1]);
 
-    addMeshToQuad(&scene.m[Player_1]);
+    // addMeshToQuad(&scene.m[Player_1]);
     // printQuad(scene.m[Player_1].quadIndex);
-    removeMeshFromQuad(&scene.m[Player_1]);
+    // removeMeshFromQuad(&scene.m[Player_1]);
     // printQuad(scene.m[Player_1].quadIndex);
+
+    /* At this spot shall be implemented collision between objects as a primitive implementation. */
+    objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1]);
 
     int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
     for (int i = 0; i < NUM_OF_CASCADES; i++) {

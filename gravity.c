@@ -22,5 +22,19 @@ const void applyGravity(Scene *s) {
         }
     }
 }
+const void applyForces(Scene *s) {
+    Mat4x4 trans;
+    for (int i = 0; i < s->m_indexes; i++) {
+        if (s->m[i].rahm > 0) {
+            s->m[i].rahm -= DeltaTime;
+            vec4f pivot = s->m[i].mvdir * s->m[i].rahm;
+            printf("Rahm: %f\n", s->m[i].rahm);
+            trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
+            s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
+            s->m[i].pivot += pivot;
+        } else
+            s->m[i].rahm = 0;
+    }
+}
 
 
