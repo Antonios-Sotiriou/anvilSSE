@@ -7,17 +7,17 @@ const void applyForces(Scene *s) {
             s->m[i].rahm -= DeltaTime;
             vec4f pivot = s->m[i].mvdir * s->m[i].rahm;
             s->m[i].pivot += pivot;
-            printf("Rahm: %f\n", s->m[i].rahm);
+            // printf("Rahm: %f\n", s->m[i].rahm);
 
-            Quat xrot = rotationQuat(10, s->m[i].mvdir);
-            Mat4x4 m = MatfromQuat(xrot, s->m[i].pivot);
-            Mat4x4 trans = mxm(m, translationMatrix(pivot[0], pivot[1], pivot[2]));
-            // trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
+            // Quat xrot = rotationQuat(10, s->m[i].mvdir);
+            // Mat4x4 m = MatfromQuat(xrot, s->m[i].pivot);
+            // trans = mxm(m, translationMatrix(pivot[0], pivot[1], pivot[2]));
+            trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
 
             s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
             s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
 
-            s->m[i].Q = multiplyQuats(s->m[i].Q, xrot);
+            // s->m[i].Q = multiplyQuats(s->m[i].Q, xrot);
         } else
             s->m[i].rahm = 0;
     }

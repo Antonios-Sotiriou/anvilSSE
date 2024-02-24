@@ -153,6 +153,9 @@ const static void configurenotify(XEvent *event);
 const static void buttonpress(XEvent *event);
 const static void keypress(XEvent *event);
 
+/* Self explanatory. Physics and collisions are computed whithin. */
+const static void applyPhysics(void);
+
 /* Represantation functions */
 const static void project(void);
 const static void drawFrame(void);
@@ -491,22 +494,16 @@ static void *cascade(void *args) {
 
     return (void*)args;
 }
-const static void project() {
+const static void applyPhysics(void) {
 
     applyForces(&scene);
 
     applyGravity(&scene);
 
-    // if (scene.m[Player_1].rahm)
-        // objectTerrainCollision(&scene.m[Terrain_1], &scene.m[Player_1]);
-
-    // addMeshToQuad(&scene.m[Player_1]);
-    // printQuad(scene.m[Player_1].quadIndex);
-    // removeMeshFromQuad(&scene.m[Player_1]);
-    // printQuad(scene.m[Player_1].quadIndex);
-
     /* At this spot shall be implemented collision between objects as a primitive implementation. */
     objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1]);
+}
+const static void project(void) {
 
     int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
     for (int i = 0; i < NUM_OF_CASCADES; i++) {
@@ -739,6 +736,7 @@ const static int board(void) {
         UpdateTimeCounter();
         CalculateFPS();
         displayInfo();
+        applyPhysics();
         project();
         // end(start_time);
 
