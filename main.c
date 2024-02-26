@@ -216,22 +216,18 @@ const static void clientmessage(XEvent *event) {
 
         RUNNING = 0;
     }
-    memset(event, 0, sizeof(XEvent));
 }
 const static void reparentnotify(XEvent *event) {
 
     printf("reparentnotify event received\n");
-    memset(event, 0, sizeof(XEvent));
 }
 const static void mapnotify(XEvent *event) {
 
     printf("mapnotify event received\n");
-    memset(event, 0, sizeof(XEvent));
 }
 const static void resizerequest(XEvent *event) {
 
     printf("resizerequest event received\n");
-    memset(event, 0, sizeof(XEvent));
 }
 const static void configurenotify(XEvent *event) {
 
@@ -263,8 +259,6 @@ const static void configurenotify(XEvent *event) {
             INIT = 1;
         }
     }
-    memset(event, 0, sizeof(XEvent));
-    XSync(displ, 1);
 }
 const static void buttonpress(XEvent *event) {
 
@@ -273,7 +267,6 @@ const static void buttonpress(XEvent *event) {
     printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
     // DROPBALL = DROPBALL == 0 ? 1 : 0;
     GravityTime = 0;
-    memset(event, 0, sizeof(XEvent));
 }
 const static void keypress(XEvent *event) {
 
@@ -746,33 +739,11 @@ const static int board(void) {
         project();
         // end(start_time);
 
-        // printf("\x1b[H\x1b[J");
+        while (XPending(displ)) {
+            XNextEvent(displ, &event);
 
-        // if ( (key_P | key_R) == 0 ) {
-        //         memset(&event, 0, sizeof(XEvent));
-        //     // getc(stdin);
-        // }
-        // printf("Key_P %d    key_R %d\n", key_P, key_R);
-
-        key_P = XCheckTypedEvent(displ, KeyPress, &event);
-        key_R = XCheckTypedEvent(displ, KeyRelease, &event_cache);
-
-        if (event.type == KeyPress) {
-            if ( event.xkey.keycode == event_cache.xkey.keycode ) {
-                if ( event_cache.xkey.time > event.xkey.time ) {
-                    // printf("KeyReleased\n");
-                    // memset(&event, 0, sizeof(XEvent));
-                    memcpy(&event, &event_cache, sizeof(XEvent));
-                }
-            }
-        }
-
-        XCheckMaskEvent(displ, EXPOSEMASKS | POINTERMASKS, &event);
-        XCheckTypedEvent(displ, ClientMessage, &event);
-        // (1 / 60) - LastFrameTimeCounter
-        
-        if (handler[event.type]) {
-            handler[event.type](&event);
+            if (handler[event.type])
+                handler[event.type](&event);
         }
 
         usleep(0);
