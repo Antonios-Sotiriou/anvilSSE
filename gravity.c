@@ -23,6 +23,7 @@ const void applyForces(Scene *s) {
     }
 }
 const void applyGravity(Scene *s) {
+    Mat4x4 trans;
     /* Apply Gravitanional forces to Specific or all meshes. EXCEPT TERRAIN. */
     for (int i = 0; i < s->m_indexes; i++) {
         if ( (s->m[i].type != Terrain) && (!s->m[i].grounded) || (s->m[i].rahm) ) {
@@ -32,6 +33,9 @@ const void applyGravity(Scene *s) {
             const float velocity = 9.81f * s->m[i].falling_time;
 
             vec4f pivot = (pull_point * velocity);
+
+            trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
+            s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
 
             s->m[i].pivot += pivot;
 

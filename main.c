@@ -216,18 +216,22 @@ const static void clientmessage(XEvent *event) {
 
         RUNNING = 0;
     }
+    memset(event, 0, sizeof(XEvent));
 }
 const static void reparentnotify(XEvent *event) {
 
     printf("reparentnotify event received\n");
+    memset(event, 0, sizeof(XEvent));
 }
 const static void mapnotify(XEvent *event) {
 
     printf("mapnotify event received\n");
+    memset(event, 0, sizeof(XEvent));
 }
 const static void resizerequest(XEvent *event) {
 
     printf("resizerequest event received\n");
+    memset(event, 0, sizeof(XEvent));
 }
 const static void configurenotify(XEvent *event) {
 
@@ -259,6 +263,7 @@ const static void configurenotify(XEvent *event) {
             INIT = 1;
         }
     }
+    memset(event, 0, sizeof(XEvent));
     XSync(displ, 1);
 }
 const static void buttonpress(XEvent *event) {
