@@ -191,31 +191,27 @@ const void placeMesh(Mesh *m, const vec4f pos) {
     m->pivot = pos;
 }
 /* Cull Mesh to view frustum. viewProj: (1 for Prespective and 0 for orthographic Projection). Thats for the perspective divide usefull.viewMat the matrix of the point of view. */
-const int frustumCulling(Mesh *m, const int viewProj, Mat4x4 viewMat) {
-    vec4f *vec_arr;
-    DimensionsLimits dm;
-
+const int frustumCulling(vec4f v[], const int v_indexes) {
     /* Thats a fix for unitialized meshes that cannot become visible due to no vectors initialization. That will be corrected with bounding boxes. */
-    if (!m->v_indexes) {
-        m->visible = 1;
+    if (!v_indexes) {
         return 1;
     }
 
-    vec_arr = vecsarrayxm(m->v, m->v_indexes, viewMat);
+    vec4f *vec_arr = malloc(v_indexes * 16);
+    memcpy(vec_arr, v, v_indexes * 16);
+    DimensionsLimits dm;
 
-    if (viewProj) {
-        for (int j = 0; j < m->v_indexes; j++) {
-            /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
-            float z = vec_arr[j][2];
+    for (int j = 0; j < v_indexes; j++) {
+        /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
+        float z = vec_arr[j][2];
 
-            if (vec_arr[j][3] > 0) {
-                vec_arr[j] /= vec_arr[j][3];
-                vec_arr[j][2] = z;
-            }
+        if (vec_arr[j][3] > 0) {
+            vec_arr[j] /= vec_arr[j][3];
+            vec_arr[j][2] = z;
         }
     }
 
-    dm = getDimensionsLimits(vec_arr, m->v_indexes);
+    dm = getDimensionsLimits(vec_arr, v_indexes);
 
     vec4f min = { dm.minX, dm.minY, dm.minZ, 1.f };
     vec4f max = { dm.maxX, dm.maxY, dm.maxZ, 1.f };
@@ -234,11 +230,9 @@ const int frustumCulling(Mesh *m, const int viewProj, Mat4x4 viewMat) {
             ((min[0] > 1000) || (max[0] < 0)) ) {
 
         free(vec_arr);
-        m->visible = 0;
         return 0;
     }
     free(vec_arr);
-    m->visible = 1;
     return 1;
 }
 /* Check and set visibillity of scene objects seen from given meshes pivot point and direction. viewProj: (1 for Prespective and 0 for orthographic Projection).*/

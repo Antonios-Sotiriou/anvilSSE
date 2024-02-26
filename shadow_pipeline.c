@@ -79,11 +79,10 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
 
     for (int i = 0; i < s->m_indexes; i++) {
 
-        if (frustumCulling(&s->m[i], 0, ortholightMat[sm_index])) {
+        initMeshShadowStepOne(&cache_0, &s->m[i]);
+        cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, ortholightMat[sm_index]);
 
-            initMeshShadowStepOne(&cache_0, &s->m[i]);
-
-            cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, ortholightMat[sm_index]);
+        if (frustumCulling(cache_0.v, 0)) {
 
             MeshShadowStepTwo cache_1 = assemblyfacesShadow(&cache_0, s->m[i].f, s->m[i].f_indexes);
             releaseMeshShadowStepOne(&cache_0);
@@ -122,8 +121,9 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
 
             createShadowmap(&cache_1, sm_index);
             releaseMeshShadowStepTwo(&cache_1);
+        } else {
+            releaseMeshShadowStepOne(&cache_0);
         }
-        // releaseMesh(&cache_v);
     }
 }
 /* Assosiates vertices coordinate values from vector array through indexes. */
