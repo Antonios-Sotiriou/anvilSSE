@@ -193,18 +193,18 @@ const void placeMesh(Mesh *m, const vec4f pos) {
     m->n = setvecsarrayxm(m->n, m->n_indexes, trMatrix);
     m->pivot = pos;
 }
-/* Cull Mesh to view frustum. proj: (1 for Prespective and 0 for orthographic Projection). Thats for the perspective divide usefull.viewMat the matrix of the point of view. */
-const int frustumCulling(vec4f *v, unsigned int indexes) {
+/* Cull Mesh to view frustum. viewProj: (1 for Prespective and 0 for orthographic Projection). Thats for the perspective divide usefull.viewMat the matrix of the point of view. */
+const int frustumCulling(vec4f v[], const int v_indexes) {
     /* Thats a fix for unitialized meshes that cannot become visible due to no vectors initialization. That will be corrected with bounding boxes. */
-    if (!indexes) {
+    if (!v_indexes) {
         return 1;
     }
 
-    vec4f *vec_arr = malloc(indexes * 16);
-    memcpy(vec_arr, v, indexes * 16);
+    vec4f *vec_arr = malloc(v_indexes * 16);
+    memcpy(vec_arr, v, v_indexes * 16);
     DimensionsLimits dm;
 
-    for (int j = 0; j < indexes; j++) {
+    for (int j = 0; j < v_indexes; j++) {
         /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
         float z = vec_arr[j][2];
 
@@ -214,7 +214,7 @@ const int frustumCulling(vec4f *v, unsigned int indexes) {
         }
     }
 
-    dm = getDimensionsLimits(vec_arr, indexes);
+    dm = getDimensionsLimits(vec_arr, v_indexes);
 
     vec4f min = { dm.minX, dm.minY, dm.minZ, 1.f };
     vec4f max = { dm.maxX, dm.maxY, dm.maxZ, 1.f };

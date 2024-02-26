@@ -8,7 +8,7 @@ const static void rasterize(MeshStepTwo *m, Material *mtr);
 const static void releaseMeshStepOne(MeshStepOne *c);
 const static void releaseMeshStepTwo(MeshStepTwo *c);
 const static void initMeshStepOne(MeshStepOne *a, Mesh *b);
-
+#include "headers/logging.h"
 /* Passes the scene Meshes throught the graphic pipeline. */
 const void grafikPipeline(Scene *s) {
     MeshStepOne cache_0 = { 0 };
@@ -19,10 +19,9 @@ const void grafikPipeline(Scene *s) {
         adoptdetailTexture(&s->m[i]);
 
         initMeshStepOne(&cache_0, &s->m[i]);
-
         cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, worldMat);
 
-        if (frustumCulling(cache_0.v, cache_0.v_indexes)) { /* Scene doenst save the info needed. */
+        if (frustumCulling(cache_0.v, cache_0.v_indexes)) {
 
             cache_0.n = setvecsarrayxm(cache_0.n, cache_0.n_indexes, viewMat);
 
