@@ -113,7 +113,7 @@ vec4f camera[N + 1] = {
     { 0.0f, 0.0f, 1.0f, 0.0f }
 };
 Light sunlight = {
-    .pos = { 0.f, 1000.0f, 0.f, 1.f },
+    .pos = { 0.f, 100.0f, 0.f, 1.f },
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
@@ -325,37 +325,30 @@ const static void keypress(XEvent *event) {
             printf("SpecularStrength: %f\n", SpecularStrength);
             break;
         case 65430 : sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
-            // scene.m[1].pivot[0] -= sunMov;
-            // Quat xrot = rotationQuat(10, sunlight.u);
-            // Mat4x4 m = MatfromQuat(xrot, scene.m[1].pivot);
-            // Mat4x4 ar = mxm(m, translationMatrix(-sunMov, 0.0f, 0.0f));
-            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, ar);
-            // scene.m[1].n = setvecsarrayxm(scene.m[1].n, scene.m[1].n_indexes, ar);
+            Quat arot = rotationQuat(10, sunlight.u);
+            Mat4x4 ma = MatfromQuat(arot, scene.m[1].pivot);
+            Mat4x4 ra = mxm(ma, translationMatrix(-sunMov, 0.0f, 0.0f));
+            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, ra);
+            scene.m[1].n = setvecsarrayxm(scene.m[1].n, scene.m[1].n_indexes, ra);
             vec4f mva = { -1.f, 0.f, 0.f };
             scene.m[1].mvdir = mva;
             scene.m[1].rahm = 1;
-            // scene.m[1].Q = multiplyQuats(scene.m[1].Q, xrot);
-            // rotate_origin(&scene.m[Player_1], -10, 0.0f, 0.0f, 1.0f);
+            scene.m[1].Q = multiplyQuats(scene.m[1].Q, arot);
+            scene.m[1].pivot[0] -= sunMov;
             break;
         case 65432 : sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
-            // scene.m[1].pivot[0] += sunMov;
-            // Quat xrotr = rotationQuat(-10, sunlight.u);
-            // Mat4x4 mr = MatfromQuat(xrotr, scene.m[1].pivot);
-            // Mat4x4 br = mxm(mr, translationMatrix(sunMov, 0.0f, 0.0f));
-            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, br);
-            // scene.m[1].n = setvecsarrayxm(scene.m[1].n, scene.m[1].n_indexes, br);
+            Quat brot = rotationQuat(-10, sunlight.u);
+            Mat4x4 mb = MatfromQuat(brot, scene.m[1].pivot);
+            Mat4x4 rb = mxm(mb, translationMatrix(sunMov, 0.0f, 0.0f));
+            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, mb);
+            scene.m[1].n = setvecsarrayxm(scene.m[1].n, scene.m[1].n_indexes, mb);
             vec4f mvb = { 1.f, 0.f, 0.f };
             scene.m[1].mvdir = mvb;
             scene.m[1].rahm = 1;
-            // scene.m[1].Q = multiplyQuats(scene.m[1].Q, xrotr);
-            // rotate_origin(&scene.m[Player_1], 10, 0.0f, 0.0f, 1.0f);
+            scene.m[1].Q = multiplyQuats(scene.m[1].Q, brot);
+            scene.m[1].pivot[0] += sunMov;
             break;
         case 65434 : sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
-            // vec4f upw = { 0.f, 1.f, 0.f };
-            // upw *= sunMov;
-            // scene.m[1].pivot += upw;
-            // Mat4x4 cr = translationMatrix(upw[0], upw[1], upw[2]);
-            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, cr);
             scene.m[1].grounded = 0;
             vec4f mvc = { 0.f, 1.f, 0.f };
             scene.m[1].mvdir = mvc;
@@ -363,34 +356,39 @@ const static void keypress(XEvent *event) {
             scene.m[1].falling_time = 0;
             break;
         case 65435 : sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
-            // scene.m[1].pivot[1] -= sunMov;
-            // Mat4x4 dr = translationMatrix(0.0f, -sunMov, 0.0f);
-            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, dr);
             vec4f mvd = { 0.f, -1.f, 0.f };
             scene.m[1].mvdir = mvd;
             scene.m[1].rahm = 1;
             break;
         case 65431 : sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
-            // scene.m[1].pivot[2] += sunMov;
-            // Mat4x4 er = translationMatrix(0.0f, 0.0f, sunMov);
-            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, er);
+            Quat erot = rotationQuat(-10, sunlight.u);
+            Mat4x4 me = MatfromQuat(erot, scene.m[1].pivot);
+            Mat4x4 re = mxm(me, translationMatrix(0.f, 0.f, sunMov));
+            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, re);
+            scene.m[1].n = setvecsarrayxm(scene.m[1].n, scene.m[1].n_indexes, re);
             vec4f mve= { 0.f, 0.f, 1.f };
             scene.m[1].mvdir = mve;
             scene.m[1].rahm = 1;
+            scene.m[1].Q = multiplyQuats(scene.m[1].Q, erot);
+            scene.m[1].pivot[2] += sunMov;
             break;
         case 65433 : sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
-            // scene.m[1].pivot[2] -= sunMov;
-            // Mat4x4 fr = translationMatrix(0.0f, 0.0f, -sunMov);
-            // scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, fr);
+            Quat frot = rotationQuat(10, sunlight.u);
+            Mat4x4 mf = MatfromQuat(frot, scene.m[1].pivot);
+            Mat4x4 rf = mxm(mf, translationMatrix(0.f, 0.f, -sunMov));
+            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, rf);
+            scene.m[1].n = setvecsarrayxm(scene.m[1].n, scene.m[1].n_indexes, rf);
             vec4f mvf = { 0.f, 0.f, -1.f };
             scene.m[1].mvdir = mvf;
             scene.m[1].rahm = 1;
+            scene.m[1].Q = multiplyQuats(scene.m[1].Q, frot);
+            scene.m[1].pivot[2] -= sunMov;    
             break;
-        case 120 : rotate_x(&scene.m[0], 1);                     /* x */
+        case 120 : rotate_x(&scene.m[1], 1);                     /* x */
             break;
-        case 121 : rotate_y(&scene.m[0], 1);                     /* y */
+        case 121 : rotate_y(&scene.m[1], 1);                     /* y */
             break;
-        case 122 : rotate_z(&scene.m[0], 1);                     /* z */
+        case 122 : rotate_z(&scene.m[1], 1);                     /* z */
             break;
         case 114 : 
             vec4f center = { 0.f, 0.f, 0.f, 0.f };

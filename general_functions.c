@@ -174,17 +174,16 @@ const void adoptdetailTexture(Mesh *m) {
     }
 }
 const void enWorldMesh(Mesh *m) {
-    Mat4x4 sclMatrix, trMatrix, vectorsMatrix, normalsMatrix;
+    Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
 
     vec4f pos = { 0 };
     Mat4x4 mfQ = MatfromQuat(m->Q, pos);
     sclMatrix = mxm(mfQ, scaleMatrix(m->scale));
     trMatrix = translationMatrix(m->pivot[0], m->pivot[1], m->pivot[2]);
-    vectorsMatrix = mxm(sclMatrix, trMatrix);
-    normalsMatrix = mxm(mxm(sclMatrix, trMatrix), viewMat);
+    enWorldMatrix = mxm(sclMatrix, trMatrix);
 
-    m->v = setvecsarrayxm(m->v, m->v_indexes, vectorsMatrix);
-    m->n = setvecsarrayxm(m->n, m->n_indexes, normalsMatrix);
+    m->v = setvecsarrayxm(m->v, m->v_indexes, enWorldMatrix);
+    m->n = setvecsarrayxm(m->n, m->n_indexes, enWorldMatrix);
 }
 const void placeMesh(Mesh *m, const vec4f pos) {
     Mat4x4 trMatrix = translationMatrix(pos[0], pos[1], pos[2]);

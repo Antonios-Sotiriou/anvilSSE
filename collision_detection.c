@@ -17,6 +17,7 @@ const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
     if (object->grounded) {
         Mat4x4 dr = translationMatrix(0, height_diff, 0);
         object->v = setvecsarrayxm(object->v, object->v_indexes, dr);
+        object->n = setvecsarrayxm(object->n, object->n_indexes, dr);
         object->pivot[1] += height_diff;
     }
 }

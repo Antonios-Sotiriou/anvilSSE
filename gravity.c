@@ -36,6 +36,7 @@ const void applyGravity(Scene *s) {
 
             trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
             s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
+            s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
 
             s->m[i].pivot += pivot;
 
