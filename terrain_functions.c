@@ -9,11 +9,11 @@ const void initMeshQuadInfo(Mesh *t, Mesh *m) {
     addMeshToQuad(m);
 }
 /* Retrieves Terrain *t height at given coords and, sets given meshes *m terain quadIndex to the id of the quad at those coords. */
-const float getTerrainHeight(Mesh *terrain, vec4f coords, Mesh *m) {
-    float quad_len = terrain->scale / tf.vecWidth;
-    const int t_limit = terrain->scale - quad_len;
+const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m) {
+    float quad_len = t->scale / tf.vecWidth;
+    const int t_limit = t->scale - quad_len;
 
-    vec4f t_coords = coords - (terrain->pivot - (terrain->scale / 2.f));
+    vec4f t_coords = coords - (t->pivot - (t->scale / 2.f));
     if ( (t_coords[0] >= t_limit || t_coords[0] < 0) || (t_coords[2] >= t_limit || t_coords[2] < 0) ) {
         fprintf(stderr, "Out of terrain Limits -- getTerrainHeight().\n");
         m->quadIndex = -1;
@@ -21,7 +21,7 @@ const float getTerrainHeight(Mesh *terrain, vec4f coords, Mesh *m) {
     } 
 
     /* Function to get t quads indexes. */
-    vec4i pos = __builtin_convertvector((t_coords / (terrain->scale)) * (float)tf.vecWidth, vec4i);
+    vec4i pos = __builtin_convertvector((t_coords / (t->scale)) * (float)tf.vecWidth, vec4i);
     const int quad_index = (pos[2] * tf.quadRows) + pos[0];
 
     /* Set meshes m quadIndex to index. */
@@ -43,13 +43,13 @@ const float getTerrainHeight(Mesh *terrain, vec4f coords, Mesh *m) {
 
     face f;
     if (x - z <= 0) {
-        f.v[0] = terrain->v[terrain->f[Upperface]];
-        f.v[1] = terrain->v[terrain->f[Upperface + 3]];
-        f.v[2] = terrain->v[terrain->f[Upperface + 6]];
+        f.v[0] = t->v[t->f[Upperface]];
+        f.v[1] = t->v[t->f[Upperface + 3]];
+        f.v[2] = t->v[t->f[Upperface + 6]];
     } else {
-        f.v[0] = terrain->v[terrain->f[Lowerface]];
-        f.v[1] = terrain->v[terrain->f[Lowerface + 3]];
-        f.v[2] = terrain->v[terrain->f[Lowerface + 6]];
+        f.v[0] = t->v[t->f[Lowerface]];
+        f.v[1] = t->v[t->f[Lowerface + 3]];
+        f.v[2] = t->v[t->f[Lowerface + 6]];
     }
 
     const vec4f xs = { f.v[0][0],  f.v[1][0], f.v[2][0], 0};

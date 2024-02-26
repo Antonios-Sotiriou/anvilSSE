@@ -273,6 +273,7 @@ const static void buttonpress(XEvent *event) {
     printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
     // DROPBALL = DROPBALL == 0 ? 1 : 0;
     GravityTime = 0;
+    memset(event, 0, sizeof(XEvent));
 }
 const static void keypress(XEvent *event) {
 
@@ -283,7 +284,7 @@ const static void keypress(XEvent *event) {
     else
         eye = (vec4f*)&camera;
 
-    // printf("Key Pressed: %ld\n", keysym);
+    printf("Key Pressed: %ld\n", keysym);
     printf("\x1b[H\x1b[J");
     // system("clear\n");
     // logEvent(*event);
