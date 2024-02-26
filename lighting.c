@@ -1,5 +1,5 @@
 #include "headers/lighting.h"
-
+#include "headers/logging.h"
 const void phong(Fragment *fr) {
     vec4f basecolor;
 
@@ -9,7 +9,7 @@ const void phong(Fragment *fr) {
         basecolor = fr->mtr->basecolor;
 
     vec4f diffuse = { 0 }, specular = { 0 };
-    vec4f ambient = sunlight.material.ambient * (fr->mtr->basecolor * AmbientStrength);
+    vec4f ambient = sunlight.material.ambient * (basecolor * AmbientStrength);
     vec4c fragcolor = { 0 };
 
     float w = 1 / fr->pos[3];
@@ -41,6 +41,9 @@ const void phong(Fragment *fr) {
         }
     }
     fragcolor = __builtin_convertvector((((specular + diffuse) * (ambient + (1.f - shadow))) * basecolor) * 255, vec4c);
+
+    // logVec4f(specular);
+    // logVec4f(ambient);
     // fragcolor = __builtin_convertvector((((specular + diffuse) * (ambient + (1.f * shadow))) * basecolor) * 255, vec4c);
     // fragcolor = __builtin_convertvector(basecolor * 255, vec4c);
     memcpy(&point_buffer[(int)((fr->pos[1] * point_attrib->width * 4) + (fr->pos[0] * 4))], &fragcolor, 4);
