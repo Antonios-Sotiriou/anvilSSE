@@ -19,8 +19,6 @@ const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
     if (object->grounded) {
         object->pivot[1] += height_diff;
     }
-<<<<<<< HEAD
-=======
 }
 const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
     const int num_of_members = tf->quads[obj->quadIndex].mems_indexes;
@@ -46,7 +44,6 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
                 // objectEnvironmentCollision(tf, s, &s->m[tf->quads[obj->quadIndex].mems[i]]);
             }
     }
->>>>>>> collisionDetection
 }
 
 

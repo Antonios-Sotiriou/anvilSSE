@@ -136,14 +136,6 @@ int HALFH = 0; // Half height of the screen; This variable is initialized in con
 int MAIN_EMVADON, MAP_EMVADON;
 int DEBUG = 0;
 
-int INCORDEC = -1;
-unsigned int SMA = 8;    //0
-unsigned int SMB = 262;//265;    //176
-unsigned int SMC = 627;//709;    //352
-unsigned int STA = 88;    //88
-unsigned int STB = 88;    //88
-unsigned int STC = 360;    //264
-
 /* Display usefull measurements. */
 float			        TimeCounter, LastFrameTimeCounter, DeltaTime, GravityTime, prevTime = 0.0, FPS;
 struct timeval		    tv, tv0;

@@ -347,11 +347,7 @@ const float shadowTest(vec4f frag, vec4f nml) {
     if (sm_index > 2)
         return 0;
 
-<<<<<<< HEAD
-    // float bias[3] = { 0.0007, 0.003, 0.0076 };
-=======
     float bias[3] = { 0.0007, 0.003, 0.0076 };
->>>>>>> collisionDetection
     // // bias 0 = 0.0007,    bias 1 = 0.003,    bias 2 = 0.0076;
     // shadow_bias = sm_index < 2 ? bias[sm_index] : shadow_bias;
 
@@ -375,11 +371,7 @@ const float shadowTest(vec4f frag, vec4f nml) {
 
 
             float pcfDepth = shadow_buffer[sm_index][((int)frag[1] * main_wa.width) + (int)frag[0]];
-<<<<<<< HEAD
-            shadow += frag[2] + shadow_bias < pcfDepth ? 1.f : 0.f;
-=======
             shadow += frag[2] + bias[sm_index] < pcfDepth ? 1.f : 0.f;
->>>>>>> collisionDetection
         }
     }
 

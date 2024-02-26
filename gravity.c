@@ -25,12 +25,7 @@ const void applyForces(Scene *s) {
 const void applyGravity(Scene *s) {
     /* Apply Gravitanional forces to Specific or all meshes. EXCEPT TERRAIN. */
     for (int i = 0; i < s->m_indexes; i++) {
-<<<<<<< HEAD
-
-        if ((s->m[i].type != Terrain) && (!s->m[i].grounded)) {
-=======
         if ( (s->m[i].type != Terrain) && (!s->m[i].grounded) || (s->m[i].rahm) ) {
->>>>>>> collisionDetection
 
             s->m[i].falling_time += DeltaTime;
             const vec4f pull_point = { 0.f, -1.f, 0.f };
