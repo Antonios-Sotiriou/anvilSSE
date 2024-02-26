@@ -25,7 +25,10 @@ const float getTerrainHeight(Mesh *terrain, vec4f coords, Mesh *m) {
     const int quad_index = (pos[2] * tf.quadRows) + pos[0];
 
     /* Set meshes m quadIndex to index. */
+    if (m->quadIndex != quad_index && m->quadInit)
+        removeMeshFromQuad(m);
     m->quadIndex = quad_index;
+    m->quadInit = 1;
 
     /* Every quad has two faces incrementally. Every face constists of 9 indexes for vectors, normals, textors.
         So to get the right index we multiply faces with 9, because indexes are stored raw until now. */
@@ -83,8 +86,8 @@ const int getTerrainQuadIndex(Mesh *t, vec4f coords) {
 const void addMeshToQuad(Mesh *m) {
     const int quad_index = m->quadIndex;
 
-    if (quad_index < 0) {
-        /* Mesh is out of terrain if its quadIndex is less than Zero. */
+    if (quad_index < 0 || !m->id) {
+        /* Mesh is out of terrain if its quadIndex is less than Zero or it is the terrain if its ID is 0. */
         return;
     }
 

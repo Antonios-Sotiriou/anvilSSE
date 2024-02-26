@@ -95,8 +95,14 @@ typedef struct {
     unsigned int *f;
     Quat Q;
     // void (*drawMesh)(void *args);
-    int v_indexes, n_indexes, t_indexes, f_indexes, cull, lodlevels, currentlod, visible, type, floating, relaxing, grounded, rahm, quadIndex, id; /* as id we use the index of the mesh in the scene. */
-    float scale, falling_time;
+    int v_indexes, n_indexes, t_indexes, f_indexes, /* vectors, normals, textors and faces indexes summary. */
+    type,                                           /* type of the Mesh. Not sure yet how to categorize them. */
+    cull, lodlevels, currentlod, visible,           /* visibillity and lod or texture lod usefull variables. */
+    floating, grounded,                             /* variables usefull for physics and kinetics.  */
+    quadInit, quadIndex, id;                        /* Terrain quad position and id of mesh the its index in the scene. */
+    float scale, falling_time,                      /* Scale of the mesh and the time that is on Air. */
+    rahm;                                           /* The momentum of the mesh. */
+    DimensionsLimits BB;
     Material material;
 } Mesh;
 

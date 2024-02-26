@@ -29,6 +29,7 @@
 extern float DeltaTime;
 
 const void applyGravity(Scene *s);
+const void applyForces(Scene *s);
 
 #endif /* _GRAVITY_H */
 
