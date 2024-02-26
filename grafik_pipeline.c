@@ -15,11 +15,15 @@ const void grafikPipeline(Scene *s) {
 
     for (int i = 0; i < s->m_indexes; i++) {
 
-        initMeshStepOne(&cache_0, &s->m[i]);
-        cache_0.v = vecsarrayxm(s->m[i].v, s->m[i].v_indexes, worldMat);
-        cache_0.n = vecsarrayxm(s->m[i].n, s->m[i].n_indexes, viewMat);
+        adoptdetailMesh(&s->m[i]);
+        adoptdetailTexture(&s->m[i]);
 
-        if (frustumCulling(&cache_0.v, cache_0.v_indexes)) {
+        initMeshStepOne(&cache_0, &s->m[i]);
+
+        cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, worldMat);
+        cache_0.n = setvecsarrayxm(cache_0.n, cache_0.n_indexes, viewMat);
+
+        if (frustumCulling(cache_0.v, cache_0.v_indexes)) { /* Scene doenst save the info needed. */
 
             /* Assembly and create the faces from the mesh vertices, normals and texture arrays, through the indexes. */
             MeshStepTwo cache_1 = assemblyfaces(&cache_0, s->m[i].f, s->m[i].f_indexes);

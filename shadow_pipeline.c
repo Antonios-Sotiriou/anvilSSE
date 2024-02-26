@@ -76,19 +76,16 @@ const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
 #include "headers/logging.h"
 /* ################################################### CASCADE SHADOW MAPPING FINISH ################################################ */
 const void shadowPipeline(Scene *s, const unsigned int sm_index) {
-    Mesh cache_v = { 0 };
     MeshShadowStepOne cache_0 = { 0 };
 
     for (int i = 0; i < s->m_indexes; i++) {
-        initMesh(&cache_v, &s->m[i]);
+        initMeshShadowStepOne(&cache_0, &s->m[i]);
 
-        cache_v.v = setvecsarrayxm(cache_v.v, cache_v.v_indexes, ortholightMat[sm_index]);
-        if (frustumCulling(&cache_v)) {
+        cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, ortholightMat[sm_index]);
 
-            initMeshShadowStepOne(&cache_0, &cache_v);
+        if (frustumCulling(cache_0.v, cache_0.v_indexes)) {
 
-            MeshShadowStepTwo cache_1 = assemblyfacesShadow(&cache_0, cache_v.f, cache_v.f_indexes);
-            releaseMesh(&cache_v);
+            MeshShadowStepTwo cache_1 = assemblyfacesShadow(&cache_0, s->m[i].f, s->m[i].f_indexes);
             releaseMeshShadowStepOne(&cache_0);
 
             /* At this Point triangles must be shadowclipped against near plane. */
@@ -125,8 +122,9 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
 
             createShadowmap(&cache_1, sm_index);
             releaseMeshShadowStepTwo(&cache_1);
-        } else
-            releaseMesh(&cache_v);
+        } else {
+            releaseMeshShadowStepOne(&cache_0);
+        }
     }
 }
 const static void enShadowMesh(Mesh *m, const Mat4x4 lightMat) {
