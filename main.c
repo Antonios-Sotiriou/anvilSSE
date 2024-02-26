@@ -124,7 +124,7 @@ const float sunMov = 1.0f;
 Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
 
 /* Anvil global Objects Meshes and Scene. */
-Scene scene = { 0 }, scene_cache = { 0 };
+Scene scene = { 0 };
 /* Terrain info struct is populated with data when terrain is created(createTerrain()). */
 TerrainInfo tf;
 
@@ -190,7 +190,6 @@ const static void clientmessage(XEvent *event) {
     if (event->xclient.data.l[0] == wmatom[Win_Close]) {
 
         releaseScene(&scene);
-        // releaseScene(&scene_cache);
 
         free(frame_buffer);
         free(main_depth_buffer);
@@ -485,7 +484,7 @@ static void *cascade(void *args) {
     int shadow_id = *(int*)args;
 
     memcpy(shadow_buffer[shadow_id], reset_buffer, FBSIZE);
-    shadowPipeline(&scene_cache, shadow_id);
+    shadowPipeline(&scene, shadow_id);
 
     return (void*)args;
 }
@@ -493,7 +492,7 @@ const static void applyPhysics(void) {
 
     applyForces(&scene);
 
-    applyGravity(&scene_cache); /* need world space */
+    applyGravity(&scene); /* need world space */
 
     /* At this spot shall be implemented collision between objects as a primitive implementation. */
     objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1]);
@@ -511,7 +510,7 @@ const static void project(void) {
             fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
     }
 
-    grafikPipeline(&scene_cache);
+    grafikPipeline(&scene);
 
     for (int i = 0; i < THREADS; i++) {
         if (pthread_create(&threads[i], NULL, &oscillator, &thread_ids[i]))
@@ -523,9 +522,6 @@ const static void project(void) {
     }
 
     drawFrame();
-    for (int i = 0; i < scene_cache.m_indexes; i++)
-        releaseMesh(&scene_cache.m[i]);
-    free(scene_cache.m);
 }
 /* Writes the final Pixel values on screen. */
 const static void drawFrame(void) {
@@ -705,7 +701,7 @@ const static int board(void) {
         return EXIT_FAILURE;
     }
     // XLockDisplay(displ);
-    XEvent event, event_cache;
+    XEvent event = { 0 }, event_cache = { 0 };
 
     displ = XOpenDisplay(NULL);
     if (displ == NULL) {

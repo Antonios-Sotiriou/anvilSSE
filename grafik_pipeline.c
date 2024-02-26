@@ -10,16 +10,16 @@ const static void releaseMeshStepTwo(MeshStepTwo *c);
 const static void initMeshStepOne(MeshStepOne *a, Mesh *b);
 
 /* Passes the scene Meshes throught the graphic pipeline. */
-#include "headers/logging.h"
 const void grafikPipeline(Scene *s) {
     MeshStepOne cache_0 = { 0 };
 
     for (int i = 0; i < s->m_indexes; i++) {
 
-        s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, worldMat);
-        if (frustumCulling(&s->m[i])) { /* Scene doenst save the info needed. */
+        initMeshStepOne(&cache_0, &s->m[i]);
+        cache_0.v = vecsarrayxm(s->m[i].v, s->m[i].v_indexes, worldMat);
+        cache_0.n = vecsarrayxm(s->m[i].n, s->m[i].n_indexes, viewMat);
 
-            initMeshStepOne(&cache_0, &s->m[i]);
+        if (frustumCulling(&cache_0.v, cache_0.v_indexes)) {
 
             /* Assembly and create the faces from the mesh vertices, normals and texture arrays, through the indexes. */
             MeshStepTwo cache_1 = assemblyfaces(&cache_0, s->m[i].f, s->m[i].f_indexes);
@@ -63,6 +63,8 @@ const void grafikPipeline(Scene *s) {
 
             rasterize(&cache_1, &s->m[i].material);
             releaseMeshStepTwo(&cache_1);
+        } else {
+            releaseMeshStepOne(&cache_0);
         }
     }
 }
