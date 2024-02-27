@@ -7,7 +7,7 @@ const void initWorldObjects(Scene *s) {
     /* ######################################################################################################## */
     // memcpy(s->m[0].name, "basic_terrain", sizeof("basic_terrain"));
     // createGrid(&s->m[0], 10, 10);
-    createTerrain(&s->m[0], "textures/height_map_10x10.bmp");
+    createTerrain(&s->m[0], "textures/height_map_bn1.bmp");
     loadmaterial(&s->m[0].material, "pearl");
 
     s->m[0].type = Terrain;
@@ -48,7 +48,29 @@ const void initWorldObjects(Scene *s) {
     // enWorldMesh(&s->m[1]);
 
     /* ######################################################################################################## */
-    for (int i = 2; i < MESH_NUM; i++) {
+    memcpy(s->m[2].name, "spacedomsmooth", sizeof("spacedomsmooth"));
+    // createCube(&s->m[3]);
+    loadmaterial(&s->m[2].material, "spacedom");
+    loadmesh(&s->m[2], s->m[2].name, 1);
+
+    s->m[2].type = Terrain;
+    s->m[2].id = 0;
+
+    s->m[2].scale = 10000.f;
+
+    s->m[2].pivot[0] = 0.f;
+    s->m[2].pivot[1] = 0.f;
+    s->m[2].pivot[2] = 0.f;
+
+    s->m[2].cull = 1;
+    s->m[2].lodlevels = 1;
+    // s->m[2].visible = 1;
+    // s->m[2].material.reflect = 1;
+    s->m[2].Q = unitQuat();
+    // enWorldMesh(&s->m[2]);
+
+    /* ######################################################################################################## */
+    for (int i = 3; i < MESH_NUM; i++) {
         createCube(&s->m[i]);
         loadmaterial(&s->m[i].material, "jade");
 

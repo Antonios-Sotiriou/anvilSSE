@@ -23,8 +23,6 @@
 #define THREADS 8
 pthread_t threads[THREADS];
 int *thread_ids;
-vec4f test_v = { 0.f, 0.f, 1.f, 0.f };
-float rahm = 0;
 /* ############################################## MULTITHREADING ################################################################### */
 
 /* CHOOSE WITH WHICH FUNCTION TO RASTERIZE. */
@@ -78,19 +76,14 @@ Fragment *frags_buffer, *reset_frags;
 /* Project Global Variables. */
 int PROJECTIONVIEW = 0;
 static int PROJECTBUFFER  = 1;
-static int AdjustShadow   = 1;
-static int AdjustScene    = 1;
 static int EYEPOINT       = 0;
 static float FOV          = 45.0f;
 static float ZNEAR        = 0.1f;
-static float ZFAR         = 1.0f;
+static float ZFAR         = 100.0f;
 float ASPECTRATIO         = 1;
 static int FBSIZE         = 0;
 float NPlane              = 1.0f;
 float FPlane              = 20000.0f;
-float collNPlane          = 0.0f;
-float collFPlane          = 2000.0f;
-float SCALE               = 0.003f;
 float AmbientStrength     = 0.5f;
 float SpecularStrength    = 0.5f;
 float DiffuseStrength     = 0.5f;
@@ -133,7 +126,7 @@ static int INIT = 0;
 static int RUNNING = 1;
 int HALFW = 0; // Half width of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
 int HALFH = 0; // Half height of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
-int MAIN_EMVADON, MAP_EMVADON;
+int MAIN_EMVADON;
 int DEBUG = 0;
 
 /* Display usefull measurements. */
@@ -182,7 +175,6 @@ static void (*handler[LASTEvent]) (XEvent *event) = {
     [ConfigureNotify] = configurenotify,
     [ButtonPress] = buttonpress,
     [KeyPress] = keypress,
-    // [KeyRelease] = keypress,
 };
 
 const static void clientmessage(XEvent *event) {
@@ -291,10 +283,8 @@ const static void keypress(XEvent *event) {
         case 57 : STB += INCORDEC; break;
         case 56 : STC += INCORDEC; break;
         case 97 : look_left(eye, 0.2);             /* a */
-            // rotate_light_cam(&scene.m[1], camera[0], 2.0f, 0.0f, 1.0f, 0.0f);
             break;
         case 100 : look_right(eye, 0.2);           /* d */
-            // rotate_light_cam(&scene.m[1], camera[0], -2.0f, 0.0f, 1.0f, 0.0f);
             break;
         case 113 : look_up(eye, 2.2);              /* q */
             break;
@@ -312,11 +302,11 @@ const static void keypress(XEvent *event) {
             break;
         case 65364 : move_down(eye, 1.f);          /* down arrow */
             break;
-        case 65451 :shadow_bias += 0.0001;             /* + */
-            printf("shadow_bias: %f\n", shadow_bias);
+        case 65451 :FOV += 1.0001;             /* + */
+            printf("shadow_bias: %f\n", FOV);
             break;
-        case 65453 :shadow_bias -= 0.0001;             /* - */
-            printf("shadow_bias: %f\n", shadow_bias);
+        case 65453 :FOV -= 1.0001;             /* - */
+            printf("shadow_bias: %f\n", FOV);
             break;
         case 65450 : SpecularStrength += 0.01f;             /* * */
             printf("SpecularStrength: %f\n", SpecularStrength);
@@ -325,28 +315,16 @@ const static void keypress(XEvent *event) {
             printf("SpecularStrength: %f\n", SpecularStrength);
             break;
         case 65430 : sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
-            Quat arot = rotationQuat(10, sunlight.u);
-            Mat4x4 ma = MatfromQuat(arot, scene.m[1].pivot);
-            Mat4x4 ra = mxm(ma, translationMatrix(-sunMov, 0.0f, 0.0f));
-            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, ra);
-            scene.m[1].n = setvecsarrayxm(scene.m[1].n, scene.m[1].n_indexes, ra);
             vec4f mva = { -1.f, 0.f, 0.f };
             scene.m[1].mvdir = mva;
             scene.m[1].rahm = 1;
-            scene.m[1].Q = multiplyQuats(scene.m[1].Q, arot);
-            scene.m[1].pivot[0] -= sunMov;
+            scene.m[1].roll = 1;
             break;
         case 65432 : sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
-            Quat brot = rotationQuat(-10, sunlight.u);
-            Mat4x4 mb = MatfromQuat(brot, scene.m[1].pivot);
-            Mat4x4 rb = mxm(mb, translationMatrix(sunMov, 0.0f, 0.0f));
-            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, mb);
-            scene.m[1].n = setvecsarrayxm(scene.m[1].n, scene.m[1].n_indexes, mb);
             vec4f mvb = { 1.f, 0.f, 0.f };
             scene.m[1].mvdir = mvb;
             scene.m[1].rahm = 1;
-            scene.m[1].Q = multiplyQuats(scene.m[1].Q, brot);
-            scene.m[1].pivot[0] += sunMov;
+            scene.m[1].roll = 1;
             break;
         case 65434 : sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
             scene.m[1].grounded = 0;
@@ -361,28 +339,16 @@ const static void keypress(XEvent *event) {
             scene.m[1].rahm = 1;
             break;
         case 65431 : sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
-            Quat erot = rotationQuat(-10, sunlight.u);
-            Mat4x4 me = MatfromQuat(erot, scene.m[1].pivot);
-            Mat4x4 re = mxm(me, translationMatrix(0.f, 0.f, sunMov));
-            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, re);
-            scene.m[1].n = setvecsarrayxm(scene.m[1].n, scene.m[1].n_indexes, re);
             vec4f mve= { 0.f, 0.f, 1.f };
             scene.m[1].mvdir = mve;
             scene.m[1].rahm = 1;
-            scene.m[1].Q = multiplyQuats(scene.m[1].Q, erot);
-            scene.m[1].pivot[2] += sunMov;
+            scene.m[1].roll = 1;
             break;
         case 65433 : sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
-            Quat frot = rotationQuat(10, sunlight.u);
-            Mat4x4 mf = MatfromQuat(frot, scene.m[1].pivot);
-            Mat4x4 rf = mxm(mf, translationMatrix(0.f, 0.f, -sunMov));
-            scene.m[1].v = setvecsarrayxm(scene.m[1].v, scene.m[1].v_indexes, rf);
-            scene.m[1].n = setvecsarrayxm(scene.m[1].n, scene.m[1].n_indexes, rf);
             vec4f mvf = { 0.f, 0.f, -1.f };
             scene.m[1].mvdir = mvf;
             scene.m[1].rahm = 1;
-            scene.m[1].Q = multiplyQuats(scene.m[1].Q, frot);
-            scene.m[1].pivot[2] -= sunMov;    
+            scene.m[1].roll = 1;
             break;
         case 120 : rotate_x(&scene.m[1], 1);                     /* x */
             break;
@@ -394,10 +360,9 @@ const static void keypress(XEvent *event) {
             vec4f center = { 0.f, 0.f, 0.f, 0.f };
             rotate_light(&sunlight, center, 1, 0.0f, 1.0f, 0.0f);        /* r */
             break;
-        case 99 : //rotate_origin(&scene.m[Player_1], 10, 1.0f, 0.0f, 0.0f);  /* c */
+        case 99 :                                                        /* c */
             vec4f axis = { 1.f, 0.f, 0.f, 0.f };
             scene.m[Player_1].Q = multiplyQuats(scene.m[Player_1].Q, rotationQuat(10, axis));
-            // scene.m[Player_1].Q = rotationQuat(10, axis);
             break;
         case 43 : AmbientStrength += 0.01;                                    /* + */
             printf("AmbientStrength: %f\n", AmbientStrength);
@@ -450,7 +415,7 @@ const static void keypress(XEvent *event) {
     // printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
     // printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
     createCascadeShadowMatrices(NUM_OF_CASCADES);
-
+    perspMat = perspectiveMatrix(FOV, ASPECTRATIO, ZNEAR, ZFAR);
     if (!PROJECTIONVIEW)
         worldMat = mxm(viewMat, perspMat);
     else
@@ -572,9 +537,6 @@ const static void initDependedVariables(void) {
     perspMat = perspectiveMatrix(FOV, ASPECTRATIO, ZNEAR, ZFAR);
     reperspMat = reperspectiveMatrix(FOV, ASPECTRATIO);
     orthoMat = orthographicMatrix(-100.f, 100.f, -100.f, 100.f, 0.01f, 1.f);
-
-    AdjustShadow = 1;
-    AdjustScene = 1;
 }
 const static void initAtoms(void) {
 
