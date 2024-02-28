@@ -30,24 +30,29 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
     obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
     Mesh m;
     for (int i = 0; i < num_of_members; i++) {
-        m = s->m[tf->quads[obj->quadIndex].mems[i]];
-        m.BB = getDimensionsLimits(m.v, m.v_indexes);
 
-        if (obj->BB.minZ > m.BB.minZ && obj->BB.minZ < m.BB.maxZ || 
-            obj->BB.maxZ > m.BB.minZ && obj->BB.maxZ < m.BB.maxZ ||
-            obj->BB.minZ < m.BB.minZ && obj->BB.maxZ > m.BB.maxZ)
+        if (s->m[tf->quads[obj->quadIndex].mems[i]].id != obj->id) {
 
-            if (obj->BB.minX > m.BB.minX && obj->BB.minX < m.BB.maxX || 
-                obj->BB.maxX > m.BB.minX && obj->BB.maxX < m.BB.maxX || 
-                obj->BB.minX < m.BB.minX && obj->BB.maxX > m.BB.maxX) {
+            m = s->m[tf->quads[obj->quadIndex].mems[i]];
+            m.BB = getDimensionsLimits(m.v, m.v_indexes);
 
-                printf("We have possible collision\n");
-                s->m[tf->quads[obj->quadIndex].mems[i]].rahm = obj->rahm;
-                s->m[tf->quads[obj->quadIndex].mems[i]].mvdir = obj->mvdir;
-                obj->rahm = 0;
+            if (obj->BB.minZ > m.BB.minZ && obj->BB.minZ < m.BB.maxZ || 
+                obj->BB.maxZ > m.BB.minZ && obj->BB.maxZ < m.BB.maxZ ||
+                obj->BB.minZ < m.BB.minZ && obj->BB.maxZ > m.BB.maxZ) {
 
-                // objectEnvironmentCollision(tf, s, &s->m[tf->quads[obj->quadIndex].mems[i]]);
+                if (obj->BB.minX > m.BB.minX && obj->BB.minX < m.BB.maxX || 
+                    obj->BB.maxX > m.BB.minX && obj->BB.maxX < m.BB.maxX || 
+                    obj->BB.minX < m.BB.minX && obj->BB.maxX > m.BB.maxX) {
+
+                    printf("Collision Detected!\n");
+                    s->m[tf->quads[obj->quadIndex].mems[i]].rahm = obj->rahm;
+                    s->m[tf->quads[obj->quadIndex].mems[i]].mvdir = obj->mvdir;
+                    obj->rahm = 0;
+
+                    // objectEnvironmentCollision(tf, s, &s->m[tf->quads[obj->quadIndex].mems[i]]);
+                }
             }
+        }
     }
 }
 
