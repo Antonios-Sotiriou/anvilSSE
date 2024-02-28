@@ -7,7 +7,7 @@ const void initWorldObjects(Scene *s) {
     /* ######################################################################################################## */
     // memcpy(s->m[0].name, "basic_terrain", sizeof("basic_terrain"));
     // createGrid(&s->m[0], 10, 10);
-    createTerrain(&s->m[0], "textures/height_map_bn1.bmp");
+    createTerrain(&s->m[0], "textures/height_map_10x10.bmp");
     loadmaterial(&s->m[0].material, "pearl");
 
     s->m[0].type = Terrain;

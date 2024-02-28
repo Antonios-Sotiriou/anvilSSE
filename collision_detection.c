@@ -22,6 +22,10 @@ const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
     }
 }
 const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
+    if (obj->quadIndex < 0) {
+        fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
+        return;
+    }
     const int num_of_members = tf->quads[obj->quadIndex].mems_indexes;
     obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
     Mesh m;
