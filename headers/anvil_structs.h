@@ -101,8 +101,9 @@ typedef struct {
     floating, grounded,                             /* variables usefull for physics and kinetics.  */
     quadInit, quadIndex, id;                        /* Terrain quad position and id of mesh the its index in the scene. */
     float scale, falling_time,                      /* Scale of the mesh and the time that is on Air. */
-    rahm,                                           /* The momentum of the mesh. */
-    roll;                                           /* If the mesh is rolling like wheels. */
+    momentum,                                       /* The momentum of the mesh. */
+    roll,                                           /* If the mesh is rolling like wheels. */
+    mass;                                           /* Mass of the mesh. */
     DimensionsLimits BB;
     Material material;
 } Mesh;

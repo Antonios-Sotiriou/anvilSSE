@@ -29,6 +29,7 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
     const int num_of_members = tf->quads[obj->quadIndex].mems_indexes;
     obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
     Mesh m;
+    // printf("obj->id: %d ", obj->id);
     for (int i = 0; i < num_of_members; i++) {
 
         if (s->m[tf->quads[obj->quadIndex].mems[i]].id != obj->id) {
@@ -45,15 +46,21 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
                     obj->BB.minX < m.BB.minX && obj->BB.maxX > m.BB.maxX) {
 
                     printf("Collision Detected!\n");
-                    s->m[tf->quads[obj->quadIndex].mems[i]].rahm = obj->rahm;
+                    s->m[tf->quads[obj->quadIndex].mems[i]].momentum = obj->momentum;
                     s->m[tf->quads[obj->quadIndex].mems[i]].mvdir = obj->mvdir;
-                    obj->rahm = 0;
+                    obj->momentum *= m.mass;
 
+                    // logDm(obj->BB);
+                    // logDm(m.BB);
+
+                    // printf("m.id: %d ", m.id);
+                    // printf("obj minZ %f  maxZ %f    m minZ %f  maxT %f\n", obj->BB.minZ, obj->BB.maxZ, m.BB.minZ, m.BB.maxZ);
                     // objectEnvironmentCollision(tf, s, &s->m[tf->quads[obj->quadIndex].mems[i]]);
                 }
             }
         }
     }
+    // printf("\n");
 }
 
 

@@ -225,7 +225,7 @@ const int frustumCulling(vec4f v[], const int v_indexes) {
     max[0] = ((1 + max[0]) * HALFW) + 0.5;
     max[1] = ((1 + max[1]) * HALFH) + 0.5;
 
-    // XDrawRectangle(displ, mainwin, gc, min[0], min[1], max[0] - min[0], max[1] - min[1]);
+    XDrawRectangle(displ, mainwin, gc, min[0], min[1], max[0] - min[0], max[1] - min[1]);
 
     if ( ((min[2] > FPlane) || (max[2] < NPlane)) ||
             ((min[1] > 1000) || (max[1] < 0)) ||

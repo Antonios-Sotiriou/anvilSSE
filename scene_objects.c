@@ -21,7 +21,8 @@ const void initWorldObjects(Scene *s) {
 
     s->m[0].cull = 1;
     s->m[0].lodlevels = 0;
-    // s->m[1].material.reflect = 1;
+    // s->m[0].material.reflect = 1;
+    s->m[0].mass = 0;
     s->m[0].Q = unitQuat();
     enWorldMesh(&s->m[0]);
 
@@ -43,6 +44,7 @@ const void initWorldObjects(Scene *s) {
     s->m[1].cull = 1;
     s->m[1].lodlevels = 5;
     // s->m[1].visible = 1;
+    s->m[1].mass = 0.5;
     // s->m[1].material.reflect = 1;
     s->m[1].Q = unitQuat();
     // enWorldMesh(&s->m[1]);
@@ -65,6 +67,7 @@ const void initWorldObjects(Scene *s) {
     s->m[2].cull = 1;
     s->m[2].lodlevels = 1;
     // s->m[2].visible = 1;
+    s->m[2].mass = 0;
     // s->m[2].material.reflect = 1;
     s->m[2].Q = unitQuat();
     // enWorldMesh(&s->m[2]);
@@ -84,6 +87,7 @@ const void initWorldObjects(Scene *s) {
         s->m[i].cull = 1;
         s->m[i].lodlevels = 0;
         // s->m[1].visible = 1;
+        s->m[i].mass = 0.02;
         s->m[i].Q = unitQuat();
         enWorldMesh(&s->m[i]);
     }

@@ -3,14 +3,14 @@
 const void applyForces(Scene *s) {
     Mat4x4 trans;
     for (int i = 0; i < s->m_indexes; i++) {
-        if (s->m[i].rahm > 0) {
+        if (s->m[i].momentum > 0) {
 
-            s->m[i].rahm -= DeltaTime;
-            vec4f pivot = s->m[i].mvdir * s->m[i].rahm;
+            s->m[i].momentum -= DeltaTime;
+            vec4f pivot = s->m[i].mvdir * s->m[i].momentum;
             vec4f axis = { 1.f, 0.f, 0.f };
 
             if (s->m[i].roll) {
-                s->m[i].roll = s->m[i].rahm * 10;
+                s->m[i].roll = s->m[i].momentum * 10;
 
                 Quat xrot = rotationQuat(s->m[i].roll, axis);
                 Mat4x4 m = MatfromQuat(xrot, s->m[i].pivot);
@@ -26,14 +26,14 @@ const void applyForces(Scene *s) {
 
             s->m[i].pivot += pivot;
         } else
-            s->m[i].rahm = s->m[i].roll = 0;
+            s->m[i].momentum = s->m[i].roll = 0;
     }
 }
 const void applyGravity(Scene *s) {
     Mat4x4 trans;
     /* Apply Gravitanional forces to Specific or all meshes. EXCEPT TERRAIN. */
     for (int i = 0; i < s->m_indexes; i++) {
-        if ( (s->m[i].type != Terrain) && (!s->m[i].grounded) || (s->m[i].rahm) ) {
+        if ( (s->m[i].type != Terrain) && (!s->m[i].grounded) || (s->m[i].momentum) ) {
 
             s->m[i].falling_time += DeltaTime;
             const vec4f pull_point = { 0.f, -1.f, 0.f };
