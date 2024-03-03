@@ -98,7 +98,7 @@ typedef struct {
     int v_indexes, n_indexes, t_indexes, f_indexes, /* vectors, normals, textors and faces indexes summary. */
     type,                                           /* type of the Mesh. Not sure yet how to categorize them. */
     cull, lodlevels, currentlod, visible,           /* visibillity and lod or texture lod usefull variables. */
-    floating, grounded,                             /* variables usefull for physics and kinetics.  */
+    floating, grounded, collide,                    /* variables usefull for physics and kinetics.  */
     quadInit, quadIndex, id;                        /* Terrain quad position and id of mesh the its index in the scene. */
     float scale, falling_time,                      /* Scale of the mesh and the time that is on Air. */
     momentum,                                       /* The momentum of the mesh. */

@@ -1,10 +1,10 @@
 #include "headers/collision_detection.h"
 
 #include "headers/logging.h"
-extern Window mainwin;
-extern Display *displ;
-extern GC gc;
-extern Mat4x4 worldMat;
+// extern Window mainwin;
+// extern Display *displ;
+// extern GC gc;
+// extern Mat4x4 worldMat;
 extern float DeltaTime;
 
 const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
@@ -26,40 +26,63 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
         fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
         return;
     }
+
     const int num_of_members = tf->quads[obj->quadIndex].mems_indexes;
-    obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
-    Mesh m;
-    // printf("obj->id: %d ", obj->id);
+
     for (int i = 0; i < num_of_members; i++) {
+        
+        int outer_inx = tf->quads[obj->quadIndex].mems[i];
+        s->m[outer_inx].BB = getDimensionsLimits(s->m[outer_inx].v, s->m[outer_inx].v_indexes);
+        printf("\nChecking collisions obj->id: %d --> ", s->m[outer_inx].id);
 
-        if (s->m[tf->quads[obj->quadIndex].mems[i]].id != obj->id) {
+        for (int j = 0; j < num_of_members; j++) {
 
-            m = s->m[tf->quads[obj->quadIndex].mems[i]];
-            m.BB = getDimensionsLimits(m.v, m.v_indexes);
+            int inner_inx = tf->quads[obj->quadIndex].mems[j];
 
-            if (obj->BB.minZ > m.BB.minZ && obj->BB.minZ < m.BB.maxZ || 
-                obj->BB.maxZ > m.BB.minZ && obj->BB.maxZ < m.BB.maxZ ||
-                obj->BB.minZ < m.BB.minZ && obj->BB.maxZ > m.BB.maxZ) {
+            if ( s->m[inner_inx].id != s->m[outer_inx].id ) {
+                s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
+                printf("%d->%d ", s->m[inner_inx].id, s->m[inner_inx].collide);
 
-                if (obj->BB.minX > m.BB.minX && obj->BB.minX < m.BB.maxX || 
-                    obj->BB.maxX > m.BB.minX && obj->BB.maxX < m.BB.maxX || 
-                    obj->BB.minX < m.BB.minX && obj->BB.maxX > m.BB.maxX) {
+                if (s->m[outer_inx].BB.minZ > s->m[inner_inx].BB.minZ && s->m[outer_inx].BB.minZ < s->m[inner_inx].BB.maxZ || 
+                    s->m[outer_inx].BB.maxZ > s->m[inner_inx].BB.minZ && s->m[outer_inx].BB.maxZ < s->m[inner_inx].BB.maxZ ||
+                    s->m[outer_inx].BB.minZ < s->m[inner_inx].BB.minZ && s->m[outer_inx].BB.maxZ > s->m[inner_inx].BB.maxZ) {
 
-                    printf("Collision Detected!\n");
-                    s->m[tf->quads[obj->quadIndex].mems[i]].momentum = obj->momentum;
-                    s->m[tf->quads[obj->quadIndex].mems[i]].mvdir = obj->mvdir;
-                    obj->momentum *= m.mass;
+                    if (s->m[outer_inx].BB.minX > s->m[inner_inx].BB.minX && s->m[outer_inx].BB.minX < s->m[inner_inx].BB.maxX || 
+                        s->m[outer_inx].BB.maxX > s->m[inner_inx].BB.minX && s->m[outer_inx].BB.maxX < s->m[inner_inx].BB.maxX || 
+                        s->m[outer_inx].BB.minX < s->m[inner_inx].BB.minX && s->m[outer_inx].BB.maxX > s->m[inner_inx].BB.maxX) {
 
-                    // logDm(obj->BB);
-                    // logDm(m.BB);
+                        printf("\nCollision Detected ids %d, %d!", s->m[outer_inx].id, s->m[inner_inx].id);
+                        s->m[inner_inx].momentum = s->m[outer_inx].momentum;
+                        s->m[inner_inx].mvdir = s->m[outer_inx].mvdir;
+                        s->m[outer_inx].momentum *= s->m[inner_inx].mass;
+                        // s->m[inner_inx].pivot[2] += 10;
 
-                    // printf("m.id: %d ", m.id);
-                    // printf("obj minZ %f  maxZ %f    m minZ %f  maxT %f\n", obj->BB.minZ, obj->BB.maxZ, m.BB.minZ, m.BB.maxZ);
-                    // objectEnvironmentCollision(tf, s, &s->m[tf->quads[obj->quadIndex].mems[i]]);
+                        vec4f pivot = s->m[outer_inx].mvdir * s->m[outer_inx].momentum;
+                        s->m[outer_inx].pivot -= pivot;
+
+                        // Mat4x4 m = MatfromQuat(s->m[outer_inx].Q, s->m[outer_inx].pivot);
+                        // Mat4x4 trans = mxm(m, translationMatrix(pivot[0], pivot[1], pivot[2]));
+
+                        // s->m[outer_inx].v = setvecsarrayxm(s->m[outer_inx].v, s->m[outer_inx].v_indexes, trans);
+                        // s->m[outer_inx].n = setvecsarrayxm(s->m[outer_inx].n, s->m[outer_inx].n_indexes, trans);
+
+                        // logDm(obj->BB);
+                        // logDm(s->m[inner_inx].BB);
+                        // s->m[outer_inx].collide = 1;
+                        // s->m[inner_inx].collide = 1;
+
+                        // printf("obj minZ %f  maxZ %f    m minZ %f  maxT %f\n", obj->BB.minZ, obj->BB.maxZ, m.BB.minZ, m.BB.maxZ);
+                        // objectEnvironmentCollision(tf, s, &s->m[tf->quads[obj->quadIndex].mems[i]]);
+                    }
                 }
             }
         }
+        printf("\n");
+        // s->m[outer_inx].collide = 0;
     }
+    // for (int i = 0; i < num_of_members; i++) {
+    //     s->m[tf->quads[obj->quadIndex].mems[i]].collide = 0;
+    // }
     // printf("\n");
 }
 

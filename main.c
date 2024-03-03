@@ -106,7 +106,7 @@ vec4f camera[N + 1] = {
     { 0.0f, 0.0f, 1.0f, 0.0f }
 };
 Light sunlight = {
-    .pos = { 0.f, 100.0f, 0.f, 1.f },
+    .pos = { 0.f, 500.0f, 0.f, 1.f },
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
@@ -339,7 +339,7 @@ const static void keypress(XEvent *event) {
             scene.m[1].momentum = 1;
             break;
         case 65431 : sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
-            vec4f mve= { 0.f, 0.f, 1.f };
+            vec4f mve= { 0.f, 0.f, 1.f }; // norm_vec(camera[U] + camera[N]);
             scene.m[1].mvdir = mve;
             scene.m[1].momentum = 1;
             scene.m[1].roll = 1;
@@ -420,6 +420,9 @@ const static void keypress(XEvent *event) {
         worldMat = mxm(viewMat, perspMat);
     else
         worldMat = mxm(viewMat, orthoMat);
+
+    // scene.m[4].pivot = camera[U] + camera[N];
+    logVec4f(norm_vec(camera[U] + camera[N]));
 }
 static void *oscillator(void *args) {
 
@@ -452,12 +455,12 @@ static void *cascade(void *args) {
 }
 const static void applyPhysics(void) {
 
-    /* At this spot shall be implemented collision between objects as a primitive implementation. */
-    objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1]);
-
     applyForces(&scene);
 
     applyGravity(&scene); /* need world space */
+
+    /* At this spot shall be implemented collision between objects as a primitive implementation. */
+    objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1]);
 }
 const static void project(void) {
 

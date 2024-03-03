@@ -1,5 +1,50 @@
 #include "headers/gravity.h"
 
+/* Defined in main.c. */
+extern TerrainInfo tf;
+const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
+    if (obj->quadIndex < 0) {
+        fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
+        return 0;
+    }
+
+    const int num_of_members = tf->quads[obj->quadIndex].mems_indexes;
+    obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
+    printf("\nChecking collisions obj->id: %d --> ", obj->id);
+
+    for (int i = 0; i < num_of_members; i++) {
+
+        int inner_inx = tf->quads[obj->quadIndex].mems[i];
+
+        if ( s->m[inner_inx].id != obj->id ) {
+            s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
+            printf("%d ", s->m[inner_inx].id);
+
+            if (obj->BB.minZ > s->m[inner_inx].BB.minZ && obj->BB.minZ < s->m[inner_inx].BB.maxZ || 
+                obj->BB.maxZ > s->m[inner_inx].BB.minZ && obj->BB.maxZ < s->m[inner_inx].BB.maxZ ||
+                obj->BB.minZ < s->m[inner_inx].BB.minZ && obj->BB.maxZ > s->m[inner_inx].BB.maxZ) {
+
+                if (obj->BB.minX > s->m[inner_inx].BB.minX && obj->BB.minX < s->m[inner_inx].BB.maxX || 
+                    obj->BB.maxX > s->m[inner_inx].BB.minX && obj->BB.maxX < s->m[inner_inx].BB.maxX || 
+                    obj->BB.minX < s->m[inner_inx].BB.minX && obj->BB.maxX > s->m[inner_inx].BB.maxX) {
+
+                    printf("\nCollision Detected ids %d, %d!", obj->id, s->m[inner_inx].id);
+                    s->m[inner_inx].momentum = obj->momentum;
+                    s->m[inner_inx].mvdir = obj->mvdir;
+                    obj->momentum *= s->m[inner_inx].mass;
+
+                    obj->collide = 1;
+                }
+            }
+        }
+    }
+    if (obj->collide) {
+        obj->collide = 0;
+        return 1;
+    }
+    return 0;
+}
+
 const void applyForces(Scene *s) {
     Mat4x4 trans;
     for (int i = 0; i < s->m_indexes; i++) {
@@ -21,10 +66,12 @@ const void applyForces(Scene *s) {
                 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
             }
 
-            s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
-            s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
+            // if (!EnvironmentCollision(&tf, s, &s->m[i])) {
+                s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
+                s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
 
-            s->m[i].pivot += pivot;
+                s->m[i].pivot += pivot;
+            // }
         } else
             s->m[i].momentum = s->m[i].roll = 0;
     }
