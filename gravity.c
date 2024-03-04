@@ -10,7 +10,7 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
     const int num_of_members = tf->quads[obj->quadIndex].mems_indexes;
     obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
-    printf("\nChecking collisions obj->id: %d --> ", obj->id);
+    // printf("\nChecking collisions obj->id: %d --> ", obj->id);
 
     for (int i = 0; i < num_of_members; i++) {
 
@@ -28,7 +28,7 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
                     obj->BB.maxX > s->m[inner_inx].BB.minX && obj->BB.maxX < s->m[inner_inx].BB.maxX || 
                     obj->BB.minX < s->m[inner_inx].BB.minX && obj->BB.maxX > s->m[inner_inx].BB.maxX) {
 
-                    printf("\nCollision Detected ids %d, %d!", obj->id, s->m[inner_inx].id);
+                    // printf("\nCollision Detected ids %d, %d!", obj->id, s->m[inner_inx].id);
                     s->m[inner_inx].momentum = obj->momentum;
                     s->m[inner_inx].mvdir = obj->mvdir;
                     obj->momentum *= s->m[inner_inx].mass;
@@ -66,14 +66,15 @@ const void applyForces(Scene *s) {
                 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
             }
 
-            // if (!EnvironmentCollision(&tf, s, &s->m[i])) {
-                s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
-                s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
+            s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
+            s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
 
-                s->m[i].pivot += pivot;
-            // }
+            s->m[i].pivot += pivot;
+            EnvironmentCollision(&tf, s, &s->m[i]);
         } else
             s->m[i].momentum = s->m[i].roll = 0;
+
+        printf("Mesh %d Collided %d\n", s->m[i].id, s->m[i].collide);
     }
 }
 const void applyGravity(Scene *s) {

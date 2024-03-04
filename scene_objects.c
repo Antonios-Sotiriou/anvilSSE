@@ -80,7 +80,7 @@ const void initWorldObjects(Scene *s) {
         s->m[i].type = MovingObject;
         s->m[i].id = i;
         
-        s->m[i].scale = 1.f;
+        s->m[i].scale = 3.f;
         s->m[i].pivot[0] = (float)rand() / (float)(RAND_MAX / 400);
         s->m[i].pivot[1] = (float)rand() / (float)(RAND_MAX / 100);
         s->m[i].pivot[2] = (float)rand() / (float)(RAND_MAX / 400);

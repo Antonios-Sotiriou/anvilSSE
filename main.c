@@ -457,10 +457,10 @@ const static void applyPhysics(void) {
 
     applyForces(&scene);
 
-    applyGravity(&scene); /* need world space */
-
     /* At this spot shall be implemented collision between objects as a primitive implementation. */
-    objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1]);
+    // objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1]);
+
+    applyGravity(&scene); /* need world space */
 }
 const static void project(void) {
 
