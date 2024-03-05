@@ -13,11 +13,11 @@ const void initWorldObjects(Scene *s) {
     s->m[0].type = Terrain;
     s->m[0].id = 0;
 
-    s->m[0].scale = 1000.f;
+    s->m[0].scale = 10000.f;
 
-    s->m[0].pivot[0] = 500.f;
+    s->m[0].pivot[0] = 5000.f;
     s->m[0].pivot[1] = 0.f;
-    s->m[0].pivot[2] = 500.f;
+    s->m[0].pivot[2] = 5000.f;
 
     s->m[0].cull = 1;
     s->m[0].lodlevels = 0;
@@ -71,6 +71,24 @@ const void initWorldObjects(Scene *s) {
     // s->m[2].material.reflect = 1;
     s->m[2].Q = unitQuat();
     // enWorldMesh(&s->m[2]);
+
+    /* ######################################################################################################## */
+    // createCube(&s->m[3]);
+    // loadmaterial(&s->m[3].material, "jade");
+
+    // s->m[3].type = MovingObject;
+    // s->m[3].id = 3;
+    
+    // s->m[3].scale = 10.f;
+    // s->m[3].pivot[0] = 50;
+    // s->m[3].pivot[1] = 0;
+    // s->m[3].pivot[2] = 50;
+    // s->m[3].cull = 1;
+    // s->m[3].lodlevels = 0;
+    // // s->m[3].visible = 1;
+    // s->m[3].mass = 0.02;
+    // s->m[3].Q = unitQuat();
+    // enWorldMesh(&s->m[3]);
 
     /* ######################################################################################################## */
     for (int i = 3; i < MESH_NUM; i++) {

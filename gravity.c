@@ -2,6 +2,7 @@
 
 /* Defined in main.c. */
 extern TerrainInfo tf;
+#include "headers/logging.h"
 const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
     if (obj->quadIndex < 0) {
         fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
@@ -18,7 +19,7 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
         if ( s->m[inner_inx].id != obj->id ) {
             s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
-            printf("%d ", s->m[inner_inx].id);
+            // printf("%d ", s->m[inner_inx].id);
 
             if (obj->BB.minZ > s->m[inner_inx].BB.minZ && obj->BB.minZ < s->m[inner_inx].BB.maxZ || 
                 obj->BB.maxZ > s->m[inner_inx].BB.minZ && obj->BB.maxZ < s->m[inner_inx].BB.maxZ ||
@@ -28,20 +29,31 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
                     obj->BB.maxX > s->m[inner_inx].BB.minX && obj->BB.maxX < s->m[inner_inx].BB.maxX || 
                     obj->BB.minX < s->m[inner_inx].BB.minX && obj->BB.maxX > s->m[inner_inx].BB.maxX) {
 
+                    if (obj->momentum < 0)
+                        obj->momentum = 0;
+
                     // printf("\nCollision Detected ids %d, %d!", obj->id, s->m[inner_inx].id);
                     s->m[inner_inx].momentum = obj->momentum;
                     s->m[inner_inx].mvdir = obj->mvdir;
                     obj->momentum *= s->m[inner_inx].mass;
 
                     obj->collide = 1;
+                    // logVec4f(norm_vec((obj->pivot + obj->scale) - (s->m[inner_inx].pivot + s->m[inner_inx].scale)));
+                    // obj->pivot += ((obj->pivot + obj->scale) - (s->m[inner_inx].pivot + s->m[inner_inx].scale)) * obj->mvdir; 
+                    // printf("A: %f\n", (obj->pivot[0] + obj->scale) - (s->m[inner_inx].pivot[0] + s->m[inner_inx].scale));
+                    // logVec4f(obj->pivot);
+                    // logVec4f(s->m[inner_inx].pivot);
+                    // printf("B: %f\n", (obj->pivot[2] + obj->scale) - (s->m[inner_inx].pivot[2] + s->m[inner_inx].scale));
+                    printf("A: %f    B: %f\n", obj->momentum, s->m[inner_inx].momentum);
                 }
             }
         }
     }
     if (obj->collide) {
-        obj->collide = 0;
+        // obj->collide = 0;
         return 1;
     }
+    obj->collide = 0;
     return 0;
 }
 
@@ -74,7 +86,9 @@ const void applyForces(Scene *s) {
         } else
             s->m[i].momentum = s->m[i].roll = 0;
 
-        printf("Mesh %d Collided %d\n", s->m[i].id, s->m[i].collide);
+        // if (s->m[i].collide && s->m[i].momentum == 0) {
+        //     s->m[i].momentum += 1;
+        // }
     }
 }
 const void applyGravity(Scene *s) {

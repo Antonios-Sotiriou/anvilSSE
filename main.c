@@ -317,13 +317,13 @@ const static void keypress(XEvent *event) {
         case 65430 : sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
             vec4f mva = { -1.f, 0.f, 0.f };
             scene.m[1].mvdir = mva;
-            scene.m[1].momentum = 1;
+            scene.m[1].momentum = 1 + DeltaTime;
             scene.m[1].roll = 1;
             break;
         case 65432 : sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
             vec4f mvb = { 1.f, 0.f, 0.f };
             scene.m[1].mvdir = mvb;
-            scene.m[1].momentum = 1;
+            scene.m[1].momentum = 1 + DeltaTime;
             scene.m[1].roll = 1;
             break;
         case 65434 : sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
@@ -422,7 +422,7 @@ const static void keypress(XEvent *event) {
         worldMat = mxm(viewMat, orthoMat);
 
     // scene.m[4].pivot = camera[U] + camera[N];
-    logVec4f(norm_vec(camera[U] + camera[N]));
+    // logVec4f(norm_vec(camera[U] + camera[N]));
 }
 static void *oscillator(void *args) {
 
@@ -455,10 +455,10 @@ static void *cascade(void *args) {
 }
 const static void applyPhysics(void) {
 
-    applyForces(&scene);
-
     /* At this spot shall be implemented collision between objects as a primitive implementation. */
-    // objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1]);
+    objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1]);
+
+    applyForces(&scene);
 
     applyGravity(&scene); /* need world space */
 }
