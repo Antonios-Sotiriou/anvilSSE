@@ -1,10 +1,6 @@
 #include "headers/collision_detection.h"
 
 #include "headers/logging.h"
-// extern Window mainwin;
-// extern Display *displ;
-// extern GC gc;
-// extern Mat4x4 worldMat;
 extern float DeltaTime;
 
 const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
@@ -45,41 +41,13 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
                     obj->BB.maxX > s->m[inner_inx].BB.minX && obj->BB.maxX < s->m[inner_inx].BB.maxX || 
                     obj->BB.minX < s->m[inner_inx].BB.minX && obj->BB.maxX > s->m[inner_inx].BB.maxX) {
 
-
-                    // printf("\nCollision Detected ids %d, %d!", obj->id, s->m[inner_inx].id);
                     s->m[inner_inx].momentum = obj->momentum;
                     s->m[inner_inx].mvdir = obj->mvdir;
                     obj->momentum *= s->m[inner_inx].mass;
-
-                    // if (!s->m[inner_inx].momentum)
-                    //     s->m[inner_inx].momentum += DeltaTime;
-                    // s->m[inner_inx].pivot[2] += 10;
-
-                    // vec4f pivot = obj->mvdir * obj->momentum;
-                    // vec4f pt = { 0 };
-                    // Mat4x4 m = MatfromQuat(obj->Q, pt);
-                    // Mat4x4 trans = mxm(m, translationMatrix(pivot[0], pivot[1], pivot[2]));
-
-                    // obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
-                    // obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
-
-                    // obj->pivot -= pivot;
-                    // logDm(obj->BB);
-                    // logDm(s->m[inner_inx].BB);
-                    // obj->collide = 1;
-                    // s->m[inner_inx].collide = 1;
-
-                    // printf("obj minZ %f  maxZ %f    m minZ %f  maxT %f\n", obj->BB.minZ, obj->BB.maxZ, m.BB.minZ, m.BB.maxZ);
-                    // objectEnvironmentCollision(tf, s, &s->m[tf->quads[obj->quadIndex].mems[i]]);
-                    // printf("momentrum %f    %f    DeltaTime: %f\n", obj->momentum, s->m[inner_inx].momentum, DeltaTime);
                 }
             }
         }
     }
-    // for (int i = 0; i < num_of_members; i++) {
-    //     s->m[tf->quads[obj->quadIndex].mems[i]].collide = 0;
-    // }
-    // printf("\n");
 }
 
 

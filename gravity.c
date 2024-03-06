@@ -17,7 +17,7 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
         int inner_inx = tf->quads[obj->quadIndex].mems[i];
 
-        if ( s->m[inner_inx].id != obj->id ) {
+        if ( s->m[inner_inx].id != obj->id  && s->m[inner_inx].type != Player ) {
             s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
             // printf("%d ", s->m[inner_inx].id);
 
@@ -29,8 +29,8 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
                     obj->BB.maxX > s->m[inner_inx].BB.minX && obj->BB.maxX < s->m[inner_inx].BB.maxX || 
                     obj->BB.minX < s->m[inner_inx].BB.minX && obj->BB.maxX > s->m[inner_inx].BB.maxX) {
 
-                    if (obj->momentum < 0)
-                        obj->momentum = 0;
+                    if (obj->momentum <= 0)
+                        obj->momentum = 1;
 
                     // printf("\nCollision Detected ids %d, %d!", obj->id, s->m[inner_inx].id);
                     s->m[inner_inx].momentum = obj->momentum;
@@ -85,10 +85,6 @@ const void applyForces(Scene *s) {
             EnvironmentCollision(&tf, s, &s->m[i]);
         } else
             s->m[i].momentum = s->m[i].roll = 0;
-
-        // if (s->m[i].collide && s->m[i].momentum == 0) {
-        //     s->m[i].momentum += 1;
-        // }
     }
 }
 const void applyGravity(Scene *s) {

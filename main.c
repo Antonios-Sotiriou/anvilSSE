@@ -317,13 +317,13 @@ const static void keypress(XEvent *event) {
         case 65430 : sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
             vec4f mva = { -1.f, 0.f, 0.f };
             scene.m[1].mvdir = mva;
-            scene.m[1].momentum = 1 + DeltaTime;
+            scene.m[1].momentum = 1;
             scene.m[1].roll = 1;
             break;
         case 65432 : sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
             vec4f mvb = { 1.f, 0.f, 0.f };
             scene.m[1].mvdir = mvb;
-            scene.m[1].momentum = 1 + DeltaTime;
+            scene.m[1].momentum = 1;
             scene.m[1].roll = 1;
             break;
         case 65434 : sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
