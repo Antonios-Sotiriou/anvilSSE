@@ -30,15 +30,17 @@ const void phong(Fragment *fr) {
     if ( diff > 0 ) {
         diffuse = sunlight.material.diffuse * (diff * (basecolor * DiffuseStrength));
 
-        if (fr->mtr->reflect) {
+        // if (fr->mtr->reflect) {
             vec4f reflectdir = cross_product(cross_product(nm, -lightdir), (-lightdir - nm)) * 2.00;
+            // vec4f reflectdir = lightdir + pixel;
 
             float dot = dot_product(norm_vec(pixel), norm_vec(reflectdir));
+            // float dot = dot_product(nm, norm_vec(reflectdir));
             if ( dot > 0 ) {
                 float spec = powf(dot, fr->mtr->shinniness);
                 specular = sunlight.material.specular * (spec * (basecolor * SpecularStrength));
             }
-        }
+        // }
     }
     fragcolor = __builtin_convertvector((((specular + diffuse) * (ambient + (1.f - shadow))) * basecolor) * 255, vec4c);
     // fragcolor = __builtin_convertvector(basecolor * 255, vec4c);
