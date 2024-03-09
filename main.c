@@ -130,9 +130,9 @@ int MAIN_EMVADON;
 int DEBUG = 0;
 
 /* Display usefull measurements. */
-float			        TimeCounter, LastFrameTimeCounter, DeltaTime, GravityTime, prevTime = 0.0, FPS;
+float			        TimeCounter = 0, LastFrameTimeCounter = 0, DeltaTime = 0, prevTime = 0.0, FPS = 0;
 struct timeval		    tv, tv0;
-int			            Frame = 1, FramesPerFPS;
+int			            Frame = 0, FramesPerFPS;
 
 /* Event handling functions. */
 const static void clientmessage(XEvent *event);
@@ -258,7 +258,6 @@ const static void buttonpress(XEvent *event) {
     printf("X: %f\n", ((event->xbutton.x - (WIDTH / 2.00)) / (WIDTH / 2.00)));
     printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
     // DROPBALL = DROPBALL == 0 ? 1 : 0;
-    GravityTime = 0;
 }
 const static void keypress(XEvent *event) {
 
@@ -314,40 +313,40 @@ const static void keypress(XEvent *event) {
         case 65455 : SpecularStrength -= 0.01f;             /* / */
             printf("SpecularStrength: %f\n", SpecularStrength);
             break;
-        case 65430 : sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
+        case 65430 : //sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
             vec4f mva = { -1.f, 0.f, 0.f };
             scene.m[1].mvdir = mva;
-            scene.m[1].momentum = 1;
+            scene.m[1].momentum = 10;
             scene.m[1].roll = 1;
             break;
-        case 65432 : sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
+        case 65432 : //sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
             vec4f mvb = { 1.f, 0.f, 0.f };
             scene.m[1].mvdir = mvb;
-            scene.m[1].momentum = 1;
+            scene.m[1].momentum = 10;
             scene.m[1].roll = 1;
             break;
-        case 65434 : sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
+        case 65434 : //sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
             scene.m[1].grounded = 0;
             vec4f mvc = { 0.f, 1.f, 0.f };
             scene.m[1].mvdir = mvc;
             scene.m[1].momentum = 1;
             scene.m[1].falling_time = 0;
             break;
-        case 65435 : sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
+        case 65435 : //sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
             vec4f mvd = { 0.f, -1.f, 0.f };
             scene.m[1].mvdir = mvd;
             scene.m[1].momentum = 1;
             break;
-        case 65431 : sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
+        case 65431 : //sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
             vec4f mve= { 0.f, 0.f, 1.f }; // norm_vec(camera[U] + camera[N]);
             scene.m[1].mvdir = mve;
-            scene.m[1].momentum = 1;
+            scene.m[1].momentum = 10;
             scene.m[1].roll = 1;
             break;
-        case 65433 : sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
+        case 65433 : //sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
             vec4f mvf = { 0.f, 0.f, -1.f };
             scene.m[1].mvdir = mvf;
-            scene.m[1].momentum = 1;
+            scene.m[1].momentum = 10;
             scene.m[1].roll = 1;
             break;
         case 120 : rotate_x(&scene.m[1], 1);                     /* x */
@@ -455,12 +454,13 @@ static void *cascade(void *args) {
 }
 const static void applyPhysics(void) {
 
-    /* At this spot shall be implemented collision between objects as a primitive implementation. */
-    objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1]);
-
     applyForces(&scene);
 
     applyGravity(&scene); /* need world space */
+
+    /* At this spot shall be implemented collision between objects as a primitive implementation. */
+    if (scene.m[Player_1].momentum)
+        objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], DeltaTime);
 }
 const static void project(void) {
 
@@ -624,6 +624,9 @@ const static void displayInfo(void) {
     sprintf(info_string, "%4.1f fps", FPS);
     XDrawString(displ ,mainwin ,gc, 5, 36, info_string, strlen(info_string));
 
+    // sprintf(info_string, "frame --> %d", Frame);
+    // XDrawString(displ ,mainwin ,gc, 5, 48, info_string, strlen(info_string));
+
     // sprintf(info_string, "%s\0", asctime(info));
     // XDrawString(displ ,mainwin ,gc, 5, 48, info_string, strlen(info_string));
 
@@ -691,7 +694,7 @@ const static int board(void) {
     announceReadyState();
 
     int key_P = 0, key_R = 1;
-
+    // float time_dif;
     while (RUNNING) {
 
         // clock_t start_time = start();
@@ -702,6 +705,8 @@ const static int board(void) {
         project();
         // end(start_time);
 
+        // time_dif = DeltaTime > 0.01666 ? (DeltaTime - 0.01666) - 0.01666 : DeltaTime < 0.01666 ? (0.01666 - DeltaTime) + 0.01666 : 0.01666;
+
         while (XPending(displ)) {
             XNextEvent(displ, &event);
 
@@ -709,6 +714,7 @@ const static int board(void) {
                 handler[event.type](&event);
         }
 
+        // printf("time_df: %f\n", DeltaTime);
         usleep(0);
     }
 

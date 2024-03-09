@@ -14,7 +14,7 @@
 #endif
 
 const void objectTerrainCollision(Mesh *terrain, Mesh *object);
-const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj);
+const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, const float dt);
 
 #endif /* _COLLISION_DETECTION_H */
 

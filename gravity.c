@@ -29,22 +29,22 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
                     obj->BB.maxX > s->m[inner_inx].BB.minX && obj->BB.maxX < s->m[inner_inx].BB.maxX || 
                     obj->BB.minX < s->m[inner_inx].BB.minX && obj->BB.maxX > s->m[inner_inx].BB.maxX) {
 
-                    if (obj->momentum <= 0)
-                        obj->momentum = 1;
+                    // if (obj->momentum <= 0)
+                    //     obj->momentum = 1;
 
                     // printf("\nCollision Detected ids %d, %d!", obj->id, s->m[inner_inx].id);
-                    s->m[inner_inx].momentum = obj->momentum;
-                    s->m[inner_inx].mvdir = obj->mvdir;
-                    obj->momentum *= s->m[inner_inx].mass;
+                    // s->m[inner_inx].momentum = obj->momentum;
+                    // s->m[inner_inx].mvdir = obj->mvdir;
+                    // obj->momentum *= s->m[inner_inx].mass;
 
-                    obj->collide = 1;
+                    // obj->collide = 1;
                     // logVec4f(norm_vec((obj->pivot + obj->scale) - (s->m[inner_inx].pivot + s->m[inner_inx].scale)));
                     // obj->pivot += ((obj->pivot + obj->scale) - (s->m[inner_inx].pivot + s->m[inner_inx].scale)) * obj->mvdir; 
                     // printf("A: %f\n", (obj->pivot[0] + obj->scale) - (s->m[inner_inx].pivot[0] + s->m[inner_inx].scale));
                     // logVec4f(obj->pivot);
                     // logVec4f(s->m[inner_inx].pivot);
                     // printf("B: %f\n", (obj->pivot[2] + obj->scale) - (s->m[inner_inx].pivot[2] + s->m[inner_inx].scale));
-                    printf("A: %f    B: %f\n", obj->momentum, s->m[inner_inx].momentum);
+                    // printf("A: %f    B: %f\n", obj->momentum, s->m[inner_inx].momentum);
                 }
             }
         }
@@ -64,6 +64,8 @@ const void applyForces(Scene *s) {
 
             s->m[i].momentum -= DeltaTime;
             vec4f pivot = s->m[i].mvdir * s->m[i].momentum;
+            printf("applyForces  ");
+            logVec4f(pivot);
             vec4f axis = { 1.f, 0.f, 0.f };
 
             if (s->m[i].roll) {
@@ -82,7 +84,7 @@ const void applyForces(Scene *s) {
             s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
 
             s->m[i].pivot += pivot;
-            EnvironmentCollision(&tf, s, &s->m[i]);
+            // EnvironmentCollision(&tf, s, &s->m[i]);
         } else
             s->m[i].momentum = s->m[i].roll = 0;
     }
