@@ -316,20 +316,20 @@ const static void keypress(XEvent *event) {
         case 65430 : //sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
             vec4f mva = { -1.f, 0.f, 0.f };
             scene.m[1].mvdir = mva;
-            scene.m[1].momentum = 10;
+            scene.m[1].momentum = 1;
             scene.m[1].roll = 1;
             break;
         case 65432 : //sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
             vec4f mvb = { 1.f, 0.f, 0.f };
             scene.m[1].mvdir = mvb;
-            scene.m[1].momentum = 10;
+            scene.m[1].momentum = 1;
             scene.m[1].roll = 1;
             break;
         case 65434 : //sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
             scene.m[1].grounded = 0;
             vec4f mvc = { 0.f, 1.f, 0.f };
             scene.m[1].mvdir = mvc;
-            scene.m[1].momentum = 1;
+            scene.m[1].momentum = 10;
             scene.m[1].falling_time = 0;
             break;
         case 65435 : //sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
@@ -340,13 +340,13 @@ const static void keypress(XEvent *event) {
         case 65431 : //sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
             vec4f mve= { 0.f, 0.f, 1.f }; // norm_vec(camera[U] + camera[N]);
             scene.m[1].mvdir = mve;
-            scene.m[1].momentum = 10;
+            scene.m[1].momentum = 1;
             scene.m[1].roll = 1;
             break;
         case 65433 : //sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
             vec4f mvf = { 0.f, 0.f, -1.f };
             scene.m[1].mvdir = mvf;
-            scene.m[1].momentum = 10;
+            scene.m[1].momentum = 1;
             scene.m[1].roll = 1;
             break;
         case 120 : rotate_x(&scene.m[1], 1);                     /* x */
@@ -454,13 +454,13 @@ static void *cascade(void *args) {
 }
 const static void applyPhysics(void) {
 
-    applyForces(&scene);
-
-    applyGravity(&scene); /* need world space */
-
     /* At this spot shall be implemented collision between objects as a primitive implementation. */
     if (scene.m[Player_1].momentum)
         objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], DeltaTime);
+
+    applyForces(&scene);
+
+    applyGravity(&scene); /* need world space */
 }
 const static void project(void) {
 

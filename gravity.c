@@ -17,7 +17,7 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
         int inner_inx = tf->quads[obj->quadIndex].mems[i];
 
-        if ( s->m[inner_inx].id != obj->id  && s->m[inner_inx].type != Player ) {
+        if ( s->m[inner_inx].id != obj->id ) {
             s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
             // printf("%d ", s->m[inner_inx].id);
 
@@ -33,9 +33,9 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
                     //     obj->momentum = 1;
 
                     // printf("\nCollision Detected ids %d, %d!", obj->id, s->m[inner_inx].id);
-                    // s->m[inner_inx].momentum = obj->momentum;
-                    // s->m[inner_inx].mvdir = obj->mvdir;
-                    // obj->momentum *= s->m[inner_inx].mass;
+                    s->m[inner_inx].momentum = obj->momentum;
+                    s->m[inner_inx].mvdir = obj->mvdir;
+                    obj->momentum *= s->m[inner_inx].mass;
 
                     // obj->collide = 1;
                     // logVec4f(norm_vec((obj->pivot + obj->scale) - (s->m[inner_inx].pivot + s->m[inner_inx].scale)));
@@ -60,12 +60,11 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 const void applyForces(Scene *s) {
     Mat4x4 trans;
     for (int i = 0; i < s->m_indexes; i++) {
-        if (s->m[i].momentum > 0) {
+        if ( s->m[i].momentum > 0 ) {
 
             s->m[i].momentum -= DeltaTime;
             vec4f pivot = s->m[i].mvdir * s->m[i].momentum;
-            printf("applyForces  ");
-            logVec4f(pivot);
+
             vec4f axis = { 1.f, 0.f, 0.f };
 
             if (s->m[i].roll) {
