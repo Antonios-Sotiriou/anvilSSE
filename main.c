@@ -338,7 +338,7 @@ const static void keypress(XEvent *event) {
             scene.m[1].momentum = 1;
             break;
         case 65431 : //sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
-            vec4f mve= { 0.f, 0.f, 1.f }; // norm_vec(camera[U] + camera[N]);
+            vec4f mve = norm_vec(camera[U] + camera[N]);
             scene.m[1].mvdir = mve;
             scene.m[1].momentum = 1;
             scene.m[1].roll = 1;
@@ -693,7 +693,6 @@ const static int board(void) {
     /* Announcing to event despatcher that starting initialization is done. We send a Keyress event to Despatcher to awake Projection. */
     announceReadyState();
 
-    int key_P = 0, key_R = 1;
     // float time_dif;
     while (RUNNING) {
 

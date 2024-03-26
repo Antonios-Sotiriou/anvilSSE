@@ -22,27 +22,15 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
         fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
         return;
     }
-    // printf("collision check\n");
-    /* initiallization stage to get cache and future object positions. */
-    vec4f *vecs_arr = malloc(obj->v_indexes * 16);
-    memcpy(vecs_arr, obj->v, obj->v_indexes * 16);
 
-    obj->momentum -= DeltaTime;
-    vec4f pivot = obj->mvdir * obj->momentum;
-    Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
-    vecs_arr = vecsarrayxm(obj->v, obj->v_indexes, trans);
+    // obj->momentum -= DeltaTime;
+    vec4f Q = obj->mvdir * obj->momentum;
+    vec4f D = obj->pivot + Q;
 
     obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
 
+    float tnearx, tneary, tfarx, tfary;
 
-    // printf("Starting Point ");
-    // logVec4f(obj->pivot);
-    // printf("Ending Point ");
-    // logVec4f(obj->pivot + pivot);
-
-    float tminx, tminy, tmaxx, tmaxy;
-
-    int first_collision = 0;
     const int num_of_members = tf->quads[obj->quadIndex].mems_indexes;
     for (int i = 0; i < num_of_members; i++) {
 
@@ -53,49 +41,36 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
 
             // vec4f dir = obj->pivot - pivot;
 
-            tminx = (s->m[inner_inx].BB.minX - obj->BB.maxX) / (obj->BB.maxX - obj->BB.maxX);
-            tminy = (s->m[inner_inx].BB.minZ - obj->BB.maxZ) / (obj->BB.maxZ - obj->BB.maxZ);
-            tmaxx = (s->m[inner_inx].BB.maxX - obj->BB.maxX) / (obj->BB.maxX - obj->BB.maxX);
-            tmaxy = (s->m[inner_inx].BB.maxZ - obj->BB.maxZ) / (obj->BB.maxZ - obj->BB.maxZ);
-            printf("tminx: %f    tminy: %f    tmaxx: %f    tmaxy: %f\n", tminx, tminy, tmaxx, tmaxy);
+            tnearx = (s->m[inner_inx].BB.minX - obj->pivot[0]) / ((D[0]) - obj->pivot[0]);
+            tneary = (s->m[inner_inx].BB.minZ - obj->pivot[2]) / ((D[2]) - obj->pivot[2]);
+            tfarx = (s->m[inner_inx].BB.maxX - obj->pivot[0]) / ((D[0]) - obj->pivot[0]);
+            tfary = (s->m[inner_inx].BB.maxZ - obj->pivot[2]) / ((D[2]) - obj->pivot[2]);
+            // printf("tnearx: %f    tneary: %f    tfarx: %f    tfary: %f\n", tnearx, tneary, tfarx, tfary);
 
-            // logVec4f(obj->pivot + pivot);
-            // logVec4f((obj->pivot + pivot) * t);
-
-            if (obj->BB.minZ > s->m[inner_inx].BB.minZ && obj->BB.minZ < s->m[inner_inx].BB.maxZ ||
-                obj->BB.maxZ > s->m[inner_inx].BB.minZ && obj->BB.maxZ < s->m[inner_inx].BB.maxZ ||
-                obj->BB.minZ < s->m[inner_inx].BB.minZ && obj->BB.maxZ > s->m[inner_inx].BB.maxZ ) {
-
-                if (obj->BB.minX > s->m[inner_inx].BB.minX && obj->BB.minX < s->m[inner_inx].BB.maxX ||
-                    obj->BB.maxX > s->m[inner_inx].BB.minX && obj->BB.maxX < s->m[inner_inx].BB.maxX ||
-                    obj->BB.minX < s->m[inner_inx].BB.minX && obj->BB.maxX > s->m[inner_inx].BB.maxX ) {
+            if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
+            if (tneary > tfary) swap(&tneary, &tfary, 4);
 
 
+            if (tnearx > tfary || tneary > tfarx) {
+                printf("Unable to Collide!\n"); 
+                return;
+            }
 
-                    // obj->momentum += (DeltaTime * 0.5);
-                    // vec4f pivot = (obj->mvdir * obj->momentum) * t;
-                    // Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
+            float t_near = tnearx > tneary ? tnearx : tneary;
+            float t_far = tfarx < tfary ? tfarx : tfary;
 
-                    // obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
-                    // obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
+            if (t_far < 0) { 
+                printf("Collision in negative direction!\n"); 
+                return;
+            } 
 
-                    // obj->pivot += pivot;
-                    // logVec4f((obj->pivot + obj->scale) - (s->m[inner_inx].pivot + s->m[inner_inx].scale));
-                    // obj->momentum = 0;
-
-                    printf("objectCollision  ");
-                    // exit(0);
-                    // logVec4f(pivot);
-
-                    // printf("X: %f\n", obj->BB_next.maxX - s->m[inner_inx].BB_next.minX);
-                    // s->m[inner_inx].momentum = obj->momentum;
-                    // s->m[inner_inx].mvdir = obj->mvdir;
-                    // obj->momentum *= s->m[inner_inx].mass;
-                }
+            if (t_near < 1) {
+                printf("Collision Detected!\n");
+                printf("t_near: %f    t_far: %f\n", t_near, t_far);
+                logVec4f(obj->pivot + (Q * t_near));
             }
         }
     }
-    free(vecs_arr);
 }
 
 
