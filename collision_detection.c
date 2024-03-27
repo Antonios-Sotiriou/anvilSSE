@@ -39,12 +39,15 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
         if ( s->m[inner_inx].id != obj->id ) {
             s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
 
-            // vec4f dir = obj->pivot - pivot;
+            float minx = s->m[inner_inx].BB.minX - (obj->pivot[0] - obj->BB.minX);
+            float minz = s->m[inner_inx].BB.minZ - (obj->pivot[2] - obj->BB.minZ);
+            float maxx = s->m[inner_inx].BB.maxX - (obj->pivot[0] - obj->BB.maxX);
+            float maxz = s->m[inner_inx].BB.maxZ - (obj->pivot[2] - obj->BB.maxZ);
 
-            tnearx = (s->m[inner_inx].BB.minX - obj->pivot[0]) / ((D[0]) - obj->pivot[0]);
-            tneary = (s->m[inner_inx].BB.minZ - obj->pivot[2]) / ((D[2]) - obj->pivot[2]);
-            tfarx = (s->m[inner_inx].BB.maxX - obj->pivot[0]) / ((D[0]) - obj->pivot[0]);
-            tfary = (s->m[inner_inx].BB.maxZ - obj->pivot[2]) / ((D[2]) - obj->pivot[2]);
+            tnearx = (minx - obj->pivot[0]) / ((D[0]) - obj->pivot[0]);
+            tneary = (minz - obj->pivot[2]) / ((D[2]) - obj->pivot[2]);
+            tfarx = (maxx - obj->pivot[0]) / ((D[0]) - obj->pivot[0]);
+            tfary = (maxz - obj->pivot[2]) / ((D[2]) - obj->pivot[2]);
             // printf("tnearx: %f    tneary: %f    tfarx: %f    tfary: %f\n", tnearx, tneary, tfarx, tfary);
 
             if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
