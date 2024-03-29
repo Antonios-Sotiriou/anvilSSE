@@ -15,7 +15,7 @@ const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m) {
 
     vec4f t_coords = coords - (t->pivot - (t->scale / 2.f));
     if ( (t_coords[0] >= t_limit || t_coords[0] < 0) || (t_coords[2] >= t_limit || t_coords[2] < 0) ) {
-        fprintf(stderr, "Out of terrain Limits -- getTerrainHeight().\n");
+        // fprintf(stderr, "Out of terrain Limits -- getTerrainHeight().\n");
         m->quadIndex = -1;
         return 0;
     } 

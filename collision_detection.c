@@ -19,7 +19,7 @@ const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
 }
 const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, const float dt) {
     if (obj->quadIndex < 0) {
-        fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
+        // fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
         return;
     }
 
@@ -29,7 +29,7 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
 
     obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
 
-    float tnearx, tneary, tfarx, tfary;
+    float tnearx, tnearz, tfarx, tfarz;
 
     const int num_of_members = tf->quads[obj->quadIndex].mems_indexes;
     for (int i = 0; i < num_of_members; i++) {
@@ -40,38 +40,63 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
             s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
 
             float minx = s->m[inner_inx].BB.minX - (obj->pivot[0] - obj->BB.minX);
+            float miny = s->m[inner_inx].BB.minY - (obj->pivot[1] - obj->BB.minY);
             float minz = s->m[inner_inx].BB.minZ - (obj->pivot[2] - obj->BB.minZ);
             float maxx = s->m[inner_inx].BB.maxX - (obj->pivot[0] - obj->BB.maxX);
+            float maxy = s->m[inner_inx].BB.maxY - (obj->pivot[1] - obj->BB.maxY);
             float maxz = s->m[inner_inx].BB.maxZ - (obj->pivot[2] - obj->BB.maxZ);
 
             tnearx = (minx - obj->pivot[0]) / ((D[0]) - obj->pivot[0]);
-            tneary = (minz - obj->pivot[2]) / ((D[2]) - obj->pivot[2]);
+            tnearz = (minz - obj->pivot[2]) / ((D[2]) - obj->pivot[2]);
             tfarx = (maxx - obj->pivot[0]) / ((D[0]) - obj->pivot[0]);
-            tfary = (maxz - obj->pivot[2]) / ((D[2]) - obj->pivot[2]);
-            // printf("tnearx: %f    tneary: %f    tfarx: %f    tfary: %f\n", tnearx, tneary, tfarx, tfary);
+            tfarz = (maxz - obj->pivot[2]) / ((D[2]) - obj->pivot[2]);
+            // printf("tnearx: %f    tnearz: %f    tfarx: %f    tfarz: %f\n", tnearx, tnearz, tfarx, tfarz);
 
             if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
-            if (tneary > tfary) swap(&tneary, &tfary, 4);
+            if (tnearz > tfarz) swap(&tnearz, &tfarz, 4);
 
 
-            if (tnearx > tfary || tneary > tfarx) {
+            if (tnearx > tfarz || tnearz > tfarx) {
                 printf("Unable to Collide!\n"); 
                 return;
             }
 
-            float t_near = tnearx > tneary ? tnearx : tneary;
-            float t_far = tfarx < tfary ? tfarx : tfary;
+            float t_near = tnearx > tnearz ? tnearx : tnearz;
+            float t_far = tfarx < tfarz ? tfarx : tfarz;
 
             if (t_far < 0) { 
                 printf("Collision in negative direction!\n"); 
                 return;
             } 
 
+            vec4f normal = { 0 };
+            if ( tnearx > tnearz ) {
+                if ( D[0] < 0 )
+                    normal[0] = 1;
+                else     
+                    normal[0] = -1;
+            } else if ( tnearx < tnearz ) {
+                if ( D[2] < 0 )
+                    normal[2] = 1;
+                else
+                    normal[2] = -1;
+            }
+
             if (t_near < 1) {
                 printf("Collision Detected!\n");
                 printf("t_near: %f    t_far: %f\n", t_near, t_far);
-                logVec4f(obj->pivot + (Q * t_near));
+                logVec4f(normal);
+                s->m[inner_inx].momentum = obj->momentum;
+                s->m[inner_inx].mvdir = obj->mvdir;
+                obj->momentum *= s->m[inner_inx].mass;
+
+                // Mat4x4 trans = translationMatrix(Q[0], Q[1], Q[2]);
+                // obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
+                // obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
+
+                // obj->pivot += (Q * t_near);
             }
+            printf("Test Nan %s!\n", 1 < -INFINITY ? "True" : "False");
         }
     }
 }
