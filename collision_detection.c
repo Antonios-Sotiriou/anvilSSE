@@ -25,7 +25,7 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
 
     // obj->momentum -= DeltaTime;
     vec4f Q = obj->mvdir * obj->momentum;
-    vec4f D = obj->pivot + Q;
+    vec4f D = (obj->pivot + Q) - obj->pivot;
 
     obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
 
@@ -46,10 +46,10 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
             float maxy = s->m[inner_inx].BB.maxY - (obj->pivot[1] - obj->BB.maxY);
             float maxz = s->m[inner_inx].BB.maxZ - (obj->pivot[2] - obj->BB.maxZ);
 
-            tnearx = (minx - obj->pivot[0]) / ((D[0]) - obj->pivot[0]);
-            tnearz = (minz - obj->pivot[2]) / ((D[2]) - obj->pivot[2]);
-            tfarx = (maxx - obj->pivot[0]) / ((D[0]) - obj->pivot[0]);
-            tfarz = (maxz - obj->pivot[2]) / ((D[2]) - obj->pivot[2]);
+            tnearx = (minx - obj->pivot[0]) / D[0];
+            tnearz = (minz - obj->pivot[2]) / D[2];
+            tfarx = (maxx - obj->pivot[0]) / D[0];
+            tfarz = (maxz - obj->pivot[2]) / D[2];
             // printf("tnearx: %f    tnearz: %f    tfarx: %f    tfarz: %f\n", tnearx, tnearz, tfarx, tfarz);
 
             if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
@@ -84,19 +84,22 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
 
             if (t_near < 1) {
                 printf("Collision Detected!\n");
-                printf("t_near: %f    t_far: %f\n", t_near, t_far);
+                // printf("t_near: %f    t_far: %f\n", t_near, t_far);
                 logVec4f(normal);
-                s->m[inner_inx].momentum = obj->momentum;
-                s->m[inner_inx].mvdir = obj->mvdir;
-                obj->momentum *= s->m[inner_inx].mass;
+                // s->m[inner_inx].momentum = obj->momentum;
+                // s->m[inner_inx].mvdir = obj->mvdir;
+                // obj->momentum *= s->m[inner_inx].mass;
 
-                // Mat4x4 trans = translationMatrix(Q[0], Q[1], Q[2]);
-                // obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
-                // obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
+                vec4f pivot = Q * t_near;
+                Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
+                obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
+                obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
 
-                // obj->pivot += (Q * t_near);
+                obj->pivot += pivot;
+                obj->momentum = 0;
             }
-            printf("Test Nan %s!\n", 1 < -INFINITY ? "True" : "False");
+            // printf("Test Nan %s!\n", 1 < -INFINITY ? "True" : "False");
+            // logVec4f(norm_vec(D));
         }
     }
 }
