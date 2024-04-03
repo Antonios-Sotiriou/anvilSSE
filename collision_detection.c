@@ -83,20 +83,21 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
             }
 
             if (t_near < 1) {
-                printf("Collision Detected!\n");
+                // printf("Collision Detected!\n");
                 // printf("t_near: %f    t_far: %f\n", t_near, t_far);
-                logVec4f(normal);
+                printf("t_near: %f\n", t_near);
+                // logVec4f(normal);
                 // s->m[inner_inx].momentum = obj->momentum;
                 // s->m[inner_inx].mvdir = obj->mvdir;
-                // obj->momentum *= s->m[inner_inx].mass;
+                obj->momentum *= s->m[inner_inx].mass;
 
-                vec4f pivot = Q * t_near;
+                vec4f pivot = Q * (1 - t_near) + normal;
                 Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
                 obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
                 obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
 
                 obj->pivot += pivot;
-                obj->momentum = 0;
+                // obj->momentum = 0;
             }
             // printf("Test Nan %s!\n", 1 < -INFINITY ? "True" : "False");
             // logVec4f(norm_vec(D));

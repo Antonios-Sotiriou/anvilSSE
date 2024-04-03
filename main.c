@@ -338,15 +338,17 @@ const static void keypress(XEvent *event) {
             scene.m[1].momentum = 10;
             break;
         case 65431 : sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
-            vec4f mve = { 0.f, 0.f, 1.f };//norm_vec(camera[U] + camera[N]);
+            vec4f mve = norm_vec(camera[U] + camera[N]);
+            // vec4f mve = { 0.f, 0.f, 1.f };
             scene.m[1].mvdir = mve;
-            scene.m[1].momentum = 10;
+            scene.m[1].momentum = 0.2;
             scene.m[1].roll = 1;
             break;
         case 65433 : sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
-            vec4f mvf = { 0.f, 0.f, -1.f };
+            vec4f mvf = -norm_vec(camera[U] + camera[N]);
+            // vec4f mvf = { 0.f, 0.f, -1.f };
             scene.m[1].mvdir = mvf;
-            scene.m[1].momentum = 10;
+            scene.m[1].momentum = 0.2;
             scene.m[1].roll = 1;
             break;
         case 120 : rotate_x(&scene.m[1], 1);                     /* x */
