@@ -63,6 +63,9 @@ const void applyForces(Scene *s) {
         if ( s->m[i].momentum > 0 ) {
 
             s->m[i].momentum -= DeltaTime;
+            if ( s->m[i].momentum < 0 )
+                s->m[i].momentum = s->m[i].roll = 0;
+
             vec4f pivot = s->m[i].mvdir * s->m[i].momentum;
 
             vec4f axis = { 1.f, 0.f, 0.f };
@@ -84,8 +87,7 @@ const void applyForces(Scene *s) {
 
             s->m[i].pivot += pivot;
             // EnvironmentCollision(&tf, s, &s->m[i]);
-        } else
-            s->m[i].momentum = s->m[i].roll = 0;
+        }
     }
 }
 const void applyGravity(Scene *s) {
