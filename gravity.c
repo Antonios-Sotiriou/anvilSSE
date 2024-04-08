@@ -62,7 +62,7 @@ const void applyForces(Scene *s) {
     for (int i = 0; i < s->m_indexes; i++) {
         if ( s->m[i].momentum > 0 ) {
 
-            s->m[i].momentum -= DeltaTime;
+            // s->m[i].momentum -= DeltaTime;
             if ( s->m[i].momentum < 0 )
                 s->m[i].momentum = s->m[i].roll = 0;
 

@@ -83,24 +83,34 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
             }
 
             if (t_near <= 1) {
-                // printf("Collision Detected!\n");
+                printf("Collision!\n");
                 // printf("t_near: %f    t_far: %f\n", t_near, t_far);
-                printf("t_near: %f\n", t_near);
+                // printf("t_near: %f\n", t_near);
                 // logVec4f(normal);
                 // s->m[inner_inx].momentum = obj->momentum;
                 // s->m[inner_inx].mvdir = obj->mvdir;
                 // obj->momentum -= DeltaTime;
-                // obj->momentum *= s->m[inner_inx].mass;
+                obj->momentum *= s->m[inner_inx].mass;
 
-                vec4f pivot = Q * (1.f - t_near) * normal;
-                logVec4f(pivot);
+                float dot = dot_product(obj->mvdir, normal);
+                obj->mvdir = norm_vec(dot * normal);
+
+                Q[0] = fabsf(Q[0]);
+                Q[1] = fabsf(Q[1]);
+                Q[2] = fabsf(Q[2]);
+
+                vec4f pivot = (Q * (1.f - t_near)) * normal;
+
                 Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
                 obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
                 obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
 
                 obj->pivot += pivot;
+                return;
                 // obj->momentum = 0;
+                // XDrawLine(displ, mainwin, gc, obj->pivot[0], obj->pivot[2])
             }
+            printf("No Collision Detected!\n");
             // printf("Test Nan %s!\n", 1 < -INFINITY ? "True" : "False");
             // logVec4f(norm_vec(D));
         }

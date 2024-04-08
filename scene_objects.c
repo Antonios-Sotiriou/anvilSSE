@@ -91,7 +91,25 @@ const void initWorldObjects(Scene *s) {
     enWorldMesh(&s->m[3]);
 
     /* ######################################################################################################## */
-    // for (int i = 4; i < MESH_NUM; i++) {
+    // createCube(&s->m[4]);
+    // loadmaterial(&s->m[4].material, "jade");
+
+    // s->m[4].type = MovingObject;
+    // s->m[4].id = 4;
+    
+    // s->m[4].scale = 10.f;
+    // s->m[4].pivot[0] = 80;
+    // s->m[4].pivot[1] = 0;
+    // s->m[4].pivot[2] = 120;
+    // s->m[4].cull = 1;
+    // s->m[4].lodlevels = 0;
+    // // s->m[3].visible = 1;
+    // s->m[4].mass = 0.5;
+    // s->m[4].Q = unitQuat();
+    // enWorldMesh(&s->m[4]);
+
+    /* ######################################################################################################## */
+    // for (int i = 5; i < MESH_NUM; i++) {
     //     createCube(&s->m[i]);
     //     loadmaterial(&s->m[i].material, "jade");
 
