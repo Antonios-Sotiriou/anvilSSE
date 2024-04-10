@@ -9,65 +9,103 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
         return 0;
     }
 
-    const int num_of_members = tf->quads[obj->quadIndex].mems_indexes;
-    obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
-    // printf("\nChecking collisions obj->id: %d --> ", obj->id);
+    // obj->momentum -= DeltaTime;
+    vec4f Q = obj->mvdir * obj->momentum;
+    vec4f D = (obj->pivot + Q) - obj->pivot;
 
+    obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
+
+    float tnearx, tnearz, tfarx, tfarz;
+
+    const int num_of_members = tf->quads[obj->quadIndex].mems_indexes;
     for (int i = 0; i < num_of_members; i++) {
 
         int inner_inx = tf->quads[obj->quadIndex].mems[i];
 
         if ( s->m[inner_inx].id != obj->id ) {
             s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
-            // printf("%d ", s->m[inner_inx].id);
 
-            if (obj->BB.minZ > s->m[inner_inx].BB.minZ && obj->BB.minZ < s->m[inner_inx].BB.maxZ || 
-                obj->BB.maxZ > s->m[inner_inx].BB.minZ && obj->BB.maxZ < s->m[inner_inx].BB.maxZ ||
-                obj->BB.minZ < s->m[inner_inx].BB.minZ && obj->BB.maxZ > s->m[inner_inx].BB.maxZ) {
+            float minx = s->m[inner_inx].BB.minX - (obj->pivot[0] - obj->BB.minX);
+            float miny = s->m[inner_inx].BB.minY - (obj->pivot[1] - obj->BB.minY);
+            float minz = s->m[inner_inx].BB.minZ - (obj->pivot[2] - obj->BB.minZ);
+            float maxx = s->m[inner_inx].BB.maxX - (obj->pivot[0] - obj->BB.maxX);
+            float maxy = s->m[inner_inx].BB.maxY - (obj->pivot[1] - obj->BB.maxY);
+            float maxz = s->m[inner_inx].BB.maxZ - (obj->pivot[2] - obj->BB.maxZ);
 
-                if (obj->BB.minX > s->m[inner_inx].BB.minX && obj->BB.minX < s->m[inner_inx].BB.maxX || 
-                    obj->BB.maxX > s->m[inner_inx].BB.minX && obj->BB.maxX < s->m[inner_inx].BB.maxX || 
-                    obj->BB.minX < s->m[inner_inx].BB.minX && obj->BB.maxX > s->m[inner_inx].BB.maxX) {
+            tnearx = (minx - obj->pivot[0]) / D[0];
+            tnearz = (minz - obj->pivot[2]) / D[2];
+            tfarx = (maxx - obj->pivot[0]) / D[0];
+            tfarz = (maxz - obj->pivot[2]) / D[2];
+            // printf("tnearx: %f    tnearz: %f    tfarx: %f    tfarz: %f\n", tnearx, tnearz, tfarx, tfarz);
 
-                    // if (obj->momentum <= 0)
-                    //     obj->momentum = 1;
+            if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
+            if (tnearz > tfarz) swap(&tnearz, &tfarz, 4);
 
-                    // printf("\nCollision Detected ids %d, %d!", obj->id, s->m[inner_inx].id);
-                    s->m[inner_inx].momentum = obj->momentum;
-                    s->m[inner_inx].mvdir = obj->mvdir;
-                    obj->momentum *= s->m[inner_inx].mass;
 
-                    // obj->collide = 1;
-                    // logVec4f(norm_vec((obj->pivot + obj->scale) - (s->m[inner_inx].pivot + s->m[inner_inx].scale)));
-                    // obj->pivot += ((obj->pivot + obj->scale) - (s->m[inner_inx].pivot + s->m[inner_inx].scale)) * obj->mvdir; 
-                    // printf("A: %f\n", (obj->pivot[0] + obj->scale) - (s->m[inner_inx].pivot[0] + s->m[inner_inx].scale));
-                    // logVec4f(obj->pivot);
-                    // logVec4f(s->m[inner_inx].pivot);
-                    // printf("B: %f\n", (obj->pivot[2] + obj->scale) - (s->m[inner_inx].pivot[2] + s->m[inner_inx].scale));
-                    // printf("A: %f    B: %f\n", obj->momentum, s->m[inner_inx].momentum);
-                }
+            if (tnearx > tfarz || tnearz > tfarx) {
+                // printf("Unable to Collide!\n");
+                return 0;
+            }
+
+            float t_near = tnearx > tnearz ? tnearx : tnearz;
+            float t_far = tfarx < tfarz ? tfarx : tfarz;
+
+            if (t_far < 0) { 
+                // printf("Collision in negative direction!\n");
+                return 0;
+            }
+
+            vec4f normal = { 0 };
+            if ( tnearx > tnearz ) {
+                if ( D[0] < 0 )
+                    normal[0] = 1;
+                else     
+                    normal[0] = -1;
+            } else if ( tnearx < tnearz ) {
+                if ( D[2] < 0 )
+                    normal[2] = 1;
+                else
+                    normal[2] = -1;
+            }
+
+            if (t_near <= 1.f) {
+                // printf("Collision!\n");
+                obj->momentum *= s->m[inner_inx].mass;
+
+                float dot = dot_product(obj->mvdir, normal);
+                obj->mvdir = norm_vec(dot * normal);
+
+                Q[0] = fabsf(Q[0]);
+                Q[1] = fabsf(Q[1]);
+                Q[2] = fabsf(Q[2]);
+
+                vec4f pivot = Q * (1.f - t_near) * normal;
+
+                Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
+                obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
+                obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
+
+                obj->pivot += pivot;
+                return 1;
             }
         }
     }
-    if (obj->collide) {
-        // obj->collide = 0;
-        return 1;
-    }
-    obj->collide = 0;
-    return 0;
 }
 
 const void applyForces(Scene *s) {
     Mat4x4 trans;
     for (int i = 0; i < s->m_indexes; i++) {
-        if ( s->m[i].momentum > 0 ) {
+        if ( s->m[i].momentum >= 0 ) {
 
-            // s->m[i].momentum -= DeltaTime;
-            if ( s->m[i].momentum < 0 )
-                s->m[i].momentum = s->m[i].roll = 0;
+            s->m[i].momentum -= DeltaTime;
+            if ( s->m[i].momentum <= 0 ) {
+                s->m[i].momentum = s->m[i].roll = 0.f;
+                continue;
+            }
 
             vec4f pivot = s->m[i].mvdir * s->m[i].momentum;
-
+            // printf("forces   : ");
+            // logVec4f(s->m[i].mvdir);
             vec4f axis = { 1.f, 0.f, 0.f };
 
             if (s->m[i].roll) {
