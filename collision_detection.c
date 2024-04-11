@@ -35,7 +35,7 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
     for (int i = 0; i < num_of_members; i++) {
 
         int inner_inx = tf->quads[obj->quadIndex].mems[i];
-
+        // printf("obj id: %d\n", tf->quads[obj->quadIndex].mems[i]);
         if ( s->m[inner_inx].id != obj->id ) {
             s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
 
@@ -51,6 +51,7 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
             tfarx = (maxx - obj->pivot[0]) / D[0];
             tfarz = (maxz - obj->pivot[2]) / D[2];
             // printf("tnearx: %f    tnearz: %f    tfarx: %f    tfarz: %f\n", tnearx, tnearz, tfarx, tfarz);
+            // printf("minx: %f    miny: %f    minz: %f    maxx: %f    maxy: %f    maxz: %f\n", minx, miny, minz, maxx, maxy, maxz);
 
             if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
             if (tnearz > tfarz) swap(&tnearz, &tfarz, 4);
@@ -58,7 +59,7 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
 
             if (tnearx > tfarz || tnearz > tfarx) {
                 // printf("Unable to Collide!\n");
-                return;
+                continue;
             }
 
             float t_near = tnearx > tnearz ? tnearx : tnearz;
@@ -66,7 +67,7 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
 
             if (t_far <= 0) { 
                 // printf("Collision in negative direction!\n");
-                return;
+                continue;
             }
 
             vec4f normal = { 0.f };
@@ -86,10 +87,13 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
                 obj->momentum *= s->m[inner_inx].mass;
                 // obj->momentum = 0;
 
+                s->m[inner_inx].mvdir = obj->mvdir;
+                s->m[inner_inx].momentum = obj->momentum;
+
                 // float dot = dot_product(obj->mvdir, normal);
                 obj->mvdir = normal + obj->mvdir;//norm_vec(dot * normal);
-                printf("Collision: ");
-                logVec4f(obj->mvdir);
+                // printf("Collision: ");
+                // logVec4f(obj->mvdir);
 
                 Q[0] = fabsf(Q[0]);
                 Q[1] = fabsf(Q[1]);

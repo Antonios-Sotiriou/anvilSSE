@@ -9,7 +9,6 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
         return 0;
     }
 
-    // obj->momentum -= DeltaTime;
     vec4f Q = obj->mvdir * obj->momentum;
     vec4f D = (obj->pivot + Q) - obj->pivot;
 
@@ -22,7 +21,7 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
         int inner_inx = tf->quads[obj->quadIndex].mems[i];
 
-        if ( s->m[inner_inx].id != obj->id ) {
+        if ( s->m[inner_inx].id != obj->id && s->m[inner_inx].type != Player ) {
             s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
 
             float minx = s->m[inner_inx].BB.minX - (obj->pivot[0] - obj->BB.minX);
@@ -44,7 +43,7 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
             if (tnearx > tfarz || tnearz > tfarx) {
                 // printf("Unable to Collide!\n");
-                return 0;
+                continue;
             }
 
             float t_near = tnearx > tnearz ? tnearx : tnearz;
@@ -52,7 +51,7 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
             if (t_far < 0) { 
                 // printf("Collision in negative direction!\n");
-                return 0;
+                continue;
             }
 
             vec4f normal = { 0 };
@@ -72,8 +71,13 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
                 // printf("Collision!\n");
                 obj->momentum *= s->m[inner_inx].mass;
 
-                float dot = dot_product(obj->mvdir, normal);
-                obj->mvdir = norm_vec(dot * normal);
+
+                s->m[inner_inx].mvdir = obj->mvdir;
+                s->m[inner_inx].momentum = obj->momentum;
+
+                // float dot = dot_product(obj->mvdir, normal);
+                // obj->mvdir = norm_vec(dot * normal);
+                obj->mvdir = normal + obj->mvdir;
 
                 Q[0] = fabsf(Q[0]);
                 Q[1] = fabsf(Q[1]);
@@ -86,7 +90,6 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
                 obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
 
                 obj->pivot += pivot;
-                return 1;
             }
         }
     }
@@ -103,9 +106,10 @@ const void applyForces(Scene *s) {
                 continue;
             }
 
+            EnvironmentCollision(&tf, s, &s->m[i]);
+
             vec4f pivot = s->m[i].mvdir * s->m[i].momentum;
-            // printf("forces   : ");
-            // logVec4f(s->m[i].mvdir);
+
             vec4f axis = { 1.f, 0.f, 0.f };
 
             if (s->m[i].roll) {
@@ -124,7 +128,6 @@ const void applyForces(Scene *s) {
             s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
 
             s->m[i].pivot += pivot;
-            // EnvironmentCollision(&tf, s, &s->m[i]);
         }
     }
 }

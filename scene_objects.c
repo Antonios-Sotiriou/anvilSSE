@@ -98,7 +98,7 @@ const void initWorldObjects(Scene *s) {
     s->m[4].id = 4;
     
     s->m[4].scale = 10.f;
-    s->m[4].pivot[0] = 80;
+    s->m[4].pivot[0] = 75;
     s->m[4].pivot[1] = 0;
     s->m[4].pivot[2] = 120;
     s->m[4].cull = 1;
