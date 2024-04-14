@@ -84,15 +84,18 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
             }
 
             if (t_near <= 1.0f) {
+                // printf("Collision! Before:  \n");
+                // logVec4f(obj->mvdir);
                 obj->momentum *= s->m[inner_inx].mass;
-                // obj->momentum = 0;
 
+                // obj->momentum = 0;
                 s->m[inner_inx].mvdir = obj->mvdir;
                 s->m[inner_inx].momentum = obj->momentum;
 
-                // float dot = dot_product(obj->mvdir, normal);
-                obj->mvdir = normal + obj->mvdir;//norm_vec(dot * normal);
-                // printf("Collision: ");
+                // obj->mvdir = normal + obj->mvdir;
+                float dot =  dot_product(normal, obj->mvdir);
+                obj->mvdir = obj->mvdir - (dot * normal);
+                // printf("Collision! After :  \n");
                 // logVec4f(obj->mvdir);
 
                 Q[0] = fabsf(Q[0]);
