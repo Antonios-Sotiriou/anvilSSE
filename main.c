@@ -268,9 +268,9 @@ const static void keypress(XEvent *event) {
     else
         eye = (vec4f*)&camera;
 
-    printf("Key Pressed: %ld\n", keysym);
+    // printf("Key Pressed: %ld\n", keysym);
     // printf("\x1b[H\x1b[J");
-    system("clear\n");
+    // system("clear\n");
     // logEvent(*event);
 
     switch (keysym) {
@@ -338,15 +338,15 @@ const static void keypress(XEvent *event) {
             scene.m[1].momentum = 1.3;
             break;
         case 65431 : //sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
-            vec4f mve = norm_vec(camera[U] + camera[N]);
-            // vec4f mve = { 0.f, 0.f, 1.f };
+            // vec4f mve = norm_vec(camera[U] + camera[N]);
+            vec4f mve = { 0.f, 0.f, 1.f };
             scene.m[1].mvdir = mve;
             scene.m[1].momentum = 1.3;
             scene.m[1].roll = 1;
             break;
         case 65433 : //sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
-            vec4f mvf = -norm_vec(camera[U] + camera[N]);
-            // vec4f mvf = { 0.f, 0.f, -1.f };
+            // vec4f mvf = -norm_vec(camera[U] + camera[N]);
+            vec4f mvf = { 0.f, 0.f, -1.f };
             scene.m[1].mvdir = mvf;
             scene.m[1].momentum = 1.3;
             scene.m[1].roll = 1;
@@ -459,6 +459,8 @@ const static void applyPhysics(void) {
     /* At this spot shall be implemented collision between objects as a primitive implementation. */
     if (scene.m[Player_1].momentum)
         objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], DeltaTime);
+
+    // printQuad(scene.m[Player_1].quadIndex);
 
     applyForces(&scene);
 

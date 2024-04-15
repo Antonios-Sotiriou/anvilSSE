@@ -14,7 +14,7 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
     obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
 
-    float tnearx, tnearz, tfarx, tfarz;
+    float tnearx, tneary, tnearz, tfarx, tfary, tfarz;
 
     const int num_of_members = tf->quads[obj->quadIndex].mems_indexes;
     for (int i = 0; i < num_of_members; i++) {
@@ -32,12 +32,15 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
             float maxz = s->m[inner_inx].BB.maxZ - (obj->pivot[2] - obj->BB.maxZ);
 
             tnearx = (minx - obj->pivot[0]) / D[0];
+            tneary = (miny - obj->pivot[1]) / D[1];
             tnearz = (minz - obj->pivot[2]) / D[2];
             tfarx = (maxx - obj->pivot[0]) / D[0];
+            tfary = (maxy - obj->pivot[1]) / D[1];
             tfarz = (maxz - obj->pivot[2]) / D[2];
             // printf("tnearx: %f    tnearz: %f    tfarx: %f    tfarz: %f\n", tnearx, tnearz, tfarx, tfarz);
 
             if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
+            if (tneary > tfary) swap(&tneary, &tfary, 4);
             if (tnearz > tfarz) swap(&tnearz, &tfarz, 4);
 
 
@@ -48,6 +51,18 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
             float t_near = tnearx > tnearz ? tnearx : tnearz;
             float t_far = tfarx < tfarz ? tfarx : tfarz;
+
+            /* ##################### Y ############################ */
+            if (t_near > tfary || tneary > t_far) {
+                // printf("Unable to Collide!\n");
+                continue;
+            }
+
+            if (tneary > t_near)
+                t_near = tneary;
+            if (tfary < t_far)
+                t_far = tfary;
+            /* ##################### Y ############################ */
 
             if (t_far < 0) { 
                 // printf("Collision in negative direction!\n");
@@ -65,9 +80,14 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
                     normal[2] = 1;
                 else
                     normal[2] = -1;
-            }
+            } //else if ( tneary < t_near ) {
+            //     if ( D[1] < 0)
+            //         normal[1] = 1.f;
+            //     else
+            //         normal[1] = -1.f;
+            // }
 
-            if (t_near <= 1.f) {
+            if (t_near <= 1.1f) {
                 printf("Collision!\n");
 
                 obj->momentum *= s->m[inner_inx].mass;
@@ -135,22 +155,27 @@ const void applyGravity(Scene *s) {
     Mat4x4 trans;
     /* Apply Gravitanional forces to Specific or all meshes. EXCEPT TERRAIN. */
     for (int i = 0; i < s->m_indexes; i++) {
-        if ( (s->m[i].type != Terrain) && (!s->m[i].grounded) || (s->m[i].momentum) ) {
+        addMeshToQuad(&s->m[i]);
+        if ( s->m[i].type != Terrain ) {
 
-            s->m[i].falling_time += DeltaTime;
-            const vec4f pull_point = { 0.f, -1.f, 0.f };
-            const float velocity = 9.81f * s->m[i].falling_time;
-
-            vec4f pivot = (pull_point * velocity);
-
-            trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
-            s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
-            s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
-
-            s->m[i].pivot += pivot;
-
-            objectTerrainCollision(&s->m[Terrain_1], &s->m[i]);
             addMeshToQuad(&s->m[i]);
+
+            if (!s->m[i].grounded || s->m[i].momentum ) {
+
+                s->m[i].falling_time += DeltaTime;
+                const vec4f pull_point = { 0.f, -1.f, 0.f };
+                const float velocity = 9.81f * s->m[i].falling_time;
+
+                vec4f pivot = (pull_point * velocity);
+
+                trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
+                s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
+                s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
+
+                s->m[i].pivot += pivot;
+
+                objectTerrainCollision(&s->m[Terrain_1], &s->m[i]);
+            }
         }
     }
 }

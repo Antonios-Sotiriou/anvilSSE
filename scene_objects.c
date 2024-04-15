@@ -1,6 +1,6 @@
 #include "headers/scene_objects.h"
 
-#define MESH_NUM 5
+#define MESH_NUM 100
 
 /* This function is responsible to position the objects in world space. */
 const void initWorldObjects(Scene *s) {
@@ -81,12 +81,13 @@ const void initWorldObjects(Scene *s) {
     
     s->m[3].scale = 10.f;
     s->m[3].pivot[0] = 100;
-    s->m[3].pivot[1] = 0;
+    s->m[3].pivot[1] = 40;
     s->m[3].pivot[2] = 100;
     s->m[3].cull = 1;
     s->m[3].lodlevels = 0;
     // s->m[3].visible = 1;
     s->m[3].mass = 0.5;
+    s->m[3].grounded = 1;
     s->m[3].Q = unitQuat();
     enWorldMesh(&s->m[3]);
 
@@ -105,6 +106,7 @@ const void initWorldObjects(Scene *s) {
     s->m[4].lodlevels = 0;
     // s->m[3].visible = 1;
     s->m[4].mass = 0.5;
+    // s->m[4].grounded = 1;
     s->m[4].Q = unitQuat();
     enWorldMesh(&s->m[4]);
 
@@ -123,7 +125,7 @@ const void initWorldObjects(Scene *s) {
     //     s->m[i].cull = 1;
     //     s->m[i].lodlevels = 0;
     //     // s->m[1].visible = 1;
-    //     s->m[i].mass = 0.02;
+    //     s->m[i].mass = 0.5;
     //     s->m[i].Q = unitQuat();
     //     enWorldMesh(&s->m[i]);
     // }
