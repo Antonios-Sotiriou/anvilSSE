@@ -80,25 +80,29 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
                     normal[2] = 1;
                 else
                     normal[2] = -1;
-            } //else if ( tneary < t_near ) {
-            //     if ( D[1] < 0)
-            //         normal[1] = 1.f;
-            //     else
-            //         normal[1] = -1.f;
-            // }
+            } else {
+                if ( D[1] < 0)
+                    normal[1] = 1.f;
+                else
+                    normal[1] = -1.f;
+            }
 
             if (t_near <= 1.1f) {
-                printf("Collision!\n");
+                // printf("Collision!\n");
 
                 obj->momentum *= s->m[inner_inx].mass;
 
-                s->m[inner_inx].mvdir = obj->mvdir;
-                s->m[inner_inx].momentum = obj->momentum;
+                // s->m[inner_inx].mvdir = obj->mvdir;
+                // s->m[inner_inx].momentum = obj->momentum;
+                if (normal[1] == 1.f) {
+                    obj->grounded = 1;
+                    obj->momentum = 0.f;
+                }
 
                 // obj->mvdir = normal + obj->mvdir;
                 float dot =  dot_product(normal, obj->mvdir);
                 obj->mvdir = obj->mvdir - (dot * normal);
-
+                // logVec4f(normal);
                 Q[0] = fabsf(Q[0]);
                 Q[1] = fabsf(Q[1]);
                 Q[2] = fabsf(Q[2]);
@@ -155,7 +159,7 @@ const void applyGravity(Scene *s) {
     Mat4x4 trans;
     /* Apply Gravitanional forces to Specific or all meshes. EXCEPT TERRAIN. */
     for (int i = 0; i < s->m_indexes; i++) {
-        addMeshToQuad(&s->m[i]);
+
         if ( s->m[i].type != Terrain ) {
 
             addMeshToQuad(&s->m[i]);
@@ -166,7 +170,8 @@ const void applyGravity(Scene *s) {
                 const vec4f pull_point = { 0.f, -1.f, 0.f };
                 const float velocity = 9.81f * s->m[i].falling_time;
 
-                vec4f pivot = (pull_point * velocity);
+                vec4f pivot = (pull_point * velocity) + s->m[i].mvdir;
+                s->m[i].mvdir = norm_vec(pivot);
 
                 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
                 s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);

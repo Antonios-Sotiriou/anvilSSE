@@ -1,6 +1,6 @@
 #include "headers/scene_objects.h"
 
-#define MESH_NUM 100
+#define MESH_NUM 5
 
 /* This function is responsible to position the objects in world space. */
 const void initWorldObjects(Scene *s) {
@@ -126,6 +126,7 @@ const void initWorldObjects(Scene *s) {
     //     s->m[i].lodlevels = 0;
     //     // s->m[1].visible = 1;
     //     s->m[i].mass = 0.5;
+    //     s->m[i].grounded = 1;
     //     s->m[i].Q = unitQuat();
     //     enWorldMesh(&s->m[i]);
     // }

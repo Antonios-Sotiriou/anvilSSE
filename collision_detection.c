@@ -23,7 +23,6 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
         return;
     }
 
-    // obj->momentum -= DeltaTime;
     vec4f Q = obj->mvdir * obj->momentum;
     vec4f D = (obj->pivot + Q) - obj->pivot;
 
@@ -98,15 +97,15 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
                     normal[2] = 1.f;
                 else
                     normal[2] = -1.f;
-            } //else if ( tneary < t_near ) {
-            //     if ( D[1] < 0)
-            //         normal[1] = 1.f;
-            //     else
-            //         normal[1] = -1.f;
-            // }
+            } else {
+                if ( D[1] < 0)
+                    normal[1] = 1.f;
+                else
+                    normal[1] = -1.f;
+            }
 
             if (t_near <= 1.1f) {
-                printf("Collision! :  ");
+                // printf("Collision! :  ");
                 // printf("t_near: %f\n", t_near);
                 // logVec4f(obj->mvdir);
                 obj->momentum *= s->m[inner_inx].mass;
@@ -114,13 +113,17 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
                 // obj->momentum = 0;
                 // s->m[inner_inx].mvdir = obj->mvdir;
                 // s->m[inner_inx].momentum = obj->momentum;
+                if (normal[1] == 1.f) {
+                    obj->grounded = 1;
+                    obj->momentum = 0.f;
+                }
 
                 // obj->mvdir = normal + obj->mvdir;
                 float dot =  dot_product(normal, obj->mvdir);
                 obj->mvdir = obj->mvdir - (dot * normal);
                 // printf("Collision! After :  \n");
                 // logVec4f(obj->mvdir);
-
+                logVec4f(normal);
                 Q[0] = fabsf(Q[0]);
                 Q[1] = fabsf(Q[1]);
                 Q[2] = fabsf(Q[2]);
