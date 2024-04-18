@@ -8,7 +8,7 @@ const void initWorldObjects(Scene *s) {
     // memcpy(s->m[0].name, "basic_terrain", sizeof("basic_terrain"));
     // createGrid(&s->m[0], 10, 10);
     createTerrain(&s->m[0], "textures/height_map_10x10.bmp");
-    loadmaterial(&s->m[0].material, "pearl");
+    loadmaterial(&s->m[0].material, "emerald");
 
     s->m[0].type = Terrain;
     s->m[0].id = 0;
@@ -98,10 +98,10 @@ const void initWorldObjects(Scene *s) {
     s->m[4].type = MovingObject;
     s->m[4].id = 4;
     
-    s->m[4].scale = 10.f;
-    s->m[4].pivot[0] = 75;
+    s->m[4].scale = 100.f;
+    s->m[4].pivot[0] = 175;
     s->m[4].pivot[1] = 0;
-    s->m[4].pivot[2] = 120;
+    s->m[4].pivot[2] = 220;
     s->m[4].cull = 1;
     s->m[4].lodlevels = 0;
     // s->m[3].visible = 1;
@@ -126,7 +126,7 @@ const void initWorldObjects(Scene *s) {
     //     s->m[i].lodlevels = 0;
     //     // s->m[1].visible = 1;
     //     s->m[i].mass = 0.5;
-    //     s->m[i].grounded = 1;
+    //     // s->m[i].grounded = 1;
     //     s->m[i].Q = unitQuat();
     //     enWorldMesh(&s->m[i]);
     // }

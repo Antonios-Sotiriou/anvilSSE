@@ -95,13 +95,19 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
                 // s->m[inner_inx].mvdir = obj->mvdir;
                 // s->m[inner_inx].momentum = obj->momentum;
                 if (normal[1] == 1.f) {
-                    obj->grounded = 1;
-                    obj->momentum = 0.f;
+                    // obj->grounded = 1;
+                    // obj->momentum = 0.f;
+                    // normal[0] = 0.f;
+                    // normal[2] = 0.f;
+                    obj->overlap = 1;
                 }
 
                 // obj->mvdir = normal + obj->mvdir;
                 float dot =  dot_product(normal, obj->mvdir);
                 obj->mvdir = obj->mvdir - (dot * normal);
+                // printf("Direction :  ");
+                // logVec4f(obj->mvdir);
+                // printf("Normal    :  ");
                 // logVec4f(normal);
                 Q[0] = fabsf(Q[0]);
                 Q[1] = fabsf(Q[1]);
@@ -114,7 +120,10 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
                 obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
 
                 obj->pivot += pivot;
+                continue;
             }
+            obj->overlap = 0;
+            // obj->grounded = 0;
         }
     }
 }
@@ -122,6 +131,7 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 const void applyForces(Scene *s) {
     Mat4x4 trans;
     for (int i = 0; i < s->m_indexes; i++) {
+
         if ( s->m[i].momentum >= 0 ) {
 
             s->m[i].momentum -= DeltaTime;
@@ -130,7 +140,7 @@ const void applyForces(Scene *s) {
                 continue;
             }
 
-            EnvironmentCollision(&tf, s, &s->m[i]);
+            // EnvironmentCollision(&tf, s, &s->m[i]);
 
             vec4f pivot = s->m[i].mvdir * s->m[i].momentum;
 
@@ -164,13 +174,13 @@ const void applyGravity(Scene *s) {
 
             addMeshToQuad(&s->m[i]);
 
-            if (!s->m[i].grounded || s->m[i].momentum ) {
+            if ( (!s->m[i].grounded || s->m[i].momentum) && !s->m[i].overlap ) {
 
                 s->m[i].falling_time += DeltaTime;
                 const vec4f pull_point = { 0.f, -1.f, 0.f };
                 const float velocity = 9.81f * s->m[i].falling_time;
 
-                vec4f pivot = (pull_point * velocity) + s->m[i].mvdir;
+                vec4f pivot = (pull_point * velocity) + (s->m[i].mvdir * s->m[i].momentum);
                 s->m[i].mvdir = norm_vec(pivot);
 
                 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);

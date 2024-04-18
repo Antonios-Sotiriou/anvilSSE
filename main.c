@@ -316,39 +316,39 @@ const static void keypress(XEvent *event) {
         case 65430 : //sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
             vec4f mva = { -1.f, 0.f, 0.f };
             scene.m[1].mvdir = mva;
-            scene.m[1].momentum = 1.3;
+            scene.m[1].momentum = 100.f * DeltaTime;
             scene.m[1].roll = 1;
             break;
         case 65432 : //sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
             vec4f mvb = { 1.f, 0.f, 0.f };
             scene.m[1].mvdir = mvb;
-            scene.m[1].momentum = 1.3;
+            scene.m[1].momentum = 100.f * DeltaTime;
             scene.m[1].roll = 1;
             break;
         case 65434 : //sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
             scene.m[1].grounded = 0;
             vec4f mvc = { 0.f, 1.f, 0.f };
             scene.m[1].mvdir = mvc;
-            scene.m[1].momentum = 1.3;
+            scene.m[1].momentum = 100.f * DeltaTime;
             scene.m[1].falling_time = 0;
             break;
         case 65435 : //sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
             vec4f mvd = { 0.f, -1.f, 0.f };
             scene.m[1].mvdir = mvd;
-            scene.m[1].momentum = 1.3;
+            scene.m[1].momentum = 100.f * DeltaTime;
             break;
         case 65431 : //sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
             // vec4f mve = norm_vec(camera[U] + camera[N]);
             vec4f mve = { 0.f, 0.f, 1.f };
             scene.m[1].mvdir = mve;
-            scene.m[1].momentum = 1.3;
+            scene.m[1].momentum = 100.f * DeltaTime;
             scene.m[1].roll = 1;
             break;
         case 65433 : //sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
             // vec4f mvf = -norm_vec(camera[U] + camera[N]);
             vec4f mvf = { 0.f, 0.f, -1.f };
             scene.m[1].mvdir = mvf;
-            scene.m[1].momentum = 1.3;
+            scene.m[1].momentum = 100.f * DeltaTime;
             scene.m[1].roll = 1;
             break;
         case 120 : rotate_x(&scene.m[1], 1);                     /* x */
@@ -416,7 +416,7 @@ const static void keypress(XEvent *event) {
     // printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
     // printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
     createCascadeShadowMatrices(NUM_OF_CASCADES);
-    perspMat = perspectiveMatrix(FOV, ASPECTRATIO, ZNEAR, ZFAR);
+
     if (!PROJECTIONVIEW)
         worldMat = mxm(viewMat, perspMat);
     else
@@ -424,6 +424,8 @@ const static void keypress(XEvent *event) {
 
     // scene.m[4].pivot = camera[U] + camera[N];
     // logVec4f(norm_vec(camera[U] + camera[N]));
+    // applyPhysics();
+    // project();
 }
 static void *oscillator(void *args) {
 
@@ -460,11 +462,19 @@ const static void applyPhysics(void) {
     if (scene.m[Player_1].momentum)
         objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], DeltaTime);
 
+    // if (scene.m[Player_1].momentum)
+    //     logVec4f(scene.m[Player_1].mvdir);
     // printQuad(scene.m[Player_1].quadIndex);
 
     applyForces(&scene);
+    // if (scene.m[Player_1].momentum)
+    //     logVec4f(scene.m[Player_1].mvdir);
 
     applyGravity(&scene); /* need world space */
+    // if (scene.m[Player_1].momentum)
+        // logVec4f(scene.m[Player_1].mvdir);
+
+    displayVec4f(scene.m[Player_1].pivot, scene.m[Player_1].pivot + (scene.m[Player_1].mvdir * scene.m[Player_1].momentum), worldMat);
 }
 const static void project(void) {
 

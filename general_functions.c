@@ -292,6 +292,26 @@ const static void checkVisibility(Mesh *m, const int len, Mat4x4 vm, const int v
         m[i].visible = 1;
     }
 }
+/* Displays given vector on screen given the view Matrix. */
+const void displayVec4f(const vec4f v_start, const vec4f v_end, const Mat4x4 vm) {
+    vec4f temp_start = vecxm(v_start, vm);
+    vec4f temp_end = vecxm(v_end, vm);
+
+    if (temp_start[3] > 0)
+        temp_start /= temp_start[3];
+    if (temp_end[3] > 0)
+        temp_end /= temp_end[3];
+
+    temp_start[0] = ((1 + temp_start[0]) * HALFW) + 0.5;
+    temp_start[1] = ((1 + temp_start[1]) * HALFH) + 0.5;
+
+    temp_end[0] = ((1 + temp_end[0]) * HALFW) + 0.5;
+    temp_end[1] = ((1 + temp_end[1]) * HALFH) + 0.5;
+
+    XDrawLine(displ, mainwin, gc, temp_start[0], temp_start[1], temp_end[0], temp_end[1]);
+    // XDrawRectangle(displ, mainwin, gc, temp_start[0], temp_start[1], temp_end[0], temp_end[1]);
+    XDrawArc(displ, mainwin, gc, temp_start[0], temp_start[1], temp_start[0], temp_start[1], 10, 360 * 64);
+}
 /* Initializing Mesh a from Mesh b. */
 const void initMesh(Mesh *a, const Mesh *b) {
     *a = *b;
