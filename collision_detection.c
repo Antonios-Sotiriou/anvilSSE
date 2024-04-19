@@ -52,7 +52,8 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
             tfarx = (maxx - obj->pivot[0]) / D[0];
             tfary = (maxy - obj->pivot[1]) / D[1];
             tfarz = (maxz - obj->pivot[2]) / D[2];
-            // printf("tnearx: %f    tneary: %f    tnearz: %f\n", tnearx, tneary, tnearz);
+            printf("tnearx: %f    tneary: %f    tnearz: %f\n", tnearx, tneary, tnearz);
+
             // printf("tfarx: %f    tfary: %f    tfarz: %f\n", tfarx, tfary, tfarz);
             // printf("minx: %f    miny: %f    minz: %f    maxx: %f    maxy: %f    maxz: %f\n", minx, miny, minz, maxx, maxy, maxz);
 
@@ -62,8 +63,8 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
 
 
             if (tnearx > tfarz || tnearz > tfarx) {
-                // printf("Unable to Collide!\n");
-                continue;
+                printf("Unable to Collide!\n");
+                // continue;
             }
 
             float t_near = tnearx > tnearz ? tnearx : tnearz;
@@ -71,8 +72,8 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
 
             /* ##################### Y ############################ */
             if (t_near > tfary || tneary > t_far) {
-                // printf("Unable to Collide!\n");
-                continue;
+                printf("Unable to Collide!\n");
+                // continue;
             }
 
             if (tneary > t_near)
@@ -82,8 +83,8 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
             /* ##################### Y ############################ */
 
             if (t_far <= 0) { 
-                // printf("Collision in negative direction!\n");
-                continue;
+                printf("Collision in negative direction!\n");
+                // continue;
             }
 
             vec4f normal = { 0.f };
@@ -104,13 +105,14 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
                     normal[1] = -1.f;
             }
             // printf("t_near: %f\n", t_near);
-            if ((int)floorf(t_near) <= 1.f) {
-                // printf("Collision! :  ");
+            vec4f pivot = { 0 };
+            if (t_near <= 1.f) {
+                printf("Collision! :  ");
+                // printf("tnearx: %f    tneary: %f    tnearz: %f\n", tnearx, tneary, tnearz);
                 // printf("t_near: %f\n", t_near);
                 // logVec4f(obj->mvdir);
                 // printf("overlap    %d:  \n", obj->overlap);
-                printf("t_near: %f,    %d\n", t_near, (int)floor(t_near));
-                obj->momentum *= s->m[inner_inx].mass;
+                printf("t_near: %f,    %f\n", t_near, t_near - 0.01);
 
                 // obj->momentum = 0;
                 // s->m[inner_inx].mvdir = obj->mvdir;
@@ -122,36 +124,34 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
                     // normal[2] = 0.f;
                     obj->overlap = 1;
                 }
-                // normal = norm_vec(normal);
                 // obj->mvdir = normal + obj->mvdir;
-                float dot =  dot_product(normal, obj->mvdir);
-                obj->mvdir = obj->mvdir - (dot * normal);
-                // printf("Collision! After :  \n");
                 // printf("Direction :  ");
                 // logVec4f(obj->mvdir);
-                // printf("Normal    :  ");
-                // logVec4f(normal);
+
                 Q[0] = fabsf(Q[0]);
                 Q[1] = fabsf(Q[1]);
                 Q[2] = fabsf(Q[2]);
 
-                vec4f pivot = Q * (1.f - t_near) * obj->mvdir;
+                pivot = obj->mvdir * obj->momentum * (t_near - 0.1f);
 
-                Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
-                obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
-                obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
+                if ( !__isnanf(t_near) && !__isinff(t_near)) {
 
-                obj->pivot += pivot;
+                    Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
+                    obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
+                    obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
+
+                    obj->pivot += pivot;
+                }
+
+                obj->momentum *= s->m[inner_inx].mass;
+                float dot =  dot_product(normal, obj->mvdir);
+                obj->mvdir = obj->mvdir - (dot * normal);
+                // logVec4f(obj->mvdir);
                 return;
             }
-            // printf("t_near: %d\n", (int)t_near);
-            // printf("momentum: %f\n", obj->momentum);
-            // printf("Direction :  ");
-            // logVec4f(obj->mvdir);
-            // printf("Normal    :  ");
-            // logVec4f(normal);
-            obj->overlap = 0;
+            // obj->overlap = 0;
             // obj->grounded = 0;
+            // logVec4f(obj->mvdir);
         }
     }
 }

@@ -1,6 +1,6 @@
 #include "headers/scene_objects.h"
 
-#define MESH_NUM 5
+#define MESH_NUM 4
 
 /* This function is responsible to position the objects in world space. */
 const void initWorldObjects(Scene *s) {
@@ -8,7 +8,7 @@ const void initWorldObjects(Scene *s) {
     // memcpy(s->m[0].name, "basic_terrain", sizeof("basic_terrain"));
     // createGrid(&s->m[0], 10, 10);
     createTerrain(&s->m[0], "textures/height_map_10x10.bmp");
-    loadmaterial(&s->m[0].material, "emerald");
+    loadmaterial(&s->m[0].material, "obsidian");
 
     s->m[0].type = Terrain;
     s->m[0].id = 0;
@@ -37,7 +37,7 @@ const void initWorldObjects(Scene *s) {
 
     s->m[1].scale = 10.f;
 
-    s->m[1].pivot[0] = 75.f;
+    s->m[1].pivot[0] = 90.f;
     s->m[1].pivot[1] = 0.f;
     s->m[1].pivot[2] = 75.f;
 
@@ -45,6 +45,7 @@ const void initWorldObjects(Scene *s) {
     s->m[1].lodlevels = 5;
     // s->m[1].visible = 1;
     s->m[1].mass = 0.5;
+    // s->m[1].grounded = 1;
     // s->m[1].material.reflect = 1;
     s->m[1].Q = unitQuat();
     // enWorldMesh(&s->m[1]);
@@ -81,7 +82,7 @@ const void initWorldObjects(Scene *s) {
     
     s->m[3].scale = 10.f;
     s->m[3].pivot[0] = 100;
-    s->m[3].pivot[1] = 40;
+    s->m[3].pivot[1] = 0;
     s->m[3].pivot[2] = 100;
     s->m[3].cull = 1;
     s->m[3].lodlevels = 0;
@@ -92,23 +93,23 @@ const void initWorldObjects(Scene *s) {
     enWorldMesh(&s->m[3]);
 
     /* ######################################################################################################## */
-    createCube(&s->m[4]);
-    loadmaterial(&s->m[4].material, "jade");
+    // createCube(&s->m[4]);
+    // loadmaterial(&s->m[4].material, "jade");
 
-    s->m[4].type = MovingObject;
-    s->m[4].id = 4;
+    // s->m[4].type = MovingObject;
+    // s->m[4].id = 4;
     
-    s->m[4].scale = 100.f;
-    s->m[4].pivot[0] = 175;
-    s->m[4].pivot[1] = 0;
-    s->m[4].pivot[2] = 220;
-    s->m[4].cull = 1;
-    s->m[4].lodlevels = 0;
-    // s->m[3].visible = 1;
-    s->m[4].mass = 0.5;
-    // s->m[4].grounded = 1;
-    s->m[4].Q = unitQuat();
-    enWorldMesh(&s->m[4]);
+    // s->m[4].scale = 10.f;
+    // s->m[4].pivot[0] = 75;
+    // s->m[4].pivot[1] = 0;
+    // s->m[4].pivot[2] = 120;
+    // s->m[4].cull = 1;
+    // s->m[4].lodlevels = 0;
+    // // s->m[3].visible = 1;
+    // s->m[4].mass = 0.5;
+    // // s->m[4].grounded = 1;
+    // s->m[4].Q = unitQuat();
+    // enWorldMesh(&s->m[4]);
 
     /* ######################################################################################################## */
     // for (int i = 5; i < MESH_NUM; i++) {

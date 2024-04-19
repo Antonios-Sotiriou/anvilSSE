@@ -106,12 +106,13 @@ vec4f camera[N + 1] = {
     { 0.0f, 0.0f, 1.0f, 0.0f }
 };
 Light sunlight = {
-    .pos = { 90.f, 500.0f, 90.f, 1.f },
+    .pos = { 90.f, 100.0f, 90.f, 1.f },
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
 };
 const float sunMov = 1.0f;
+const float movScalar = 20.f;
 
 /* Global Matrices */
 Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
@@ -270,7 +271,7 @@ const static void keypress(XEvent *event) {
 
     // printf("Key Pressed: %ld\n", keysym);
     // printf("\x1b[H\x1b[J");
-    // system("clear\n");
+    system("clear\n");
     // logEvent(*event);
 
     switch (keysym) {
@@ -316,39 +317,39 @@ const static void keypress(XEvent *event) {
         case 65430 : //sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
             vec4f mva = { -1.f, 0.f, 0.f };
             scene.m[1].mvdir = mva;
-            scene.m[1].momentum = 100.f * DeltaTime;
+            scene.m[1].momentum = movScalar * DeltaTime;
             scene.m[1].roll = 1;
             break;
         case 65432 : //sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
             vec4f mvb = { 1.f, 0.f, 0.f };
             scene.m[1].mvdir = mvb;
-            scene.m[1].momentum = 100.f * DeltaTime;
+            scene.m[1].momentum = movScalar * DeltaTime;
             scene.m[1].roll = 1;
             break;
         case 65434 : //sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
             scene.m[1].grounded = 0;
             vec4f mvc = { 0.f, 1.f, 0.f };
             scene.m[1].mvdir = mvc;
-            scene.m[1].momentum = 100.f * DeltaTime;
+            scene.m[1].momentum = movScalar * DeltaTime;
             scene.m[1].falling_time = 0;
             break;
         case 65435 : //sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
             vec4f mvd = { 0.f, -1.f, 0.f };
             scene.m[1].mvdir = mvd;
-            scene.m[1].momentum = 100.f * DeltaTime;
+            scene.m[1].momentum = movScalar * DeltaTime;
             break;
         case 65431 : //sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
             // vec4f mve = norm_vec(camera[U] + camera[N]);
             vec4f mve = { 0.f, 0.f, 1.f };
             scene.m[1].mvdir = mve;
-            scene.m[1].momentum = 100.f * DeltaTime;
+            scene.m[1].momentum = movScalar * DeltaTime;
             scene.m[1].roll = 1;
             break;
         case 65433 : //sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
             // vec4f mvf = -norm_vec(camera[U] + camera[N]);
             vec4f mvf = { 0.f, 0.f, -1.f };
             scene.m[1].mvdir = mvf;
-            scene.m[1].momentum = 100.f * DeltaTime;
+            scene.m[1].momentum = movScalar * DeltaTime;
             scene.m[1].roll = 1;
             break;
         case 120 : rotate_x(&scene.m[1], 1);                     /* x */
@@ -424,8 +425,9 @@ const static void keypress(XEvent *event) {
 
     // scene.m[4].pivot = camera[U] + camera[N];
     // logVec4f(norm_vec(camera[U] + camera[N]));
-    // applyPhysics();
-    // project();
+
+    applyForces(&scene);
+    objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], DeltaTime);
 }
 static void *oscillator(void *args) {
 
@@ -459,14 +461,14 @@ static void *cascade(void *args) {
 const static void applyPhysics(void) {
 
     /* At this spot shall be implemented collision between objects as a primitive implementation. */
-    if (scene.m[Player_1].momentum)
-        objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], DeltaTime);
+    // if (scene.m[Player_1].momentum)
+        // objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], DeltaTime);
 
     // if (scene.m[Player_1].momentum)
-    //     logVec4f(scene.m[Player_1].mvdir);
+    //    logVec4f(scene.m[Player_1].mvdir);
     // printQuad(scene.m[Player_1].quadIndex);
 
-    applyForces(&scene);
+    // applyForces(&scene);
     // if (scene.m[Player_1].momentum)
     //     logVec4f(scene.m[Player_1].mvdir);
 

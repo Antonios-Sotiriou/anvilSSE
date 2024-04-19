@@ -141,6 +141,7 @@ const void applyForces(Scene *s) {
             }
 
             // EnvironmentCollision(&tf, s, &s->m[i]);
+            // objectEnvironmentCollision(&tf, s, &s->m[Player_1], DeltaTime);
 
             vec4f pivot = s->m[i].mvdir * s->m[i].momentum;
 
@@ -162,6 +163,7 @@ const void applyForces(Scene *s) {
             s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
 
             s->m[i].pivot += pivot;
+            logVec4f(s->m[i].pivot);
         }
     }
 }
@@ -174,23 +176,23 @@ const void applyGravity(Scene *s) {
 
             addMeshToQuad(&s->m[i]);
 
-            if ( (!s->m[i].grounded || s->m[i].momentum) && !s->m[i].overlap ) {
+            // if ( (!s->m[i].grounded || s->m[i].momentum) && !s->m[i].overlap ) {
 
-                s->m[i].falling_time += DeltaTime;
-                const vec4f pull_point = { 0.f, -1.f, 0.f };
-                const float velocity = 9.81f * s->m[i].falling_time;
+            //     s->m[i].falling_time += DeltaTime;
+            //     const vec4f pull_point = { 0.f, -1.f, 0.f };
+            //     const float velocity = 9.81f * s->m[i].falling_time;
 
-                vec4f pivot = (pull_point * velocity) + (s->m[i].mvdir * s->m[i].momentum);
-                s->m[i].mvdir = norm_vec(pivot);
+            //     vec4f pivot = (pull_point * velocity) + (s->m[i].mvdir * s->m[i].momentum);
+            //     s->m[i].mvdir = norm_vec(pivot);
 
-                trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
-                s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
-                s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
+            //     trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
+            //     s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
+            //     s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
 
-                s->m[i].pivot += pivot;
+            //     s->m[i].pivot += pivot;
 
-                objectTerrainCollision(&s->m[Terrain_1], &s->m[i]);
-            }
+            //     objectTerrainCollision(&s->m[Terrain_1], &s->m[i]);
+            // }
         }
     }
 }
