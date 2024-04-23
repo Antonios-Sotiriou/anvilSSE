@@ -1,7 +1,7 @@
 #include "headers/collision_detection.h"
 
 #include "headers/logging.h"
-extern float DeltaTime;
+extern float DeltaTime, movScalar;
 
 const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
     const float height = getTerrainHeight(terrain, object->pivot, object);
@@ -17,14 +17,13 @@ const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
         object->pivot[1] += height_diff;
     }
 }
-const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, const float dt) {
+const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f velocity) {
     if (obj->quadIndex < 0) {
         // fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
-        return;
+        return 0;
     }
 
-    vec4f Q = obj->mvdir * obj->momentum;
-    vec4f D = (obj->pivot + Q) - obj->pivot;
+    vec4f D = (obj->pivot + velocity) - obj->pivot;
 
     obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
 
@@ -34,7 +33,6 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
     for (int i = 0; i < num_of_members; i++) {
 
         int inner_inx = tf->quads[obj->quadIndex].mems[i];
-        // printf("obj id: %d\n", tf->quads[obj->quadIndex].mems[i]);
 
         if ( s->m[inner_inx].id != obj->id ) {
             s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
@@ -52,9 +50,9 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
             tfarx = (maxx - obj->pivot[0]) / D[0];
             tfary = (maxy - obj->pivot[1]) / D[1];
             tfarz = (maxz - obj->pivot[2]) / D[2];
-            printf("tnearx: %f    tneary: %f    tnearz: %f\n", tnearx, tneary, tnearz);
+            // printf("x: %f    y: %f    z: %f  ", tnearx, tneary, tnearz);
+            // printf("x: %f    y: %f    z: %f\n", tfarx, tfary, tfarz);
 
-            // printf("tfarx: %f    tfary: %f    tfarz: %f\n", tfarx, tfary, tfarz);
             // printf("minx: %f    miny: %f    minz: %f    maxx: %f    maxy: %f    maxz: %f\n", minx, miny, minz, maxx, maxy, maxz);
 
             if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
@@ -63,8 +61,8 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
 
 
             if (tnearx > tfarz || tnearz > tfarx) {
-                printf("Unable to Collide!\n");
-                // continue;
+                // printf("Unable to Collide!\n");
+                continue;
             }
 
             float t_near = tnearx > tnearz ? tnearx : tnearz;
@@ -72,8 +70,8 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
 
             /* ##################### Y ############################ */
             if (t_near > tfary || tneary > t_far) {
-                printf("Unable to Collide!\n");
-                // continue;
+                // printf("Unable to Collide!\n");
+                continue;
             }
 
             if (tneary > t_near)
@@ -83,8 +81,8 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
             /* ##################### Y ############################ */
 
             if (t_far <= 0) { 
-                printf("Collision in negative direction!\n");
-                // continue;
+                // printf("Collision in negative direction!\n");
+                continue;
             }
 
             vec4f normal = { 0.f };
@@ -104,35 +102,26 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
                 else
                     normal[1] = -1.f;
             }
-            // printf("t_near: %f\n", t_near);
-            vec4f pivot = { 0 };
-            if (t_near <= 1.f) {
-                printf("Collision! :  ");
-                // printf("tnearx: %f    tneary: %f    tnearz: %f\n", tnearx, tneary, tnearz);
-                // printf("t_near: %f\n", t_near);
-                // logVec4f(obj->mvdir);
-                // printf("overlap    %d:  \n", obj->overlap);
-                printf("t_near: %f,    %f\n", t_near, t_near - 0.01);
+
+             vec4f pivot = { 0 };
+            if ( t_near <= 1.f ) {
+                printf("Collision 1\n");
+                // printf("x: %f    y: %f    z: %f  ", tnearx, tneary, tnearz);
+                // printf("x: %f    y: %f    z: %f\n", tfarx, tfary, tfarz);
 
                 // obj->momentum = 0;
                 // s->m[inner_inx].mvdir = obj->mvdir;
                 // s->m[inner_inx].momentum = obj->momentum;
                 if (normal[1] == 1.f) {
-                    // obj->grounded = 1;
-                    // obj->momentum = 0.f;
-                    // normal[0] = 0.f;
-                    // normal[2] = 0.f;
                     obj->overlap = 1;
                 }
-                // obj->mvdir = normal + obj->mvdir;
-                // printf("Direction :  ");
-                // logVec4f(obj->mvdir);
 
-                Q[0] = fabsf(Q[0]);
-                Q[1] = fabsf(Q[1]);
-                Q[2] = fabsf(Q[2]);
+                velocity[0] = fabsf(velocity[0]);
+                velocity[1] = fabsf(velocity[1]);
+                velocity[2] = fabsf(velocity[2]);
 
-                pivot = obj->mvdir * obj->momentum * (t_near - 0.1f);
+                pivot = D * (t_near - (1.f / (movScalar * 0.5f)));
+                // pivot = velocity * (1.f - t_near) * normal;
 
                 if ( !__isnanf(t_near) && !__isinff(t_near)) {
 
@@ -146,14 +135,16 @@ const void objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, cons
                 obj->momentum *= s->m[inner_inx].mass;
                 float dot =  dot_product(normal, obj->mvdir);
                 obj->mvdir = obj->mvdir - (dot * normal);
+                // logVec4f(normal);
                 // logVec4f(obj->mvdir);
-                return;
+                return 1;
             }
-            // obj->overlap = 0;
-            // obj->grounded = 0;
+            obj->overlap = 0;
+            // logVec4f(normal);
             // logVec4f(obj->mvdir);
         }
     }
+    return 0;
 }
 
 

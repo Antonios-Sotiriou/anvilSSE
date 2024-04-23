@@ -2,7 +2,9 @@
 
 /* Defined in main.c. */
 extern TerrainInfo tf;
+extern float movScalar;
 #include "headers/logging.h"
+
 const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
     if (obj->quadIndex < 0) {
         fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
@@ -21,7 +23,7 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
         int inner_inx = tf->quads[obj->quadIndex].mems[i];
 
-        if ( s->m[inner_inx].id != obj->id && s->m[inner_inx].type != Player ) {
+        if ( s->m[inner_inx].id != obj->id ) {
             s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
 
             float minx = s->m[inner_inx].BB.minX - (obj->pivot[0] - obj->BB.minX);
@@ -37,7 +39,8 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
             tfarx = (maxx - obj->pivot[0]) / D[0];
             tfary = (maxy - obj->pivot[1]) / D[1];
             tfarz = (maxz - obj->pivot[2]) / D[2];
-            // printf("tnearx: %f    tnearz: %f    tfarx: %f    tfarz: %f\n", tnearx, tnearz, tfarx, tfarz);
+            // printf("x: %f    y: %f    z: %f  ", tnearx, tneary, tnearz);
+            // printf("x: %f    y: %f    z: %f\n", tfarx, tfary, tfarz);
 
             if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
             if (tneary > tfary) swap(&tneary, &tfary, 4);
@@ -86,44 +89,41 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
                 else
                     normal[1] = -1.f;
             }
+            vec4f pivot = { 0 };
+            if ( t_near <= 1.f ) {
+                printf("Collision 2\n");
+                // printf("x: %f    y: %f    z: %f  ", tnearx, tneary, tnearz);
+                // printf("x: %f    y: %f    z: %f\n", tfarx, tfary, tfarz);
 
-            if (t_near <= 1.1f) {
-                // printf("Collision!\n");
-
-                obj->momentum *= s->m[inner_inx].mass;
-
+                // obj->momentum = 0;
                 // s->m[inner_inx].mvdir = obj->mvdir;
                 // s->m[inner_inx].momentum = obj->momentum;
                 if (normal[1] == 1.f) {
-                    // obj->grounded = 1;
-                    // obj->momentum = 0.f;
-                    // normal[0] = 0.f;
-                    // normal[2] = 0.f;
                     obj->overlap = 1;
                 }
 
-                // obj->mvdir = normal + obj->mvdir;
-                float dot =  dot_product(normal, obj->mvdir);
-                obj->mvdir = obj->mvdir - (dot * normal);
-                // printf("Direction :  ");
-                // logVec4f(obj->mvdir);
-                // printf("Normal    :  ");
-                // logVec4f(normal);
                 Q[0] = fabsf(Q[0]);
                 Q[1] = fabsf(Q[1]);
                 Q[2] = fabsf(Q[2]);
 
-                vec4f pivot = Q * (1.f - t_near) * normal;
+                pivot = obj->mvdir * obj->momentum * (t_near - (1.f / (movScalar * 0.5f)));
+                // pivot = Q * (1.f - t_near) * normal;
 
-                Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
-                obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
-                obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
+                if ( !__isnanf(t_near) && !__isinff(t_near)) {
 
-                obj->pivot += pivot;
+                    Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
+                    obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
+                    obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
+
+                    obj->pivot += pivot;
+                }
+
+                obj->momentum *= s->m[inner_inx].mass;
+                float dot =  dot_product(normal, obj->mvdir);
+                obj->mvdir = obj->mvdir - (dot * normal);
                 continue;
             }
             obj->overlap = 0;
-            // obj->grounded = 0;
         }
     }
 }
@@ -132,38 +132,62 @@ const void applyForces(Scene *s) {
     Mat4x4 trans;
     for (int i = 0; i < s->m_indexes; i++) {
 
-        if ( s->m[i].momentum >= 0 ) {
+        if ( s->m[i].type !=  Terrain ) {
 
-            s->m[i].momentum -= DeltaTime;
-            if ( s->m[i].momentum <= 0 ) {
-                s->m[i].momentum = s->m[i].roll = 0.f;
-                continue;
-            }
+            addMeshToQuad(&s->m[i]);
 
-            // EnvironmentCollision(&tf, s, &s->m[i]);
-            // objectEnvironmentCollision(&tf, s, &s->m[Player_1], DeltaTime);
+            // if ( s->m[i].momentum < 0 ) {
+            //     s->m[i].momentum = s->m[i].roll = 0.f;
+            //     continue;
+            // }
 
-            vec4f pivot = s->m[i].mvdir * s->m[i].momentum;
+            // if ( s->m[i].momentum >= 0 ) {
 
-            vec4f axis = { 1.f, 0.f, 0.f };
+                s->m[i].momentum *= 0.7f;
 
-            if (s->m[i].roll) {
-                s->m[i].roll = s->m[i].momentum * 10;
+                s->m[i].falling_time += DeltaTime;
+                const vec4f pull_point = { 0.f, -1.f, 0.f };
+                const float g_accelaration = (9.81f * s->m[i].falling_time) * s->m[i].mass;
 
-                Quat xrot = rotationQuat(s->m[i].roll, axis);
-                Mat4x4 m = MatfromQuat(xrot, s->m[i].pivot);
-                trans = mxm(m, translationMatrix(pivot[0], pivot[1], pivot[2]));
+                vec4f pivot = (pull_point * g_accelaration) + (s->m[i].mvdir * s->m[i].momentum);
+                // logVec4f(pivot);
+                // s->m[i].mvdir = norm_vec(pivot);
 
-                s->m[i].Q = multiplyQuats(s->m[i].Q, xrot);
-            } else {
-                trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
-            }
+                // pivot = s->m[i].mvdir * s->m[i].momentum;
+                // logVec4f(pivot);
 
-            s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
-            s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
+                // EnvironmentCollision(&tf, s, &s->m[i]);
+                objectEnvironmentCollision(&tf, s, &s->m[Player_1], pivot);
+                // if ( !objectEnvironmentCollision(&tf, s, &s->m[Player_1], pivot) ) {
 
-            s->m[i].pivot += pivot;
-            logVec4f(s->m[i].pivot);
+                    // pivot = (pull_point * g_accelaration) + (s->m[i].mvdir * s->m[i].momentum);
+                    vec4f axis = { 1.f, 0.f, 0.f };
+
+                    if (s->m[i].roll) {
+                        s->m[i].roll = s->m[i].momentum * 10;
+
+                        Quat xrot = rotationQuat(s->m[i].roll, axis);
+                        Mat4x4 m = MatfromQuat(xrot, s->m[i].pivot);
+                        trans = mxm(m, translationMatrix(pivot[0], pivot[1], pivot[2]));
+
+                        s->m[i].Q = multiplyQuats(s->m[i].Q, xrot);
+                    } else {
+                        trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
+                    }
+
+                    s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
+                    s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
+
+                    s->m[i].pivot += pivot;
+                // }
+
+                // EnvironmentCollision(&tf, s, &s->m[i]);
+                // objectEnvironmentCollision(&tf, s, &s->m[Player_1], DeltaTime);
+
+                objectTerrainCollision(&s->m[Terrain_1], &s->m[i]);
+                // EnvironmentCollision(&tf, s, &s->m[i]);
+                // objectEnvironmentCollision(&tf, s, &s->m[Player_1], pivot);
+            // }
         }
     }
 }
@@ -180,9 +204,9 @@ const void applyGravity(Scene *s) {
 
             //     s->m[i].falling_time += DeltaTime;
             //     const vec4f pull_point = { 0.f, -1.f, 0.f };
-            //     const float velocity = 9.81f * s->m[i].falling_time;
+            //     const float g_accelaration = 9.81f * s->m[i].falling_time;
 
-            //     vec4f pivot = (pull_point * velocity) + (s->m[i].mvdir * s->m[i].momentum);
+            //     vec4f pivot = (pull_point * g_accelaration) + (s->m[i].mvdir * s->m[i].momentum);
             //     s->m[i].mvdir = norm_vec(pivot);
 
             //     trans = translationMatrix(pivot[0], pivot[1], pivot[2]);

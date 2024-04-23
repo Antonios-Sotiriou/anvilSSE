@@ -106,13 +106,13 @@ vec4f camera[N + 1] = {
     { 0.0f, 0.0f, 1.0f, 0.0f }
 };
 Light sunlight = {
-    .pos = { 90.f, 100.0f, 90.f, 1.f },
+    .pos = { 90.f, 200.0f, 90.f, 1.f },
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
 };
 const float sunMov = 1.0f;
-const float movScalar = 20.f;
+const float movScalar = 200.f;
 
 /* Global Matrices */
 Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
@@ -331,7 +331,7 @@ const static void keypress(XEvent *event) {
             vec4f mvc = { 0.f, 1.f, 0.f };
             scene.m[1].mvdir = mvc;
             scene.m[1].momentum = movScalar * DeltaTime;
-            scene.m[1].falling_time = 0;
+            scene.m[1].falling_time = 0.f;
             break;
         case 65435 : //sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
             vec4f mvd = { 0.f, -1.f, 0.f };
@@ -426,8 +426,8 @@ const static void keypress(XEvent *event) {
     // scene.m[4].pivot = camera[U] + camera[N];
     // logVec4f(norm_vec(camera[U] + camera[N]));
 
-    applyForces(&scene);
-    objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], DeltaTime);
+    // applyForces(&scene);
+    // objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], DeltaTime);
 }
 static void *oscillator(void *args) {
 
@@ -460,21 +460,15 @@ static void *cascade(void *args) {
 }
 const static void applyPhysics(void) {
 
+    applyForces(&scene);
+
     /* At this spot shall be implemented collision between objects as a primitive implementation. */
     // if (scene.m[Player_1].momentum)
-        // objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], DeltaTime);
+    //     objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], DeltaTime);
 
-    // if (scene.m[Player_1].momentum)
-    //    logVec4f(scene.m[Player_1].mvdir);
+    // applyGravity(&scene); /* need world space */
+
     // printQuad(scene.m[Player_1].quadIndex);
-
-    // applyForces(&scene);
-    // if (scene.m[Player_1].momentum)
-    //     logVec4f(scene.m[Player_1].mvdir);
-
-    applyGravity(&scene); /* need world space */
-    // if (scene.m[Player_1].momentum)
-        // logVec4f(scene.m[Player_1].mvdir);
 
     displayVec4f(scene.m[Player_1].pivot, scene.m[Player_1].pivot + (scene.m[Player_1].mvdir * scene.m[Player_1].momentum), worldMat);
 }
@@ -730,7 +724,7 @@ const static int board(void) {
         }
 
         // printf("time_df: %f\n", DeltaTime);
-        usleep(0);
+        usleep(1000);
     }
 
     return EXIT_SUCCESS;

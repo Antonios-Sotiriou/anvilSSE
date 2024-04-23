@@ -37,7 +37,7 @@ const void initWorldObjects(Scene *s) {
 
     s->m[1].scale = 10.f;
 
-    s->m[1].pivot[0] = 90.f;
+    s->m[1].pivot[0] = 75.f;
     s->m[1].pivot[1] = 0.f;
     s->m[1].pivot[2] = 75.f;
 
@@ -88,7 +88,7 @@ const void initWorldObjects(Scene *s) {
     s->m[3].lodlevels = 0;
     // s->m[3].visible = 1;
     s->m[3].mass = 0.5;
-    s->m[3].grounded = 1;
+    // s->m[3].grounded = 1;
     s->m[3].Q = unitQuat();
     enWorldMesh(&s->m[3]);
 
