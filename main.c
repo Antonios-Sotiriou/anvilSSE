@@ -460,11 +460,11 @@ static void *cascade(void *args) {
 }
 const static void applyPhysics(void) {
 
-    applyForces(&scene);
-
     /* At this spot shall be implemented collision between objects as a primitive implementation. */
     // if (scene.m[Player_1].momentum)
-    //     objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], DeltaTime);
+    //     objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], );
+
+    applyForces(&scene);
 
     // applyGravity(&scene); /* need world space */
 

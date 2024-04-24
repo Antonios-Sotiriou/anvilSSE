@@ -23,7 +23,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
         return 0;
     }
 
-    vec4f D = (obj->pivot + velocity) - obj->pivot;
+    // vec4f D = (obj->pivot + velocity) - obj->pivot;
 
     obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
 
@@ -44,14 +44,15 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             float maxy = s->m[inner_inx].BB.maxY - (obj->pivot[1] - obj->BB.maxY);
             float maxz = s->m[inner_inx].BB.maxZ - (obj->pivot[2] - obj->BB.maxZ);
 
-            tnearx = (minx - obj->pivot[0]) / D[0];
-            tneary = (miny - obj->pivot[1]) / D[1];
-            tnearz = (minz - obj->pivot[2]) / D[2];
-            tfarx = (maxx - obj->pivot[0]) / D[0];
-            tfary = (maxy - obj->pivot[1]) / D[1];
-            tfarz = (maxz - obj->pivot[2]) / D[2];
-            // printf("x: %f    y: %f    z: %f  ", tnearx, tneary, tnearz);
-            // printf("x: %f    y: %f    z: %f\n", tfarx, tfary, tfarz);
+            tnearx = (minx - obj->pivot[0]) / velocity[0];
+            tneary = (miny - obj->pivot[1]) / velocity[1];
+            tnearz = (minz - obj->pivot[2]) / velocity[2];
+            tfarx = (maxx - obj->pivot[0]) / velocity[0];
+            tfary = (maxy - obj->pivot[1]) / velocity[1];
+            tfarz = (maxz - obj->pivot[2]) / velocity[2];
+
+            // printf("nx: %f    ny: %f    nz: %f\n", tnearx, tneary, tnearz);
+            // printf("fx: %f    fy: %f    fz: %f\n", tfarx, tfary, tfarz);
 
             // printf("minx: %f    miny: %f    minz: %f    maxx: %f    maxy: %f    maxz: %f\n", minx, miny, minz, maxx, maxy, maxz);
 
@@ -87,43 +88,47 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
 
             vec4f normal = { 0.f };
             if ( tnearx > tnearz ) {
-                if ( D[0] < 0 )
+                if ( velocity[0] < 0 )
                     normal[0] = 1.f;
                 else     
                     normal[0] = -1.f;
             } else if ( tnearx < tnearz ) {
-                if ( D[2] < 0 )
+                if ( velocity[2] < 0 )
                     normal[2] = 1.f;
                 else
                     normal[2] = -1.f;
             } else {
-                if ( D[1] < 0)
+                if ( velocity[1] < 0)
                     normal[1] = 1.f;
                 else
                     normal[1] = -1.f;
             }
 
-             vec4f pivot = { 0 };
+            vec4f pivot = { 0 };
             if ( t_near <= 1.f ) {
                 printf("Collision 1\n");
-                // printf("x: %f    y: %f    z: %f  ", tnearx, tneary, tnearz);
+                // printf("Collision 1 t_near: %f    floorf(t_near): %d\n", t_near, (int)(-1.5 + 0.6));
+                printf("x: %f    y: %f    z: %f  ", tnearx, tneary, tnearz);
                 // printf("x: %f    y: %f    z: %f\n", tfarx, tfary, tfarz);
 
-                // obj->momentum = 0;
+                obj->momentum = 0;
                 // s->m[inner_inx].mvdir = obj->mvdir;
                 // s->m[inner_inx].momentum = obj->momentum;
                 if (normal[1] == 1.f) {
                     obj->overlap = 1;
                 }
 
-                velocity[0] = fabsf(velocity[0]);
-                velocity[1] = fabsf(velocity[1]);
-                velocity[2] = fabsf(velocity[2]);
+                // velocity[0] = fabsf(velocity[0]);
+                // velocity[1] = fabsf(velocity[1]);
+                // velocity[2] = fabsf(velocity[2]);
 
-                pivot = D * (t_near - (1.f / (movScalar * 0.5f)));
+                // pivot = velocity * (t_near - (1.f / (movScalar * 0.5f)));
                 // pivot = velocity * (1.f - t_near) * normal;
 
                 if ( !__isnanf(t_near) && !__isinff(t_near)) {
+
+                    pivot = velocity * (t_near - (1.f / (movScalar * 0.5f)));
+                    // pivot = velocity * (1.f - t_near) * normal;
 
                     Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
                     obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
