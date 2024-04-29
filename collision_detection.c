@@ -51,8 +51,11 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             tfary = (maxy - obj->pivot[1]) / velocity[1];
             tfarz = (maxz - obj->pivot[2]) / velocity[2];
 
-            // printf("nx: %f    ny: %f    nz: %f\n", tnearx, tneary, tnearz);
-            // printf("fx: %f    fy: %f    fz: %f\n", tfarx, tfary, tfarz);
+            // printf("\x1b[H\x1b[J");
+            system("clear\n");
+            printf("nx: %f    ny: %f    nz: %f\n", tnearx, tneary, tnearz);
+            printf("fx: %f    fy: %f    fz: %f\n", tfarx, tfary, tfarz);
+            printf("Momentum: %f\n", obj->momentum);
 
             // printf("minx: %f    miny: %f    minz: %f    maxx: %f    maxy: %f    maxz: %f\n", minx, miny, minz, maxx, maxy, maxz);
 
@@ -108,10 +111,10 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             if ( t_near <= 1.f ) {
                 printf("Collision 1\n");
                 // printf("Collision 1 t_near: %f    floorf(t_near): %d\n", t_near, (int)(-1.5 + 0.6));
-                printf("x: %f    y: %f    z: %f  ", tnearx, tneary, tnearz);
+                // printf("x: %f    y: %f    z: %f  ", tnearx, tneary, tnearz);
                 // printf("x: %f    y: %f    z: %f\n", tfarx, tfary, tfarz);
 
-                obj->momentum = 0;
+                // obj->momentum = 0;
                 // s->m[inner_inx].mvdir = obj->mvdir;
                 // s->m[inner_inx].momentum = obj->momentum;
                 if (normal[1] == 1.f) {
@@ -129,13 +132,13 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
 
                     pivot = velocity * (t_near - (1.f / (movScalar * 0.5f)));
                     // pivot = velocity * (1.f - t_near) * normal;
-
-                    Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
-                    obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
-                    obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
-
-                    obj->pivot += pivot;
                 }
+
+                Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
+                obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
+                obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
+
+                obj->pivot += pivot;
 
                 obj->momentum *= s->m[inner_inx].mass;
                 float dot =  dot_product(normal, obj->mvdir);

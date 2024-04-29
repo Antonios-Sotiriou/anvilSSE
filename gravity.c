@@ -163,7 +163,7 @@ const void applyForces(Scene *s) {
 
                 // EnvironmentCollision(&tf, s, &s->m[i]);
                 // objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
-                if ( !objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity) ) {
+                if ( s->m[i].id == Player_1 && !objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity) ) {
                     // printf("Collision 1\n");
                     // velocity = (s->m[i].mvdir * s->m[i].momentum);
                     vec4f axis = { 1.f, 0.f, 0.f };
@@ -192,6 +192,13 @@ const void applyForces(Scene *s) {
                 // EnvironmentCollision(&tf, s, &s->m[i]);
                 // objectEnvironmentCollision(&tf, s, &s->m[Player_1], pivot);
             // }
+        }
+        // s->m[i].momentum *= s->m[i].mass;
+        // s->m[i].momentum = 0;
+        s->m[i].momentum -= DeltaTime;
+        if ( s->m[i].momentum < 0 ) {
+            s->m[i].momentum = s->m[i].roll = 0.f;
+            continue;
         }
     }
 }

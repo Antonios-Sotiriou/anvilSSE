@@ -112,7 +112,7 @@ Light sunlight = {
     .n = { 0.f, -1.f, 0.f, 0.f },
 };
 const float sunMov = 1.0f;
-const float movScalar = 200.f;
+const float movScalar = 20.f;
 
 /* Global Matrices */
 Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
@@ -271,7 +271,7 @@ const static void keypress(XEvent *event) {
 
     // printf("Key Pressed: %ld\n", keysym);
     // printf("\x1b[H\x1b[J");
-    system("clear\n");
+    // system("clear\n");
     // logEvent(*event);
 
     switch (keysym) {
@@ -339,8 +339,8 @@ const static void keypress(XEvent *event) {
             scene.m[1].momentum = movScalar * DeltaTime;
             break;
         case 65431 : //sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
-            // vec4f mve = norm_vec(camera[U] + camera[N]);
-            vec4f mve = { 0.f, 0.f, 1.f };
+            vec4f mve = norm_vec(camera[U] + camera[N]);
+            // vec4f mve = { 0.f, 0.f, 1.f };
             scene.m[1].mvdir = mve;
             scene.m[1].momentum = movScalar * DeltaTime;
             scene.m[1].roll = 1;
@@ -426,7 +426,7 @@ const static void keypress(XEvent *event) {
     // scene.m[4].pivot = camera[U] + camera[N];
     // logVec4f(norm_vec(camera[U] + camera[N]));
 
-    // applyForces(&scene);
+    applyForces(&scene);
     // objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], DeltaTime);
 }
 static void *oscillator(void *args) {
@@ -464,7 +464,7 @@ const static void applyPhysics(void) {
     // if (scene.m[Player_1].momentum)
     //     objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], );
 
-    applyForces(&scene);
+    // applyForces(&scene);
 
     // applyGravity(&scene); /* need world space */
 
