@@ -56,6 +56,8 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             printf("nx: %f    ny: %f    nz: %f\n", tnearx, tneary, tnearz);
             printf("fx: %f    fy: %f    fz: %f\n", tfarx, tfary, tfarz);
             printf("Momentum: %f\n", obj->momentum);
+            logVec4f(obj->mvdir);
+            logVec4f(obj->pivot);
 
             // printf("minx: %f    miny: %f    minz: %f    maxx: %f    maxy: %f    maxz: %f\n", minx, miny, minz, maxx, maxy, maxz);
 
@@ -107,49 +109,59 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                     normal[1] = -1.f;
             }
 
-            vec4f pivot = { 0 };
-            if ( t_near <= 1.f ) {
-                printf("Collision 1\n");
-                // printf("Collision 1 t_near: %f    floorf(t_near): %d\n", t_near, (int)(-1.5 + 0.6));
-                // printf("x: %f    y: %f    z: %f  ", tnearx, tneary, tnearz);
-                // printf("x: %f    y: %f    z: %f\n", tfarx, tfary, tfarz);
+            if ( !__isnanf(t_near) && !__isinff(t_near)) {
 
-                // obj->momentum = 0;
-                // s->m[inner_inx].mvdir = obj->mvdir;
-                // s->m[inner_inx].momentum = obj->momentum;
-                if (normal[1] == 1.f) {
-                    obj->overlap = 1;
-                }
+                vec4f pivot = { 0 };
+                const float bias = 1.f / (movScalar * 0.5f);
+                if ( t_near <= (1.f + 0.5) && t_near >= (1.f - 0.5) ) {
+                    printf("Sliding...\n");
+                } else if ( t_near < (1.f - 0.5) ) {
+                    printf("Collision 1\n");
+                    // printf("Collision 1 t_near: %f    floorf(t_near): %d\n", t_near, (int)(-1.5 + 0.6));
+                    // printf("x: %f    y: %f    z: %f  ", tnearx, tneary, tnearz);
+                    // printf("x: %f    y: %f    z: %f\n", tfarx, tfary, tfarz);
 
-                // velocity[0] = fabsf(velocity[0]);
-                // velocity[1] = fabsf(velocity[1]);
-                // velocity[2] = fabsf(velocity[2]);
+                    // obj->momentum = 0;
+                    // s->m[inner_inx].mvdir = obj->mvdir;
+                    // s->m[inner_inx].momentum = obj->momentum;
+                    if (normal[1] == 1.f) {
+                        obj->overlap = 1;
+                    }
 
-                // pivot = velocity * (t_near - (1.f / (movScalar * 0.5f)));
-                // pivot = velocity * (1.f - t_near) * normal;
+                    // velocity[0] = fabsf(velocity[0]);
+                    // velocity[1] = fabsf(velocity[1]);
+                    // velocity[2] = fabsf(velocity[2]);
 
-                if ( !__isnanf(t_near) && !__isinff(t_near)) {
-
-                    pivot = velocity * (t_near - (1.f / (movScalar * 0.5f)));
+                    // pivot = velocity * (t_near - (1.f / (movScalar * 0.5f)));
                     // pivot = velocity * (1.f - t_near) * normal;
+
+                    // if ( !__isnanf(t_near) && !__isinff(t_near)) {
+
+                        pivot = velocity * (t_near - bias);
+                        // pivot = velocity * (1.f - t_near) * normal;
+                    // }
+
+                    Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
+                    obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
+                    obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
+
+                    obj->pivot += pivot;
+
+                    obj->momentum *= s->m[inner_inx].mass;
+                    float dot =  dot_product(normal, obj->mvdir);
+                    obj->mvdir = obj->mvdir - (dot * normal);
+                    // logVec4f(normal);
+                    // logVec4f(obj->mvdir);
+                    obj->collisions++;
+                    // if (obj->collisions > 1)
+                    //     getc(stdin);
+
+                    return 1;
                 }
-
-                Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
-                obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
-                obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
-
-                obj->pivot += pivot;
-
-                obj->momentum *= s->m[inner_inx].mass;
-                float dot =  dot_product(normal, obj->mvdir);
-                obj->mvdir = obj->mvdir - (dot * normal);
+                obj->overlap = 0;
                 // logVec4f(normal);
                 // logVec4f(obj->mvdir);
-                return 1;
             }
-            obj->overlap = 0;
-            // logVec4f(normal);
-            // logVec4f(obj->mvdir);
         }
     }
     return 0;

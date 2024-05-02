@@ -259,6 +259,7 @@ const static void buttonpress(XEvent *event) {
     printf("X: %f\n", ((event->xbutton.x - (WIDTH / 2.00)) / (WIDTH / 2.00)));
     printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
     // DROPBALL = DROPBALL == 0 ? 1 : 0;
+    scene.m[Player_1].collisions = 0;
 }
 const static void keypress(XEvent *event) {
 
@@ -339,8 +340,8 @@ const static void keypress(XEvent *event) {
             scene.m[1].momentum = movScalar * DeltaTime;
             break;
         case 65431 : //sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
-            vec4f mve = norm_vec(camera[U] + camera[N]);
-            // vec4f mve = { 0.f, 0.f, 1.f };
+            // vec4f mve = norm_vec(camera[U] + camera[N]);
+            vec4f mve = { 0.f, 0.f, 1.f };
             scene.m[1].mvdir = mve;
             scene.m[1].momentum = movScalar * DeltaTime;
             scene.m[1].roll = 1;
@@ -426,7 +427,7 @@ const static void keypress(XEvent *event) {
     // scene.m[4].pivot = camera[U] + camera[N];
     // logVec4f(norm_vec(camera[U] + camera[N]));
 
-    applyForces(&scene);
+    // applyForces(&scene);
     // objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], DeltaTime);
 }
 static void *oscillator(void *args) {
@@ -464,7 +465,7 @@ const static void applyPhysics(void) {
     // if (scene.m[Player_1].momentum)
     //     objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], );
 
-    // applyForces(&scene);
+    applyForces(&scene);
 
     // applyGravity(&scene); /* need world space */
 
