@@ -109,7 +109,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                     normal[1] = -1.f;
             }
 
-            if ( !__isnanf(t_near) && !__isinff(t_near)) {
+            // if ( !__isnanf(t_near) && !__isinff(t_near)) {
 
                 vec4f pivot = { 0 };
                 const float bias = 1.f / (movScalar * 0.5f);
@@ -135,11 +135,11 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                     // pivot = velocity * (t_near - (1.f / (movScalar * 0.5f)));
                     // pivot = velocity * (1.f - t_near) * normal;
 
-                    // if ( !__isnanf(t_near) && !__isinff(t_near)) {
+                    if ( !__isnanf(t_near) && !__isinff(t_near)) {
 
                         pivot = velocity * (t_near - bias);
                         // pivot = velocity * (1.f - t_near) * normal;
-                    // }
+                    }
 
                     Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
                     obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
@@ -161,7 +161,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                 obj->overlap = 0;
                 // logVec4f(normal);
                 // logVec4f(obj->mvdir);
-            }
+            // }
         }
     }
     return 0;
