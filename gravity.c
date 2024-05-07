@@ -144,11 +144,11 @@ const void applyForces(Scene *s) {
             // if ( s->m[i].momentum >= 0 ) {
                 // printf("Momentum: %f\n", s->m[i].momentum);
                 // s->m[i].momentum *= s->m[i].mass;
-                // s->m[i].momentum -= DeltaTime;
-                // if ( s->m[i].momentum <= 0.1 ) {
-                //     s->m[i].momentum = s->m[i].roll = 0.f;
-                //     continue;
-                // }
+                s->m[i].momentum -= DeltaTime;
+                if ( s->m[i].momentum < 0 ) {
+                    s->m[i].momentum = s->m[i].roll = 0.f;
+                    // continue;
+                }
                 s->m[i].falling_time += DeltaTime;
                 const vec4f pull_point = { 0.f, -1.f, 0.f };
                 const float g_accelaration = (9.81f * s->m[i].falling_time) * s->m[i].mass;
@@ -165,7 +165,7 @@ const void applyForces(Scene *s) {
                 // objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
                 if ( s->m[i].id == Player_1 && !objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity) ) {
                     // printf("Collision 1\n");
-                    // velocity = (s->m[i].mvdir * s->m[i].momentum);
+                    velocity = (s->m[i].mvdir * s->m[i].momentum);
                     vec4f axis = { 1.f, 0.f, 0.f };
 
                     if (s->m[i].roll) {
@@ -195,11 +195,11 @@ const void applyForces(Scene *s) {
         }
         // s->m[i].momentum *= s->m[i].mass;
         // s->m[i].momentum = 0;
-        s->m[i].momentum -= DeltaTime;
-        if ( s->m[i].momentum < 0 ) {
-            s->m[i].momentum = s->m[i].roll = 0.f;
-            continue;
-        }
+        // s->m[i].momentum -= DeltaTime;
+        // if ( s->m[i].momentum < 0 ) {
+        //     s->m[i].momentum = s->m[i].roll = 0.f;
+        //     continue;
+        // }
     }
 }
 const void applyGravity(Scene *s) {

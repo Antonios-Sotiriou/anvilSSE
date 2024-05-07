@@ -37,12 +37,12 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
         if ( s->m[inner_inx].id != obj->id ) {
             s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
 
-            float minx = s->m[inner_inx].BB.minX - (obj->pivot[0] - obj->BB.minX);
-            float miny = s->m[inner_inx].BB.minY - (obj->pivot[1] - obj->BB.minY);
-            float minz = s->m[inner_inx].BB.minZ - (obj->pivot[2] - obj->BB.minZ);
-            float maxx = s->m[inner_inx].BB.maxX - (obj->pivot[0] - obj->BB.maxX);
-            float maxy = s->m[inner_inx].BB.maxY - (obj->pivot[1] - obj->BB.maxY);
-            float maxz = s->m[inner_inx].BB.maxZ - (obj->pivot[2] - obj->BB.maxZ);
+            int minx = (s->m[inner_inx].BB.minX - (obj->pivot[0] - obj->BB.minX)) + 0.5;
+            int miny = (s->m[inner_inx].BB.minY - (obj->pivot[1] - obj->BB.minY)) + 0.5;
+            int minz = (s->m[inner_inx].BB.minZ - (obj->pivot[2] - obj->BB.minZ)) + 0.5;
+            int maxx = (s->m[inner_inx].BB.maxX - (obj->pivot[0] - obj->BB.maxX)) + 0.5;
+            int maxy = (s->m[inner_inx].BB.maxY - (obj->pivot[1] - obj->BB.maxY)) + 0.5;
+            int maxz = (s->m[inner_inx].BB.maxZ - (obj->pivot[2] - obj->BB.maxZ)) + 0.5;
 
             tnearx = (minx - obj->pivot[0]) / velocity[0];
             tneary = (miny - obj->pivot[1]) / velocity[1];
@@ -53,13 +53,14 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
 
             // printf("\x1b[H\x1b[J");
             system("clear\n");
-            printf("nx: %f    ny: %f    nz: %f\n", tnearx, tneary, tnearz);
-            printf("fx: %f    fy: %f    fz: %f\n", tfarx, tfary, tfarz);
+            printf("minx: %d    miny: %d    minz: %d\n", minx, miny, minz);
+            printf("maxx: %d    maxy: %d    maxz: %d\n", maxx, maxy, maxz);
             printf("Momentum: %f\n", obj->momentum);
             logVec4f(obj->mvdir);
             logVec4f(obj->pivot);
 
-            // printf("minx: %f    miny: %f    minz: %f    maxx: %f    maxy: %f    maxz: %f\n", minx, miny, minz, maxx, maxy, maxz);
+            printf("nx: %f    ny: %f    nz: %f\n", tnearx, tneary, tnearz);
+            printf("fx: %f    fy: %f    fz: %f\n", tfarx, tfary, tfarz);
 
             if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
             if (tneary > tfary) swap(&tneary, &tfary, 4);
@@ -113,11 +114,16 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
 
                 vec4f pivot = { 0 };
                 const float bias = 1.f / (movScalar * 0.5f);
-                if ( t_near <= (1.f + 0.5) && t_near >= (1.f - 0.5) ) {
+                printf("t_near: %f    bias: %f\n", t_near, t_near - bias);
+                if ( t_near <= (0.1f) ) {
                     printf("Sliding...\n");
-                } else if ( t_near < (1.f - 0.5) ) {
-                    printf("Collision 1\n");
-                    // printf("Collision 1 t_near: %f    floorf(t_near): %d\n", t_near, (int)(-1.5 + 0.6));
+                    float dot =  dot_product(normal, obj->mvdir);
+                    obj->mvdir = obj->mvdir - (dot * normal);
+                    return 0;
+                } else if ( t_near <= (1.f) ) {
+                    // printf("Collision 1\n");
+                    printf("Collision 1 t_near: %f\n", t_near);
+                    // getc(stdin);
                     // printf("x: %f    y: %f    z: %f  ", tnearx, tneary, tnearz);
                     // printf("x: %f    y: %f    z: %f\n", tfarx, tfary, tfarz);
 
@@ -140,6 +146,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                         pivot = velocity * (t_near - bias);
                         // pivot = velocity * (1.f - t_near) * normal;
                     }
+                    logVec4f(pivot);
 
                     Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
                     obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
