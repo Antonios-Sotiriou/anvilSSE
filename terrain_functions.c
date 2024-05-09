@@ -72,8 +72,8 @@ const int getTerrainQuadIndex(Mesh *t, vec4f coords) {
 
     vec4f t_coords = coords - (t->pivot - (t->scale / 2.f));
     if ( (t_coords[0] >= t_limit || t_coords[0] < 0) || (t_coords[2] >= t_limit || t_coords[2] < 0) ) {
-        fprintf(stderr, "Out of terrain Limits -- getTerrainQuadIndex().\n");
-        return 0;
+        // fprintf(stderr, "Out of terrain Limits -- getTerrainQuadIndex().\n");
+        return -1;
     } 
 
     /* Function to get t quads indexes. */

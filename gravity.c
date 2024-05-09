@@ -134,8 +134,8 @@ const void applyForces(Scene *s) {
 
         if ( s->m[i].type !=  Terrain ) {
 
-            addMeshToQuad(&s->m[i]);
-
+            initMeshQuadInfo(&s->m[0], &s->m[i]);
+            // printf("Quad index: %d\n", s->m[1].quadIndex);
             // if ( s->m[i].momentum < 0 ) {
             //     s->m[i].momentum = s->m[i].roll = 0.f;
             //     continue;
