@@ -32,8 +32,8 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
     system("clear\n");
     // printQuad(obj->quadIndex);
     // logDm(obj->BB);
-    printf("Pivot before: ");
-    logVec4f(obj->pivot);
+    // printf("Pivot before: ");
+    // logVec4f(obj->pivot);
     // logDm(s->m[3].BB);
 
     const int num_of_members = tf->quads[obj->quadIndex].mems_indexes;
@@ -58,36 +58,35 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             tfary = (maxy - obj->pivot[1]) / velocity[1];
             tfarz = (maxz - obj->pivot[2]) / velocity[2];
 
+            // if (__isnanf(tnearx * tneary * tnearz * tfarx * tfary * tfarz))
+            //     continue;
 
-            // tnearx = __isnanf(tnearx) ? 0.f : tnearx;
-            // tneary = __isnanf(tneary) ? 0.f : tneary;
-            // tnearz = __isnanf(tnearz) ? 0.f : tnearz;
-            // tfarx = __isnanf(tfarx) ? 0.f : tfarx;
-            // tfary = __isnanf(tfary) ? 0.f : tfary;
-            // tfarz = __isnanf(tfarz) ? 0.f : tfarz;
+            // tnearx = __isnanf(tnearx) ? printf("tnearx NAN\n"), 0.f : tnearx;
+            // tneary = __isnanf(tneary) ? printf("tneary NAN\n"), 0.f : tneary;
+            // tnearz = __isnanf(tnearz) ? printf("tnearz NAN\n"), 0.f : tnearz;
+            // tfarx = __isnanf(tfarx) ? printf("tfarx NAN\n"), 0.f : tfarx;
+            // tfary = __isnanf(tfary) ? printf("tfary NAN\n"), 0.f : tfary;
+            // tfarz = __isnanf(tfarz) ? printf("tfarz NAN\n"), 0.f : tfarz;
 
-            printf("minx: %d    minz: %d\n", minx, minz);
-            printf("maxx: %d    maxz: %d\n", maxx, maxz);
-
-            printf("tnnearx: %f    tnnearz: %f\n", tnearx, tnearz);
-            printf("tfarx  : %f    tfarz  : %f\n", tfarx, tfarz);
 
             if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
             if (tnearz > tfarz) swap(&tnearz, &tfarz, 4);
 
+            // if ( (tnearx == tnearz) ) {
+            //     getc(stdin);
+            //     continue;
+            // }
 
             if (tnearx > tfarz || tnearz > tfarx) {
-                printf("tnearx > tfarz || tnearz > tfarx!\n");
-                // getc(stdin);
+                // printf("tnearx > tfarz || tnearz > tfarx!\n");
                 continue;
             }
 
             float t_near = tnearx > tnearz ? tnearx : tnearz;
             float t_far = tfarx < tfarz ? tfarx : tfarz;
 
-            if (t_far <= 0) { 
-                printf("t_far <= 0!\n");
-                // getc(stdin);
+            if (t_far < 0) { 
+                // printf("t_far <= 0!\n");
                 continue;
             }
 
@@ -111,6 +110,14 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             }
 
             vec4f pivot = { 0 };
+            printf("minx: %d    minz: %d\n", minx, minz);
+            printf("maxx: %d    maxz: %d\n", maxx, maxz);
+
+            printf("tnnearx: %f    tnnearz: %f\n", tnearx, tnearz);
+            printf("tfarx  : %f    tfarz  : %f\n", tfarx, tfarz);
+
+           if ( __isinf(tnearz))
+               printf("nearz: %f\n", tnearz * 0.f);
 
             if ( t_near == 0.f ) {
                 printf("Sliding...\n");
@@ -118,7 +125,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                 obj->mvdir = obj->mvdir - (dot * normal);
                 // getc(stdin);
                 return 0;
-            } else if ( (t_near > 0.f) && (t_near < 1.f) ) {
+            } else if ( ((t_near > 0.f) && (t_near <= 1.f)) && (!__isnanf(tnearx * tneary * tnearz * tfarx * tfary * tfarz)) ) {
                 printf("Collision 1 t_near: %f\n", t_near);
 
                 pivot = velocity * (t_near);
@@ -129,10 +136,10 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
 
                 obj->pivot += pivot;
 
-                printf("Pivot change: ");
-                logVec4f(pivot);
-                printf("Pivot after : ");
-                logVec4f(obj->pivot);
+                // printf("Pivot change: ");
+                // logVec4f(pivot);
+                // printf("Pivot after : ");
+                // logVec4f(obj->pivot);
                 // getc(stdin);
 
                 obj->momentum *= s->m[inner_inx].mass;
