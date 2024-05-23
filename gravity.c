@@ -149,57 +149,46 @@ const void applyForces(Scene *s) {
                     s->m[i].momentum = s->m[i].roll = 0.f;
                     // continue;
                 }
-                s->m[i].falling_time += DeltaTime;
-                const vec4f pull_point = { 0.f, -1.f, 0.f };
-                const float g_accelaration = (9.81f * s->m[i].falling_time) * s->m[i].mass;
 
-                vec4f velocity = (s->m[i].mvdir * s->m[i].momentum);
-                // vec4f velocity = (pull_point * g_accelaration) + (s->m[i].mvdir * s->m[i].momentum);
-                // logVec4f(velocity);
-                // s->m[i].mvdir = norm_vec(velocity);
+                if ( s->m[i].momentum > 0 ) {
+                    s->m[i].falling_time += DeltaTime;
+                    const vec4f pull_point = { 0.f, -1.f, 0.f };
+                    const float g_accelaration = (9.81f * s->m[i].falling_time) * s->m[i].mass;
 
-                // velocity = s->m[i].mvdir * s->m[i].momentum;
-                // logVec4f(velocity);
+                    // vec4f velocity = (s->m[i].mvdir * s->m[i].momentum);
+                    vec4f velocity = (pull_point * g_accelaration) + (s->m[i].mvdir * s->m[i].momentum);
 
-                // EnvironmentCollision(&tf, s, &s->m[i]);
-                // objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
-                if ( s->m[i].id == Player_1 && !objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity) ) {
-                    // printf("Collision 1\n");
-                    velocity = (s->m[i].mvdir * s->m[i].momentum);
-                    vec4f axis = { 1.f, 0.f, 0.f };
+                    if ( s->m[i].id == Player_1 ) {
+                        int collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
+                        if ( collide == 0 ) {
 
-                    if (s->m[i].roll) {
-                        s->m[i].roll = s->m[i].momentum * 10;
+                            // velocity = (s->m[i].mvdir * s->m[i].momentum);
+                            velocity = (pull_point * g_accelaration) + (s->m[i].mvdir * s->m[i].momentum);
+                            vec4f axis = { 1.f, 0.f, 0.f };
+                            logVec4f(velocity);
+                            if (s->m[i].roll) {
+                                s->m[i].roll = s->m[i].momentum * 10;
 
-                        Quat xrot = rotationQuat(s->m[i].roll, axis);
-                        Mat4x4 m = MatfromQuat(xrot, s->m[i].pivot);
-                        trans = mxm(m, translationMatrix(velocity[0], velocity[1], velocity[2]));
+                                Quat xrot = rotationQuat(s->m[i].roll, axis);
+                                Mat4x4 m = MatfromQuat(xrot, s->m[i].pivot);
+                                trans = mxm(m, translationMatrix(velocity[0], velocity[1], velocity[2]));
 
-                        s->m[i].Q = multiplyQuats(s->m[i].Q, xrot);
-                    } else {
-                        trans = translationMatrix(velocity[0], velocity[1], velocity[2]);
+                                s->m[i].Q = multiplyQuats(s->m[i].Q, xrot);
+                            } else {
+                                trans = translationMatrix(velocity[0], velocity[1], velocity[2]);
+                            }
+
+                            s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
+                            s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
+
+                            s->m[i].pivot += velocity;
+                        }
                     }
 
-                    s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
-                    s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
-
-                    s->m[i].pivot += velocity;
                 }
-                // EnvironmentCollision(&tf, s, &s->m[i]);
-                // objectEnvironmentCollision(&tf, s, &s->m[Player_1], DeltaTime);
-                // if ( !s->m[i].grounded )
-                    objectTerrainCollision(&s->m[Terrain_1], &s->m[i]);
-                // EnvironmentCollision(&tf, s, &s->m[i]);
-                // objectEnvironmentCollision(&tf, s, &s->m[Player_1], pivot);
-            // }
+
+                objectTerrainCollision(&s->m[Terrain_1], &s->m[i]);
         }
-        // s->m[i].momentum *= s->m[i].mass;
-        // s->m[i].momentum = 0;
-        // s->m[i].momentum -= DeltaTime;
-        // if ( s->m[i].momentum < 0 ) {
-        //     s->m[i].momentum = s->m[i].roll = 0.f;
-        //     continue;
-        // }
     }
 }
 const void applyGravity(Scene *s) {
