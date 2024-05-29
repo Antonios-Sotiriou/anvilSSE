@@ -23,18 +23,11 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
         return 0;
     }
 
-    // vec4f D = (obj->pivot + velocity) - obj->pivot;
-
     obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
 
     float tnearx, tneary, tnearz, tfarx, tfary, tfarz;
 
     system("clear\n");
-    // printQuad(obj->quadIndex);
-    // logDm(obj->BB);
-    // printf("Pivot before: ");
-    // logVec4f(obj->pivot);
-    // logDm(s->m[3].BB);
 
     const int num_of_members = tf->quads[obj->quadIndex].mems_indexes;
     for (int i = 0; i < num_of_members; i++) {
@@ -57,6 +50,9 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             tfarx = (maxx - obj->pivot[0]) / velocity[0];
             tfary = (maxy - obj->pivot[1]) / velocity[1];
             tfarz = (maxz - obj->pivot[2]) / velocity[2];
+
+            // const float check_nan = tnearx * tneary * tnearz * tfarx * tfary * tfarz;
+            // printf("\ncheck_nan: %f\n", check_nan);
 
             if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
             if (tneary > tfary) swap(&tneary, &tfary, 4);
@@ -89,71 +85,77 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             }
             /* ##################### Y ############################ */
 
-            if (t_far < 0) { 
+            if (t_far < 0 || t_near < 0) { 
                 // printf("t_far <= 0!\n");
                 continue;
             }
 
             vec4f normal = { 0.f };
-            if ( tnearx > tnearz ) {
-                if ( velocity[0] < 0 ) {
-                    normal[0] = 1.f;
-                    printf("Right\n");
-                } else {     
-                    normal[0] = -1.f;
-                    printf("Left\n");
-                }
-            } else if ( tnearx < tnearz ) {
-                if ( velocity[2] < 0 ) {
-                    normal[2] = 1.f;
-                    printf("Front\n");
+            // if (!__isnanf(tnearx * tneary * tnearz * tfarx * tfary * tfarz)) {
+                if ( tnearx >= tneary && tnearx >= tnearz ) {
+                    if ( velocity[0] < 0 ) {
+                        normal[0] = 1.f;
+                        printf("Right\n");
+                    } else if ( velocity[0] > 0 ) {     
+                        normal[0] = -1.f;
+                        printf("Left\n");
+                    }
+                } else if ( tneary >= tnearx && tneary >= tnearz ) {
+                    if ( velocity[1] < 0 ) {
+                        normal[1] = 1.f;
+                        printf("Up\n");
+                    } else if ( velocity[1] > 0 ) {
+                        normal[1] = -1.f;
+                        printf("Down\n");
+                    }
+                } else if ( tnearz >= tnearx && tnearz >= tneary ) {
+                    if ( velocity[2] < 0 ) {
+                        normal[2] = 1.f;
+                        printf("Back\n");
+                    } else if ( velocity[2] > 0 ) {
+                        normal[2] = -1.f;
+                        printf("Front\n");
+                    }
                 } else {
-                    normal[2] = -1.f;
-                    printf("Back\n");
+                    printf("EXTRA CASE\n");
                 }
-            } else {
-                if ( velocity[1] < 0) {
-                    // normal[0] = 0.f;
-                    normal[1] = 1.f;
-                    // normal[2] = 0.f;
-                    printf("Up\n");
-                } else {
-                    // normal[0] = 0.f;
-                    normal[1] = -1.f;
-                    // normal[2] = 0.f;
-                    printf("Down\n");
-                }
-            }
+            // }
 
-            vec4f pivot = { 0 };
             // printf("minx: %d    miny: %d    minz: %d\n", minx, miny, minz);
             // printf("maxx: %d    maxy: %d    maxz: %d\n", maxx, maxy, maxz);
 
-            // printf("tnnearx: %f    tnneary: %f    tnnearz: %f\n", tnearx, tneary, tnearz);
-            // printf("tfarx  : %f    tfary  : %f    tfarz  : %f\n", tfarx, tfary, tfarz);
-            // logVec4f(normal);
+            printf("tnearx: %f    tneary: %f    tnearz: %f\n", tnearx, tneary, tnearz);
+            printf("tfarx  : %f    tfary  : %f    tfarz  : %f\n", tfarx, tfary, tfarz);
+            // logVec4f(dot_product(obj->pivot, s->m[inner_inx].pivot) * velocity);
 
             if ( t_near == 0.f ) {
-                printf("Sliding 1 t_near: %f\n", t_near);
+                printf("Sliding:   t_near = %f", t_near);
+                // if ( tneary == 0.f || tfary == 0.f )
+                //     return 1;
                 float dot =  dot_product(normal, obj->mvdir);
                 obj->mvdir = obj->mvdir - (dot * normal);
+                // logVec4f(obj->mvdir);
+                // getc(stdin);
+                if ( tneary == 0.f || tfary == 0.f )
+                    return 1;
                 return 0;
-            } else if ( ((t_near > 0.f) && (t_near <= 1.f)) && (!__isnanf(tnearx * tneary * tnearz * tfarx * tfary * tfarz)) ) {
-                printf("Collision 1 t_near: %f\n", t_near);
+            } else if ( ((t_near > 0.f) && (t_near <= 1.f)) && (!__isnanf(tnearx * tneary * tnearz * tfarx * tfary * tfarz) || (tnearx == 0 || tneary == 0 || tnearz == 0)) ) {
+                printf("Collision: t_near = %f", t_near);
+                // && (!__isnanf(tnearx * tneary * tnearz * tfarx * tfary * tfarz))
+                velocity *= t_near;
 
-                pivot = velocity * (t_near);
-
-                Mat4x4 trans = translationMatrix(pivot[0], pivot[1], pivot[2]);
+                Mat4x4 trans = translationMatrix(velocity[0], velocity[1], velocity[2]);
                 obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
                 obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
 
-                obj->pivot += pivot;
+                obj->pivot += velocity;
 
                 obj->momentum *= s->m[inner_inx].mass;
                 float dot =  dot_product(normal, obj->mvdir);
                 obj->mvdir = obj->mvdir - (dot * normal);
-
-                return 1;
+                // logVec4f(obj->mvdir);
+                // getc(stdin);
+                return 2;
             }
         }
     }

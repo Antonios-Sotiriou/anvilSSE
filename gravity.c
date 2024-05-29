@@ -135,59 +135,57 @@ const void applyForces(Scene *s) {
         if ( s->m[i].type !=  Terrain ) {
 
             initMeshQuadInfo(&s->m[0], &s->m[i]);
-            // printf("Quad index: %d\n", s->m[1].quadIndex);
-            // if ( s->m[i].momentum < 0 ) {
-            //     s->m[i].momentum = s->m[i].roll = 0.f;
-            //     continue;
-            // }
 
-            // if ( s->m[i].momentum >= 0 ) {
-                // printf("Momentum: %f\n", s->m[i].momentum);
-                // s->m[i].momentum *= s->m[i].mass;
-                s->m[i].momentum -= DeltaTime;
-                if ( s->m[i].momentum < 0 ) {
-                    s->m[i].momentum = s->m[i].roll = 0.f;
-                    // continue;
-                }
+            s->m[i].momentum -= DeltaTime;
+            if ( s->m[i].momentum < 0 ) {
+                s->m[i].momentum = s->m[i].roll = 0.f;
+                // continue;
+            }
 
-                if ( s->m[i].momentum > 0 ) {
-                    s->m[i].falling_time += DeltaTime;
-                    const vec4f pull_point = { 0.f, -1.f, 0.f };
-                    const float g_accelaration = (9.81f * s->m[i].falling_time) * s->m[i].mass;
+            if ( s->m[i].momentum > 0 ) {
+                s->m[i].falling_time += DeltaTime;
+                const vec4f pull_point = { 0.f, -1.f, 0.f };
+                const float g_accelaration = (9.81f * s->m[i].falling_time) * s->m[i].mass;
 
-                    // vec4f velocity = (s->m[i].mvdir * s->m[i].momentum);
-                    vec4f velocity = (pull_point * g_accelaration) + (s->m[i].mvdir * s->m[i].momentum);
+                // vec4f velocity = (s->m[i].mvdir * s->m[i].momentum);
+                vec4f velocity = (pull_point * g_accelaration) + (s->m[i].mvdir * s->m[i].momentum);
 
-                    if ( s->m[i].id == Player_1 ) {
-                        int collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
-                        if ( collide == 0 ) {
+                if ( s->m[i].id == Player_1 ) {
+                    int collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
+                    if ( collide <= 1 ) {
 
-                            // velocity = (s->m[i].mvdir * s->m[i].momentum);
+                        if ( collide == 1 ) {
+
+                            velocity = (s->m[i].mvdir * s->m[i].momentum);
+                        } else if ( collide == 0) {
+
                             velocity = (pull_point * g_accelaration) + (s->m[i].mvdir * s->m[i].momentum);
-                            vec4f axis = { 1.f, 0.f, 0.f };
-                            logVec4f(velocity);
-                            if (s->m[i].roll) {
-                                s->m[i].roll = s->m[i].momentum * 10;
-
-                                Quat xrot = rotationQuat(s->m[i].roll, axis);
-                                Mat4x4 m = MatfromQuat(xrot, s->m[i].pivot);
-                                trans = mxm(m, translationMatrix(velocity[0], velocity[1], velocity[2]));
-
-                                s->m[i].Q = multiplyQuats(s->m[i].Q, xrot);
-                            } else {
-                                trans = translationMatrix(velocity[0], velocity[1], velocity[2]);
-                            }
-
-                            s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
-                            s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
-
-                            s->m[i].pivot += velocity;
                         }
-                    }
 
+                        vec4f axis = { 1.f, 0.f, 0.f };
+
+                        if (s->m[i].roll) {
+                            s->m[i].roll = s->m[i].momentum * 10;
+
+                            Quat xrot = rotationQuat(s->m[i].roll, axis);
+                            Mat4x4 m = MatfromQuat(xrot, s->m[i].pivot);
+                            trans = mxm(m, translationMatrix(velocity[0], velocity[1], velocity[2]));
+
+                            s->m[i].Q = multiplyQuats(s->m[i].Q, xrot);
+                        } else {
+                            trans = translationMatrix(velocity[0], velocity[1], velocity[2]);
+                        }
+
+                        s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
+                        s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
+
+                        s->m[i].pivot += velocity;
+                    }
                 }
 
-                objectTerrainCollision(&s->m[Terrain_1], &s->m[i]);
+            }
+
+            objectTerrainCollision(&s->m[Terrain_1], &s->m[i]);
         }
     }
 }
