@@ -98,7 +98,7 @@ typedef struct {
     int v_indexes, n_indexes, t_indexes, f_indexes, /* vectors, normals, textors and faces indexes summary. */
     type,                                           /* type of the Mesh. Not sure yet how to categorize them. */
     cull, lodlevels, currentlod, visible,           /* visibillity and lod or texture lod usefull variables. */
-    floating, grounded, collide, collisions,        /* variables usefull for physics and kinetics.  */
+    floating, grounded, collide,                    /* variables usefull for physics and kinetics.  */
     quadInit, quadIndex, id,                        /* Terrain quad position and id of meshes index in the scene. */
     overlap;                                        /* flag to check if an object is above another object. Usefull for collisions with stairs */
     float scale, falling_time,                      /* Scale of the mesh and the time that is on Air. */

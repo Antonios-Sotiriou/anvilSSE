@@ -111,6 +111,7 @@ Light sunlight = {
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
 };
+const vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 1.0f;
 const float movScalar = 100.f;
 
@@ -259,7 +260,6 @@ const static void buttonpress(XEvent *event) {
     printf("X: %f\n", ((event->xbutton.x - (WIDTH / 2.00)) / (WIDTH / 2.00)));
     printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
     // DROPBALL = DROPBALL == 0 ? 1 : 0;
-    scene.m[Player_1].collisions = 0;
 }
 const static void keypress(XEvent *event) {
 

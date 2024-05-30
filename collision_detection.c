@@ -2,6 +2,7 @@
 
 #include "headers/logging.h"
 extern float DeltaTime, movScalar;
+extern vec4f gravity_epicenter;
 
 const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
     const float height = getTerrainHeight(terrain, object->pivot, object);
@@ -17,7 +18,7 @@ const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
         object->pivot[1] += height_diff;
     }
 }
-const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f velocity) {
+const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *velocity) {
     if (obj->quadIndex < 0) {
         // fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
         return 0;
@@ -26,8 +27,6 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
     obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
 
     float tnearx, tneary, tnearz, tfarx, tfary, tfarz;
-
-    system("clear\n");
 
     const int num_of_members = tf->quads[obj->quadIndex].mems_indexes;
     for (int i = 0; i < num_of_members; i++) {
@@ -44,12 +43,12 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             int maxy = (s->m[inner_inx].BB.maxY - (obj->pivot[1] - obj->BB.maxY)) + 0.5;
             int maxz = (s->m[inner_inx].BB.maxZ - (obj->pivot[2] - obj->BB.maxZ)) + 0.5;
 
-            tnearx = (minx - obj->pivot[0]) / velocity[0];
-            tneary = (miny - obj->pivot[1]) / velocity[1];
-            tnearz = (minz - obj->pivot[2]) / velocity[2];
-            tfarx = (maxx - obj->pivot[0]) / velocity[0];
-            tfary = (maxy - obj->pivot[1]) / velocity[1];
-            tfarz = (maxz - obj->pivot[2]) / velocity[2];
+            tnearx = (minx - obj->pivot[0]) / velocity[0][0];
+            tneary = (miny - obj->pivot[1]) / velocity[0][1];
+            tnearz = (minz - obj->pivot[2]) / velocity[0][2];
+            tfarx = (maxx - obj->pivot[0]) / velocity[0][0];
+            tfary = (maxy - obj->pivot[1]) / velocity[0][1];
+            tfarz = (maxz - obj->pivot[2]) / velocity[0][2];
 
             // const float check_nan = tnearx * tneary * tnearz * tfarx * tfary * tfarz;
             // printf("\ncheck_nan: %f\n", check_nan);
@@ -85,7 +84,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             }
             /* ##################### Y ############################ */
 
-            if (t_far < 0 || t_near < 0) { 
+            if (t_far <= 0) { 
                 // printf("t_far <= 0!\n");
                 continue;
             }
@@ -93,26 +92,26 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             vec4f normal = { 0.f };
             // if (!__isnanf(tnearx * tneary * tnearz * tfarx * tfary * tfarz)) {
                 if ( tnearx >= tneary && tnearx >= tnearz ) {
-                    if ( velocity[0] < 0 ) {
+                    if ( velocity[0][0] < 0 ) {
                         normal[0] = 1.f;
                         printf("Right\n");
-                    } else if ( velocity[0] > 0 ) {     
+                    } else if ( velocity[0][0] > 0 ) {     
                         normal[0] = -1.f;
                         printf("Left\n");
                     }
                 } else if ( tneary >= tnearx && tneary >= tnearz ) {
-                    if ( velocity[1] < 0 ) {
+                    if ( velocity[0][1] < 0 ) {
                         normal[1] = 1.f;
                         printf("Up\n");
-                    } else if ( velocity[1] > 0 ) {
+                    } else if ( velocity[0][1] > 0 ) {
                         normal[1] = -1.f;
                         printf("Down\n");
                     }
                 } else if ( tnearz >= tnearx && tnearz >= tneary ) {
-                    if ( velocity[2] < 0 ) {
+                    if ( velocity[0][2] < 0 ) {
                         normal[2] = 1.f;
                         printf("Back\n");
-                    } else if ( velocity[2] > 0 ) {
+                    } else if ( velocity[0][2] > 0 ) {
                         normal[2] = -1.f;
                         printf("Front\n");
                     }
@@ -129,33 +128,35 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             // logVec4f(dot_product(obj->pivot, s->m[inner_inx].pivot) * velocity);
 
             if ( t_near == 0.f ) {
-                printf("Sliding:   t_near = %f", t_near);
-                // if ( tneary == 0.f || tfary == 0.f )
-                //     return 1;
+                printf("Sliding:   t_near = %f\n", t_near);
+
                 float dot =  dot_product(normal, obj->mvdir);
                 obj->mvdir = obj->mvdir - (dot * normal);
-                // logVec4f(obj->mvdir);
-                // getc(stdin);
-                if ( tneary == 0.f || tfary == 0.f )
-                    return 1;
-                return 0;
-            } else if ( ((t_near > 0.f) && (t_near <= 1.f)) && (!__isnanf(tnearx * tneary * tnearz * tfarx * tfary * tfarz) || (tnearx == 0 || tneary == 0 || tnearz == 0)) ) {
-                printf("Collision: t_near = %f", t_near);
-                // && (!__isnanf(tnearx * tneary * tnearz * tfarx * tfary * tfarz))
-                velocity *= t_near;
 
-                Mat4x4 trans = translationMatrix(velocity[0], velocity[1], velocity[2]);
+                if ( tneary == 0.f ) {
+                    velocity[0] = (obj->mvdir * obj->momentum);
+                } else {
+                    velocity[0] = (gravity_epicenter * (9.81f * obj->falling_time) * obj->mass) + (obj->mvdir * obj->momentum);
+                }
+                // continue;
+
+            } else if ( ((t_near > 0.f) && (t_near <= 1.f)) && (!__isnanf(tnearx * tneary * tnearz * tfarx * tfary * tfarz) || (tnearx == 0 || tneary == 0 || tnearz == 0)) ) {
+                printf("Collision: t_near = %f\n", t_near);
+
+                velocity[0] *= t_near;
+
+                Mat4x4 trans = translationMatrix(velocity[0][0], velocity[0][1], velocity[0][2]);
                 obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
                 obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
 
-                obj->pivot += velocity;
+                obj->pivot += velocity[0];
 
                 obj->momentum *= s->m[inner_inx].mass;
                 float dot =  dot_product(normal, obj->mvdir);
                 obj->mvdir = obj->mvdir - (dot * normal);
-                // logVec4f(obj->mvdir);
-                // getc(stdin);
-                return 2;
+                velocity[0] = (gravity_epicenter * (9.81f * obj->falling_time) * obj->mass) + (obj->mvdir * obj->momentum);
+
+                // return 1;
             }
         }
     }
