@@ -104,7 +104,8 @@ typedef struct {
     float scale, falling_time,                      /* Scale of the mesh and the time that is on Air. */
     momentum,                                       /* The momentum of the mesh. */
     roll,                                           /* If the mesh is rolling like wheels. */
-    mass;                                           /* Mass of the mesh. */
+    mass,                                           /* Mass of the mesh. */
+    collision_t;                                    /* Collison time, usefull to sort the collisions. */
     DimensionsLimits BB;
     Material material;
 } Mesh;
@@ -147,8 +148,8 @@ typedef struct {
 } Scene;
 
 typedef struct {
-    unsigned int *mems;
-    unsigned int mems_indexes;
+    unsigned int *members;
+    unsigned int members_indexes;
 } Quad;
 
 typedef struct {

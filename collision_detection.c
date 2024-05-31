@@ -28,10 +28,10 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
 
     float tnearx, tneary, tnearz, tfarx, tfary, tfarz;
 
-    const int num_of_members = tf->quads[obj->quadIndex].mems_indexes;
+    const int num_of_members = tf->quads[obj->quadIndex].members_indexes;
     for (int i = 0; i < num_of_members; i++) {
 
-        int inner_inx = tf->quads[obj->quadIndex].mems[i];
+        int inner_inx = tf->quads[obj->quadIndex].members[i];
 
         if ( s->m[inner_inx].id != obj->id ) {
             s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
@@ -49,9 +49,6 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             tfarx = (maxx - obj->pivot[0]) / velocity[0][0];
             tfary = (maxy - obj->pivot[1]) / velocity[0][1];
             tfarz = (maxz - obj->pivot[2]) / velocity[0][2];
-
-            // const float check_nan = tnearx * tneary * tnearz * tfarx * tfary * tfarz;
-            // printf("\ncheck_nan: %f\n", check_nan);
 
             if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
             if (tneary > tfary) swap(&tneary, &tfary, 4);
@@ -84,7 +81,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             }
             /* ##################### Y ############################ */
 
-            if (t_far <= 0) { 
+            if (t_far < 0 || t_near < 0 ) { 
                 // printf("t_far <= 0!\n");
                 continue;
             }
@@ -117,11 +114,15 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                     }
                 } else {
                     printf("EXTRA CASE\n");
+                    // continue;
                 }
             // }
 
             // printf("minx: %d    miny: %d    minz: %d\n", minx, miny, minz);
             // printf("maxx: %d    maxy: %d    maxz: %d\n", maxx, maxy, maxz);
+            printf("id: %d\n", s->m[inner_inx].id);
+            const float check_nan = tnearx * tneary * tnearz * tfarx * tfary * tfarz;
+            printf("check_nan:    ----> %f\n", check_nan);
 
             printf("tnearx: %f    tneary: %f    tnearz: %f\n", tnearx, tneary, tnearz);
             printf("tfarx  : %f    tfary  : %f    tfarz  : %f\n", tfarx, tfary, tfarz);
@@ -133,12 +134,14 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                 float dot =  dot_product(normal, obj->mvdir);
                 obj->mvdir = obj->mvdir - (dot * normal);
 
-                if ( tneary == 0.f ) {
+                if ( tneary == 0.f || tfary == 0.f) {
                     velocity[0] = (obj->mvdir * obj->momentum);
+                    // continue;
                 } else {
                     velocity[0] = (gravity_epicenter * (9.81f * obj->falling_time) * obj->mass) + (obj->mvdir * obj->momentum);
                 }
                 // continue;
+                // return 0;
 
             } else if ( ((t_near > 0.f) && (t_near <= 1.f)) && (!__isnanf(tnearx * tneary * tnearz * tfarx * tfary * tfarz) || (tnearx == 0 || tneary == 0 || tnearz == 0)) ) {
                 printf("Collision: t_near = %f\n", t_near);
@@ -159,10 +162,76 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                 // return 1;
             }
         }
+        printf("\n");
     }
-    printf("Nothing happened\n");
     return 0;
 }
+const void sortObjectCollisions(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *velocity) {
+    if (obj->quadIndex < 0) {
+        // fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
+        return;
+    }
 
+    obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
+
+    float tnearx, tneary, tnearz, tfarx, tfary, tfarz;
+
+    const int num_of_members = tf->quads[obj->quadIndex].members_indexes;
+    for (int i = 0; i < num_of_members; i++) {
+
+        int inner_inx = tf->quads[obj->quadIndex].members[i];
+
+        if ( s->m[inner_inx].id != obj->id ) {
+            s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
+
+            int minx = (s->m[inner_inx].BB.minX - (obj->pivot[0] - obj->BB.minX)) + 0.5;
+            int miny = (s->m[inner_inx].BB.minY - (obj->pivot[1] - obj->BB.minY)) + 0.5;
+            int minz = (s->m[inner_inx].BB.minZ - (obj->pivot[2] - obj->BB.minZ)) + 0.5;
+            int maxx = (s->m[inner_inx].BB.maxX - (obj->pivot[0] - obj->BB.maxX)) + 0.5;
+            int maxy = (s->m[inner_inx].BB.maxY - (obj->pivot[1] - obj->BB.maxY)) + 0.5;
+            int maxz = (s->m[inner_inx].BB.maxZ - (obj->pivot[2] - obj->BB.maxZ)) + 0.5;
+
+            tnearx = (minx - obj->pivot[0]) / velocity[0][0];
+            tneary = (miny - obj->pivot[1]) / velocity[0][1];
+            tnearz = (minz - obj->pivot[2]) / velocity[0][2];
+            tfarx = (maxx - obj->pivot[0]) / velocity[0][0];
+            tfary = (maxy - obj->pivot[1]) / velocity[0][1];
+            tfarz = (maxz - obj->pivot[2]) / velocity[0][2];
+
+            if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
+            if (tneary > tfary) swap(&tneary, &tfary, 4);
+            if (tnearz > tfarz) swap(&tnearz, &tfarz, 4);
+
+            if (tnearx > tfarz || tnearz > tfarx) {
+                continue;
+            }
+
+            float t_near = tnearx > tnearz ? tnearx : tnearz;
+            float t_far = tfarx < tfarz ? tfarx : tfarz;
+
+            if (t_near > tfary || tneary > t_far) {
+                continue;
+            }
+
+            if (tneary > t_near) {
+                t_near = tneary;
+            }
+            if (tfary < t_far) {
+                t_far = tfary;
+            }
+
+            if (t_far <= 0) { 
+                continue;
+            }
+
+            s->m[inner_inx].collision_t = t_near;
+            for (int j = 0; j < num_of_members; j++) {
+                int most_inner_inx = tf->quads[obj->quadIndex].members[j];
+                if (s->m[inner_inx].collision_t <= s->m[most_inner_inx].collision_t)
+                    swap(&tf->quads[obj->quadIndex].members[i], &tf->quads[obj->quadIndex].members[j], 4);
+            }
+        }
+    }
+}
 
 

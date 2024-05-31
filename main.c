@@ -198,8 +198,8 @@ const static void clientmessage(XEvent *event) {
         free(shadow_buffer[2]);
 
         for (int i = 0; i < tf.quadsArea; i++) {
-            if (tf.quads[i].mems)
-                free(tf.quads[i].mems);
+            if (tf.quads[i].members)
+                free(tf.quads[i].members);
         }
         free(tf.quads);
 

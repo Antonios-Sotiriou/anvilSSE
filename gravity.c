@@ -19,10 +19,10 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
     float tnearx, tneary, tnearz, tfarx, tfary, tfarz;
 
-    const int num_of_members = tf->quads[obj->quadIndex].mems_indexes;
+    const int num_of_members = tf->quads[obj->quadIndex].members_indexes;
     for (int i = 0; i < num_of_members; i++) {
 
-        int inner_inx = tf->quads[obj->quadIndex].mems[i];
+        int inner_inx = tf->quads[obj->quadIndex].members[i];
 
         if ( s->m[inner_inx].id != obj->id ) {
             s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
@@ -156,11 +156,12 @@ const void applyForces(Scene *s) {
                 // logVec4f(velocity[0]);
 
                 if ( s->m[i].id == Player_1 ) {
+                    sortObjectCollisions(&tf, s, &s->m[Player_1], velocity);
                     int collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
                     // if (!collide)
-                    //     collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
+                        collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
                     // if (!collide)
-                    //     collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
+                        // collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
 
                     vec4f axis = { 1.f, 0.f, 0.f };
 

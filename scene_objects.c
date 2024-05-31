@@ -1,6 +1,6 @@
 #include "headers/scene_objects.h"
 
-#define MESH_NUM 5
+#define MESH_NUM 6
 
 /* This function is responsible to position the objects in world space. */
 const void initWorldObjects(Scene *s) {
@@ -100,16 +100,35 @@ const void initWorldObjects(Scene *s) {
     s->m[4].id = 4;
     
     s->m[4].scale = 10.f;
-    s->m[4].pivot[0] = 75;
+    s->m[4].pivot[0] = 80;
     s->m[4].pivot[1] = 0;
     s->m[4].pivot[2] = 120;
     s->m[4].cull = 1;
     s->m[4].lodlevels = 0;
-    // s->m[3].visible = 1;
+    // s->m[4].visible = 1;
     s->m[4].mass = 0.5;
     // s->m[4].grounded = 1;
     s->m[4].Q = unitQuat();
     enWorldMesh(&s->m[4]);
+
+    /* ######################################################################################################## */
+    createCube(&s->m[5]);
+    loadmaterial(&s->m[5].material, "emerald");
+
+    s->m[5].type = MovingObject;
+    s->m[5].id = 5;
+    
+    s->m[5].scale = 10.f;
+    s->m[5].pivot[0] = 80;
+    s->m[5].pivot[1] = 30;
+    s->m[5].pivot[2] = 100;
+    s->m[5].cull = 1;
+    s->m[5].lodlevels = 0;
+    // s->m[5].visible = 1;
+    s->m[5].mass = 0.5;
+    // s->m[5].grounded = 1;
+    s->m[5].Q = unitQuat();
+    enWorldMesh(&s->m[5]);
 
     /* ######################################################################################################## */
     // for (int i = 5; i < MESH_NUM; i++) {
