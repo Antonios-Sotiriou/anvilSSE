@@ -82,7 +82,7 @@ const void initWorldObjects(Scene *s) {
     
     s->m[3].scale = 10.f;
     s->m[3].pivot[0] = 100;
-    s->m[3].pivot[1] = 0;
+    s->m[3].pivot[1] = 30;
     s->m[3].pivot[2] = 100;
     s->m[3].cull = 1;
     s->m[3].lodlevels = 0;
@@ -101,7 +101,7 @@ const void initWorldObjects(Scene *s) {
     
     s->m[4].scale = 10.f;
     s->m[4].pivot[0] = 80;
-    s->m[4].pivot[1] = 0;
+    s->m[4].pivot[1] = 30;
     s->m[4].pivot[2] = 120;
     s->m[4].cull = 1;
     s->m[4].lodlevels = 0;
@@ -113,14 +113,14 @@ const void initWorldObjects(Scene *s) {
 
     /* ######################################################################################################## */
     createCube(&s->m[5]);
-    loadmaterial(&s->m[5].material, "emerald");
+    loadmaterial(&s->m[5].material, "jade");
 
     s->m[5].type = MovingObject;
     s->m[5].id = 5;
     
     s->m[5].scale = 10.f;
     s->m[5].pivot[0] = 80;
-    s->m[5].pivot[1] = 30;
+    s->m[5].pivot[1] = 0;
     s->m[5].pivot[2] = 100;
     s->m[5].cull = 1;
     s->m[5].lodlevels = 0;

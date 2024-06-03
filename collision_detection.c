@@ -25,8 +25,10 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
     }
 
     obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
+    printQuad(0);
 
     float tnearx, tneary, tnearz, tfarx, tfary, tfarz;
+    int f_nx, f_ny, f_nz, f_fx, f_fy, f_fz;
 
     const int num_of_members = tf->quads[obj->quadIndex].members_indexes;
     for (int i = 0; i < num_of_members; i++) {
@@ -34,8 +36,9 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
         int inner_inx = tf->quads[obj->quadIndex].members[i];
 
         if ( s->m[inner_inx].id != obj->id ) {
-            s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
 
+            s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
+            printf("id: %d\n", s->m[inner_inx].id);
             int minx = (s->m[inner_inx].BB.minX - (obj->pivot[0] - obj->BB.minX)) + 0.5;
             int miny = (s->m[inner_inx].BB.minY - (obj->pivot[1] - obj->BB.minY)) + 0.5;
             int minz = (s->m[inner_inx].BB.minZ - (obj->pivot[2] - obj->BB.minZ)) + 0.5;
@@ -50,12 +53,29 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             tfary = (maxy - obj->pivot[1]) / velocity[0][1];
             tfarz = (maxz - obj->pivot[2]) / velocity[0][2];
 
+            f_nx = tnearx == 0 ? 1 : __isnanf(tnearx) ? -1 : 0; 
+            f_ny = tneary == 0 ? 1 : __isnanf(tneary) ? -1 : 0; 
+            f_nz = tnearz == 0 ? 1 : __isnanf(tnearz) ? -1 : 0; 
+            f_fx = tfarx == 0 ? 1 : __isnanf(tfarx) ? -1 : 0;             
+            f_fy = tfary == 0 ? 1 : __isnanf(tfary) ? -1 : 0; 
+            f_fz = tfarz == 0 ? 1 : __isnanf(tfarz) ? -1 : 0;
+
+            printf("Nan value has occured: %d!!!\n", (f_nx | f_ny | f_nz | f_fx | f_fy | f_fz));
+            if ( (f_nx | f_ny | f_nz | f_fx | f_fy | f_fz) < 0 ) {
+                loadmaterial(&s->m[inner_inx].material, "jade");
+                continue;
+                // printf("Nan value has occured!!!\n");
+            }
+
+            const int f_sum = f_nx + f_ny + f_nz + f_fx + f_fy + f_fz;
+
             if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
             if (tneary > tfary) swap(&tneary, &tfary, 4);
             if (tnearz > tfarz) swap(&tnearz, &tfarz, 4);
 
             if (tnearx > tfarz || tnearz > tfarx) {
                 // printf("tnearx > tfarz || tnearz > tfarx!\n");
+                loadmaterial(&s->m[inner_inx].material, "jade");
                 continue;
             }
 
@@ -66,6 +86,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             if (t_near > tfary || tneary > t_far) {
                 // printf("t_near > tfary || tneary > t_far!\n");
                 // getc(stdin);
+                loadmaterial(&s->m[inner_inx].material, "jade");
                 continue;
             }
 
@@ -81,76 +102,84 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             }
             /* ##################### Y ############################ */
 
-            if (t_far < 0 || t_near < 0 ) { 
+            if ( (t_far < 0 || t_near < 0) || (t_near > 1.f) ) { 
                 // printf("t_far <= 0!\n");
+                loadmaterial(&s->m[inner_inx].material, "jade");
                 continue;
             }
 
-            vec4f normal = { 0.f };
-            // if (!__isnanf(tnearx * tneary * tnearz * tfarx * tfary * tfarz)) {
-                if ( tnearx >= tneary && tnearx >= tnearz ) {
-                    if ( velocity[0][0] < 0 ) {
-                        normal[0] = 1.f;
-                        printf("Right\n");
-                    } else if ( velocity[0][0] > 0 ) {     
-                        normal[0] = -1.f;
-                        printf("Left\n");
-                    }
-                } else if ( tneary >= tnearx && tneary >= tnearz ) {
-                    if ( velocity[0][1] < 0 ) {
-                        normal[1] = 1.f;
-                        printf("Up\n");
-                    } else if ( velocity[0][1] > 0 ) {
-                        normal[1] = -1.f;
-                        printf("Down\n");
-                    }
-                } else if ( tnearz >= tnearx && tnearz >= tneary ) {
-                    if ( velocity[0][2] < 0 ) {
-                        normal[2] = 1.f;
-                        printf("Back\n");
-                    } else if ( velocity[0][2] > 0 ) {
-                        normal[2] = -1.f;
-                        printf("Front\n");
-                    }
-                } else {
-                    printf("EXTRA CASE\n");
-                    // continue;
-                }
-            // }
-
             // printf("minx: %d    miny: %d    minz: %d\n", minx, miny, minz);
             // printf("maxx: %d    maxy: %d    maxz: %d\n", maxx, maxy, maxz);
-            printf("id: %d\n", s->m[inner_inx].id);
-            const float check_nan = tnearx * tneary * tnearz * tfarx * tfary * tfarz;
-            printf("check_nan:    ----> %f\n", check_nan);
 
-            printf("tnearx: %f    tneary: %f    tnearz: %f\n", tnearx, tneary, tnearz);
-            printf("tfarx  : %f    tfary  : %f    tfarz  : %f\n", tfarx, tfary, tfarz);
-            // logVec4f(dot_product(obj->pivot, s->m[inner_inx].pivot) * velocity);
+            // printf("FLAGS: f_nx: %d    f_ny: %d    f_nz: %d\n", f_nx, f_ny, f_nz);
+            // printf("FLAGS: f_fx: %d    f_fy: %d    f_fz: %d\n", f_fx, f_fy, f_fz);
 
-            if ( t_near == 0.f ) {
-                printf("Sliding:   t_near = %f\n", t_near);
+            // printf("\ntnearx: %f    tneary: %f    tnearz: %f\n", tnearx, tneary, tnearz);
+            // printf("tfarx  : %f    tfary  : %f    tfarz  : %f\n", tfarx, tfary, tfarz);
+                vec4f normal = { 0.f };
+
+            if ( tnearx >= tneary && tnearx >= tnearz ) {
+                if ( velocity[0][0] < 0 ) {
+                    normal[0] = 1.f;
+                    printf("Right\n");
+                } else if ( velocity[0][0] > 0 ) {     
+                    normal[0] = -1.f;
+                    printf("Left\n");
+                }
+            } else if ( tneary >= tnearx && tneary >= tnearz ) {
+                if ( velocity[0][1] < 0 ) {
+                    normal[1] = 1.f;
+                    printf("Up\n");
+                } else if ( velocity[0][1] > 0 ) {
+                    normal[1] = -1.f;
+                    printf("Down\n");
+                }
+            } else if ( tnearz >= tnearx && tnearz >= tneary ) {
+                if ( velocity[0][2] < 0 ) {
+                    normal[2] = 1.f;
+                    printf("Back\n");
+                } else if ( velocity[0][2] > 0 ) {
+                    normal[2] = -1.f;
+                    printf("Front\n");
+                }
+            } else {
+                printf("EXTRA CASE\n");
+                // continue;
+            }
+
+            // printf("id: %d\n", s->m[inner_inx].id);
+            printf("t_near   :    ----> %f\n", t_near);
+
+            if ( t_near == 0.f && f_sum <= 1 ) {
+                printf("Sliding....\n");
 
                 float dot =  dot_product(normal, obj->mvdir);
                 obj->mvdir = obj->mvdir - (dot * normal);
 
-                if ( tneary == 0.f || tfary == 0.f) {
+                if ( tneary == 0 ) {
                     velocity[0] = (obj->mvdir * obj->momentum);
+                    printf("Sliding:   tneary == 0.f || tfary == 0.f\n");
+                    // i--;
                     // continue;
                 } else {
+                    printf("Sliding:   else CASE\n");
                     velocity[0] = (gravity_epicenter * (9.81f * obj->falling_time) * obj->mass) + (obj->mvdir * obj->momentum);
+                    // i--;
                 }
-                // continue;
+                loadmaterial(&s->m[inner_inx].material, "pearl");
+                // i--;
+                continue;
                 // return 0;
 
-            } else if ( ((t_near > 0.f) && (t_near <= 1.f)) && (!__isnanf(tnearx * tneary * tnearz * tfarx * tfary * tfarz) || (tnearx == 0 || tneary == 0 || tnearz == 0)) ) {
-                printf("Collision: t_near = %f\n", t_near);
+            } else if ( ((t_near > 0.f) && (t_near <= 1.f)) ) {
+                printf("COLLISION !\n");
 
                 velocity[0] *= t_near;
 
                 Mat4x4 trans = translationMatrix(velocity[0][0], velocity[0][1], velocity[0][2]);
                 obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
                 obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
+
 
                 obj->pivot += velocity[0];
 
@@ -159,10 +188,16 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                 obj->mvdir = obj->mvdir - (dot * normal);
                 velocity[0] = (gravity_epicenter * (9.81f * obj->falling_time) * obj->mass) + (obj->mvdir * obj->momentum);
 
+                loadmaterial(&s->m[inner_inx].material, "gold");
+                i--;
+                continue;
                 // return 1;
             }
+            // logVec4f(obj->mvdir);
+            printf("End of Cases\n");
+            printf("\n");
+            loadmaterial(&s->m[inner_inx].material, "jade");
         }
-        printf("\n");
     }
     return 0;
 }
@@ -175,6 +210,7 @@ const void sortObjectCollisions(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *vel
     obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
 
     float tnearx, tneary, tnearz, tfarx, tfary, tfarz;
+    // int f_nx, f_ny, f_nz, f_fx, f_fy, f_fz;
 
     const int num_of_members = tf->quads[obj->quadIndex].members_indexes;
     for (int i = 0; i < num_of_members; i++) {
@@ -198,6 +234,17 @@ const void sortObjectCollisions(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *vel
             tfary = (maxy - obj->pivot[1]) / velocity[0][1];
             tfarz = (maxz - obj->pivot[2]) / velocity[0][2];
 
+            // f_nx = tnearx == 0 ? 1 : __isnanf(tnearx) ? -1 : 0; 
+            // f_ny = tneary == 0 ? 1 : __isnanf(tneary) ? -1 : 0; 
+            // f_nz = tnearz == 0 ? 1 : __isnanf(tnearz) ? -1 : 0; 
+            // f_fx = tfarx == 0 ? 1 : __isnanf(tfarx) ? -1 : 0;             
+            // f_fy = tfary == 0 ? 1 : __isnanf(tfary) ? -1 : 0; 
+            // f_fz = tfarz == 0 ? 1 : __isnanf(tfarz) ? -1 : 0;
+
+            // if ( (f_nx | f_ny | f_nz | f_fx | f_fy | f_fz) < 0 ) {
+            //     continue;
+            // }
+
             if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
             if (tneary > tfary) swap(&tneary, &tfary, 4);
             if (tnearz > tfarz) swap(&tnearz, &tfarz, 4);
@@ -220,7 +267,7 @@ const void sortObjectCollisions(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *vel
                 t_far = tfary;
             }
 
-            if (t_far <= 0) { 
+            if (t_far < 0) { 
                 continue;
             }
 

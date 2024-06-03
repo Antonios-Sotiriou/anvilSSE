@@ -156,10 +156,10 @@ const void applyForces(Scene *s) {
                 // logVec4f(velocity[0]);
 
                 if ( s->m[i].id == Player_1 ) {
-                    sortObjectCollisions(&tf, s, &s->m[Player_1], velocity);
+                    // sortObjectCollisions(&tf, s, &s->m[Player_1], velocity);
                     int collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
-                    // if (!collide)
-                        collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
+                    // if (collide == 1)
+                        // collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
                     // if (!collide)
                         // collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
 
