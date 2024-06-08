@@ -90,12 +90,12 @@ float DiffuseStrength     = 0.5f;
 float shadow_bias         = 0.0003f;//0.003105;//0.002138;//0.000487f;
 /* For investigating shadow map usefull global variables. */
 int INCORDEC = -1;
-unsigned int SMA = 8;    //0
-unsigned int SMB = 262;//265;    //176
-unsigned int SMC = 627;//709;    //352
-unsigned int STA = 88;    //88
-unsigned int STB = 88;    //88
-unsigned int STC = 360;    //264
+unsigned int SMA = 100;    //0
+unsigned int SMB = 200;//265;    //176
+unsigned int SMC = 400;//709;    //352
+unsigned int STA = 77;    //88
+unsigned int STB = 317;    //88
+unsigned int STC = 1200;    //264
 
 /* Main Camera. Player */
 vec4f *eye;
@@ -270,9 +270,9 @@ const static void keypress(XEvent *event) {
     else
         eye = (vec4f*)&camera;
 
-    // printf("Key Pressed: %ld\n", keysym);
     // printf("\x1b[H\x1b[J");
-    // system("clear\n");
+    system("clear\n");
+    // printf("Key Pressed: %ld\n", keysym);
     // logEvent(*event);
 
     switch (keysym) {
@@ -303,11 +303,11 @@ const static void keypress(XEvent *event) {
             break;
         case 65364 : move_down(eye, 1.f);          /* down arrow */
             break;
-        case 65451 :FOV += 1.0001;             /* + */
-            printf("shadow_bias: %f\n", FOV);
+        case 65451 :shadow_bias += 0.0001;             /* + */
+            printf("shadow_bias: %f\n", shadow_bias);
             break;
-        case 65453 :FOV -= 1.0001;             /* - */
-            printf("shadow_bias: %f\n", FOV);
+        case 65453 :shadow_bias -= 0.0001;             /* - */
+            printf("shadow_bias: %f\n", shadow_bias);
             break;
         case 65450 : SpecularStrength += 0.01f;             /* * */
             printf("SpecularStrength: %f\n", SpecularStrength);
@@ -423,8 +423,8 @@ const static void keypress(XEvent *event) {
     viewMat = inverse_mat(lookAt);
     sunlight.newPos = vecxm(sunlight.pos, viewMat);
 
-    // printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
-    // printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
+    printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
+    printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
     createCascadeShadowMatrices(NUM_OF_CASCADES);
 
     if (!PROJECTIONVIEW)
@@ -435,7 +435,7 @@ const static void keypress(XEvent *event) {
     // scene.m[4].pivot = camera[U] + camera[N];
     // logVec4f(norm_vec(camera[U] + camera[N]));
 
-    applyForces(&scene);
+    // applyForces(&scene);
     // objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], DeltaTime);
 }
 static void *oscillator(void *args) {
@@ -473,7 +473,7 @@ const static void applyPhysics(void) {
     // if (scene.m[Player_1].momentum)
     //     objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], );
 
-    // applyForces(&scene);
+    applyForces(&scene);
 
     // applyGravity(&scene); /* need world space */
 
@@ -484,15 +484,15 @@ const static void applyPhysics(void) {
 const static void project(void) {
 
     /* Draw in parallel the 3 Cascade shadow maps. */
-    // int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
-    // for (int i = 0; i < NUM_OF_CASCADES; i++) {
-    //     if (pthread_create(&threads[i], NULL, &cascade, &shadow_ids[i]))
-    //         fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
-    // }
-    // for (int i = 0; i < NUM_OF_CASCADES; i++) {
-    //     if (pthread_join(threads[i], NULL))
-    //         fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
-    // }
+    int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
+    for (int i = 0; i < NUM_OF_CASCADES; i++) {
+        if (pthread_create(&threads[i], NULL, &cascade, &shadow_ids[i]))
+            fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
+    }
+    for (int i = 0; i < NUM_OF_CASCADES; i++) {
+        if (pthread_join(threads[i], NULL))
+            fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
+    }
 
     grafikPipeline(&scene);
 

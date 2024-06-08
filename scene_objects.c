@@ -48,7 +48,7 @@ const void initWorldObjects(Scene *s) {
     // s->m[1].grounded = 1;
     // s->m[1].material.reflect = 1;
     s->m[1].Q = unitQuat();
-    // enWorldMesh(&s->m[1]);
+    enWorldMesh(&s->m[1]);
 
     /* ######################################################################################################## */
     memcpy(s->m[2].name, "spacedomsmooth", sizeof("spacedomsmooth"));
@@ -71,7 +71,7 @@ const void initWorldObjects(Scene *s) {
     s->m[2].mass = 0;
     // s->m[2].material.reflect = 1;
     s->m[2].Q = unitQuat();
-    // enWorldMesh(&s->m[2]);
+    enWorldMesh(&s->m[2]);
 
     /* ######################################################################################################## */
     createCube(&s->m[3]);

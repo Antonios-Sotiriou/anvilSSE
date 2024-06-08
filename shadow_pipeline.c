@@ -50,14 +50,14 @@ const Mat4x4 createOrthoMatrixFromLimits(const DimensionsLimits dl) {
 const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
     DimensionsLimits dl;
     vec4f *fr[3] = {
-        worldSpaceFrustum(NPlane, 100.f),
-        worldSpaceFrustum(NPlane, 250.f),
-        worldSpaceFrustum(NPlane, 500.f)
+        worldSpaceFrustum(NPlane, 100),
+        worldSpaceFrustum(NPlane, 200),
+        worldSpaceFrustum(NPlane, 400)
     };
     Mat4x4 lm[3] = {
-        lookat(eye[0] + (sunlight.pos + (eye[3] * 100.f)), sunlight.u, sunlight.v, sunlight.n),//100.f
-        lookat(eye[0] + (sunlight.pos + (eye[3] * 300.f)), sunlight.u, sunlight.v, sunlight.n),//460.f
-        lookat(eye[0] + (sunlight.pos + (eye[3] * 600.f)), sunlight.u, sunlight.v, sunlight.n)//1260.f
+        lookat(eye[0] + ((eye[3] * (float)SMA)), sunlight.u, sunlight.v, sunlight.n),
+        lookat(eye[0] + ((eye[3] * (float)SMB)), sunlight.u, sunlight.v, sunlight.n),
+        lookat(eye[0] + ((eye[3] * (float)SMC)), sunlight.u, sunlight.v, sunlight.n)
     };
 
     for (int i = 0; i < num_of_cascades; i++) {
@@ -329,14 +329,10 @@ const static void shadowface(Shadowface *f, const Srt srt[], const unsigned int 
     }
 }
 const float shadowTest(vec4f frag, vec4f nml) {
-    unsigned int sm_index;          //88                //88              //246
-    sm_index = (frag[2] <= STA) ? 0 : (frag[2] > STB && frag[2] <= STC) ? 1 : (frag[2] > STC && frag[2] <= 1000) ? 2 : 3;
+    unsigned int sm_index;
+    sm_index = (frag[2] <= STA) ? 0 : (frag[2] > STA && frag[2] <= STB) ? 1 : (frag[2] > STB && frag[2] <= 20000) ? 2 : 3;
     if (sm_index > 2)
         return 0;
-
-    float bias[3] = { 0.0007, 0.003, 0.0076 };
-    // // bias 0 = 0.0007,    bias 1 = 0.003,    bias 2 = 0.0076;
-    // shadow_bias = sm_index < 2 ? bias[sm_index] : shadow_bias;
 
     /* Transform to Model space coordinates. */ /* Transform to Light space coordinates. */
     frag[3] = 1.f;
@@ -348,21 +344,22 @@ const float shadowTest(vec4f frag, vec4f nml) {
     frag[2] = 1.f / frag[2];
 
     float shadow = 0.0;
-    for (int v = -1; v <= 1; v++) {
-        for (int u = -1; u <= 1; u++) {
+    for (int v = -1; v < 1; v++) {
+        for (int u = -1; u < 1; u++) {
 
             if ( (frag[0] > 0 && frag[0] < main_wa.width) && (frag[1] > 0 && frag[1] < main_wa.height) )
                 frag[0] += u, frag[1] += v;
             else
-                return 0;
+                continue;
 
 
             float pcfDepth = shadow_buffer[sm_index][((int)frag[1] * main_wa.width) + (int)frag[0]];
-            shadow += frag[2] + bias[sm_index] < pcfDepth ? 1.f : 0.f;
+            shadow += frag[2] + shadow_bias < pcfDepth ? 1.f : 0.f;
         }
     }
 
     return shadow / 9.f;
+    // return sm_index;
 }
 /* Releases all members of the given inside Shadow pipeline lvl 1 Mesh. */
 const static void releaseMeshShadowStepOne(MeshShadowStepOne *c) {

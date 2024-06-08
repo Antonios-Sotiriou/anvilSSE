@@ -15,7 +15,7 @@ const void grafikPipeline(Scene *s) {
 
     for (int i = 0; i < s->m_indexes; i++) {
 
-        adoptdetailMesh(&s->m[i]);
+        // adoptdetailMesh(&s->m[i]);
         adoptdetailTexture(&s->m[i]);
 
         initMeshStepOne(&cache_0, &s->m[i]);

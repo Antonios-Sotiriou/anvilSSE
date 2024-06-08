@@ -131,7 +131,7 @@ const int EnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
 const void applyForces(Scene *s) {
     Mat4x4 trans;
-    system("clear\n");
+    // system("clear\n");
     for (int i = 0; i < s->m_indexes; i++) {
 
         if ( s->m[i].type !=  Terrain ) {
@@ -149,21 +149,16 @@ const void applyForces(Scene *s) {
                 
                 const float g_accelaration = (9.81f * s->m[i].falling_time) * s->m[i].mass;
 
-                // vec4f velocity = (s->m[i].mvdir * s->m[i].momentum);
                 vec4f velocity[1];
                 velocity[0] = (gravity_epicenter * g_accelaration) + (s->m[i].mvdir * s->m[i].momentum);
-                // printf("BEFORE    ");
-                // logVec4f(velocity[0]);
 
                 if ( s->m[i].id == Player_1 ) {
-                    sortObjectCollisions(&tf, s, &s->m[Player_1], velocity);
-                    int collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
-                    if (collide == 1)
-                        collide += objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
-                    if (collide == 2)
-                        collide += objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
 
-                    // printf("Number of Collisions: %d\n", collide);
+                    int collide = 1;
+                    sortObjectCollisions(&tf, s, &s->m[Player_1], velocity);
+                    while (collide) {
+                        collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
+                    }
 
                     vec4f axis = { 1.f, 0.f, 0.f };
 

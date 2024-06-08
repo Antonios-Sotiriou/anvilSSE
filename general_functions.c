@@ -310,7 +310,7 @@ const void displayVec4f(const vec4f v_start, const vec4f v_end, const Mat4x4 vm)
 
     XDrawLine(displ, mainwin, gc, temp_start[0], temp_start[1], temp_end[0], temp_end[1]);
     // XDrawRectangle(displ, mainwin, gc, temp_start[0], temp_start[1], temp_end[0], temp_end[1]);
-    XDrawArc(displ, mainwin, gc, temp_start[0], temp_start[1], temp_start[0], temp_start[1], 10, 360 * 64);
+    // XDrawArc(displ, mainwin, gc, temp_start[0], temp_start[1], temp_start[0], temp_start[1], 10, 360 * 64);
 }
 /* Initializing Mesh a from Mesh b. */
 const void initMesh(Mesh *a, const Mesh *b) {
