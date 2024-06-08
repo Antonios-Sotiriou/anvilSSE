@@ -90,12 +90,12 @@ float DiffuseStrength     = 0.5f;
 float shadow_bias         = 0.0003f;//0.003105;//0.002138;//0.000487f;
 /* For investigating shadow map usefull global variables. */
 int INCORDEC = -1;
-unsigned int SMA = 100;    //0
-unsigned int SMB = 200;//265;    //176
-unsigned int SMC = 400;//709;    //352
-unsigned int STA = 77;    //88
-unsigned int STB = 317;    //88
-unsigned int STC = 1200;    //264
+unsigned int SMA = 0;
+unsigned int SMB = 200;
+unsigned int SMC = 400;
+unsigned int STA = 82;
+unsigned int STB = 320;
+unsigned int STC = 1280;
 
 /* Main Camera. Player */
 vec4f *eye;

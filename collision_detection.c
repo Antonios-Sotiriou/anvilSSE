@@ -171,6 +171,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                     // continue;
                 } else {
                     // printf("else CASE\n\n");
+                    // obj->momentum *= s->m[inner_inx].mass;
                     velocity[0] = (gravity_epicenter * (9.81f * obj->falling_time) * obj->mass) + (obj->mvdir * obj->momentum);
                     // i--;
                 }
@@ -275,9 +276,9 @@ const void sortObjectCollisions(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *vel
                 t_far = tfary;
             }
 
-            // if (t_far < 0) { 
-            //     continue;
-            // }
+            if (t_far < 0) { 
+                continue;
+            }
 
             s->m[inner_inx].collision_t = t_near;
             // printf("id: %d\n", s->m[inner_inx].id);
