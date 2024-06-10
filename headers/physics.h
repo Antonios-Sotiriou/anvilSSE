@@ -1,5 +1,5 @@
-#ifndef _GRAVITY_H
-#define _GRAVITY_H 1
+#ifndef _PHYSICS_H
+#define _PHYSICS_H 1
 
 #ifndef _ANVIL_STRUCTS_H
     #include "anvil_structs.h"
@@ -28,10 +28,9 @@
 /* Define in main.c. */
 extern float DeltaTime;
 
-const void applyGravity(Scene *s);
 const void applyForces(Scene *s);
 
-#endif /* _GRAVITY_H */
+#endif /* _PHYSICS_H */
 
 
 

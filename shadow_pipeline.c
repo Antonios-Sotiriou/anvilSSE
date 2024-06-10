@@ -96,7 +96,7 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
             }
 
             /* Clipping against far Plane in View Space. */
-            vec4f plane_far_p = { 0.0f, 0.0f,  FPlane},
+            vec4f plane_far_p = { 0.0f, 0.0f, FPlane },
                     plane_far_n = { 0.0f, 0.0f, -1.0f };
             cache_1 = shadowclipp(&cache_1, plane_far_p, plane_far_n);
             if (!cache_1.f_indexes) {

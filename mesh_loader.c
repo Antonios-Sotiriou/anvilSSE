@@ -1,4 +1,4 @@
-#include "headers/obj_parser.h"
+#include "headers/mesh_loader.h"
 
 static vec4f *loadvectors(const char path[]);
 static vec2f *loadtextors(const char path[]);

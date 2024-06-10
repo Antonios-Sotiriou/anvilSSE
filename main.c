@@ -37,7 +37,7 @@ int SCANLINE = 1;
 #include "headers/kinetics.h"
 #include "headers/scene_objects.h"
 #include "headers/general_functions.h"
-#include "headers/gravity.h"
+#include "headers/physics.h"
 #include "headers/clipping.h"
 #include "headers/shadow_pipeline.h"
 #include "headers/grafik_pipeline.h"
@@ -423,8 +423,8 @@ const static void keypress(XEvent *event) {
     viewMat = inverse_mat(lookAt);
     sunlight.newPos = vecxm(sunlight.pos, viewMat);
 
-    printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
-    printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
+    // printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
+    // printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
     createCascadeShadowMatrices(NUM_OF_CASCADES);
 
     if (!PROJECTIONVIEW)
@@ -432,11 +432,7 @@ const static void keypress(XEvent *event) {
     else
         worldMat = mxm(viewMat, orthoMat);
 
-    // scene.m[4].pivot = camera[U] + camera[N];
-    // logVec4f(norm_vec(camera[U] + camera[N]));
-
     // applyForces(&scene);
-    // objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], DeltaTime);
 }
 static void *oscillator(void *args) {
 
@@ -469,13 +465,7 @@ static void *cascade(void *args) {
 }
 const static void applyPhysics(void) {
 
-    /* At this spot shall be implemented collision between objects as a primitive implementation. */
-    // if (scene.m[Player_1].momentum)
-    //     objectEnvironmentCollision(&tf, &scene, &scene.m[Player_1], );
-
     applyForces(&scene);
-
-    // applyGravity(&scene); /* need world space */
 
     // printQuad(scene.m[Player_1].quadIndex);
 

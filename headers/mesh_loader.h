@@ -1,5 +1,5 @@
-#ifndef _OBJ_PARSER_H
-#define _OBJ_PARSER_H 1
+#ifndef _MESH_LOADER_H
+#define _MESH_LOADER_H 1
 
 #ifndef _ANVIL_STRUCTS_H
     #include "anvil_structs.h"
@@ -19,6 +19,6 @@
 
 const void loadmesh(Mesh *m, const char name[], const unsigned int meshlod);
 
-#endif /* _OBJ_PARSER_H */
+#endif /* _MESH_LOADER_H */
 
 

@@ -158,7 +158,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             // printf("t_near   :    ----> %f\n", t_near);
 
             if ( t_near == 0.f && f_sum <= 1 ) {
-                printf("Sliding....  ");
+                printf("Sliding....\n");
 
                 float dot =  dot_product(normal, obj->mvdir);
                 obj->mvdir = obj->mvdir - (dot * normal);
@@ -167,17 +167,12 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                     // obj->falling_time = 0.f;
                     velocity[0] = (obj->mvdir * obj->momentum);
                     // printf("tneary == 0.f || tfary == 0.f\n\n");
-                    // i--;
-                    // continue;
                 } else {
                     // printf("else CASE\n\n");
                     // obj->momentum *= s->m[inner_inx].mass;
                     velocity[0] = (gravity_epicenter * (9.81f * obj->falling_time) * obj->mass) + (obj->mvdir * obj->momentum);
-                    // i--;
                 }
                 // loadmaterial(&s->m[inner_inx].material, "pearl");
-                // i--;
-                // continue;
                 return 1;
 
             } else if ( ((t_near > 0.f) && (t_near <= 1.f)) ) {
@@ -198,11 +193,8 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                 velocity[0] = (obj->mvdir * obj->momentum);
 
                 // loadmaterial(&s->m[inner_inx].material, "gold");
-                // i--;
-                // continue;
                 return 1;
             }
-            // logVec4f(obj->mvdir);
             // printf("End of Cases\n\n");
             // loadmaterial(&s->m[inner_inx].material, "jade");
         }

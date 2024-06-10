@@ -13,8 +13,8 @@
     #include "matrices.h"
 #endif
 
-#ifndef _OBJ_PARSER_H
-    #include "obj_parser.h"
+#ifndef _MESH_LOADER_H
+    #include "mesh_loader.h"
 #endif
 
 #ifndef _STDIO_H
