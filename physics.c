@@ -32,8 +32,8 @@ const void applyForces(Scene *s) {
                 if ( s->m[i].id == Player_1 ) {
 
                     int collide = 1;
-                    sortObjectCollisions(&tf, s, &s->m[Player_1], velocity);
                     while (collide) {
+                        sortObjectCollisions(&tf, s, &s->m[Player_1], velocity);
                         collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
                     }
 
@@ -53,6 +53,8 @@ const void applyForces(Scene *s) {
 
                     s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
                     s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
+
+                    s->m[i].bbox.v = setvecsarrayxm(s->m[i].bbox.v, s->m[i].bbox.v_indexes, trans);
 
                     s->m[i].pivot += velocity[0];
                 }

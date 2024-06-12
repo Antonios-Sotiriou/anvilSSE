@@ -113,7 +113,7 @@ Light sunlight = {
 };
 const vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 1.0f;
-const float movScalar = 100.f;
+const float movScalar = 10.f;
 
 /* Global Matrices */
 Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
@@ -291,17 +291,17 @@ const static void keypress(XEvent *event) {
             break;
         case 101 : look_down(eye, 2.2);            /* e */
             break;
-        case 119 : move_forward(eye, 1.f);         /* w */
+        case 119 : move_forward(eye, 100.f);         /* w */
             break;
-        case 115 : move_backward(eye, 1.f);        /* s */
+        case 115 : move_backward(eye, 100.f);        /* s */
             break;
-        case 65361 : move_left(eye, 1.f);          /* left arrow */
+        case 65361 : move_left(eye, 100.f);          /* left arrow */
             break;
-        case 65363 : move_right(eye, 1.f);         /* right arrow */
+        case 65363 : move_right(eye, 100.f);         /* right arrow */
             break;
-        case 65362 : move_up(eye, 1.f);            /* up arror */
+        case 65362 : move_up(eye, 100.f);            /* up arror */
             break;
-        case 65364 : move_down(eye, 1.f);          /* down arrow */
+        case 65364 : move_down(eye, 100.f);          /* down arrow */
             break;
         case 65451 :shadow_bias += 0.0001;             /* + */
             printf("shadow_bias: %f\n", shadow_bias);
@@ -333,7 +333,7 @@ const static void keypress(XEvent *event) {
             scene.m[1].grounded = 0;
             vec4f mvc = { 0.f, 1.f, 0.f };
             scene.m[1].mvdir = mvc;
-            scene.m[1].momentum = movScalar * DeltaTime;
+            scene.m[1].momentum = 100 * DeltaTime;
             scene.m[1].falling_time = 0.f;
             break;
         case 65435 : //sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
@@ -361,11 +361,11 @@ const static void keypress(XEvent *event) {
             scene.m[1].momentum = movScalar * DeltaTime;
             scene.m[1].roll = 1;
             break;
-        case 120 : rotate_x(&scene.m[1], 1);                     /* x */
+        case 120 : rotate_x(&scene.m[0], 1);                     /* x */
             break;
-        case 121 : rotate_y(&scene.m[1], 1);                     /* y */
+        case 121 : rotate_y(&scene.m[0], 1);                     /* y */
             break;
-        case 122 : rotate_z(&scene.m[1], 1);                     /* z */
+        case 122 : rotate_z(&scene.m[0], 1);                     /* z */
             break;
         case 114 : 
             vec4f center = { 0.f, 0.f, 0.f, 0.f };
@@ -373,6 +373,7 @@ const static void keypress(XEvent *event) {
             break;
         case 99 :                                                        /* c */
             vec4f axis = { 1.f, 0.f, 0.f, 0.f };
+            rotate_origin(&scene.m[0], 1, 1.0f, 0.0f, 0.0f);
             scene.m[Player_1].Q = multiplyQuats(scene.m[Player_1].Q, rotationQuat(10, axis));
             break;
         case 43 : AmbientStrength += 0.01;                                    /* + */
@@ -432,7 +433,13 @@ const static void keypress(XEvent *event) {
     else
         worldMat = mxm(viewMat, orthoMat);
 
-    // applyForces(&scene);
+    // scene.m[1].BB = getDimensionsLimits(scene.m[1].v, scene.m[1].v_indexes);
+    // logDm(scene.m[1].BB);
+    // scene.m[1].BB = getDimensionsLimits(scene.m[1].bbox.v, scene.m[1].bbox.v_indexes);
+    // logDm(scene.m[1].BB);
+    // printf("|-------------------------------------|\n");
+
+    applyForces(&scene);
 }
 static void *oscillator(void *args) {
 
@@ -474,15 +481,15 @@ const static void applyPhysics(void) {
 const static void project(void) {
 
     /* Draw in parallel the 3 Cascade shadow maps. */
-    int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
-    for (int i = 0; i < NUM_OF_CASCADES; i++) {
-        if (pthread_create(&threads[i], NULL, &cascade, &shadow_ids[i]))
-            fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
-    }
-    for (int i = 0; i < NUM_OF_CASCADES; i++) {
-        if (pthread_join(threads[i], NULL))
-            fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
-    }
+    // int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
+    // for (int i = 0; i < NUM_OF_CASCADES; i++) {
+    //     if (pthread_create(&threads[i], NULL, &cascade, &shadow_ids[i]))
+    //         fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
+    // }
+    // for (int i = 0; i < NUM_OF_CASCADES; i++) {
+    //     if (pthread_join(threads[i], NULL))
+    //         fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
+    // }
 
     grafikPipeline(&scene);
 

@@ -15,6 +15,8 @@ const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
         Mat4x4 dr = translationMatrix(0, height_diff, 0);
         object->v = setvecsarrayxm(object->v, object->v_indexes, dr);
         object->n = setvecsarrayxm(object->n, object->n_indexes, dr);
+
+        object->bbox.v = setvecsarrayxm(object->bbox.v, object->bbox.v_indexes, dr);
         object->pivot[1] += height_diff;
     }
 }
@@ -24,7 +26,10 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
         return 0;
     }
 
-    obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
+    // obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
+    // logDm(obj->BB);
+    obj->BB = getDimensionsLimits(obj->bbox.v, obj->bbox.v_indexes);
+    // logDm(obj->BB);
     // printQuad(obj->quadIndex);
     // printf("|-------------------------------------|\n");
 
@@ -38,7 +43,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
 
         if ( s->m[inner_inx].id != obj->id ) {
 
-            s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
+            s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].bbox.v, s->m[inner_inx].bbox.v_indexes);
 
             int minx = (s->m[inner_inx].BB.minX - (obj->pivot[0] - obj->BB.minX)) + 0.5;
             int miny = (s->m[inner_inx].BB.minY - (obj->pivot[1] - obj->BB.minY)) + 0.5;
@@ -65,7 +70,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
 
             // printf("Nan value has occured: %d!!!\n", (f_nx | f_ny | f_nz | f_fx | f_fy | f_fz));
             if ( (f_nx | f_ny | f_nz | f_fx | f_fy | f_fz) < 0 ) {
-                // loadmaterial(&s->m[inner_inx].material, "jade");
+                // loadMaterial(&s->m[inner_inx].material, "jade");
                 // printf("Nan value has occured!!!\n");
                 continue;
             }
@@ -78,7 +83,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
 
             if (tnearx > tfarz || tnearz > tfarx) {
                 // printf("(tnearx > tfarz || tnearz > tfarx)\n");
-                // loadmaterial(&s->m[inner_inx].material, "jade");
+                // loadMaterial(&s->m[inner_inx].material, "jade");
                 continue;
             }
 
@@ -89,7 +94,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             if (t_near > tfary || tneary > t_far) {
                 // printf("(t_near > tfary || tneary > t_far)\n");
                 // getc(stdin);
-                // loadmaterial(&s->m[inner_inx].material, "jade");
+                // loadMaterial(&s->m[inner_inx].material, "jade");
                 continue;
             }
 
@@ -103,14 +108,11 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                 // printf("(tfary < t_far)\n");
                 // getc(stdin);
             }
-            /* ##################### Y ############################ */
-
-            if (t_near < 0)
-                // printf("t_near below ZERO    ---->    id: %d\n", s->m[inner_inx].id);               
+            /* ##################### Y ############################ */          
 
             if ( (t_far < 0 || t_near < 0) || (t_near > 1.f) ) { 
                 // printf("(t_far < 0 || t_near < 0) || (t_near > 1.f)\n");
-                // loadmaterial(&s->m[inner_inx].material, "jade");
+                // loadMaterial(&s->m[inner_inx].material, "jade");
                 continue;
             }
 
@@ -172,11 +174,11 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                     // obj->momentum *= s->m[inner_inx].mass;
                     velocity[0] = (gravity_epicenter * (9.81f * obj->falling_time) * obj->mass) + (obj->mvdir * obj->momentum);
                 }
-                // loadmaterial(&s->m[inner_inx].material, "pearl");
+                // loadMaterial(&s->m[inner_inx].material, "pearl");
                 return 1;
 
             } else if ( ((t_near > 0.f) && (t_near <= 1.f)) ) {
-                printf("COLLISION !\n\n");
+                printf("COLLISION!!!\n\n");
 
                 velocity[0] *= t_near;
 
@@ -184,6 +186,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                 obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
                 obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
 
+                obj->bbox.v = setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, trans);
 
                 obj->pivot += velocity[0];
 
@@ -192,11 +195,11 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                 obj->mvdir = obj->mvdir - (dot * normal);
                 velocity[0] = (obj->mvdir * obj->momentum);
 
-                // loadmaterial(&s->m[inner_inx].material, "gold");
+                // loadMaterial(&s->m[inner_inx].material, "gold");
                 return 1;
             }
             // printf("End of Cases\n\n");
-            // loadmaterial(&s->m[inner_inx].material, "jade");
+            // loadMaterial(&s->m[inner_inx].material, "jade");
         }
     }
     return 0;
@@ -207,7 +210,8 @@ const void sortObjectCollisions(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *vel
         return;
     }
 
-    obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
+    obj->BB = getDimensionsLimits(obj->bbox.v, obj->bbox.v_indexes);
+    // obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
 
     float tnearx, tneary, tnearz, tfarx, tfary, tfarz;
     int f_nx, f_ny, f_nz, f_fx, f_fy, f_fz;
@@ -219,7 +223,7 @@ const void sortObjectCollisions(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *vel
         s->m[inner_inx].collision_t = 1000000.f;
 
         if ( s->m[inner_inx].id != obj->id ) {
-            s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].v, s->m[inner_inx].v_indexes);
+            s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].bbox.v, s->m[inner_inx].bbox.v_indexes);
 
             int minx = (s->m[inner_inx].BB.minX - (obj->pivot[0] - obj->BB.minX)) + 0.5;
             int miny = (s->m[inner_inx].BB.minY - (obj->pivot[1] - obj->BB.minY)) + 0.5;

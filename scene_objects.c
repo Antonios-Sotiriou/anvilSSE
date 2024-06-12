@@ -5,10 +5,12 @@
 /* This function is responsible to position the objects in world space. */
 const void initWorldObjects(Scene *s) {
     /* ######################################################################################################## */
-    // memcpy(s->m[0].name, "basic_terrain", sizeof("basic_terrain"));
     // createGrid(&s->m[0], 10, 10);
-    createTerrain(&s->m[0], "textures/height_map_10x10.bmp");
-    loadmaterial(&s->m[0].material, "obsidian");
+
+    memcpy(s->m[0].name, "terrain0", sizeof("terrain0"));
+    createTerrain(&s->m[0], "terrains/terrain0/height_map_10x10.bmp");
+    loadMaterial(&s->m[0].material, "obsidian");
+    loadBoundingBox(&s->m[0].bbox, "terrains/terrain0/bbox_terrain0");
 
     s->m[0].type = Terrain;
     s->m[0].id = 0;
@@ -25,21 +27,23 @@ const void initWorldObjects(Scene *s) {
     s->m[0].mass = 0;
     s->m[0].Q = unitQuat();
     enWorldMesh(&s->m[0]);
+    enWorldBoundingBox(&s->m[0]);
 
     /* ######################################################################################################## */
     memcpy(s->m[1].name, "planet", sizeof("planet"));
     // createCube(&s->m[1]);
-    loadmaterial(&s->m[1].material, "stones");
-    loadmesh(&s->m[1], s->m[1].name, 1);
+    loadMaterial(&s->m[1].material, "stones");
+    loadMesh(&s->m[1], s->m[1].name, 1);
+    loadBoundingBox(&s->m[1].bbox, "objfiles/cubesmooth/bbox_cubesmooth");
 
     s->m[1].type = Player;
     s->m[1].id = 1;
 
     s->m[1].scale = 10.f;
 
-    s->m[1].pivot[0] = 90.f;
+    s->m[1].pivot[0] = 0.f;
     s->m[1].pivot[1] = 0.f;
-    s->m[1].pivot[2] = 75.f;
+    s->m[1].pivot[2] = 0.f;
 
     s->m[1].cull = 1;
     s->m[1].lodlevels = 5;
@@ -49,15 +53,16 @@ const void initWorldObjects(Scene *s) {
     // s->m[1].material.reflect = 1;
     s->m[1].Q = unitQuat();
     enWorldMesh(&s->m[1]);
+    enWorldBoundingBox(&s->m[1]);
 
     /* ######################################################################################################## */
     memcpy(s->m[2].name, "spacedomsmooth", sizeof("spacedomsmooth"));
-    // createCube(&s->m[3]);
-    loadmaterial(&s->m[2].material, "spacedom");
-    loadmesh(&s->m[2], s->m[2].name, 1);
+    loadMaterial(&s->m[2].material, "spacedom");
+    loadMesh(&s->m[2], s->m[2].name, 1);
+    loadBoundingBox(&s->m[2].bbox, "objfiles/planet/bbox_planet");
 
     s->m[2].type = Terrain;
-    s->m[2].id = 0;
+    s->m[2].id = 2;
 
     s->m[2].scale = 10000.f;
 
@@ -72,10 +77,14 @@ const void initWorldObjects(Scene *s) {
     // s->m[2].material.reflect = 1;
     s->m[2].Q = unitQuat();
     enWorldMesh(&s->m[2]);
+    enWorldBoundingBox(&s->m[2]);
 
     /* ######################################################################################################## */
-    createCube(&s->m[3]);
-    loadmaterial(&s->m[3].material, "jade");
+    // createCube(&s->m[3]);
+    memcpy(s->m[3].name, "cubesmooth", sizeof("cubesmooth"));
+    loadMesh(&s->m[3], s->m[3].name, 1);
+    loadMaterial(&s->m[3].material, "jade");
+    loadBoundingBox(&s->m[3].bbox, "objfiles/cubesmooth/bbox_cubesmooth");
 
     s->m[3].type = MovingObject;
     s->m[3].id = 3;
@@ -91,28 +100,12 @@ const void initWorldObjects(Scene *s) {
     // s->m[3].grounded = 1;
     s->m[3].Q = unitQuat();
     enWorldMesh(&s->m[3]);
-
-    // createCube(&s->m[3]);
-    // loadmaterial(&s->m[3].material, "jade");
-
-    // s->m[3].type = MovingObject;
-    // s->m[3].id = 3;
-    
-    // s->m[3].scale = 100.f;
-    // s->m[3].pivot[0] = 210;
-    // s->m[3].pivot[1] = 30;
-    // s->m[3].pivot[2] = 200;
-    // s->m[3].cull = 1;
-    // s->m[3].lodlevels = 0;
-    // // s->m[3].visible = 1;
-    // s->m[3].mass = 0.5;
-    // // s->m[3].grounded = 1;
-    // s->m[3].Q = unitQuat();
-    // enWorldMesh(&s->m[3]);
+    enWorldBoundingBox(&s->m[3]);
 
     /* ######################################################################################################## */
     createCube(&s->m[4]);
-    loadmaterial(&s->m[4].material, "jade");
+    loadMaterial(&s->m[4].material, "jade");
+    loadBoundingBox(&s->m[4].bbox, "objfiles/cubesmooth/bbox_cubesmooth");
 
     s->m[4].type = MovingObject;
     s->m[4].id = 4;
@@ -128,10 +121,12 @@ const void initWorldObjects(Scene *s) {
     // s->m[4].grounded = 1;
     s->m[4].Q = unitQuat();
     enWorldMesh(&s->m[4]);
+    enWorldBoundingBox(&s->m[4]);
 
     /* ######################################################################################################## */
     createCube(&s->m[5]);
-    loadmaterial(&s->m[5].material, "jade");
+    loadMaterial(&s->m[5].material, "jade");
+    loadBoundingBox(&s->m[5].bbox, "objfiles/cubesmooth/bbox_cubesmooth");
 
     s->m[5].type = MovingObject;
     s->m[5].id = 5;
@@ -147,11 +142,12 @@ const void initWorldObjects(Scene *s) {
     // s->m[5].grounded = 1;
     s->m[5].Q = unitQuat();
     enWorldMesh(&s->m[5]);
+    enWorldBoundingBox(&s->m[5]);
 
     /* ######################################################################################################## */
     // for (int i = 5; i < MESH_NUM; i++) {
     //     createCube(&s->m[i]);
-    //     loadmaterial(&s->m[i].material, "jade");
+    //     loadMaterial(&s->m[i].material, "jade");
 
     //     s->m[i].type = MovingObject;
     //     s->m[i].id = i;
@@ -179,6 +175,7 @@ const void releaseScene(Scene *s) {
     for (int i = 0; i < s->m_indexes; i++) {
         free(s->m[i].material.texture);
         releaseMesh(&s->m[i]);
+        free(s->m[i].bbox.v);
     }
     free(s->m);
 }

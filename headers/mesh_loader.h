@@ -17,7 +17,7 @@
     #include <string.h>
 #endif
 
-const void loadmesh(Mesh *m, const char name[], const unsigned int meshlod);
+const void loadMesh(Mesh *m, const char name[], const unsigned int meshlod);
 
 #endif /* _MESH_LOADER_H */
 

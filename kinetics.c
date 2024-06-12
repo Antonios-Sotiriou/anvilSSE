@@ -11,6 +11,8 @@ const void rotate_y(Mesh *c, const float angle) {
     Mat4x4 m = rotateYMatrix(radians(angle));
     c->v = setvecsarrayxm(c->v, c->v_indexes, m);
     c->n = setvecsarrayxm(c->n, c->n_indexes, m);
+
+    c->bbox.v = setvecsarrayxm(c->bbox.v, c->bbox.v_indexes, m);
 }
 /* Rotates object according to World Z axis. */
 const void rotate_z(Mesh *c, const float angle) {
@@ -31,6 +33,8 @@ const void rotate_origin(Mesh *c, const float angle, float x, float y, float z) 
     // logQuat(c->Q);
     c->v = setvecsarrayxm(c->v, c->v_indexes, m);
     c->n = setvecsarrayxm(c->n, c->n_indexes, m);
+
+    c->bbox.v = setvecsarrayxm(c->bbox.v, c->bbox.v_indexes, m);
 }
 /* Rotates light arround a given pivot point. */
 const void rotate_light(Light *l, const vec4f pivot, const float angle, float x, float y, float z) {

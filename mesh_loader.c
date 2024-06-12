@@ -14,8 +14,8 @@ static int t_indexes = 0;
 /* Face array indexes */
 static int f_indexes = 0;
 
-const void loadmesh(Mesh *m, const char name[], const unsigned int meshlod) {
-    size_t len = 18 + (strlen(name) * 2) + 2;
+const void loadMesh(Mesh *m, const char name[], const unsigned int meshlod) {
+    size_t len = 20 + (strlen(name) * 2);
     char objfile[len];
     snprintf(objfile, len, "objfiles/%s/%s_lod%d.obj", name, name, meshlod);
 

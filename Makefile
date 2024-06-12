@@ -20,7 +20,7 @@ all:
 		main.c locale.c matrices.c quaternions.c kinetics.c clipping.c\
 		grafik_pipeline.c shadow_pipeline.c camera.c vectors_math.c scene_objects.c general_functions.c\
 		draw_functions.c lighting.c terrain_functions.c physics.c collision_detection.c mesh_loader.c database.c\
-		exec_time.c test_shapes.c logging.c -o\
+		boundingbox_loader.c exec_time.c test_shapes.c logging.c -o\
 	$(OBJ) $(LINKS);\
 
 exec:

@@ -45,12 +45,12 @@ const DimensionsLimits getDimensionsLimits(vec4f va[], const int len) {
     return dl;
 }
 /* Loads the appropriate Material with given name and importand Material infos. */
-const void loadmaterial(Material *mtr, const char name[]) {
+const void loadMaterial(Material *mtr, const char name[]) {
     FILE *fp;
     fp = fopen("tables/materials.dat", "rb");
 
     if (!fp){
-        fprintf(stderr, "Could not open material files < tables/%s >! loadmaterial() -- fopen().\n", name);
+        fprintf(stderr, "Could not open material files < tables/%s >! loadMaterial() -- fopen().\n", name);
         return;
     } else {
         while (!feof(fp)) {
@@ -135,7 +135,7 @@ const void adoptdetailMesh(Mesh *m) {
 
     if (lcache_0 != m->currentlod) {
         releaseMesh(m);
-        loadmesh(m, m->name, m->currentlod);
+        loadMesh(m, m->name, m->currentlod);
         enWorldMesh(m);
         printf("adoptDetailMesh()\n");
     }
@@ -185,6 +185,17 @@ const void enWorldMesh(Mesh *m) {
     m->v = setvecsarrayxm(m->v, m->v_indexes, enWorldMatrix);
     m->n = setvecsarrayxm(m->n, m->n_indexes, enWorldMatrix);
 }
+const void enWorldBoundingBox(Mesh *m) {
+    Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
+
+    vec4f pos = { 0 };
+    Mat4x4 mfQ = MatfromQuat(m->Q, pos);
+    sclMatrix = mxm(mfQ, scaleMatrix(m->scale));
+    trMatrix = translationMatrix(m->pivot[0], m->pivot[1], m->pivot[2]);
+    enWorldMatrix = mxm(sclMatrix, trMatrix);
+
+    m->bbox.v = setvecsarrayxm(m->bbox.v, m->bbox.v_indexes, enWorldMatrix);
+}
 const void placeMesh(Mesh *m, const vec4f pos) {
     Mat4x4 trMatrix = translationMatrix(pos[0], pos[1], pos[2]);
 
@@ -225,8 +236,6 @@ const int frustumCulling(vec4f v[], const int v_indexes) {
     max[0] = ((1 + max[0]) * HALFW) + 0.5;
     max[1] = ((1 + max[1]) * HALFH) + 0.5;
 
-    XDrawRectangle(displ, mainwin, gc, min[0], min[1], max[0] - min[0], max[1] - min[1]);
-
     if ( ((min[2] > FPlane) || (max[2] < NPlane)) ||
             ((min[1] > 1000) || (max[1] < 0)) ||
             ((min[0] > 1000) || (max[0] < 0)) ) {
@@ -234,6 +243,9 @@ const int frustumCulling(vec4f v[], const int v_indexes) {
         free(vec_arr);
         return 0;
     }
+    
+    XDrawRectangle(displ, mainwin, gc, min[0], min[1], max[0] - min[0], max[1] - min[1]);
+
     free(vec_arr);
     return 1;
 }

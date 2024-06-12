@@ -21,6 +21,10 @@
     #include "terrain_functions.h"
 #endif
 
+#ifndef _BOUNDINGBOX_LOADER_H
+    #include "boundingbox_loader.h"
+#endif
+
 const void initWorldObjects(Scene *s);
 const void createScene(Scene *s);
 const void releaseScene(Scene *s);

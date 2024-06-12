@@ -59,6 +59,12 @@ typedef struct {
     vec4f v;
 } Quat;
 
+/* Bounding box struct. It holds all the information for physics and topology. */
+typedef struct {
+    vec4f *v;
+    int v_indexes;
+} Bbox;
+
 /* Material struct to hold the specific for each material values. */
 typedef struct {
     char name[24];
@@ -107,6 +113,7 @@ typedef struct {
     mass,                                           /* Mass of the mesh. */
     collision_t;                                    /* Collison time, usefull to sort the collisions. */
     DimensionsLimits BB;
+    Bbox bbox;
     Material material;
 } Mesh;
 
