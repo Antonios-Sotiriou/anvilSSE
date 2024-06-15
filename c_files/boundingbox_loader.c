@@ -1,4 +1,4 @@
-#include "headers/boundingbox_loader.h"
+#include "../headers/boundingbox_loader.h"
 
 static vec4f *loadvectors(const char path[]);
 

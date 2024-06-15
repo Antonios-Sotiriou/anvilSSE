@@ -1,4 +1,4 @@
-#include "headers/database.h"
+#include "../headers/database.h"
 
 const int createMaterialDatabase(void) {
     FILE *fp = fopen("tables/materials.dat", "rb");

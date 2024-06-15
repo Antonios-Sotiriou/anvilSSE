@@ -1,4 +1,4 @@
-#include "headers/vectors_math.h"
+#include "../headers/vectors_math.h"
 
 const static vec4i mask1 = { 1, 2, 0, 3 }, mask2 = { 2, 0, 1, 3 };
 

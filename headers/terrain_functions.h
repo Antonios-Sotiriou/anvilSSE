@@ -24,6 +24,7 @@
 /* Defined in main.c. */
 extern TerrainInfo tf;
 
+const void createTerrain(Mesh *c, const char path[]);
 const void initMeshQuadInfo(Mesh *t, Mesh *m);
 const float getTerrainHeight(Mesh *terrain, vec4f coords, Mesh *m);
 const int getTerrainQuadIndex(Mesh *t, vec4f coords);

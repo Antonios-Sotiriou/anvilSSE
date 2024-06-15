@@ -1,4 +1,4 @@
-#include "headers/mesh_loader.h"
+#include "../headers/mesh_loader.h"
 
 static vec4f *loadvectors(const char path[]);
 static vec2f *loadtextors(const char path[]);
@@ -14,10 +14,10 @@ static int t_indexes = 0;
 /* Face array indexes */
 static int f_indexes = 0;
 
-const void loadMesh(Mesh *m, const char name[], const unsigned int meshlod) {
-    size_t len = 20 + (strlen(name) * 2);
+const void loadMesh(Mesh *m, const char path[], const unsigned int meshlod) {
+    size_t len = 10 + (strlen(path));
     char objfile[len];
-    snprintf(objfile, len, "objfiles/%s/%s_lod%d.obj", name, name, meshlod);
+    snprintf(objfile, len, "%s/lod%d.obj", path, meshlod);
 
     m->v = loadvectors(objfile);
     if (!m->v)

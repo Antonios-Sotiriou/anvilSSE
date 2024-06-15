@@ -1,4 +1,4 @@
-#include "headers/general_functions.h"
+#include "../headers/general_functions.h"
 
 const static void checkVisibility(Mesh *m, const int len, Mat4x4 vm, const int viewProj);
 

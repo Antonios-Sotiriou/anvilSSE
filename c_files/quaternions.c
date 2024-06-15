@@ -1,4 +1,4 @@
-#include "headers/quaternions.h"
+#include "../headers/quaternions.h"
 
 /* Quaternions library for C. */
 /* Quaternion definition: q = w + xi + yj + zk */
@@ -125,4 +125,5 @@ Mat4x4 MatfromQuat(const Quat q, const vec4f v) {
 
     return m;
 }
+
 

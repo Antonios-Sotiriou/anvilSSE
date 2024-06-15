@@ -1,4 +1,4 @@
-#include "headers/grafik_pipeline.h"
+#include "../headers/grafik_pipeline.h"
 
 const static MeshStepTwo assemblyfaces(MeshStepOne *m, unsigned int *indices, const int len);
 const static void ppdiv(MeshStepTwo *m, const int len);
@@ -8,22 +8,42 @@ const static void rasterize(MeshStepTwo *m, Material *mtr);
 const static void releaseMeshStepOne(MeshStepOne *c);
 const static void releaseMeshStepTwo(MeshStepTwo *c);
 const static void initMeshStepOne(MeshStepOne *a, Mesh *b);
-#include "headers/logging.h"
+#include "../headers/logging.h"
 /* Passes the scene Meshes throught the graphic pipeline. */
 const void grafikPipeline(Scene *s) {
     MeshStepOne cache_0 = { 0 };
-
+    // system("clear\n");
     for (int i = 0; i < s->m_indexes; i++) {
-
-        adoptdetailMesh(&s->m[i]);
+        // logMesh(s->m[i]);
+        // adoptdetailMesh(&s->m[i]);
         adoptdetailTexture(&s->m[i]);
 
         initMeshStepOne(&cache_0, &s->m[i]);
-        cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, worldMat);
 
-        if (frustumCulling(cache_0.v, cache_0.v_indexes)) {
+        cache_0.bbox.v = setvecsarrayxm(cache_0.bbox.v, cache_0.bbox.v_indexes, worldMat);
 
-            cache_0.n = setvecsarrayxm(cache_0.n, cache_0.n_indexes, viewMat);
+        if (frustumCulling(cache_0.bbox.v, cache_0.bbox.v_indexes)) {
+
+            // printf("Object id: %d\n", s->m[i].id);
+
+            Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
+
+            vec4f pos = { 0 };
+            Mat4x4 mfQ = MatfromQuat(s->m[i].Q, pos);
+            sclMatrix = mxm(mfQ, scaleMatrix(s->m[i].scale));
+            trMatrix = translationMatrix(s->m[i].pivot[0], s->m[i].pivot[1], s->m[i].pivot[2]);
+            enWorldMatrix = mxm(sclMatrix, trMatrix);
+
+            Mat4x4 vecsMat = mxm(enWorldMatrix, worldMat);
+            Mat4x4 normsMat = mxm(enWorldMatrix, viewMat);
+
+            if (s->m[i].type == Terrain)
+                cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, mxm(mfQ, worldMat));
+            else
+                cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, vecsMat);
+            cache_0.n = setvecsarrayxm(cache_0.n, cache_0.n_indexes, normsMat);
+            // cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, worldMat);
+            // cache_0.n = setvecsarrayxm(cache_0.n, cache_0.n_indexes, viewMat);
 
             /* Assembly and create the faces from the mesh vertices, normals and texture arrays, through the indexes. */
             MeshStepTwo cache_1 = assemblyfaces(&cache_0, s->m[i].f, s->m[i].f_indexes);
@@ -118,6 +138,7 @@ const static MeshStepTwo bfculling(const MeshStepTwo m, const int len) {
         fprintf(stderr, "Could not allocate memory - bfculling() - malloc\n");
 
     for (int i = 0; i < len; i++) {
+
         if (winding(m.f[i]) > 0.00) {
             r.f = realloc(r.f, size * counter);
 
@@ -195,6 +216,7 @@ const static void releaseMeshStepOne(MeshStepOne *c) {
     free(c->v);
     free(c->n);
     free(c->t);
+    free(c->bbox.v);
 }
 /* Releases all members of the given inside graphic pipeline lvl 2 Mesh. */
 const static void releaseMeshStepTwo(MeshStepTwo *c) {
@@ -205,6 +227,7 @@ const static void initMeshStepOne(MeshStepOne *a, Mesh *b) {
     size_t vsize = sizeof(vec4f) * b->v_indexes;
     size_t nsize = sizeof(vec4f) * b->n_indexes;
     size_t tsize = sizeof(vec2f) * b->t_indexes;
+    size_t bbox_vsize = sizeof(vec4f) * b->bbox.v_indexes;
 
     a->v = malloc(vsize);
     memcpy(a->v, b->v, vsize);
@@ -217,6 +240,10 @@ const static void initMeshStepOne(MeshStepOne *a, Mesh *b) {
     a->t = malloc(tsize);
     memcpy(a->t, b->t, tsize);
     a->t_indexes = b->t_indexes;
+
+    a->bbox.v = malloc(bbox_vsize);
+    memcpy(a->bbox.v, b->bbox.v, bbox_vsize);
+    a->bbox.v_indexes = b->bbox.v_indexes;
 
     a->cull = b->cull;
 }

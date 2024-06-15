@@ -1,6 +1,6 @@
-#include "headers/collision_detection.h"
+#include "../headers/collision_detection.h"
 
-#include "headers/logging.h"
+#include "../headers/logging.h"
 extern float DeltaTime, movScalar;
 extern vec4f gravity_epicenter;
 
@@ -13,8 +13,8 @@ const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
     }
     if (object->grounded) {
         Mat4x4 dr = translationMatrix(0, height_diff, 0);
-        object->v = setvecsarrayxm(object->v, object->v_indexes, dr);
-        object->n = setvecsarrayxm(object->n, object->n_indexes, dr);
+        // object->v = setvecsarrayxm(object->v, object->v_indexes, dr);
+        // object->n = setvecsarrayxm(object->n, object->n_indexes, dr);
 
         object->bbox.v = setvecsarrayxm(object->bbox.v, object->bbox.v_indexes, dr);
         object->pivot[1] += height_diff;
@@ -26,12 +26,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
         return 0;
     }
 
-    // obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
-    // logDm(obj->BB);
     obj->BB = getDimensionsLimits(obj->bbox.v, obj->bbox.v_indexes);
-    // logDm(obj->BB);
-    // printQuad(obj->quadIndex);
-    // printf("|-------------------------------------|\n");
 
     float tnearx, tneary, tnearz, tfarx, tfary, tfarz;
     int f_nx, f_ny, f_nz, f_fx, f_fy, f_fz;
@@ -183,8 +178,8 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                 velocity[0] *= t_near;
 
                 Mat4x4 trans = translationMatrix(velocity[0][0], velocity[0][1], velocity[0][2]);
-                obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
-                obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
+                // obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
+                // obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
 
                 obj->bbox.v = setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, trans);
 
@@ -211,7 +206,6 @@ const void sortObjectCollisions(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *vel
     }
 
     obj->BB = getDimensionsLimits(obj->bbox.v, obj->bbox.v_indexes);
-    // obj->BB = getDimensionsLimits(obj->v, obj->v_indexes);
 
     float tnearx, tneary, tnearz, tfarx, tfary, tfarz;
     int f_nx, f_ny, f_nz, f_fx, f_fy, f_fz;

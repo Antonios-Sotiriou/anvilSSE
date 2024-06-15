@@ -13,13 +13,9 @@
     #include <string.h>
 #endif
 
-/* Defined in main.c. */
-extern TerrainInfo tf;
-
 const void createCube(Mesh *c);
 const void createskybox(Mesh *c);
 const void createPlane(Mesh *c);
 const void createGrid(Mesh *c, int vrows, int vcols);
-const void createTerrain(Mesh *c, const char path[]);
 
 #endif /* _TEST_SHAPE_H */

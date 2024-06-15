@@ -123,6 +123,7 @@ typedef struct {
     vec4f *n;
     vec2f *t;
     int v_indexes, n_indexes, t_indexes, cull;
+    Bbox bbox;
 } MeshStepOne;
 
 /* Inside graphic pipeline struct. Holds necessery data for the 2nd step of the graphic pipeline. */

@@ -1,4 +1,4 @@
-#include "headers/exec_time.h"
+#include "../headers/exec_time.h"
 
 const clock_t start(void) {
     return clock();

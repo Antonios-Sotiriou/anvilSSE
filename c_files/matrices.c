@@ -1,4 +1,4 @@
-#include "headers/matrices.h"
+#include "../headers/matrices.h"
 
 /* Some usefull masks to shuffle vectors with builtins SSE gcc. */
 const static vec4i xmask = { 0, 0, 0, 0 };

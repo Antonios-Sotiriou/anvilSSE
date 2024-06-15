@@ -1,4 +1,4 @@
-#include "headers/camera.h"
+#include "../headers/camera.h"
 
 /* Rotates the camera to look left. */
 const void look_left(vec4f *g, const float angle) {

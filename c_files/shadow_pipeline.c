@@ -1,4 +1,4 @@
-#include "headers/shadow_pipeline.h"
+#include "../headers/shadow_pipeline.h"
 
 const static MeshShadowStepTwo assemblyfacesShadow(MeshShadowStepOne *m, unsigned int *indices, const int len);
 const static MeshShadowStepTwo shadowculling(const MeshShadowStepTwo c, const int len);

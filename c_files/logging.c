@@ -1,4 +1,4 @@
-#include "headers/logging.h"
+#include "../headers/logging.h"
 
 const void logEvent(const XEvent e) {
     printf("Event {\n");
@@ -58,6 +58,7 @@ const void logMesh(const Mesh m) {
     printf("scale:         %f\n", m.scale);
     printf("visible:       %d\n", m.visible);
     logMaterial(m.material);
+    printf("bboxv_indexes: %d\n", m.bbox.v_indexes);
 }
 
 const void logMaterial(const Material mt) {

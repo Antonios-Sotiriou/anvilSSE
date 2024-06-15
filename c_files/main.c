@@ -14,9 +14,9 @@
 // #include <immintrin.h>
 
 /* testing */
-#include "headers/exec_time.h"
-#include "headers/logging.h"
-#include "headers/test_shapes.h"
+#include "../headers/exec_time.h"
+#include "../headers/logging.h"
+#include "../headers/test_shapes.h"
 
 /* ############################################## MULTITHREADING ################################################################### */
 #include <pthread.h>
@@ -30,21 +30,21 @@ int EDGEFUNC = 0;
 int SCANLINE = 1;
 
 /* Project specific headers */
-#include "headers/anvil_structs.h"
-#include "headers/quaternions.h"
-#include "headers/database.h"
-#include "headers/matrices.h"
-#include "headers/kinetics.h"
-#include "headers/scene_objects.h"
-#include "headers/general_functions.h"
-#include "headers/physics.h"
-#include "headers/clipping.h"
-#include "headers/shadow_pipeline.h"
-#include "headers/grafik_pipeline.h"
-#include "headers/terrain_functions.h"
-#include "headers/collision_detection.h"
-#include "headers/camera.h"
-#include "headers/draw_functions.h"
+#include "../headers/anvil_structs.h"
+#include "../headers/quaternions.h"
+#include "../headers/database.h"
+#include "../headers/matrices.h"
+#include "../headers/kinetics.h"
+#include "../headers/scene_objects.h"
+#include "../headers/general_functions.h"
+#include "../headers/physics.h"
+#include "../headers/clipping.h"
+#include "../headers/shadow_pipeline.h"
+#include "../headers/grafik_pipeline.h"
+#include "../headers/terrain_functions.h"
+#include "../headers/collision_detection.h"
+#include "../headers/camera.h"
+#include "../headers/draw_functions.h"
 
 enum { Win_Close, Win_Name, Atom_Type, Atom_Last};
 
@@ -106,14 +106,14 @@ vec4f camera[N + 1] = {
     { 0.0f, 0.0f, 1.0f, 0.0f }
 };
 Light sunlight = {
-    .pos = { 90.f, 200.0f, 90.f, 1.f },
+    .pos = { 0.f, 100.0f, 0.f, 1.f },
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
 };
 const vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
-const float sunMov = 1.0f;
-const float movScalar = 10.f;
+const float sunMov = 100.0f;
+const float movScalar = 50.f;
 
 /* Global Matrices */
 Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
@@ -271,7 +271,7 @@ const static void keypress(XEvent *event) {
         eye = (vec4f*)&camera;
 
     // printf("\x1b[H\x1b[J");
-    system("clear\n");
+    // system("clear\n");
     // printf("Key Pressed: %ld\n", keysym);
     // logEvent(*event);
 
@@ -342,8 +342,8 @@ const static void keypress(XEvent *event) {
             scene.m[1].momentum = movScalar * DeltaTime;
             break;
         case 65431 : //sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
-            vec4f mve = norm_vec(camera[U] + camera[N]);
-            // vec4f mve = { 0.f, 0.f, 1.f };
+            // vec4f mve = norm_vec(camera[U] + camera[N]);
+            vec4f mve = { 0.f, 0.f, 1.f };
             // const vec4f pull_pointe = { 0.f, -1.f, 0.f };
             // const float g_accelaratione = (9.81f * scene.m[Player_1].falling_time) * scene.m[Player_1].mass;
             // scene.m[1].mvdir = (pull_pointe * g_accelaratione) + mve;
@@ -363,7 +363,9 @@ const static void keypress(XEvent *event) {
             break;
         case 120 : rotate_x(&scene.m[0], 1);                     /* x */
             break;
-        case 121 : rotate_y(&scene.m[0], 1);                     /* y */
+        case 121 :
+            rotate_y(&scene.m[0], 10);                           /* y */
+            rotate_y(&scene.m[1], 10);
             break;
         case 122 : rotate_z(&scene.m[0], 1);                     /* z */
             break;
@@ -372,9 +374,8 @@ const static void keypress(XEvent *event) {
             rotate_light(&sunlight, center, 1, 0.0f, 1.0f, 0.0f);        /* r */
             break;
         case 99 :                                                        /* c */
-            vec4f axis = { 1.f, 0.f, 0.f, 0.f };
-            rotate_origin(&scene.m[0], 1, 1.0f, 0.0f, 0.0f);
-            scene.m[Player_1].Q = multiplyQuats(scene.m[Player_1].Q, rotationQuat(10, axis));
+            rotate_origin(&scene.m[0], 10, 1.0f, 0.0f, 0.0f);
+            rotate_origin(&scene.m[1], 10, 1.0f, 0.0f, 0.0f);
             break;
         case 43 : AmbientStrength += 0.01;                                    /* + */
             printf("AmbientStrength: %f\n", AmbientStrength);
@@ -433,13 +434,7 @@ const static void keypress(XEvent *event) {
     else
         worldMat = mxm(viewMat, orthoMat);
 
-    // scene.m[1].BB = getDimensionsLimits(scene.m[1].v, scene.m[1].v_indexes);
-    // logDm(scene.m[1].BB);
-    // scene.m[1].BB = getDimensionsLimits(scene.m[1].bbox.v, scene.m[1].bbox.v_indexes);
-    // logDm(scene.m[1].BB);
-    // printf("|-------------------------------------|\n");
-
-    applyForces(&scene);
+    // applyForces(&scene);
 }
 static void *oscillator(void *args) {
 
@@ -474,9 +469,9 @@ const static void applyPhysics(void) {
 
     applyForces(&scene);
 
-    // printQuad(scene.m[Player_1].quadIndex);
+    printQuad(scene.m[Player_1].quadIndex);
 
-    displayVec4f(scene.m[Player_1].pivot, scene.m[Player_1].pivot + (scene.m[Player_1].mvdir * scene.m[Player_1].momentum), worldMat);
+    // displayVec4f(scene.m[Player_1].pivot, scene.m[Player_1].pivot + (scene.m[Player_1].mvdir * scene.m[Player_1].momentum), worldMat);
 }
 const static void project(void) {
 

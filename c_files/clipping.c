@@ -1,4 +1,4 @@
-#include "headers/clipping.h"
+#include "../headers/clipping.h"
 
 extern const void swap(void *a, void *b, unsigned long size);
 
