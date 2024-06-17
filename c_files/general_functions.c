@@ -136,7 +136,7 @@ const void adoptdetailMesh(Mesh *m) {
     if (lcache_0 != m->currentlod) {
         releaseMesh(m);
         loadMesh(m, m->name, m->currentlod);
-        enWorldMesh(m);
+        // enWorldMesh(m);
         printf("adoptDetailMesh()\n");
     }
 }

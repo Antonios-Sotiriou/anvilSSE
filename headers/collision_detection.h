@@ -15,6 +15,7 @@
 
 const void objectTerrainCollision(Mesh *terrain, Mesh *object);
 const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *velocity);
+const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj);
 const void sortObjectCollisions(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *velocity);
 
 #endif /* _COLLISION_DETECTION_H */

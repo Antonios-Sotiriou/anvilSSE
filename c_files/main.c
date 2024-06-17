@@ -364,7 +364,7 @@ const static void keypress(XEvent *event) {
         case 120 : rotate_x(&scene.m[0], 1);                     /* x */
             break;
         case 121 :
-            rotate_y(&scene.m[0], 10);                           /* y */
+            //rotate_y(&scene.m[0], 10);                           /* y */
             rotate_y(&scene.m[1], 10);
             break;
         case 122 : rotate_z(&scene.m[0], 1);                     /* z */
@@ -374,7 +374,7 @@ const static void keypress(XEvent *event) {
             rotate_light(&sunlight, center, 1, 0.0f, 1.0f, 0.0f);        /* r */
             break;
         case 99 :                                                        /* c */
-            rotate_origin(&scene.m[0], 10, 1.0f, 0.0f, 0.0f);
+            //rotate_origin(&scene.m[0], 10, 1.0f, 0.0f, 0.0f);
             rotate_origin(&scene.m[1], 10, 1.0f, 0.0f, 0.0f);
             break;
         case 43 : AmbientStrength += 0.01;                                    /* + */
@@ -469,7 +469,7 @@ const static void applyPhysics(void) {
 
     applyForces(&scene);
 
-    printQuad(scene.m[Player_1].quadIndex);
+    // printQuad(scene.m[Player_1].quadIndex);
 
     // displayVec4f(scene.m[Player_1].pivot, scene.m[Player_1].pivot + (scene.m[Player_1].mvdir * scene.m[Player_1].momentum), worldMat);
 }

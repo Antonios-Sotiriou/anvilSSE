@@ -21,6 +21,9 @@ const void applyForces(Scene *s) {
                 // continue;
             }
 
+            // if (s->m[i].momentum == 0)
+                rotationCollision(&tf, s, &s->m[Player_1]);
+
             if ( s->m[i].momentum > 0 ) {
                 s->m[i].falling_time += DeltaTime;
                 
@@ -34,6 +37,7 @@ const void applyForces(Scene *s) {
                     int collide = 1;
                     while (collide) {
                         sortObjectCollisions(&tf, s, &s->m[Player_1], velocity);
+                        // collide = rotationCollision(&tf, s, &s->m[Player_1]);
                         collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
                     }
 

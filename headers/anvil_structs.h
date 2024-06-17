@@ -99,7 +99,7 @@ typedef struct {
     vec4f *n;
     vec2f *t;
     unsigned int *f;
-    Quat Q;
+    Quat Q, r;
     // void (*drawMesh)(void *args);
     int v_indexes, n_indexes, t_indexes, f_indexes, /* vectors, normals, textors and faces indexes summary. */
     type,                                           /* type of the Mesh. Not sure yet how to categorize them. */

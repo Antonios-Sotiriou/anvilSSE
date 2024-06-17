@@ -10,13 +10,14 @@ const void rotate_x(Mesh *c, const float angle) {
 }
 const void rotate_y(Mesh *c, const float angle) {
     vec4f axis = { 0.f, 1.f, 0.f };
-    Quat n = setQuat(0, (vec4f){ 0.f, 0.f, 0.f, 0.f });
 
     Quat yrot = rotationQuat(angle, axis);
-    Mat4x4 m = MatfromQuat(yrot, n.v);
+    Mat4x4 m = MatfromQuat(yrot, (vec4f){ 0.f, 0.f, 0.f, 0.f });
 
     c->pivot = vecxm(c->pivot, m);
     c->Q = multiplyQuats(c->Q, yrot);
+
+    c->r = yrot;
 
     c->bbox.v = setvecsarrayxm(c->bbox.v, c->bbox.v_indexes, m);
 }
@@ -39,13 +40,14 @@ const void rotate_z(Mesh *c, const float angle) {
 /* Rotates Mesh according to own axis in relation with its pivot point. */
 const void rotate_origin(Mesh *c, const float angle, float x, float y, float z) {
     vec4f axis = { x, y, z };
-    Quat n = setQuat(0, c->pivot);
 
     Quat xrot = rotationQuat(angle, axis);
-    Mat4x4 m = MatfromQuat(xrot, n.v);
+    Mat4x4 m = MatfromQuat(xrot, c->pivot);
 
     // c->pivot = vecxm(c->pivot, m);
     c->Q = multiplyQuats(c->Q, xrot);
+
+    c->r = xrot;
 
     // c->v = setvecsarrayxm(c->v, c->v_indexes, m);
     // c->n = setvecsarrayxm(c->n, c->n_indexes, m);

@@ -105,7 +105,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             }
             /* ##################### Y ############################ */          
 
-            if ( (t_far < 0 || t_near < 0) || (t_near > 1.f) ) { 
+            if ( ((t_far < 0) || (t_near < 0)) || (t_near > 1.f) ) { 
                 // printf("(t_far < 0 || t_near < 0) || (t_near > 1.f)\n");
                 // loadMaterial(&s->m[inner_inx].material, "jade");
                 continue;
@@ -193,8 +193,122 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                 // loadMaterial(&s->m[inner_inx].material, "gold");
                 return 1;
             }
-            // printf("End of Cases\n\n");
-            // loadMaterial(&s->m[inner_inx].material, "jade");
+        }
+    }
+    return 0;
+}
+const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
+    if (obj->quadIndex < 0) {
+        // fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
+        return 0;
+    }
+
+    obj->BB = getDimensionsLimits(obj->bbox.v, obj->bbox.v_indexes);
+
+    float tnearx, tneary, tnearz, tfarx, tfary, tfarz;
+    int f_nx, f_ny, f_nz, f_fx, f_fy, f_fz;
+
+    const int num_of_members = tf->quads[obj->quadIndex].members_indexes;
+    for (int i = 0; i < num_of_members; i++) {
+
+        int inner_inx = tf->quads[obj->quadIndex].members[i];
+
+        if ( s->m[inner_inx].id != obj->id ) {
+
+            s->m[inner_inx].BB = getDimensionsLimits(s->m[inner_inx].bbox.v, s->m[inner_inx].bbox.v_indexes);
+
+            int minx = (s->m[inner_inx].BB.minX - (obj->pivot[0] - obj->BB.minX)) + 0.5;
+            int miny = (s->m[inner_inx].BB.minY - (obj->pivot[1] - obj->BB.minY)) + 0.5;
+            int minz = (s->m[inner_inx].BB.minZ - (obj->pivot[2] - obj->BB.minZ)) + 0.5;
+            int maxx = (s->m[inner_inx].BB.maxX - (obj->pivot[0] - obj->BB.maxX)) + 0.5;
+            int maxy = (s->m[inner_inx].BB.maxY - (obj->pivot[1] - obj->BB.maxY)) + 0.5;
+            int maxz = (s->m[inner_inx].BB.maxZ - (obj->pivot[2] - obj->BB.maxZ)) + 0.5;
+
+            tnearx = (minx - obj->pivot[0]);
+            tneary = (miny - obj->pivot[1]);
+            tnearz = (minz - obj->pivot[2]);
+            tfarx = (maxx - obj->pivot[0]);
+            tfary = (maxy - obj->pivot[1]);
+            tfarz = (maxz - obj->pivot[2]);
+
+            f_nx = tnearx == 0 ? 1 : __isnanf(tnearx) ? -1 : 0; 
+            f_ny = tneary == 0 ? 1 : __isnanf(tneary) ? -1 : 0; 
+            f_nz = tnearz == 0 ? 1 : __isnanf(tnearz) ? -1 : 0; 
+            f_fx = tfarx == 0 ? 1 : __isnanf(tfarx) ? -1 : 0;             
+            f_fy = tfary == 0 ? 1 : __isnanf(tfary) ? -1 : 0; 
+            f_fz = tfarz == 0 ? 1 : __isnanf(tfarz) ? -1 : 0;
+
+            // printf("Nan value has occured: %d!!!\n", (f_nx | f_ny | f_nz | f_fx | f_fy | f_fz));
+            if ( (f_nx | f_ny | f_nz | f_fx | f_fy | f_fz) < 0 ) {
+                // loadMaterial(&s->m[inner_inx].material, "jade");
+                // printf("Nan value has occured!!!\n");
+                continue;
+            }
+
+            const int f_sum = f_nx + f_ny + f_nz + f_fx + f_fy + f_fz;
+
+            if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
+            if (tneary > tfary) swap(&tneary, &tfary, 4);
+            if (tnearz > tfarz) swap(&tnearz, &tfarz, 4);
+
+            if (tnearx > tfarz || tnearz > tfarx) {
+                // printf("(tnearx > tfarz || tnearz > tfarx)\n");
+                // loadMaterial(&s->m[inner_inx].material, "jade");
+                continue;
+            }
+
+            float t_near = tnearx > tnearz ? tnearx : tnearz;
+            float t_far = tfarx < tfarz ? tfarx : tfarz;
+
+            /* ##################### Y ############################ */
+            if (t_near > tfary || tneary > t_far) {
+                // printf("(t_near > tfary || tneary > t_far)\n");
+                // getc(stdin);
+                // loadMaterial(&s->m[inner_inx].material, "jade");
+                continue;
+            }
+
+            if (tneary > t_near) {
+                t_near = tneary;
+                // printf("(tneary > t_near)\n");
+                // getc(stdin);
+            }
+            if (tfary < t_far) {
+                t_far = tfary;
+                // printf("(tfary < t_far)\n");
+                // getc(stdin);
+            }
+            /* ##################### Y ############################ */          
+
+            if ( (t_far < 0) || (t_near > 1.f) ) { 
+                // printf("(t_far < 0 || t_near < 0) || (t_near > 1.f)\n");
+                // loadMaterial(&s->m[inner_inx].material, "jade");
+                continue;
+            }
+
+
+            // printf("minx: %d    miny: %d    minz: %d\n", minx, miny, minz);
+            // printf("maxx: %d    maxy: %d    maxz: %d\n", maxx, maxy, maxz);
+
+            printf("FLAGS: f_nx: %d    f_ny: %d    f_nz: %d\n", f_nx, f_ny, f_nz);
+            printf("FLAGS: f_fx: %d    f_fy: %d    f_fz: %d\n", f_fx, f_fy, f_fz);
+
+            // printf("id: %d\n", s->m[inner_inx].id);
+            printf("\ntnearx: %f    tneary: %f    tnearz: %f\n", tnearx, tneary, tnearz);
+            printf("tfarx  : %f    tfary  : %f    tfarz  : %f\n", tfarx, tfary, tfarz);
+
+            if ( (t_near < 0) ) {
+                printf("PENETRATION!!! %f\n\n", t_near);
+
+                Quat rq = conjugateQuat(obj->r);
+
+                Mat4x4 rm = MatfromQuat(rq, obj->pivot);
+                obj->Q = multiplyQuats(obj->Q, rq);
+
+                obj->bbox.v = setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, rm);
+                obj->r = unitQuat();
+                getc(stdin);
+            }
         }
     }
     return 0;

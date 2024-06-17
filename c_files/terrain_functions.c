@@ -170,7 +170,6 @@ const void initMeshQuadInfo(Mesh *t, Mesh *m) {
     m->quadIndex = quad_index;
     addMeshToQuad(m);
 }
-#include "../headers/logging.h"
 /* Retrieves Terrain *t height at given coords and, sets given meshes *m terain quadIndex to the id of the quad at those coords. */
 const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m) {
     const float t_scale = t->scale * 2.f;
