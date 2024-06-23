@@ -9,7 +9,7 @@ const void initWorldObjects(Scene *s) {
 
     memcpy(s->m[0].name, "terrain0", sizeof("terrain0"));
     createTerrain(&s->m[0], "terrains/terrain0/hm_10x10.bmp");
-    loadMaterial(&s->m[0].material, "obsidian");
+    loadMaterial(&s->m[0].material, "greece");
     loadBoundingBox(&s->m[0].bbox, "terrains/terrain0/bbox_terrain0");
 
     s->m[0].type = Terrain;

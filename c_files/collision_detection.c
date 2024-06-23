@@ -224,12 +224,12 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
             int maxy = (s->m[inner_inx].BB.maxY - (obj->pivot[1] - obj->BB.maxY)) + 0.5;
             int maxz = (s->m[inner_inx].BB.maxZ - (obj->pivot[2] - obj->BB.maxZ)) + 0.5;
 
-            tnearx = (minx - obj->pivot[0]);
-            tneary = (miny - obj->pivot[1]);
-            tnearz = (minz - obj->pivot[2]);
-            tfarx = (maxx - obj->pivot[0]);
-            tfary = (maxy - obj->pivot[1]);
-            tfarz = (maxz - obj->pivot[2]);
+            tnearx = (minx - obj->pivot[0]) / 0.f;
+            tneary = (miny - obj->pivot[1]) / 0.f;
+            tnearz = (minz - obj->pivot[2]) / 0.f;
+            tfarx = (maxx - obj->pivot[0]) / 0.f;
+            tfary = (maxy - obj->pivot[1]) / 0.f;
+            tfarz = (maxz - obj->pivot[2]) / 0.f;
 
             f_nx = tnearx == 0 ? 1 : __isnanf(tnearx) ? -1 : 0; 
             f_ny = tneary == 0 ? 1 : __isnanf(tneary) ? -1 : 0; 
@@ -307,7 +307,7 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
                 obj->bbox.v = setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, rm);
                 obj->r = unitQuat();
-                getc(stdin);
+                // getc(stdin);
             }
         }
     }

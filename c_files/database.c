@@ -12,7 +12,7 @@ const int createMaterialDatabase(void) {
     }
 
     const int intensity = 128;
-    Material mats[29] = {
+    Material mats[30] = {
         {
             .name = "skybox",
             .basecolor = { 1.0f, 0.8f, 0.0f, 0.0f },
@@ -56,6 +56,17 @@ const int createMaterialDatabase(void) {
             .reflect = 0,
             .texlevels = 9,
             .texlvl = { "4096x2048", "2048x1024", "1024x512", "512x256", "256x128", "128x64", "64x32", "32x16", "16x8" }
+        },
+        {
+            .name = "greece",
+            .basecolor = { 1.0f, 0.8f, 0.0f, 0.0f },
+            .ambient = { 0.24725f, 0.1995f, 0.0745f, 0.0f },
+            .diffuse = { 0.75164f, 0.60648f, 0.22648f, 0.0f },
+            .specular = { 0.628281f, 0.555802f, 0.366065f, 0.0f },
+            .shinniness = 0.4f * intensity,
+            .reflect = 0,
+            .texlevels = 9,
+            .texlvl = { "1640x1376", "1640x1376", "1640x1376", "1640x1376", "1640x1376", "1640x1376", "1640x1376", "1640x1376", "1640x1376" }
         },
         {
             .name = "light",
@@ -334,7 +345,7 @@ const int createMaterialDatabase(void) {
         },
     };
     
-    for (int i = 0; i < 29; i++)
+    for (int i = 0; i < 30; i++)
         fwrite(&mats[i], sizeof(Material), 1, fp);
 
     fprintf(stderr, "INFO: tables/materials.dat... Success!\n");

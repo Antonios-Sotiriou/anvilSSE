@@ -8,7 +8,7 @@ extern vec4f gravity_epicenter;
 
 const void applyForces(Scene *s) {
     Mat4x4 trans;
-    system("clear\n");
+    // system("clear\n");
     for (int i = 0; i < s->m_indexes; i++) {
 
         if ( s->m[i].type !=  Terrain ) {
