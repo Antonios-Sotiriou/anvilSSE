@@ -21,8 +21,8 @@ const void applyForces(Scene *s) {
                 // continue;
             }
 
-            // if (s->m[i].momentum == 0)
-                rotationCollision(&tf, s, &s->m[Player_1]);
+
+            rotationCollision(&tf, s, &s->m[Player_1]);
 
             if ( s->m[i].momentum > 0 ) {
                 s->m[i].falling_time += DeltaTime;
@@ -37,26 +37,20 @@ const void applyForces(Scene *s) {
                     int collide = 1;
                     while (collide) {
                         sortObjectCollisions(&tf, s, &s->m[Player_1], velocity);
-                        // collide = rotationCollision(&tf, s, &s->m[Player_1]);
+
                         collide = objectEnvironmentCollision(&tf, s, &s->m[Player_1], velocity);
                     }
-
-                    vec4f axis = { 1.f, 0.f, 0.f };
-
+                    
+                    // vec4f axis = { 1.f, 0.f, 0.f };
                     // if (s->m[i].roll) {
                     //     s->m[i].roll = s->m[i].momentum * 10;
 
                     //     Quat xrot = rotationQuat(s->m[i].roll, axis);
-                    //     Mat4x4 m = MatfromQuat(xrot, s->m[i].pivot);
-                    //     trans = mxm(m, translationMatrix(velocity[0][0], velocity[0][1], velocity[0][2]));
 
                     //     s->m[i].Q = multiplyQuats(s->m[i].Q, xrot);
-                    // } else {
-                        trans = translationMatrix(velocity[0][0], velocity[0][1], velocity[0][2]);
                     // }
 
-                    // s->m[i].v = setvecsarrayxm(s->m[i].v, s->m[i].v_indexes, trans);
-                    // s->m[i].n = setvecsarrayxm(s->m[i].n, s->m[i].n_indexes, trans);
+                    trans = translationMatrix(velocity[0][0], velocity[0][1], velocity[0][2]);
 
                     s->m[i].bbox.v = setvecsarrayxm(s->m[i].bbox.v, s->m[i].bbox.v_indexes, trans);
 

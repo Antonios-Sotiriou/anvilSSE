@@ -1,11 +1,11 @@
-#include "../headers/boundingbox_loader.h"
+#include "../headers/bbox_loader.h"
 
 static vec4f *loadvectors(const char path[]);
 
 /* vectors array indexes */
 static int v_indexes = 0;
 
-const void loadBoundingBox(Bbox *b, const char path[]) {
+const void loadBbox(Bbox *b, const char path[]) {
     size_t len = 5 + (strlen(path));
     char objfile[len];
     snprintf(objfile, len, "%s.obj", path);

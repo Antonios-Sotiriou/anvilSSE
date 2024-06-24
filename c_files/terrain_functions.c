@@ -1,5 +1,7 @@
 #include "../headers/terrain_functions.h"
 
+#include "../headers/logging.h"
+
 const static vec4i hmask = { 1, 2, 0, 3 };
 
 /* Creates a Terrain from a given Height Map and Populates the TerrainInfo global struct. */
@@ -182,7 +184,7 @@ const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m) {
         m->quadIndex = -1;
         return 0;
     } 
-
+    logVec4f(t_coords);
     /* Function to get t quads indexes. */
     vec4i pos = __builtin_convertvector((t_coords / t_scale) * (float)tf.vecWidth, vec4i);
     const int quad_index = (pos[2] * tf.quadRows) + pos[0];
@@ -215,6 +217,15 @@ const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m) {
         f.v[2] = t->v[t->f[Lowerface + 6]];
     }
 
+    /* Translate the face from object space to world space for the edge function to work and get the interpolated height value. */
+    Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
+
+    sclMatrix = scaleMatrix(t->scale);
+    trMatrix = translationMatrix(t->pivot[0], t->pivot[1], t->pivot[2]);
+    enWorldMatrix = mxm(sclMatrix, trMatrix);
+
+    f = facexm(f, enWorldMatrix);
+
     const vec4f xs = { f.v[0][0],  f.v[1][0], f.v[2][0], 0};
     const vec4f zs = { f.v[0][2],  f.v[1][2], f.v[2][2], 0};
 
@@ -224,7 +235,7 @@ const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m) {
     const float area = (xmx[0] * zmz[1]) - (zmz[0] * xmx[1]);
     vec4f za = (((t_coords[0] - xs) * zmz) - ((t_coords[2] - zs) * xmx)) / area;
 
-    const vec4f height = za[0] * f.v[2] + za[1] * f.v[0] + za[2] * f.v[1];
+    vec4f height = za[0] * f.v[2] + za[1] * f.v[0] + za[2] * f.v[1];
 
     return height[1];
 }

@@ -36,7 +36,7 @@ all:
 		$(DIRECTORY)collision_detection.c\
 		$(DIRECTORY)mesh_loader.c\
 		$(DIRECTORY)database.c\
-		$(DIRECTORY)boundingbox_loader.c\
+		$(DIRECTORY)bbox_loader.c\
 		$(DIRECTORY)exec_time.c\
 		$(DIRECTORY)test_shapes.c\
 		$(DIRECTORY)logging.c\

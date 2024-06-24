@@ -22,7 +22,7 @@
 #endif
 
 #ifndef _BOUNDINGBOX_LOADER_H
-    #include "boundingbox_loader.h"
+    #include "bbox_loader.h"
 #endif
 
 const void initWorldObjects(Scene *s);

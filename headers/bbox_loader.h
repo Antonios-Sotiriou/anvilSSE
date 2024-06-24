@@ -1,5 +1,5 @@
-#ifndef _BOUNDINGBOX_LOADER_H
-#define _BOUNDINGBOX_LOADER_H 1
+#ifndef _BBOX_LOADER_H
+#define _BBOX_LOADER_H 1
 
 #ifndef _ANVIL_STRUCTS_H
     #include "anvil_structs.h"
@@ -17,8 +17,8 @@
     #include <string.h>
 #endif
 
-const void loadBoundingBox(Bbox *bb, const char name[]);
+const void loadBbox(Bbox *bb, const char name[]);
 
-#endif /* _BOUNDINGBOX_LOADER_H */
+#endif /* _BBOX_LOADER_H */
 
 

@@ -185,7 +185,7 @@ const void enWorldMesh(Mesh *m) {
     m->v = setvecsarrayxm(m->v, m->v_indexes, enWorldMatrix);
     m->n = setvecsarrayxm(m->n, m->n_indexes, enWorldMatrix);
 }
-const void enWorldBoundingBox(Mesh *m) {
+const void enworldBbox(Mesh *m) {
     Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
 
     vec4f pos = { 0 };

@@ -6,19 +6,20 @@ extern vec4f gravity_epicenter;
 
 const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
     const float height = getTerrainHeight(terrain, object->pivot, object);
+    // printf("height: %f\n", height);
     float height_diff = height - (object->pivot[1] - object->scale);
+    // printf("height_diff: %f\n", height_diff);
     if (height_diff >= 0) {
         object->grounded = 1;
         object->falling_time = 0;
     }
     if (object->grounded) {
         Mat4x4 dr = translationMatrix(0, height_diff, 0);
-        // object->v = setvecsarrayxm(object->v, object->v_indexes, dr);
-        // object->n = setvecsarrayxm(object->n, object->n_indexes, dr);
 
         object->bbox.v = setvecsarrayxm(object->bbox.v, object->bbox.v_indexes, dr);
         object->pivot[1] += height_diff;
     }
+    // logVec4f(object->pivot);
 }
 const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *velocity) {
     if (obj->quadIndex < 0) {
@@ -178,8 +179,6 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                 velocity[0] *= t_near;
 
                 Mat4x4 trans = translationMatrix(velocity[0][0], velocity[0][1], velocity[0][2]);
-                // obj->v = setvecsarrayxm(obj->v, obj->v_indexes, trans);
-                // obj->n = setvecsarrayxm(obj->n, obj->n_indexes, trans);
 
                 obj->bbox.v = setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, trans);
 
@@ -238,10 +237,7 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
             f_fy = tfary == 0 ? 1 : __isnanf(tfary) ? -1 : 0; 
             f_fz = tfarz == 0 ? 1 : __isnanf(tfarz) ? -1 : 0;
 
-            // printf("Nan value has occured: %d!!!\n", (f_nx | f_ny | f_nz | f_fx | f_fy | f_fz));
             if ( (f_nx | f_ny | f_nz | f_fx | f_fy | f_fz) < 0 ) {
-                // loadMaterial(&s->m[inner_inx].material, "jade");
-                // printf("Nan value has occured!!!\n");
                 continue;
             }
 
@@ -252,8 +248,6 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
             if (tnearz > tfarz) swap(&tnearz, &tfarz, 4);
 
             if (tnearx > tfarz || tnearz > tfarx) {
-                // printf("(tnearx > tfarz || tnearz > tfarx)\n");
-                // loadMaterial(&s->m[inner_inx].material, "jade");
                 continue;
             }
 
@@ -262,27 +256,18 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
             /* ##################### Y ############################ */
             if (t_near > tfary || tneary > t_far) {
-                // printf("(t_near > tfary || tneary > t_far)\n");
-                // getc(stdin);
-                // loadMaterial(&s->m[inner_inx].material, "jade");
                 continue;
             }
 
             if (tneary > t_near) {
                 t_near = tneary;
-                // printf("(tneary > t_near)\n");
-                // getc(stdin);
             }
             if (tfary < t_far) {
                 t_far = tfary;
-                // printf("(tfary < t_far)\n");
-                // getc(stdin);
             }
             /* ##################### Y ############################ */          
 
             if ( (t_far < 0) || (t_near > 1.f) ) { 
-                // printf("(t_far < 0 || t_near < 0) || (t_near > 1.f)\n");
-                // loadMaterial(&s->m[inner_inx].material, "jade");
                 continue;
             }
 
@@ -307,7 +292,7 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
                 obj->bbox.v = setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, rm);
                 obj->r = unitQuat();
-                // getc(stdin);
+                return 1;
             }
         }
     }

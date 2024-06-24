@@ -51,7 +51,7 @@ const void readHeightmap(const char path[]);
 const void adoptdetailMesh(Mesh *m);
 const void adoptdetailTexture(Mesh *m);
 const void enWorldMesh(Mesh *m);
-const void enWorldBoundingBox(Mesh *m);
+const void enworldBbox(Mesh *m);
 const void placeMesh(Mesh *m, const vec4f pos);
 const int frustumCulling(vec4f v[], const int v_indexes);
 const int checkVisibles(Scene *s, Mesh *m, const int viewProj);

@@ -21,22 +21,22 @@ const void loadMesh(Mesh *m, const char path[], const unsigned int meshlod) {
 
     m->v = loadvectors(objfile);
     if (!m->v)
-        fprintf(stderr, "Could not reallocate Vectors array. load_obj() - get_vectors()\n");
+        fprintf(stderr, "Could not reallocate Vectors array. loadMesh() - get_vectors()\n");
     m->v_indexes = v_indexes;
 
     m->t = loadtextors(objfile);
     if (!m->t)
-        fprintf(stderr, "Could not create Vectors array. load_obj() - get_textors()\n");
+        fprintf(stderr, "Could not create Vectors array. loadMesh() - get_textors()\n");
     m->t_indexes = t_indexes;
 
     m->n = loadnormals(objfile);
     if (!m->n)
-        fprintf(stderr, "Could not create Vectors array. load_obj() - get_normals()\n");
+        fprintf(stderr, "Could not create Vectors array. loadMesh() - get_normals()\n");
     m->n_indexes = n_indexes;
 
     m->f = loadfaces(objfile);
     if (!m->f)
-        fprintf(stderr, "Could not create Faces array. load_obj() - get_faces()\n");
+        fprintf(stderr, "Could not create Faces array. loadMesh() - get_faces()\n");
     m->f_indexes = f_indexes;
 }
 static unsigned int *loadfaces(const char path[]) {
@@ -49,7 +49,7 @@ static unsigned int *loadfaces(const char path[]) {
 
     unsigned int *f = malloc(facesize);
     if (!f) {
-        fprintf(stderr, "Could not allocate memory for Face struct. load_obj() -- malloc().\n");
+        fprintf(stderr, "Could not allocate memory for Face struct. loadMesh() -- malloc().\n");
         fclose(fp);
         return NULL;
     }
@@ -66,7 +66,7 @@ static unsigned int *loadfaces(const char path[]) {
 
                     f = realloc(f, facesize * dynamic_inc);
                     if (!f) {
-                        fprintf(stderr, "Could not reallocate memory for Face struct array. load_obj() -- realloc().\n");
+                        fprintf(stderr, "Could not reallocate memory for Face struct array. loadMesh() -- realloc().\n");
                         fclose(fp);
                         free(f);
                         return NULL;
@@ -110,7 +110,7 @@ static vec4f *loadvectors(const char path[]) {
 
                     v = realloc(v, vecsize * dynamic_inc);
                     if (!v) {
-                        fprintf(stderr, "Could not reallocate memory for vec4f struct array. load_obj() -- realloc().\n");
+                        fprintf(stderr, "Could not reallocate memory for vec4f struct array. loadMesh() -- realloc().\n");
                         fclose(fp);
                         free(v);
                         return NULL;
@@ -199,7 +199,7 @@ static vec4f *loadnormals(const char path[]) {
 
                         n = realloc(n, sizeof(vec4f) * dynamic_inc);
                         if (!n) {
-                            fprintf(stderr, "Could not reallocate memory for vec4f struct array. load_obj() -- realloc().\n");
+                            fprintf(stderr, "Could not reallocate memory for vec4f struct array. loadMesh() -- realloc().\n");
                             fclose(fp);
                             free(n);
                             return NULL;

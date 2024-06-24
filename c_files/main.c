@@ -113,7 +113,7 @@ Light sunlight = {
 };
 const vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
-const float movScalar = 50.f;
+const float movScalar = 100.f;
 
 /* Global Matrices */
 Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
@@ -344,6 +344,7 @@ const static void keypress(XEvent *event) {
         case 65431 : //sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
             // vec4f mve = norm_vec(camera[U] + camera[N]);
             vec4f mve = { 0.f, 0.f, 1.f };
+            // rotate_origin(&scene.m[1], 10, 1.0f, 0.0f, 0.0f);
             // const vec4f pull_pointe = { 0.f, -1.f, 0.f };
             // const float g_accelaratione = (9.81f * scene.m[Player_1].falling_time) * scene.m[Player_1].mass;
             // scene.m[1].mvdir = (pull_pointe * g_accelaratione) + mve;
@@ -364,7 +365,7 @@ const static void keypress(XEvent *event) {
         case 120 : rotate_x(&scene.m[0], 1);                     /* x */
             break;
         case 121 :
-            //rotate_y(&scene.m[0], 10);                           /* y */
+            rotate_y(&scene.m[0], 10);                           /* y */
             rotate_y(&scene.m[1], 10);
             break;
         case 122 : rotate_z(&scene.m[0], 1);                     /* z */
@@ -374,7 +375,7 @@ const static void keypress(XEvent *event) {
             rotate_light(&sunlight, center, 1, 0.0f, 1.0f, 0.0f);        /* r */
             break;
         case 99 :                                                        /* c */
-            //rotate_origin(&scene.m[0], 10, 1.0f, 0.0f, 0.0f);
+            rotate_origin(&scene.m[0], 10, 1.0f, 0.0f, 0.0f);
             rotate_origin(&scene.m[1], 10, 1.0f, 0.0f, 0.0f);
             break;
         case 43 : AmbientStrength += 0.01;                                    /* + */

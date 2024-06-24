@@ -138,6 +138,14 @@ face *setfacesarrayxm(face fs[], const int len, const Mat4x4 m) {
 const vec4f vecxm(const vec4f v, const Mat4x4 m) {
     return  __builtin_shuffle(v, xmask) * m.m[0] + __builtin_shuffle(v, ymask) * m.m[1] + __builtin_shuffle(v, zmask) * m.m[2] + __builtin_shuffle(v, wmask) * m.m[3];
 }
+/* Multiplies a faces vectors with the given Matrix and returns a new face with only the vectors translated and modified, leaving the original unmodified. */
+const face facexm(const face f, const Mat4x4 m) {
+    face r = { 0 };
+    r.v[0] = __builtin_shuffle(f.v[0], xmask) * m.m[0] + __builtin_shuffle(f.v[0], ymask) * m.m[1] + __builtin_shuffle(f.v[0], zmask) * m.m[2] + __builtin_shuffle(f.v[0], wmask) * m.m[3];
+    r.v[1] = __builtin_shuffle(f.v[1], xmask) * m.m[0] + __builtin_shuffle(f.v[1], ymask) * m.m[1] + __builtin_shuffle(f.v[1], zmask) * m.m[2] + __builtin_shuffle(f.v[1], wmask) * m.m[3];
+    r.v[2] = __builtin_shuffle(f.v[2], xmask) * m.m[0] + __builtin_shuffle(f.v[2], ymask) * m.m[1] + __builtin_shuffle(f.v[2], zmask) * m.m[2] + __builtin_shuffle(f.v[2], wmask) * m.m[3];
+    return r;
+}
 /* The Camera Matrix or as used to called the View Matrix.Returns a new 4x4 Matrix. */
 const Mat4x4 lookat(const vec4f P, const vec4f U, const vec4f V, const vec4f N) {
     Mat4x4 m = { 0 };

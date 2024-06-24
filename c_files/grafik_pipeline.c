@@ -37,12 +37,12 @@ const void grafikPipeline(Scene *s) {
             Mat4x4 vecsMat = mxm(enWorldMatrix, worldMat);
             Mat4x4 normsMat = mxm(enWorldMatrix, viewMat);
 
-            if (s->m[i].type == Terrain) {
-                Mat4x4 mfq = MatfromQuat(s->m[i].Q, s->m[i].pivot);
-                cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, mxm(mfq, worldMat));
-            } else {
+            // if (s->m[i].type == Terrain) {
+            //     Mat4x4 mfq = MatfromQuat(s->m[i].Q, s->m[i].pivot);
+            //     cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, mxm(mfQ, worldMat));
+            // } else {
                 cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, vecsMat);
-            }
+            // }
             cache_0.n = setvecsarrayxm(cache_0.n, cache_0.n_indexes, normsMat);
 
             /* Assembly and create the faces from the mesh vertices, normals and texture arrays, through the indexes. */
