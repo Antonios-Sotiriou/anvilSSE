@@ -2,8 +2,8 @@
 
 /* Defined in main.c. */
 extern TerrainInfo tf;
-extern float movScalar;
 extern vec4f gravity_epicenter;
+
 #include "../headers/logging.h"
 
 const void applyForces(Scene *s) {
@@ -20,7 +20,6 @@ const void applyForces(Scene *s) {
                 s->m[i].momentum = s->m[i].roll = 0.f;
                 // continue;
             }
-
 
             rotationCollision(&tf, s, &s->m[Player_1]);
 

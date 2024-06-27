@@ -45,6 +45,7 @@ int SCANLINE = 1;
 #include "../headers/collision_detection.h"
 #include "../headers/camera.h"
 #include "../headers/draw_functions.h"
+#include "../headers/click_select.h"
 
 enum { Win_Close, Win_Name, Atom_Type, Atom_Last};
 
@@ -69,9 +70,9 @@ XSetWindowAttributes sa;
 Atom wmatom[Atom_Last];
 
 /* BUFFERS. */
-u_int8_t *frame_buffer, *point_buffer, *reset_buffer;
-float *main_depth_buffer, *point_depth_buffer, *shadow_buffer[NUM_OF_CASCADES];
-Fragment *frags_buffer, *reset_frags;
+u_int8_t *frame_buffer, *point_frame_buffer, *reset_frame_buffer;
+float *main_depth_buffer, *point_depth_buffer, *reset_depth_buffer, *shadow_buffer[NUM_OF_CASCADES];
+Fragment *frags_buffer, *reset_frags_buffer;
 
 /* Project Global Variables. */
 int PROJECTIONVIEW = 0;
@@ -87,7 +88,7 @@ float FPlane              = 20000.0f;
 float AmbientStrength     = 0.5f;
 float SpecularStrength    = 0.5f;
 float DiffuseStrength     = 0.5f;
-float shadow_bias         = 0.0003f;//0.003105;//0.002138;//0.000487f;
+float shadow_bias         = 0.0f;//0.003105;//0.002138;//0.000487f;
 /* For investigating shadow map usefull global variables. */
 int INCORDEC = -1;
 unsigned int SMA = 0;
@@ -106,7 +107,7 @@ vec4f camera[N + 1] = {
     { 0.0f, 0.0f, 1.0f, 0.0f }
 };
 Light sunlight = {
-    .pos = { 0.f, 100.0f, 0.f, 1.f },
+    .pos = { 0.f, 10000.0f, 0.f, 1.f },
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
@@ -114,6 +115,9 @@ Light sunlight = {
 const vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
 const float movScalar = 100.f;
+const float cameraMov = 10.f;
+// unsigned int click = 0;
+vec4f click = { 0 };
 
 /* Global Matrices */
 Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
@@ -186,11 +190,13 @@ const static void clientmessage(XEvent *event) {
         releaseScene(&scene);
 
         free(frame_buffer);
+        free(reset_frame_buffer);
+
         free(main_depth_buffer);
-        free(reset_buffer);
+        free(reset_depth_buffer);
 
         free(frags_buffer);
-        free(reset_frags);
+        free(reset_frags_buffer);
         free(thread_ids);
 
         free(shadow_buffer[0]);
@@ -232,11 +238,13 @@ const static void configurenotify(XEvent *event) {
         if (INIT) {
 
             free(frame_buffer);
+            free(reset_frame_buffer);
+
             free(main_depth_buffer);
-            free(reset_buffer);
+            free(reset_depth_buffer);
 
             free(frags_buffer);
-            free(reset_frags);
+            free(reset_frags_buffer);
             free(thread_ids);
 
             free(shadow_buffer[0]);
@@ -260,6 +268,10 @@ const static void buttonpress(XEvent *event) {
     printf("X: %f\n", ((event->xbutton.x - (WIDTH / 2.00)) / (WIDTH / 2.00)));
     printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
     // DROPBALL = DROPBALL == 0 ? 1 : 0;
+    // click = (event->xbutton.y * main_wa.width) + event->xbutton.x;
+    click[0] = event->xbutton.x;
+    click[1] = event->xbutton.y;
+    // printf("depth on screen space: %f\n", point_depth_buffer[click]);
 }
 const static void keypress(XEvent *event) {
 
@@ -271,7 +283,7 @@ const static void keypress(XEvent *event) {
         eye = (vec4f*)&camera;
 
     // printf("\x1b[H\x1b[J");
-    // system("clear\n");
+    system("clear\n");
     // printf("Key Pressed: %ld\n", keysym);
     // logEvent(*event);
 
@@ -291,22 +303,22 @@ const static void keypress(XEvent *event) {
             break;
         case 101 : look_down(eye, 2.2);            /* e */
             break;
-        case 119 : move_forward(eye, 100.f);         /* w */
+        case 119 : move_forward(eye, cameraMov);         /* w */
             break;
-        case 115 : move_backward(eye, 100.f);        /* s */
+        case 115 : move_backward(eye, cameraMov);        /* s */
             break;
-        case 65361 : move_left(eye, 100.f);          /* left arrow */
+        case 65361 : move_left(eye, cameraMov);          /* left arrow */
             break;
-        case 65363 : move_right(eye, 100.f);         /* right arrow */
+        case 65363 : move_right(eye, cameraMov);         /* right arrow */
             break;
-        case 65362 : move_up(eye, 100.f);            /* up arror */
+        case 65362 : move_up(eye, cameraMov);            /* up arror */
             break;
-        case 65364 : move_down(eye, 100.f);          /* down arrow */
+        case 65364 : move_down(eye, cameraMov);          /* down arrow */
             break;
-        case 65451 :shadow_bias += 0.0001;             /* + */
+        case 65451 :shadow_bias += 0.00001;             /* + */
             printf("shadow_bias: %f\n", shadow_bias);
             break;
-        case 65453 :shadow_bias -= 0.0001;             /* - */
+        case 65453 :shadow_bias -= 0.00001;             /* - */
             printf("shadow_bias: %f\n", shadow_bias);
             break;
         case 65450 : SpecularStrength += 0.01f;             /* * */
@@ -365,17 +377,17 @@ const static void keypress(XEvent *event) {
         case 120 : rotate_x(&scene.m[0], 1);                     /* x */
             break;
         case 121 :
-            rotate_y(&scene.m[0], 10);                           /* y */
+            // rotate_y(&scene.m[0], 10);                           /* y */
             rotate_y(&scene.m[1], 10);
             break;
         case 122 : rotate_z(&scene.m[0], 1);                     /* z */
             break;
         case 114 : 
             vec4f center = { 0.f, 0.f, 0.f, 0.f };
-            rotate_light(&sunlight, center, 1, 0.0f, 1.0f, 0.0f);        /* r */
+            rotate_light(&sunlight, center, 1, 1.0f, 0.0f, 0.0f);   /* r */
             break;
         case 99 :                                                        /* c */
-            rotate_origin(&scene.m[0], 10, 1.0f, 0.0f, 0.0f);
+            // rotate_origin(&scene.m[0], 10, 1.0f, 0.0f, 0.0f);
             rotate_origin(&scene.m[1], 10, 1.0f, 0.0f, 0.0f);
             break;
         case 43 : AmbientStrength += 0.01;                                    /* + */
@@ -426,8 +438,8 @@ const static void keypress(XEvent *event) {
     viewMat = inverse_mat(lookAt);
     sunlight.newPos = vecxm(sunlight.pos, viewMat);
 
-    // printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
-    // printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
+    printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
+    printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
     createCascadeShadowMatrices(NUM_OF_CASCADES);
 
     if (!PROJECTIONVIEW)
@@ -461,7 +473,7 @@ static void *cascade(void *args) {
 
     int shadow_id = *(int*)args;
 
-    memcpy(shadow_buffer[shadow_id], reset_buffer, FBSIZE);
+    memcpy(shadow_buffer[shadow_id], reset_depth_buffer, FBSIZE);
     shadowPipeline(&scene, shadow_id);
 
     return (void*)args;
@@ -477,15 +489,15 @@ const static void applyPhysics(void) {
 const static void project(void) {
 
     /* Draw in parallel the 3 Cascade shadow maps. */
-    // int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
-    // for (int i = 0; i < NUM_OF_CASCADES; i++) {
-    //     if (pthread_create(&threads[i], NULL, &cascade, &shadow_ids[i]))
-    //         fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
-    // }
-    // for (int i = 0; i < NUM_OF_CASCADES; i++) {
-    //     if (pthread_join(threads[i], NULL))
-    //         fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
-    // }
+    int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
+    for (int i = 0; i < NUM_OF_CASCADES; i++) {
+        if (pthread_create(&threads[i], NULL, &cascade, &shadow_ids[i]))
+            fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
+    }
+    for (int i = 0; i < NUM_OF_CASCADES; i++) {
+        if (pthread_join(threads[i], NULL))
+            fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
+    }
 
     grafikPipeline(&scene);
 
@@ -498,6 +510,7 @@ const static void project(void) {
             fprintf(stderr, "ERROR: project() -- oscillator -- pthread_join()\n");
     }
 
+    logVec4f(click);
     drawFrame();
 }
 /* Writes the final Pixel values on screen. */
@@ -516,9 +529,9 @@ const static void drawFrame(void) {
     XPutImage(displ, main_pixmap, gc, main_image, 0, 0, 0, 0, main_wa.width, main_wa.height);
     pixmapdisplay(main_pixmap, mainwin, main_wa.width, main_wa.height);
 
-    memcpy(frame_buffer, reset_buffer, FBSIZE);
-    memcpy(main_depth_buffer, reset_buffer, FBSIZE);
-    memcpy(frags_buffer, reset_frags, MAIN_EMVADON * sizeof(Fragment));
+    memcpy(frame_buffer, reset_frame_buffer, FBSIZE);
+    memcpy(main_depth_buffer, reset_depth_buffer, FBSIZE); 
+    memcpy(frags_buffer, reset_frags_buffer, MAIN_EMVADON * sizeof(Fragment));
 }
 const static void initMainWindow(void) {
     sa.event_mask = EXPOSEMASKS | KEYBOARDMASKS | POINTERMASKS;
@@ -534,7 +547,7 @@ const static void initGlobalGC(void) {
     gc = XCreateGC(displ, mainwin, GCBackground | GCForeground | GCGraphicsExposures, &gcvalues);
 }
 const static void initDependedVariables(void) {
-    main_image = XCreateImage(displ, main_wa.visual, main_wa.depth, ZPixmap, 0, (char*)point_buffer, main_wa.width, main_wa.height, 32, (main_wa.width * 4));
+    main_image = XCreateImage(displ, main_wa.visual, main_wa.depth, ZPixmap, 0, (char*)point_frame_buffer, main_wa.width, main_wa.height, 32, (main_wa.width * 4));
 
     ASPECTRATIO = ((float)main_wa.width / (float)main_wa.height);
     HALFH = main_wa.height >> 1;
@@ -565,11 +578,16 @@ const static void initAtoms(void) {
 /* Creates and Initializes the importand buffers. (frame, depth, shadow). */
 const static void initBuffers(void) {
     frame_buffer = calloc(MAIN_EMVADON * 4, 1);
+    reset_frame_buffer = calloc(MAIN_EMVADON * 4, 1);
+
     main_depth_buffer = calloc(MAIN_EMVADON, 4);
-    reset_buffer = calloc(MAIN_EMVADON * 4, 1);
+    reset_depth_buffer = calloc(MAIN_EMVADON, 4);
+
+    // for (int i = 0; i < MAIN_EMVADON; i++)
+    //     reset_depth_buffer[i] = 100000.f;
 
     frags_buffer = calloc(MAIN_EMVADON, sizeof(Fragment));
-    reset_frags = calloc(MAIN_EMVADON, sizeof(Fragment));
+    reset_frags_buffer = calloc(MAIN_EMVADON, sizeof(Fragment));
 
     shadow_buffer[0] = calloc(MAIN_EMVADON, 4);
     shadow_buffer[1] = calloc(MAIN_EMVADON, 4);

@@ -108,6 +108,7 @@ vec4f *setvecsarrayxm(vec4f vecs[], const int len, const Mat4x4 m) {
         r[i] = __builtin_shuffle(vecs[i], xmask) * m.m[0] + __builtin_shuffle(vecs[i], ymask) * m.m[1] + __builtin_shuffle(vecs[i], zmask) * m.m[2] + __builtin_shuffle(vecs[i], wmask) * m.m[3];
     }
     memcpy(vecs, &r, len * 16);
+    // return vecs;
 }
 /* Multiplies a vec4f array with the given Matrix and returns a new array, which includes the original array information, leaving the original unmodified. */
 face *facesarrayxm(face fs[], const int len, const Mat4x4 m) {

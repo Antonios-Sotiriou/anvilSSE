@@ -250,7 +250,7 @@ const int frustumCulling(vec4f v[], const int v_indexes) {
     return 1;
 }
 /* Check and set visibillity of scene objects seen from given meshes pivot point and direction. viewProj: (1 for Prespective and 0 for orthographic Projection).*/
-const int checkVisibles(Scene *s, Mesh *m, const int viewProj) {
+const void checkVisibles(Scene *s, Mesh *m, const int viewProj) {
     vec4f up = { 0.f, -1.f, 0.f };
     vec4f u = cross_product(m->mvdir, up);
     vec4f v = cross_product(u, m->mvdir);

@@ -8,7 +8,7 @@ const int createMaterialDatabase(void) {
         return EXIT_SUCCESS;
     } else {
         // fprintf(stderr, "INFO: data/materials.dat not found... Creating!\n");
-        FILE *fp = fopen("tables/materials.dat", "wb");
+        fp = fopen("tables/materials.dat", "wb");
     }
 
     const int intensity = 128;

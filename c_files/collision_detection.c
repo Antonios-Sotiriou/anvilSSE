@@ -6,9 +6,7 @@ extern vec4f gravity_epicenter;
 
 const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
     const float height = getTerrainHeight(terrain, object->pivot, object);
-    // printf("height: %f\n", height);
     float height_diff = height - (object->pivot[1] - object->scale);
-    // printf("height_diff: %f\n", height_diff);
     if (height_diff >= 0) {
         object->grounded = 1;
         object->falling_time = 0;
@@ -19,7 +17,6 @@ const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
         object->bbox.v = setvecsarrayxm(object->bbox.v, object->bbox.v_indexes, dr);
         object->pivot[1] += height_diff;
     }
-    // logVec4f(object->pivot);
 }
 const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *velocity) {
     if (obj->quadIndex < 0) {
@@ -241,7 +238,7 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
                 continue;
             }
 
-            const int f_sum = f_nx + f_ny + f_nz + f_fx + f_fy + f_fz;
+            // const int f_sum = f_nx + f_ny + f_nz + f_fx + f_fy + f_fz;
 
             if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
             if (tneary > tfary) swap(&tneary, &tfary, 4);

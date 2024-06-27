@@ -8,7 +8,7 @@ const void initWorldObjects(Scene *s) {
     // createGrid(&s->m[0], 10, 10);
 
     memcpy(s->m[0].name, "terrain0", sizeof("terrain0"));
-    createTerrain(&s->m[0], "terrains/terrain0/hm_100x100.bmp");
+    createTerrain(&s->m[0], "terrains/terrain0/hm_10x10.bmp");
     loadMaterial(&s->m[0].material, "greece");
     loadBbox(&s->m[0].bbox, "terrains/terrain0/bbox_terrain0");
 
@@ -18,7 +18,7 @@ const void initWorldObjects(Scene *s) {
     s->m[0].scale = 1000.f;
 
     s->m[0].pivot[0] = 1000.f;
-    s->m[0].pivot[1] = 20.f;
+    s->m[0].pivot[1] = 0.f;
     s->m[0].pivot[2] = 1000.f;
 
     s->m[0].cull = 1;
@@ -56,7 +56,7 @@ const void initWorldObjects(Scene *s) {
     enworldBbox(&s->m[1]);
 
     // /* ######################################################################################################## */
-    createCube(&s->m[2]);
+    // createCube(&s->m[2]);
     memcpy(s->m[2].name, "cubesmooth", sizeof("cubesmooth"));
     loadMesh(&s->m[2], "objfiles/cubesmooth", 1);
     loadMaterial(&s->m[2].material, "jade");

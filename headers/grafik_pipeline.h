@@ -30,8 +30,8 @@ extern int HALFH, HALFW, PROJECTIONVIEW, DEBUG;
 extern float FPlane, NPlane;
 extern XWindowAttributes main_wa;
 extern Mat4x4 viewMat, worldMat, lookAt, *point_mat;
-extern u_int8_t *frame_buffer, *point_buffer;
-extern float *point_depth_buffer, *main_depth_buffer;
+extern u_int8_t *frame_buffer, *point_frame_buffer;
+extern float *main_depth_buffer, *point_depth_buffer;
 
 const void grafikPipeline(Scene *s);
 

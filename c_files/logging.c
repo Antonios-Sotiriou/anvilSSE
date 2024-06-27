@@ -3,18 +3,18 @@
 const void logEvent(const XEvent e) {
     printf("Event {\n");
     fprintf(stdout, "    type        : %d\n", e.type);
-    fprintf(stdout, "    pad         : %d\n", e.pad);
+    // fprintf(stdout, "    pad         : %ln\n", e.pad);
     fprintf(stdout, "    display     : %p\n", e.xkey.display);
     fprintf(stdout, "    keycode     : %d\n", e.xkey.keycode);
-    fprintf(stdout, "    root        : %p\n", e.xkey.root);
+    fprintf(stdout, "    root        : %ld\n", e.xkey.root);
     fprintf(stdout, "    same_screen : %d\n", e.xkey.same_screen);
     fprintf(stdout, "    send_event  : %d\n", e.xkey.send_event);
-    fprintf(stdout, "    serial      : %d\n", e.xkey.serial);
+    fprintf(stdout, "    serial      : %ld\n", e.xkey.serial);
     fprintf(stdout, "    state       : %d\n", e.xkey.state);
-    fprintf(stdout, "    subwindow   : %p\n", e.xkey.subwindow);
-    fprintf(stdout, "    time        : %d\n", e.xkey.time);
+    fprintf(stdout, "    subwindow   : %ld\n", e.xkey.subwindow);
+    fprintf(stdout, "    time        : %ld\n", e.xkey.time);
     fprintf(stdout, "    type        : %d\n", e.xkey.type);
-    fprintf(stdout, "    window      : %p\n", e.xkey.window);
+    fprintf(stdout, "    window      : %ld\n", e.xkey.window);
     fprintf(stdout, "    x           : %d\n", e.xkey.x);
     fprintf(stdout, "    y           : %d\n", e.xkey.y);
     fprintf(stdout, "    x_root      : %d\n", e.xkey.x_root);
@@ -146,8 +146,8 @@ const void logBMP_Info(const BMP_Info bmp_i) {
         printf("info.BitsPerPixel    : %d\n", bmp_i.BitsPerPixel);
         printf("info.compression     : %d\n", bmp_i.compression);
         printf("info.SizeOfBitmap    : %d\n", bmp_i.SizeOfBitmap);
-        printf("info.HorzResolution  : %d\n", bmp_i.HorzResolution);
-        printf("info.VertResolution  : %d\n", bmp_i.VertResolution);
+        printf("info.HorzResolution  : %ld\n", bmp_i.HorzResolution);
+        printf("info.VertResolution  : %ld\n", bmp_i.VertResolution);
         printf("info.ColorsUsed      : %d\n", bmp_i.ColorsUsed);
         printf("info.ColorsImportand : %d\n", bmp_i.ColorsImportant);
         printf("info.RedMask         : %d\n", bmp_i.RedMask);

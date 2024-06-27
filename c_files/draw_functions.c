@@ -36,12 +36,12 @@ const void drawLine(float x1, float y1, float x2, float y2, vec4f color) {
         if (delta_x < 0) {
             for (int x = start_x; x > end_x; x--) {
                 step_y = ((slope * (x - start_x)) + y1);
-                memcpy(&point_buffer[(step_y * pad) + (x * 4)], &rgba, 4);
+                memcpy(&point_frame_buffer[(step_y * pad) + (x * 4)], &rgba, 4);
             }
         } else {
             for (int x = start_x; x < end_x; x++) {
                 step_y = ((slope * (x - start_x)) + y1);
-                memcpy(&point_buffer[(step_y * pad) + (x * 4)], &rgba, 4);
+                memcpy(&point_frame_buffer[(step_y * pad) + (x * 4)], &rgba, 4);
             }
         }
     } else if ( fabsdx < fabsdy ) {
@@ -50,12 +50,12 @@ const void drawLine(float x1, float y1, float x2, float y2, vec4f color) {
         if (delta_y < 0) {
             for (int y = start_y; y > end_y; y--) {
                 step_x = ((slope * (y - start_y)) + x1);
-                memcpy(&point_buffer[(y * pad) + (step_x * 4)], &rgba, 4);
+                memcpy(&point_frame_buffer[(y * pad) + (step_x * 4)], &rgba, 4);
             }
         } else {
             for (int y = start_y; y < end_y; y++) {
                 step_x = ((slope * (y - start_y)) + x1);
-                memcpy(&point_buffer[(y * pad) + (step_x * 4)], &rgba, 4);
+                memcpy(&point_frame_buffer[(y * pad) + (step_x * 4)], &rgba, 4);
             }
         }
     } else {

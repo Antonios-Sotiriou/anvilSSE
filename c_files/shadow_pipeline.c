@@ -79,50 +79,56 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
     for (int i = 0; i < s->m_indexes; i++) {
 
         initMeshShadowStepOne(&cache_0, &s->m[i]);
-        cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, ortholightMat[sm_index]);
 
-        if (frustumCulling(cache_0.v, cache_0.v_indexes)) {
+        Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
 
-            MeshShadowStepTwo cache_1 = assemblyfacesShadow(&cache_0, s->m[i].f, s->m[i].f_indexes);
-            releaseMeshShadowStepOne(&cache_0);
+        vec4f pos = { 0 };
+        Mat4x4 mfQ = MatfromQuat(s->m[i].Q, pos);
+        sclMatrix = mxm(mfQ, scaleMatrix(s->m[i].scale));
+        trMatrix = translationMatrix(s->m[i].pivot[0], s->m[i].pivot[1], s->m[i].pivot[2]);
+        enWorldMatrix = mxm(sclMatrix, trMatrix);
 
-            /* At this Point triangles must be shadowclipped against near plane. */
-            vec4f plane_near_p = { 0.0f, 0.0f, NPlane },
-                    plane_near_n = { 0.0f, 0.0f, 1.0f };
-            cache_1 = shadowclipp(&cache_1, plane_near_p, plane_near_n);
-            if (!cache_1.f_indexes) {
-                releaseMeshShadowStepTwo(&cache_1);
-                continue;
-            }
+        Mat4x4 vecsMat = mxm(enWorldMatrix, ortholightMat[sm_index]);
 
-            /* Clipping against far Plane in View Space. */
-            vec4f plane_far_p = { 0.0f, 0.0f, FPlane },
-                    plane_far_n = { 0.0f, 0.0f, -1.0f };
-            cache_1 = shadowclipp(&cache_1, plane_far_p, plane_far_n);
-            if (!cache_1.f_indexes) {
-                releaseMeshShadowStepTwo(&cache_1);
-                continue;
-            }
+        cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, vecsMat);
 
-            /* Applying Backface culling before we proceed to full frustum shadowclipping. */
-            if (cache_1.cull)
-                cache_1 = shadowculling(cache_1, cache_1.f_indexes);
-            if (!cache_1.f_indexes) {
-                releaseMeshShadowStepTwo(&cache_1);
-                continue;
-            }
+        MeshShadowStepTwo cache_1 = assemblyfacesShadow(&cache_0, s->m[i].f, s->m[i].f_indexes);
+        releaseMeshShadowStepOne(&cache_0);
 
-            /* Sending to translation from NDC to Screen Coordinates. */
-            if (!shadowtoscreen(&cache_1, cache_1.f_indexes)) {
-                releaseMeshShadowStepTwo(&cache_1);
-                continue;
-            }
-
-            createShadowmap(&cache_1, sm_index);
+        /* At this Point triangles must be shadowclipped against near plane. */
+        vec4f plane_near_p = { 0.0f, 0.0f, NPlane },
+                plane_near_n = { 0.0f, 0.0f, 1.0f };
+        cache_1 = shadowclipp(&cache_1, plane_near_p, plane_near_n);
+        if (!cache_1.f_indexes) {
             releaseMeshShadowStepTwo(&cache_1);
-        } else {
-            releaseMeshShadowStepOne(&cache_0);
+            continue;
         }
+
+        /* Clipping against far Plane in View Space. */
+        vec4f plane_far_p = { 0.0f, 0.0f, FPlane },
+                plane_far_n = { 0.0f, 0.0f, -1.0f };
+        cache_1 = shadowclipp(&cache_1, plane_far_p, plane_far_n);
+        if (!cache_1.f_indexes) {
+            releaseMeshShadowStepTwo(&cache_1);
+            continue;
+        }
+
+        /* Applying Backface culling before we proceed to full frustum shadowclipping. */
+        if (cache_1.cull)
+            cache_1 = shadowculling(cache_1, cache_1.f_indexes);
+        if (!cache_1.f_indexes) {
+            releaseMeshShadowStepTwo(&cache_1);
+            continue;
+        }
+
+        /* Sending to translation from NDC to Screen Coordinates. */
+        if (!shadowtoscreen(&cache_1, cache_1.f_indexes)) {
+            releaseMeshShadowStepTwo(&cache_1);
+            continue;
+        }
+
+        createShadowmap(&cache_1, sm_index);
+        releaseMeshShadowStepTwo(&cache_1);
     }
 }
 /* Assosiates vertices coordinate values from vector array through indexes. */
@@ -177,10 +183,10 @@ const float shadow_winding(const Shadowface f) {
     vec4f r = xs * __builtin_shuffle(ys, smask) - ys * __builtin_shuffle(xs, smask);
     return r[0] + r[1] + r[2];
 }
+#include "../headers/logging.h"
 /* Translates the Mesh's Triangles from world to Screen Coordinates. */
 const static int shadowtoscreen(MeshShadowStepTwo *m, const int len) {
     for (int i = 0; i < len; i++) {
-        // m->f[i].fn = norm_vec(triangle_cp(m->f[i]));
         for (int j = 0; j < 3; j++) {
             m->f[i].v[j][0] = ((1 + m->f[i].v[j][0]) * HALFW) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
             m->f[i].v[j][1] = ((1 + m->f[i].v[j][1]) * HALFH) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
@@ -328,11 +334,16 @@ const static void shadowface(Shadowface *f, const Srt srt[], const unsigned int 
         yB++;
     }
 }
-const float shadowTest(vec4f frag, vec4f nml) {
+const float shadowTest(vec4f frag) {
     unsigned int sm_index;
-    sm_index = (frag[2] <= STA) ? 0 : (frag[2] > STA && frag[2] <= STB) ? 1 : (frag[2] > STB && frag[2] <= 20000) ? 2 : 3;
+    sm_index = (frag[2] <= STA) ? 0 : (frag[2] > STA && frag[2] <= STB) ? 1 : (frag[2] > STB && frag[2] <= STC) ? 2 : 3;
     if (sm_index > 2)
         return 0;
+
+
+    // float sb[3] = { 0.00002, 0.00004, 0.00006 };
+    // if (dot_product(n, ld) < 0.9)
+    //     return 0;
 
     /* Transform to Model space coordinates. */ /* Transform to Light space coordinates. */
     frag[3] = 1.f;
@@ -354,12 +365,12 @@ const float shadowTest(vec4f frag, vec4f nml) {
 
 
             float pcfDepth = shadow_buffer[sm_index][((int)frag[1] * main_wa.width) + (int)frag[0]];
-            shadow += frag[2] + shadow_bias < pcfDepth ? 1.f : 0.f;
+            shadow += (frag[2] + shadow_bias) < pcfDepth ? 1.f : 0.f;
         }
     }
 
     return shadow / 9.f;
-    // return sm_index;
+    // return 3;
 }
 /* Releases all members of the given inside Shadow pipeline lvl 1 Mesh. */
 const static void releaseMeshShadowStepOne(MeshShadowStepOne *c) {

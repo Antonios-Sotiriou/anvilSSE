@@ -1,7 +1,5 @@
 #include "../headers/terrain_functions.h"
 
-#include "../headers/logging.h"
-
 const static vec4i hmask = { 1, 2, 0, 3 };
 
 /* Creates a Terrain from a given Height Map and Populates the TerrainInfo global struct. */
@@ -184,7 +182,7 @@ const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m) {
         m->quadIndex = -1;
         return 0;
     } 
-    logVec4f(t_coords);
+
     /* Function to get t quads indexes. */
     vec4i pos = __builtin_convertvector((t_coords / t_scale) * (float)tf.vecWidth, vec4i);
     const int quad_index = (pos[2] * tf.quadRows) + pos[0];
@@ -255,7 +253,7 @@ const int getTerrainQuadIndex(Mesh *t, vec4f coords) {
     vec4i pos = __builtin_convertvector((t_coords / t_scale) * (float)tf.vecWidth, vec4i);
     const int quad_index = (pos[2] * tf.quadRows) + pos[0];
 
-    return (pos[2] * tf.quadRows) + pos[0];
+    return quad_index;
 }
 /* Adds a Mesh to the Quad that is standing on to, if its not already a member of this Quad. */
 const void addMeshToQuad(Mesh *m) {

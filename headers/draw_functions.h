@@ -23,7 +23,7 @@
 
 /* Defined in main.c file. */
 extern int EDGEFUNC, SCANLINE;
-extern u_int8_t *frame_buffer;
+extern u_int8_t *point_frame_buffer;
 extern float *point_depth_buffer;
 extern XWindowAttributes *point_attrib;
 extern Fragment *frags_buffer;

@@ -47,7 +47,7 @@ vec4f *worldSpaceFrustum(const float np, const float fp);
 const Mat4x4 createOrthoMatrixFromLimits(const DimensionsLimits dl);
 const void createCascadeShadowMatrices(const unsigned int num_of_cascades);
 const void shadowPipeline(Scene *s, const unsigned int sm_index);
-const float shadowTest(vec4f frag, vec4f nml);
+const float shadowTest(vec4f frag);
 
 #endif /* _SHADOW_PIPELINE_H */
 

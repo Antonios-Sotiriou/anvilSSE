@@ -44,13 +44,9 @@ const void rotate_origin(Mesh *c, const float angle, float x, float y, float z) 
     Quat xrot = rotationQuat(angle, axis);
     Mat4x4 m = MatfromQuat(xrot, c->pivot);
 
-    // c->pivot = vecxm(c->pivot, m);
     c->Q = multiplyQuats(c->Q, xrot);
 
     c->r = xrot;
-
-    // c->v = setvecsarrayxm(c->v, c->v_indexes, m);
-    // c->n = setvecsarrayxm(c->n, c->n_indexes, m);
 
     c->bbox.v = setvecsarrayxm(c->bbox.v, c->bbox.v_indexes, m);
 }

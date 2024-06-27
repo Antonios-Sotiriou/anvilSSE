@@ -8,6 +8,7 @@ const static void rasterize(MeshStepTwo *m, Material *mtr);
 const static void releaseMeshStepOne(MeshStepOne *c);
 const static void releaseMeshStepTwo(MeshStepTwo *c);
 const static void initMeshStepOne(MeshStepOne *a, Mesh *b);
+
 #include "../headers/logging.h"
 /* Passes the scene Meshes throught the graphic pipeline. */
 const void grafikPipeline(Scene *s) {
@@ -37,12 +38,7 @@ const void grafikPipeline(Scene *s) {
             Mat4x4 vecsMat = mxm(enWorldMatrix, worldMat);
             Mat4x4 normsMat = mxm(enWorldMatrix, viewMat);
 
-            // if (s->m[i].type == Terrain) {
-            //     Mat4x4 mfq = MatfromQuat(s->m[i].Q, s->m[i].pivot);
-            //     cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, mxm(mfQ, worldMat));
-            // } else {
-                cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, vecsMat);
-            // }
+            cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, vecsMat);
             cache_0.n = setvecsarrayxm(cache_0.n, cache_0.n_indexes, normsMat);
 
             /* Assembly and create the faces from the mesh vertices, normals and texture arrays, through the indexes. */
@@ -198,7 +194,7 @@ const static int viewtoscreen(MeshStepTwo *m, const int len) {
 }
 /* Rasterize given Mesh by passing them to the appropriate function. */
 const static void rasterize(MeshStepTwo *m, Material *mtr) {
-    point_buffer = frame_buffer;
+    point_frame_buffer = frame_buffer;
     point_depth_buffer = main_depth_buffer;
     point_attrib = &main_wa;
     point_mat = &lookAt;
