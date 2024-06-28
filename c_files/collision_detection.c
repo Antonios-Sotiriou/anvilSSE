@@ -1,9 +1,5 @@
 #include "../headers/collision_detection.h"
 
-#include "../headers/logging.h"
-extern float DeltaTime, movScalar;
-extern vec4f gravity_epicenter;
-
 const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
     const float height = getTerrainHeight(terrain, object->pivot, object);
     float height_diff = height - (object->pivot[1] - object->scale);
@@ -198,7 +194,7 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
         // fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
         return 0;
     }
-
+    // system("clear\n");
     obj->BB = getDimensionsLimits(obj->bbox.v, obj->bbox.v_indexes);
 
     float tnearx, tneary, tnearz, tfarx, tfary, tfarz;
@@ -239,6 +235,7 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
             }
 
             // const int f_sum = f_nx + f_ny + f_nz + f_fx + f_fy + f_fz;
+            // printf("f_sum: %d\n", f_sum);
 
             if (tnearx > tfarx) swap(&tnearx, &tfarx, 4);
             if (tneary > tfary) swap(&tneary, &tfary, 4);

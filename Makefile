@@ -40,6 +40,7 @@ all:
 		$(DIRECTORY)exec_time.c\
 		$(DIRECTORY)test_shapes.c\
 		$(DIRECTORY)logging.c\
+		$(DIRECTORY)click_select.c\
 		-o\
 	$(OBJ) $(LINKS)\
 

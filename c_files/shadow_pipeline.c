@@ -183,7 +183,6 @@ const float shadow_winding(const Shadowface f) {
     vec4f r = xs * __builtin_shuffle(ys, smask) - ys * __builtin_shuffle(xs, smask);
     return r[0] + r[1] + r[2];
 }
-#include "../headers/logging.h"
 /* Translates the Mesh's Triangles from world to Screen Coordinates. */
 const static int shadowtoscreen(MeshShadowStepTwo *m, const int len) {
     for (int i = 0; i < len; i++) {

@@ -112,11 +112,11 @@ Light sunlight = {
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
 };
-const vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
+vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
 const float movScalar = 100.f;
 const float cameraMov = 10.f;
-// unsigned int click = 0;
+unsigned int getClick = 0;
 vec4f click = { 0 };
 
 /* Global Matrices */
@@ -265,13 +265,12 @@ const static void configurenotify(XEvent *event) {
 const static void buttonpress(XEvent *event) {
 
     printf("buttonpress event received\n");
-    printf("X: %f\n", ((event->xbutton.x - (WIDTH / 2.00)) / (WIDTH / 2.00)));
-    printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
-    // DROPBALL = DROPBALL == 0 ? 1 : 0;
-    // click = (event->xbutton.y * main_wa.width) + event->xbutton.x;
+    // printf("X: %f\n", ((event->xbutton.x - (WIDTH / 2.00)) / (WIDTH / 2.00)));
+    // printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
+
     click[0] = event->xbutton.x;
     click[1] = event->xbutton.y;
-    // printf("depth on screen space: %f\n", point_depth_buffer[click]);
+    getClick = 1;
 }
 const static void keypress(XEvent *event) {
 
@@ -448,6 +447,7 @@ const static void keypress(XEvent *event) {
         worldMat = mxm(viewMat, orthoMat);
 
     // applyForces(&scene);
+    logVec4f(scene.m[1].pivot);
 }
 static void *oscillator(void *args) {
 
@@ -510,7 +510,11 @@ const static void project(void) {
             fprintf(stderr, "ERROR: project() -- oscillator -- pthread_join()\n");
     }
 
-    logVec4f(click);
+    if ( getClick ) {
+        clickSelect(frags_buffer[((int)click[1] * main_wa.width) + (int)click[0]].pos);
+        getClick = 0;
+    }
+
     drawFrame();
 }
 /* Writes the final Pixel values on screen. */

@@ -1,11 +1,25 @@
 #ifndef _CLICK_SELECT_H
 #define _CLICK_SELECT_H 1
 
-#ifndef _XLIB_H
-    #include <X11/Xlib.h>
+#ifndef _ANVIL_STRUCTS_H
+    #include "../headers/anvil_structs.h"
 #endif
 
-const int clickSelect(XEvent *ev);
+#ifndef _MATRICES_H
+    #include "../headers/matrices.h"
+#endif
+
+/* Defined in main.c. */
+extern TerrainInfo tf;
+extern Scene scene;
+extern XWindowAttributes *point_attrib;
+extern Mat4x4 reperspMat, *point_mat;
+
+/* Defined in terrain_functions.h */
+extern const int getTerrainQuadIndex(Mesh *t, vec4f coords);
+
+const int clickSelect(const vec4f cs);
+const int clickvsBbox(TerrainInfo *tf, Scene *s, vec4f wsc);
 
 #endif /* _CLICK_SELECT_H */
 

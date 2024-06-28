@@ -1,15 +1,10 @@
 #include "../headers/lighting.h"
-
+#include "../headers/logging.h"
 /* defined in main.c */
 extern vec4f click;
 
 const void phong(Fragment *fr) {
     vec4f basecolor;
-
-    if (fr->pos[0] == click[0] && fr->pos[1] == click[1])
-        click[2] = fr->pos[2], click[3] = fr->pos[3];
-    else
-        click[2] = 0.f, click[3] = 0.f;
 
     if (fr->mtr->texlevels) {
         basecolor = __builtin_convertvector(fr->mtr->texture[(fr->tex_y * fr->mtr->texture_width) + fr->tex_x], vec4f) / 255.0f;

@@ -13,7 +13,7 @@ const void applyForces(Scene *s) {
 
         if ( s->m[i].type !=  Terrain ) {
 
-            initMeshQuadInfo(&s->m[0], &s->m[i]);
+            initMeshQuadInfo(&s->m[Terrain_1], &s->m[i]);
 
             s->m[i].momentum -= DeltaTime;
             if ( s->m[i].momentum < 0 ) {
