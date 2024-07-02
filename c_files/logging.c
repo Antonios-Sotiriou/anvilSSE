@@ -119,7 +119,10 @@ const void logQuat(const Quat q) {
 }
 
 const void logDm(const DimensionsLimits dm) {
-    fprintf(stdout, "Dimensions Limits: minX: %f - maxX: %f | minY: %f - maxY: %f | minZ: %f - maxZ: %f\n", dm.minX, dm.maxX, dm.minY, dm.maxY, dm.minZ, dm.maxZ);
+    printf("dm min: ");
+    logVec4f(dm.min);
+    printf("dm max: ");
+    logVec4f(dm.max);
 }
 
 const void logBMP_Header(const BMP_Header bmp_h) {

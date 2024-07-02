@@ -1,6 +1,6 @@
 #include "../headers/scene_objects.h"
 
-#define MESH_NUM 3
+#define MESH_NUM 5
 
 /* This function is responsible to position the objects in world space. */
 const void initWorldObjects(Scene *s) {
@@ -41,9 +41,9 @@ const void initWorldObjects(Scene *s) {
 
     s->m[1].scale = 10.f;
 
-    s->m[1].pivot[0] = 0.f;
+    s->m[1].pivot[0] = 30.f;
     s->m[1].pivot[1] = 0.f;
-    s->m[1].pivot[2] = 0.f;
+    s->m[1].pivot[2] = 30.f;
 
     s->m[1].cull = 1;
     s->m[1].lodlevels = 5;
@@ -79,47 +79,47 @@ const void initWorldObjects(Scene *s) {
     // enWorldMesh(&s->m[2]);
     enworldBbox(&s->m[2]);
 
-    // /* ######################################################################################################## */
-    // createCube(&s->m[4]);
-    // loadMaterial(&s->m[4].material, "jade");
-    // loadBbox(&s->m[4].bbox, "objfiles/cubesmooth/bbox_cubesmooth");
+    /* ######################################################################################################## */
+    createCube(&s->m[3]);
+    loadMaterial(&s->m[3].material, "jade");
+    loadBbox(&s->m[3].bbox, "objfiles/cubesmooth/bbox_cubesmooth");
 
-    // s->m[4].type = MovingObject;
-    // s->m[4].id = 4;
+    s->m[3].type = MovingObject;
+    s->m[3].id = 3;
     
-    // s->m[4].scale = 10.f;
-    // s->m[4].pivot[0] = 80;
-    // s->m[4].pivot[1] = 30;
-    // s->m[4].pivot[2] = 130;
-    // s->m[4].cull = 1;
-    // s->m[4].lodlevels = 0;
-    // // s->m[4].visible = 1;
-    // s->m[4].mass = 0.5;
-    // // s->m[4].grounded = 1;
-    // s->m[4].Q = unitQuat();
-    // // enWorldMesh(&s->m[4]);
-    // enworldBbox(&s->m[4]);
+    s->m[3].scale = 10.f;
+    s->m[3].pivot[0] = 100;
+    s->m[3].pivot[1] = 30;
+    s->m[3].pivot[2] = 120;
+    s->m[3].cull = 1;
+    s->m[3].lodlevels = 0;
+    // s->m[3].visible = 1;
+    s->m[3].mass = 0.5;
+    // s->m[3].grounded = 1;
+    s->m[3].Q = unitQuat();
+    // enWorldMesh(&s->m[3]);
+    enworldBbox(&s->m[3]);
 
-    // /* ######################################################################################################## */
-    // createCube(&s->m[5]);
-    // loadMaterial(&s->m[5].material, "jade");
-    // loadBbox(&s->m[5].bbox, "objfiles/cubesmooth/bbox_cubesmooth");
+    /* ######################################################################################################## */
+    createCube(&s->m[4]);
+    loadMaterial(&s->m[4].material, "jade");
+    loadBbox(&s->m[4].bbox, "objfiles/cubesmooth/bbox_cubesmooth");
 
-    // s->m[5].type = MovingObject;
-    // s->m[5].id = 5;
+    s->m[4].type = MovingObject;
+    s->m[4].id = 4;
     
-    // s->m[5].scale = 10.f;
-    // s->m[5].pivot[0] = 80;
-    // s->m[5].pivot[1] = 0;
-    // s->m[5].pivot[2] = 100;
-    // s->m[5].cull = 1;
-    // s->m[5].lodlevels = 0;
-    // // s->m[5].visible = 1;
-    // s->m[5].mass = 0.5;
-    // // s->m[5].grounded = 1;
-    // s->m[5].Q = unitQuat();
-    // // enWorldMesh(&s->m[5]);
-    // enworldBbox(&s->m[5]);
+    s->m[4].scale = 10.f;
+    s->m[4].pivot[0] = 120;
+    s->m[4].pivot[1] = 30;
+    s->m[4].pivot[2] = 100;
+    s->m[4].cull = 1;
+    s->m[4].lodlevels = 0;
+    // s->m[4].visible = 1;
+    s->m[4].mass = 0.5;
+    // s->m[4].grounded = 1;
+    s->m[4].Q = unitQuat();
+    // enWorldMesh(&s->m[4]);
+    enworldBbox(&s->m[4]);
 
     /* ######################################################################################################## */
     // memcpy(s->m[2].name, "spacedomsmooth", sizeof("spacedomsmooth"));

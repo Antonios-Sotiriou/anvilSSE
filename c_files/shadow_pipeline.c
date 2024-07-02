@@ -45,7 +45,7 @@ vec4f *worldSpaceFrustum(const float np, const float fp) {
     return va;
 }
 const Mat4x4 createOrthoMatrixFromLimits(const DimensionsLimits dl) {
-    return orthographicMatrix(dl.minX, dl.maxX, dl.minY, dl.maxY, dl.minZ, dl.maxZ);
+    return orthographicMatrix(dl.min[0], dl.max[0], dl.min[1], dl.max[1], dl.min[2], dl.max[2]);
 }
 const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
     DimensionsLimits dl;

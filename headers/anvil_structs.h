@@ -81,7 +81,7 @@ typedef struct {
 
 /* Dimensions Limits in any Space. */
 typedef struct {
-    float minX, maxX, minY, maxY, minZ, maxZ;
+    vec4f min, max;
 } DimensionsLimits;
 
 /* Base face aka(triangle) struct. */
@@ -112,7 +112,7 @@ typedef struct {
     roll,                                           /* If the mesh is rolling like wheels. */
     mass,                                           /* Mass of the mesh. */
     collision_t;                                    /* Collison time, usefull to sort the collisions. */
-    DimensionsLimits BB;
+    DimensionsLimits dm;
     Bbox bbox;
     Material material;
 } Mesh;

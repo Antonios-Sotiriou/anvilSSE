@@ -17,29 +17,27 @@ const float radians(const float value) {
 /* Finds the minX, maxX, minY, maxY, minZ maxZ values of given vectors array. AKA (bounding box). */
 const DimensionsLimits getDimensionsLimits(vec4f va[], const int len) {
     DimensionsLimits dl = {
-        .minX = dl.maxX = va[0][0],
-        .minY = dl.maxY = va[0][1],
-        .minZ = dl.maxZ = va[0][2]
+        .min = dl.max = va[0],
     };
 
     for (int i = 1; i < len; i++) {
         /* Get min and max x values. */
-        if ( va[i][0] <= dl.minX) {
-            dl.minX = va[i][0];
-        } else if ( va[i][0] > dl.maxX) {
-            dl.maxX = va[i][0];
+        if ( va[i][0] <= dl.min[0]) {
+            dl.min[0] = va[i][0];
+        } else if ( va[i][0] > dl.max[0]) {
+            dl.max[0] = va[i][0];
         }
         /* Get min and max y values. */
-        if ( va[i][1] <= dl.minY) {
-            dl.minY = va[i][1];
-        } else if ( va[i][1] > dl.maxY) {
-            dl.maxY = va[i][1];
+        if ( va[i][1] <= dl.min[1]) {
+            dl.min[1] = va[i][1];
+        } else if ( va[i][1] > dl.max[1]) {
+            dl.max[1] = va[i][1];
         }
         /* Get min and max z values. */
-        if ( va[i][2] <= dl.minZ) {
-            dl.minZ = va[i][2];
-        } else if ( va[i][2] > dl.maxZ) {
-            dl.maxZ = va[i][2];
+        if ( va[i][2] <= dl.min[2]) {
+            dl.min[2] = va[i][2];
+        } else if ( va[i][2] > dl.max[2]) {
+            dl.max[2] = va[i][2];
         }
     }
     return dl;
@@ -212,7 +210,6 @@ const int frustumCulling(vec4f v[], const int v_indexes) {
 
     vec4f *vec_arr = malloc(v_indexes * 16);
     memcpy(vec_arr, v, v_indexes * 16);
-    DimensionsLimits dm;
 
     for (int j = 0; j < v_indexes; j++) {
         /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
@@ -224,27 +221,15 @@ const int frustumCulling(vec4f v[], const int v_indexes) {
         }
     }
 
-    dm = getDimensionsLimits(vec_arr, v_indexes);
+    DimensionsLimits dm = getDimensionsLimits(vec_arr, v_indexes);
 
-    vec4f min = { dm.minX, dm.minY, dm.minZ, 1.f };
-    vec4f max = { dm.maxX, dm.maxY, dm.maxZ, 1.f };
-
-
-    min[0] = ((1 + min[0]) * HALFW) + 0.5;
-    min[1] = ((1 + min[1]) * HALFH) + 0.5;
-
-    max[0] = ((1 + max[0]) * HALFW) + 0.5;
-    max[1] = ((1 + max[1]) * HALFH) + 0.5;
-
-    if ( ((min[2] > FPlane) || (max[2] < NPlane)) ||
-            ((min[1] > 1000) || (max[1] < 0)) ||
-            ((min[0] > 1000) || (max[0] < 0)) ) {
+    if ( ((dm.min[2] > FPlane) || (dm.max[2] < NPlane)) ||
+            ((dm.min[1] > 1.f) || (dm.max[1] < -1.f)) ||
+            ((dm.min[0] > 1.f) || (dm.max[0] < -1.f)) ) {
 
         free(vec_arr);
         return 0;
     }
-    
-    XDrawRectangle(displ, mainwin, gc, min[0], min[1], max[0] - min[0], max[1] - min[1]);
 
     free(vec_arr);
     return 1;
@@ -265,9 +250,9 @@ const void checkVisibles(Scene *s, Mesh *m, const int viewProj) {
 
     checkVisibility(s->m, s->m_indexes, collMat, viewProj);
 }
+/* Ccheck what is visible from a given point of view.Must be implemented with bounding boxes. */
 const static void checkVisibility(Mesh *m, const int len, Mat4x4 vm, const int viewProj) {
     vec4f *vec_arr;
-    DimensionsLimits dm;
 
     for (int i = 0; i < len; i++) {
 
@@ -290,11 +275,11 @@ const static void checkVisibility(Mesh *m, const int len, Mat4x4 vm, const int v
                 }
             }
 
-        dm = getDimensionsLimits(vec_arr, m[i].v_indexes);
+        DimensionsLimits dm = getDimensionsLimits(vec_arr, m[i].v_indexes);
 
-        if ( ((dm.minZ > FPlane ) || (dm.maxZ < NPlane)) ||
-            ((dm.minY > 1) || (dm.maxY < -1)) ||
-            ((dm.minX > 1) || (dm.maxX < -1)) ) {
+        if ( ((dm.min[2] > FPlane ) || (dm.max[2] < NPlane)) ||
+            ((dm.min[1] > 1.f) || (dm.max[1] < -1.f)) ||
+            ((dm.min[0] > 1.f) || (dm.max[0] < -1.f)) ) {
 
             free(vec_arr);
             m[i].visible = 0;
@@ -321,8 +306,38 @@ const void displayVec4f(const vec4f v_start, const vec4f v_end, const Mat4x4 vm)
     temp_end[1] = ((1 + temp_end[1]) * HALFH) + 0.5;
 
     XDrawLine(displ, mainwin, gc, temp_start[0], temp_start[1], temp_end[0], temp_end[1]);
-    // XDrawRectangle(displ, mainwin, gc, temp_start[0], temp_start[1], temp_end[0], temp_end[1]);
-    // XDrawArc(displ, mainwin, gc, temp_start[0], temp_start[1], temp_start[0], temp_start[1], 10, 360 * 64);
+}
+/* Displays given vector on screen given the view Matrix. */
+const void displayBbox(vec4f v[], const int v_indexes, const Mat4x4 vm) {
+    /* Thats a fix for unitialized meshes that cannot become visible due to no vectors initialization. That will be corrected with bounding boxes. */
+    if (!v_indexes) {
+        return;
+    }
+
+    // vec4f *vec_arr = malloc(v_indexes * 16);
+    vec4f *vec_arr = vecsarrayxm(v, v_indexes, vm);
+
+    for (int j = 0; j < v_indexes; j++) {
+        /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
+        float z = vec_arr[j][2];
+
+        if (vec_arr[j][3] > 0) {
+            vec_arr[j] /= vec_arr[j][3];
+            vec_arr[j][2] = z;
+        }
+    }
+
+    DimensionsLimits dm = getDimensionsLimits(vec_arr, v_indexes);
+
+    dm.min[0] = ((1 + dm.min[0]) * HALFW) + 0.5;
+    dm.min[1] = ((1 + dm.min[1]) * HALFH) + 0.5;
+
+    dm.max[0] = ((1 + dm.max[0]) * HALFW) + 0.5;
+    dm.max[1] = ((1 + dm.max[1]) * HALFH) + 0.5;
+
+    XDrawRectangle(displ, mainwin, gc, dm.min[0], dm.min[1], dm.max[0] - dm.min[0], dm.max[1] - dm.min[1]);
+    free(vec_arr);
+    return;
 }
 /* Initializing Mesh a from Mesh b. */
 const void initMesh(Mesh *a, const Mesh *b) {

@@ -89,6 +89,7 @@ float AmbientStrength     = 0.5f;
 float SpecularStrength    = 0.5f;
 float DiffuseStrength     = 0.5f;
 float shadow_bias         = 0.0f;//0.003105;//0.002138;//0.000487f;
+int DISPLAYBBOX           = 0;
 /* For investigating shadow map usefull global variables. */
 int INCORDEC = -1;
 unsigned int SMA = 0;
@@ -107,7 +108,7 @@ vec4f camera[N + 1] = {
     { 0.0f, 0.0f, 1.0f, 0.0f }
 };
 Light sunlight = {
-    .pos = { 0.f, 10000.0f, 0.f, 1.f },
+    .pos = { 100.f, 200.0f, 100.f, 1.f }, // y = 10000.f
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
@@ -116,7 +117,10 @@ vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
 const float movScalar = 100.f;
 const float cameraMov = 10.f;
+
+/* Variables usefull for mesh click select. */
 unsigned int getClick = 0;
+int mesh_id = 0;
 vec4f click = { 0 };
 
 /* Global Matrices */
@@ -268,6 +272,9 @@ const static void buttonpress(XEvent *event) {
     // printf("X: %f\n", ((event->xbutton.x - (WIDTH / 2.00)) / (WIDTH / 2.00)));
     // printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
 
+    printf("X: %d\n", event->xbutton.x);
+    printf("Y: %d\n", event->xbutton.y);
+
     click[0] = event->xbutton.x;
     click[1] = event->xbutton.y;
     getClick = 1;
@@ -283,17 +290,18 @@ const static void keypress(XEvent *event) {
 
     // printf("\x1b[H\x1b[J");
     system("clear\n");
-    // printf("Key Pressed: %ld\n", keysym);
+    printf("Key Pressed: %ld\n", keysym);
     // logEvent(*event);
 
     switch (keysym) {
-        case 65505 : INCORDEC = INCORDEC == -1 ? 1 : -1; break;
+        case 65505 : INCORDEC = INCORDEC == -1 ? 1 : -1; break; /* control */
         case 49 : SMA += INCORDEC; break;
         case 50 : SMB += INCORDEC; break;
         case 51 : SMC += INCORDEC; break;
         case 48 : STA += INCORDEC; break;
         case 57 : STB += INCORDEC; break;
         case 56 : STC += INCORDEC; break;
+        case 98 : DISPLAYBBOX = DISPLAYBBOX == 0 ? 1 : 0; break;  /* b */
         case 97 : look_left(eye, 0.2);             /* a */
             break;
         case 100 : look_right(eye, 0.2);           /* d */
@@ -387,7 +395,8 @@ const static void keypress(XEvent *event) {
             break;
         case 99 :                                                        /* c */
             // rotate_origin(&scene.m[0], 10, 1.0f, 0.0f, 0.0f);
-            rotate_origin(&scene.m[1], 10, 1.0f, 0.0f, 0.0f);
+            if ( mesh_id > 0 )
+                rotate_origin(&scene.m[mesh_id], 10, 1.0f, 0.0f, 0.0f);
             break;
         case 43 : AmbientStrength += 0.01;                                    /* + */
             printf("AmbientStrength: %f\n", AmbientStrength);
@@ -437,8 +446,8 @@ const static void keypress(XEvent *event) {
     viewMat = inverse_mat(lookAt);
     sunlight.newPos = vecxm(sunlight.pos, viewMat);
 
-    printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
-    printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
+    // printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
+    // printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
     createCascadeShadowMatrices(NUM_OF_CASCADES);
 
     if (!PROJECTIONVIEW)
@@ -447,7 +456,6 @@ const static void keypress(XEvent *event) {
         worldMat = mxm(viewMat, orthoMat);
 
     // applyForces(&scene);
-    logVec4f(scene.m[1].pivot);
 }
 static void *oscillator(void *args) {
 
@@ -511,9 +519,12 @@ const static void project(void) {
     }
 
     if ( getClick ) {
-        clickSelect(frags_buffer[((int)click[1] * main_wa.width) + (int)click[0]].pos);
+        mesh_id = clickSelect(frags_buffer[((int)click[1] * main_wa.width) + (int)click[0]].pos);
         getClick = 0;
     }
+
+    if (DISPLAYBBOX)
+        displayBbox(scene.m[mesh_id].bbox.v, scene.m[mesh_id].bbox.v_indexes, worldMat);
 
     drawFrame();
 }

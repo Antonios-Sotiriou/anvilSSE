@@ -13,19 +13,16 @@ const static void initMeshStepOne(MeshStepOne *a, Mesh *b);
 /* Passes the scene Meshes throught the graphic pipeline. */
 const void grafikPipeline(Scene *s) {
     MeshStepOne cache_0 = { 0 };
-    // system("clear\n");
+
     for (int i = 0; i < s->m_indexes; i++) {
-        // logMesh(s->m[i]);
+
         // adoptdetailMesh(&s->m[i]);
         adoptdetailTexture(&s->m[i]);
 
         initMeshStepOne(&cache_0, &s->m[i]);
 
         cache_0.bbox.v = setvecsarrayxm(cache_0.bbox.v, cache_0.bbox.v_indexes, worldMat);
-
         if (frustumCulling(cache_0.bbox.v, cache_0.bbox.v_indexes)) {
-
-            // printf("Object id: %d\n", s->m[i].id);
 
             Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
 

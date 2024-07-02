@@ -56,6 +56,7 @@ const void placeMesh(Mesh *m, const vec4f pos);
 const int frustumCulling(vec4f v[], const int v_indexes);
 const void checkVisibles(Scene *s, Mesh *m, const int viewProj);
 const void displayVec4f(const vec4f v_start, const vec4f v_end, const Mat4x4 vm);
+const void displayBbox(vec4f v[], const int v_indexes, const Mat4x4 vm);
 const void initMesh(Mesh *a, const Mesh *b);
 const void releaseMesh(Mesh *m);
 

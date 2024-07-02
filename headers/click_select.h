@@ -18,6 +18,9 @@ extern Mat4x4 reperspMat, *point_mat;
 /* Defined in terrain_functions.h */
 extern const int getTerrainQuadIndex(Mesh *t, vec4f coords);
 
+/* Defined in general_functions.h */
+extern const DimensionsLimits getDimensionsLimits(vec4f va[], const int len);
+
 const int clickSelect(const vec4f cs);
 const int clickvsBbox(TerrainInfo *tf, Scene *s, vec4f wsc);
 
