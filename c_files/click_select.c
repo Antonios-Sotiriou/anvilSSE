@@ -5,8 +5,8 @@
 
 const int clickSelect(const vec4f cs) {
     
-    // logVec4f(cs);
-    system("clear\n");
+    logVec4f(cs);
+
     float w = 1 / cs[3];
     vec4f wsc = {
         ((cs[0] / (point_attrib->width >> 1)) - 1.0) * w,

@@ -71,7 +71,7 @@ Atom wmatom[Atom_Last];
 
 /* BUFFERS. */
 vec4c *frame_buffer, *point_frame_buffer, *reset_frame_buffer;
-float *main_depth_buffer, *point_depth_buffer, *reset_depth_buffer, *shadow_buffer[NUM_OF_CASCADES];
+float *main_depth_buffer, *point_depth_buffer, *reset_depth_buffer, *shadow_buffer[NUM_OF_CASCADES], *reset_shadow_buffer;
 Fragment *frags_buffer, *reset_frags_buffer;
 
 /* Project Global Variables. */
@@ -206,6 +206,7 @@ const static void clientmessage(XEvent *event) {
         free(shadow_buffer[0]);
         free(shadow_buffer[1]);
         free(shadow_buffer[2]);
+        free(reset_shadow_buffer);
 
         for (int i = 0; i < tf.quadsArea; i++) {
             if (tf.quads[i].members)
@@ -254,6 +255,7 @@ const static void configurenotify(XEvent *event) {
             free(shadow_buffer[0]);
             free(shadow_buffer[1]);
             free(shadow_buffer[2]);
+            free(reset_shadow_buffer);
 
             free(main_image);
 
@@ -267,13 +269,10 @@ const static void configurenotify(XEvent *event) {
     }
 }
 const static void buttonpress(XEvent *event) {
-
+    system("clear\n");
     printf("buttonpress event received\n");
     // printf("X: %f\n", ((event->xbutton.x - (WIDTH / 2.00)) / (WIDTH / 2.00)));
     // printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
-
-    printf("X: %d\n", event->xbutton.x);
-    printf("Y: %d\n", event->xbutton.y);
 
     click[0] = event->xbutton.x;
     click[1] = event->xbutton.y;
@@ -322,10 +321,10 @@ const static void keypress(XEvent *event) {
             break;
         case 65364 : move_down(eye, cameraMov);          /* down arrow */
             break;
-        case 65451 :shadow_bias += 0.00001;             /* + */
+        case 65451 :shadow_bias += 0.01;             /* + */
             printf("shadow_bias: %f\n", shadow_bias);
             break;
-        case 65453 :shadow_bias -= 0.00001;             /* - */
+        case 65453 :shadow_bias -= 0.01;             /* - */
             printf("shadow_bias: %f\n", shadow_bias);
             break;
         case 65450 : SpecularStrength += 0.01f;             /* * */
@@ -481,7 +480,7 @@ static void *cascade(void *args) {
 
     int shadow_id = *(int*)args;
 
-    memcpy(shadow_buffer[shadow_id], reset_depth_buffer, BSIZE);
+    memcpy(shadow_buffer[shadow_id], reset_shadow_buffer, BSIZE);
     shadowPipeline(&scene, shadow_id);
 
     return (void*)args;
@@ -598,15 +597,16 @@ const static void initBuffers(void) {
     main_depth_buffer = calloc(MAIN_EMVADON, 4);
     reset_depth_buffer = calloc(MAIN_EMVADON, 4);
 
-    // for (int i = 0; i < MAIN_EMVADON; i++)
-    //     reset_depth_buffer[i] = 100000.f;
-
     frags_buffer = calloc(MAIN_EMVADON, sizeof(Fragment));
     reset_frags_buffer = calloc(MAIN_EMVADON, sizeof(Fragment));
 
     shadow_buffer[0] = calloc(MAIN_EMVADON, 4);
     shadow_buffer[1] = calloc(MAIN_EMVADON, 4);
     shadow_buffer[2] = calloc(MAIN_EMVADON, 4);
+
+    reset_shadow_buffer = malloc(MAIN_EMVADON * 4);
+    for (int i = 0; i < MAIN_EMVADON; i++)
+        reset_shadow_buffer[i] = 100000.f;
 }
 const static void initLightModel(Light *l) {
     vec4f lightColor = { 1.0, 1.0, 1.0, 1.0 };

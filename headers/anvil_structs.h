@@ -75,7 +75,7 @@ typedef struct {
     float shinniness;
     int reflect, texlevels, texlod;
     signed int texture_height, texture_width;
-    vec4c *texture;
+    vec4f *texture;
     char texlvl[9][10];
 } Material;
 

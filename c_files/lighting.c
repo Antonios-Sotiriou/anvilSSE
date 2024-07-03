@@ -4,7 +4,7 @@ const void phong(Fragment *fr) {
     vec4f basecolor;
 
     if (fr->mtr->texlevels) {
-        basecolor = __builtin_convertvector(fr->mtr->texture[(fr->tex_y * fr->mtr->texture_width) + fr->tex_x], vec4f) / 255.0f;
+        basecolor = fr->mtr->texture[(fr->tex_y * fr->mtr->texture_width) + fr->tex_x];
     } else
         basecolor = fr->mtr->basecolor;
 
@@ -12,13 +12,15 @@ const void phong(Fragment *fr) {
     vec4f ambient = sunlight.material.ambient * (basecolor * AmbientStrength);
     vec4c fragcolor = { 0 };
 
-    float w = 1 / fr->pos[3];
+    float w = 1.f / fr->pos[3];
     vec4f pixel = {
-        ((fr->pos[0] / (point_attrib->width >> 1)) - 1.0) * w,
-        ((fr->pos[1] / (point_attrib->height >> 1)) - 1.0) * w,
-        (1.f / fr->pos[2]) * w,
-        w
+        ((fr->pos[0] / (point_attrib->width >> 1)) - 1.0),
+        ((fr->pos[1] / (point_attrib->height >> 1)) - 1.0),
+        fr->pos[2],
     };
+
+    pixel *= w;
+    pixel[3] = w;
 
     pixel = vecxm(pixel, reperspMat);
     vec4f nm = norm_vec(fr->nrm);

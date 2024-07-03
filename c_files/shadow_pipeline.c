@@ -189,7 +189,7 @@ const static int shadowtoscreen(MeshShadowStepTwo *m, const int len) {
         for (int j = 0; j < 3; j++) {
             m->f[i].v[j][0] = ((1 + m->f[i].v[j][0]) * HALFW) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
             m->f[i].v[j][1] = ((1 + m->f[i].v[j][1]) * HALFH) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
-            m->f[i].v[j][2] = 1.f / m->f[i].v[j][2];
+            // m->f[i].v[j][2] = 1.f / m->f[i].v[j][2];
             // m->f[i].v[j][3] = 1.f / m->f[i].v[j][3];
         }
     }
@@ -284,7 +284,7 @@ const static void shadowface(Shadowface *f, const Srt srt[], const unsigned int 
                 const float depthZ = z1 + (barycentric * z2z1);
                 
                 const int padxSB = padySB + x;
-                if ( depthZ > shadow_buffer[sm_index][padxSB] ) {
+                if ( depthZ < shadow_buffer[sm_index][padxSB] ) {
 
                     shadow_buffer[sm_index][padxSB] = depthZ;
                 }
@@ -324,7 +324,7 @@ const static void shadowface(Shadowface *f, const Srt srt[], const unsigned int 
             const float depthZ = z1 + (barycentric * z2z1);
 
             const int padxSB = padySB + x;
-            if ( depthZ > shadow_buffer[sm_index][padxSB] ) {
+            if ( depthZ < shadow_buffer[sm_index][padxSB] ) {
 
                 shadow_buffer[sm_index][padxSB] = depthZ;
             }
@@ -340,7 +340,7 @@ const float shadowTest(vec4f frag) {
         return 0;
 
 
-    // float sb[3] = { 0.00002, 0.00004, 0.00006 };
+    // float sb[3] = { 0.1, 0.05, 0.025 };
     // if (dot_product(n, ld) < 0.9)
     //     return 0;
 
@@ -351,7 +351,7 @@ const float shadowTest(vec4f frag) {
     /* Transform to Screen space coordinates. */
     frag[0] = (1.0 + frag[0]) * (main_wa.width >> 1);
     frag[1] = (1.0 + frag[1]) * (main_wa.height >> 1);
-    frag[2] = 1.f / frag[2];
+    // frag[2] = 1.f / frag[2];
 
     float shadow = 0.0;
     for (int v = -1; v < 1; v++) {
@@ -364,7 +364,7 @@ const float shadowTest(vec4f frag) {
 
 
             float pcfDepth = shadow_buffer[sm_index][((int)frag[1] * main_wa.width) + (int)frag[0]];
-            shadow += (frag[2] + shadow_bias) < pcfDepth ? 1.f : 0.f;
+            shadow += (frag[2] - shadow_bias) > pcfDepth ? 1.f : 0.f;
         }
     }
 

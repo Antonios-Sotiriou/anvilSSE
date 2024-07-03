@@ -157,7 +157,7 @@ const static int viewtoscreen(MeshStepTwo *m, const int len) {
 
             m->f[i].v[j][0] = ((1 + m->f[i].v[j][0]) * HALFW) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
             m->f[i].v[j][1] = ((1 + m->f[i].v[j][1]) * HALFH) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
-            m->f[i].v[j][2] = 1.f / m->f[i].v[j][2];
+            // m->f[i].v[j][2] = 1.f / m->f[i].v[j][2];
             m->f[i].v[j][3] = 1.f / m->f[i].v[j][3];
         }
     }

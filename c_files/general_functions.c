@@ -95,13 +95,14 @@ const void loadtexture(Mesh *m, const unsigned int lvl) {
         m->material.texture_width = bmp.info.Width;
         const int texSize = bmp.info.Height * bmp.info.Width;
 
-        m->material.texture = malloc(texSize * 4);
+        m->material.texture = malloc(texSize * 16);
         if (!m->material.texture)
             fprintf(stderr, "Could not allocate memmory for texture: %s. loadtexture()\n", texpath);
 
+        vec4c temp = { 0, 0, 0, 1 };
         for (int i = 0; i < texSize; i++) {
-            fread(&m->material.texture[i], 3, 1, fp);
-            m->material.texture[i][3] = (unsigned char)255;
+            fread(&temp, 3, 1, fp);
+            m->material.texture[i] = __builtin_convertvector(temp, vec4f) / 255.f;
         }
     }
     fclose(fp);
