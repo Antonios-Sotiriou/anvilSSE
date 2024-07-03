@@ -91,7 +91,6 @@ const void loadtexture(Mesh *m, const unsigned int lvl) {
         fread(&bmp.info, sizeof(BMP_Info), 1, fp);
         fseek(fp, (14 + bmp.info.Size), SEEK_SET);
 
-        /* Subtract 1 from Texture width and height because counting starts from 0; */
         m->material.texture_height = bmp.info.Height;
         m->material.texture_width = bmp.info.Width;
         const int texSize = bmp.info.Height * bmp.info.Width;

@@ -22,7 +22,7 @@ extern XWindowAttributes *point_attrib;
 extern int HALFW;
 extern int HALFH;
 extern Mat4x4 reperspMat;
-extern u_int8_t *point_frame_buffer;
+extern vec4c *point_frame_buffer;
 extern Light sunlight;
 extern vec4f camera[4];
 extern float AmbientStrength, SpecularStrength, DiffuseStrength;

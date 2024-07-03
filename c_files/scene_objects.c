@@ -122,28 +122,28 @@ const void initWorldObjects(Scene *s) {
     enworldBbox(&s->m[4]);
 
     /* ######################################################################################################## */
-    // memcpy(s->m[2].name, "spacedomsmooth", sizeof("spacedomsmooth"));
-    // loadMaterial(&s->m[2].material, "spacedom");
-    // loadMesh(&s->m[2], "objfiles/spacedomsmooth", 1);
-    // loadBbox(&s->m[2].bbox, "objfiles/planet/bbox_planet");
+    // memcpy(s->m[5].name, "spacedomsmooth", sizeof("spacedomsmooth"));
+    // loadMaterial(&s->m[5].material, "spacedom");
+    // loadMesh(&s->m[5], "objfiles/spacedomsmooth", 1);
+    // loadBbox(&s->m[5].bbox, "objfiles/planet/bbox_planet");
 
-    // s->m[2].type = Celestial;
-    // s->m[2].id = 2;
+    // s->m[5].type = Celestial;
+    // s->m[5].id = 5;
 
-    // s->m[2].scale = 10000.f;
+    // s->m[5].scale = 10000.f;
 
-    // s->m[2].pivot[0] = 0.f;
-    // s->m[2].pivot[1] = 0.f;
-    // s->m[2].pivot[2] = 0.f;
+    // s->m[5].pivot[0] = 0.f;
+    // s->m[5].pivot[1] = 0.f;
+    // s->m[5].pivot[2] = 0.f;
 
-    // s->m[2].cull = 1;
-    // s->m[2].lodlevels = 1;
-    // // s->m[2].visible = 1;
-    // s->m[2].mass = 0;
-    // // s->m[2].material.reflect = 1;
-    // s->m[2].Q = unitQuat();
-    // // enWorldMesh(&s->m[2]);
-    // enworldBbox(&s->m[2]);
+    // s->m[5].cull = 1;
+    // s->m[5].lodlevels = 1;
+    // // s->m[5].visible = 1;
+    // s->m[5].mass = 0;
+    // // s->m[5].material.reflect = 1;
+    // s->m[5].Q = unitQuat();
+    // // enWorldMesh(&s->m[5]);
+    // enworldBbox(&s->m[5]);
 
     /* ######################################################################################################## */
     // for (int i = 5; i < MESH_NUM; i++) {

@@ -70,19 +70,19 @@ XSetWindowAttributes sa;
 Atom wmatom[Atom_Last];
 
 /* BUFFERS. */
-u_int8_t *frame_buffer, *point_frame_buffer, *reset_frame_buffer;
+vec4c *frame_buffer, *point_frame_buffer, *reset_frame_buffer;
 float *main_depth_buffer, *point_depth_buffer, *reset_depth_buffer, *shadow_buffer[NUM_OF_CASCADES];
 Fragment *frags_buffer, *reset_frags_buffer;
 
 /* Project Global Variables. */
-int PROJECTIONVIEW = 0;
+int PROJECTIONVIEW        = 0;
 static int PROJECTBUFFER  = 1;
 static int EYEPOINT       = 0;
 static float FOV          = 45.0f;
 static float ZNEAR        = 0.1f;
 static float ZFAR         = 100.0f;
 float ASPECTRATIO         = 1;
-static int FBSIZE         = 0;
+static int BSIZE          = 0;
 float NPlane              = 1.0f;
 float FPlane              = 20000.0f;
 float AmbientStrength     = 0.5f;
@@ -108,7 +108,7 @@ vec4f camera[N + 1] = {
     { 0.0f, 0.0f, 1.0f, 0.0f }
 };
 Light sunlight = {
-    .pos = { 100.f, 200.0f, 100.f, 1.f }, // y = 10000.f
+    .pos = { 100.f, 10000.0f, 100.f, 1.f }, // y = 10000.f
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
     .n = { 0.f, -1.f, 0.f, 0.f },
@@ -290,7 +290,7 @@ const static void keypress(XEvent *event) {
 
     // printf("\x1b[H\x1b[J");
     system("clear\n");
-    printf("Key Pressed: %ld\n", keysym);
+    // printf("Key Pressed: %ld\n", keysym);
     // logEvent(*event);
 
     switch (keysym) {
@@ -481,7 +481,7 @@ static void *cascade(void *args) {
 
     int shadow_id = *(int*)args;
 
-    memcpy(shadow_buffer[shadow_id], reset_depth_buffer, FBSIZE);
+    memcpy(shadow_buffer[shadow_id], reset_depth_buffer, BSIZE);
     shadowPipeline(&scene, shadow_id);
 
     return (void*)args;
@@ -544,8 +544,8 @@ const static void drawFrame(void) {
     XPutImage(displ, main_pixmap, gc, main_image, 0, 0, 0, 0, main_wa.width, main_wa.height);
     pixmapdisplay(main_pixmap, mainwin, main_wa.width, main_wa.height);
 
-    memcpy(frame_buffer, reset_frame_buffer, FBSIZE);
-    memcpy(main_depth_buffer, reset_depth_buffer, FBSIZE); 
+    memcpy(frame_buffer, reset_frame_buffer, BSIZE);
+    memcpy(main_depth_buffer, reset_depth_buffer, BSIZE); 
     memcpy(frags_buffer, reset_frags_buffer, MAIN_EMVADON * sizeof(Fragment));
 }
 const static void initMainWindow(void) {
@@ -574,7 +574,7 @@ const static void initDependedVariables(void) {
     for (int i = 0; i < THREADS; i++)
         thread_ids[i] = i;
 
-    FBSIZE = main_wa.width * main_wa.height * 4;
+    BSIZE = main_wa.width * main_wa.height * 4;
 
     /* Matrices initialization. */
     perspMat = perspectiveMatrix(FOV, ASPECTRATIO, ZNEAR, ZFAR);
@@ -592,8 +592,8 @@ const static void initAtoms(void) {
 }
 /* Creates and Initializes the importand buffers. (frame, depth, shadow). */
 const static void initBuffers(void) {
-    frame_buffer = calloc(MAIN_EMVADON * 4, 1);
-    reset_frame_buffer = calloc(MAIN_EMVADON * 4, 1);
+    frame_buffer = calloc(MAIN_EMVADON, 4);
+    reset_frame_buffer = calloc(MAIN_EMVADON, 4);
 
     main_depth_buffer = calloc(MAIN_EMVADON, 4);
     reset_depth_buffer = calloc(MAIN_EMVADON, 4);

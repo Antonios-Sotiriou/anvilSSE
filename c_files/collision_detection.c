@@ -19,7 +19,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
         // fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
         return 0;
     }
-    system("clear\n");
+
     obj->dm = getDimensionsLimits(obj->bbox.v, obj->bbox.v_indexes);
 
     vec4f tnear, tfar;
@@ -147,7 +147,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
                 obj->mvdir = obj->mvdir - (dot * normal);
 
                 if ( tnear[1] == 0 ) {
-                    // obj->falling_time = 0.f;
+                    obj->falling_time = 1.f;
                     velocity[0] = (obj->mvdir * obj->momentum);
                     // printf("tnear[1] == 0.f || tfar[1] == 0.f\n\n");
                 } else {

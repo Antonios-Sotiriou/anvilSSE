@@ -8,7 +8,8 @@ extern vec4f gravity_epicenter;
 
 const void applyForces(Scene *s) {
     Mat4x4 trans;
-    // system("clear\n");
+
+    int rotation_collide = 0;
     for (int i = 0; i < s->m_indexes; i++) {
 
         if ( s->m[i].type !=  Terrain ) {
@@ -21,7 +22,8 @@ const void applyForces(Scene *s) {
                 // continue;
             }
 
-            rotationCollision(&tf, s, &s->m[Player_1]);
+            if (!rotation_collide)
+                rotation_collide += rotationCollision(&tf, s, &s->m[Player_1]);
 
             if ( s->m[i].momentum > 0 ) {
                 s->m[i].falling_time += DeltaTime;

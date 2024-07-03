@@ -1,7 +1,4 @@
 #include "../headers/lighting.h"
-#include "../headers/logging.h"
-/* defined in main.c */
-extern vec4f click;
 
 const void phong(Fragment *fr) {
     vec4f basecolor;
@@ -59,7 +56,8 @@ const void phong(Fragment *fr) {
 
     // fragcolor = __builtin_convertvector((((ambient + (1.f - shadow))) * basecolor) * 255, vec4c);
     // fragcolor = __builtin_convertvector(basecolor * 255, vec4c);
-    memcpy(&point_frame_buffer[(int)((fr->pos[1] * point_attrib->width * 4) + (fr->pos[0] * 4))], &fragcolor, 4);
+
+    point_frame_buffer[(int)((fr->pos[1] * point_attrib->width) + (fr->pos[0]))] = fragcolor;
 }
 
 

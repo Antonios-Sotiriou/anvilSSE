@@ -9,7 +9,6 @@ const static void releaseMeshStepOne(MeshStepOne *c);
 const static void releaseMeshStepTwo(MeshStepTwo *c);
 const static void initMeshStepOne(MeshStepOne *a, Mesh *b);
 
-#include "../headers/logging.h"
 /* Passes the scene Meshes throught the graphic pipeline. */
 const void grafikPipeline(Scene *s) {
     MeshStepOne cache_0 = { 0 };
@@ -22,6 +21,7 @@ const void grafikPipeline(Scene *s) {
         initMeshStepOne(&cache_0, &s->m[i]);
 
         cache_0.bbox.v = setvecsarrayxm(cache_0.bbox.v, cache_0.bbox.v_indexes, worldMat);
+
         if (frustumCulling(cache_0.bbox.v, cache_0.bbox.v_indexes)) {
 
             Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
