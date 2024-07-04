@@ -139,6 +139,11 @@ face *setfacesarrayxm(face fs[], const int len, const Mat4x4 m) {
 const vec4f vecxm(const vec4f v, const Mat4x4 m) {
     return  __builtin_shuffle(v, xmask) * m.m[0] + __builtin_shuffle(v, ymask) * m.m[1] + __builtin_shuffle(v, zmask) * m.m[2] + __builtin_shuffle(v, wmask) * m.m[3];
 }
+/* Multiplies a vec4 with the given Matrix. */
+const void setvecxm(vec4f *v, const Mat4x4 m) {
+    const vec4f r = *v;
+    *v = __builtin_shuffle(r, xmask) * m.m[0] + __builtin_shuffle(r, ymask) * m.m[1] + __builtin_shuffle(r, zmask) * m.m[2] + __builtin_shuffle(r, wmask) * m.m[3];
+}
 /* Multiplies a faces vectors with the given Matrix and returns a new face with only the vectors translated and modified, leaving the original unmodified. */
 const face facexm(const face f, const Mat4x4 m) {
     face r = { 0 };

@@ -346,7 +346,7 @@ const float shadowTest(vec4f frag) {
 
     /* Transform to Model space coordinates. */ /* Transform to Light space coordinates. */
     frag[3] = 1.f;
-    frag = vecxm(frag, mxm(*point_mat, ortholightMat[sm_index]));
+    setvecxm(&frag, mxm(*point_mat, ortholightMat[sm_index]));
 
     /* Transform to Screen space coordinates. */
     frag[0] = (1.0 + frag[0]) * (main_wa.width >> 1);

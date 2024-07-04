@@ -22,7 +22,7 @@ const void phong(Fragment *fr) {
     pixel *= w;
     pixel[3] = w;
 
-    pixel = vecxm(pixel, reperspMat);
+    setvecxm(&pixel, reperspMat);
     vec4f nm = norm_vec(fr->nrm);
 
     /* Applying shadow test by transforming View Space coordinates to light Space. */
