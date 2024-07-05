@@ -93,6 +93,17 @@ const Mat4x4 reperspectiveMatrix(const float fov, const float aspectratio) {
     m.m[3][3] = 1.0;
     return m;
 }
+/* Matrix which transforms from Clipp Space to Screen Space. */
+const Mat4x4 screenSpaceMatrix() {
+    Mat4x4 m = { 0 };
+    m.m[0][0] = 1000.f * 0.5;
+    m.m[1][1] = 1000.f * 0.5;
+    m.m[2][2] = 1.0f;
+    m.m[2][3] = 1.f;
+    m.m[3][2] = 0.f;
+    m.m[3][3] = 1.f;
+    return m;
+}
 /* Multiplies a vec4f array with the given Matrix and returns a new array, which includes the original array information, leaving the original unmodified. */
 vec4f *vecsarrayxm(vec4f vecs[], const int len, const Mat4x4 m) {
     vec4f *r = malloc(16 * len);

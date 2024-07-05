@@ -185,7 +185,8 @@ typedef struct {
 } Srt;
 
 typedef struct {
-    vec4f pos, nrm;
+    vec4f pos,               /* Screen Space Position. */
+    nrm;                     /* The normal of the given position.It is always in View Space */
     Material *mtr;
     int state, tex_x, tex_y;
 } Fragment;

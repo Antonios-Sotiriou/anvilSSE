@@ -1,5 +1,5 @@
 #include "../headers/grafik_pipeline.h"
-
+#include "../headers/logging.h"
 const static MeshStepTwo assemblyfaces(MeshStepOne *m, unsigned int *indices, const int len);
 const static void ppdiv(MeshStepTwo *m, const int len);
 const static MeshStepTwo bfculling(const MeshStepTwo m, const int len);
@@ -33,10 +33,9 @@ const void grafikPipeline(Scene *s) {
             enWorldMatrix = mxm(sclMatrix, trMatrix);
 
             Mat4x4 vecsMat = mxm(enWorldMatrix, worldMat);
-            Mat4x4 normsMat = mxm(enWorldMatrix, viewMat);
 
             cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, vecsMat);
-            cache_0.n = setvecsarrayxm(cache_0.n, cache_0.n_indexes, normsMat);
+            cache_0.n = setvecsarrayxm(cache_0.n, cache_0.n_indexes, mxm(mfQ, trMatrix));
 
             /* Assembly and create the faces from the mesh vertices, normals and texture arrays, through the indexes. */
             MeshStepTwo cache_1 = assemblyfaces(&cache_0, s->m[i].f, s->m[i].f_indexes);
@@ -150,8 +149,12 @@ const static MeshStepTwo bfculling(const MeshStepTwo m, const int len) {
 }
 /* Translates the Mesh's Triangles from world to Screen Coordinates. */
 const static int viewtoscreen(MeshStepTwo *m, const int len) {
+    Mat4x4 ssm = screenSpaceMatrix();
     for (int i = 0; i < len; i++) {
         for (int j = 0; j < 3; j++) {
+
+            // printf("before  ");
+            // logVec4f(vecxm(m->f[i].v[j], ssm));
 
             m->f[i].vt[j] /= m->f[i].v[j][3];
 
@@ -159,6 +162,10 @@ const static int viewtoscreen(MeshStepTwo *m, const int len) {
             m->f[i].v[j][1] = ((1 + m->f[i].v[j][1]) * HALFH) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
             // m->f[i].v[j][2] = 1.f / m->f[i].v[j][2];
             m->f[i].v[j][3] = 1.f / m->f[i].v[j][3];
+
+            // printf("After   ");
+            // logVec4f(m->f[i].v[j]);
+            // printf("\n");
         }
     }
 

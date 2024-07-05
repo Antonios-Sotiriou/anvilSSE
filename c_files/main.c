@@ -158,6 +158,7 @@ const static void applyPhysics(void);
 
 /* Represantation functions */
 const static void project(void);
+const void reverseFragmentsToWorld(Fragment *frags_buffer);
 const static void drawFrame(void);
 
 /* Xlib relative functions and event dispatcher. */
@@ -321,10 +322,10 @@ const static void keypress(XEvent *event) {
             break;
         case 65364 : move_down(eye, cameraMov);          /* down arrow */
             break;
-        case 65451 :shadow_bias += 0.01;             /* + */
+        case 65451 :shadow_bias += 0.001;             /* + */
             printf("shadow_bias: %f\n", shadow_bias);
             break;
-        case 65453 :shadow_bias -= 0.01;             /* - */
+        case 65453 :shadow_bias -= 0.001;             /* - */
             printf("shadow_bias: %f\n", shadow_bias);
             break;
         case 65450 : SpecularStrength += 0.01f;             /* * */
@@ -470,8 +471,9 @@ static void *oscillator(void *args) {
         tile_size += ypol;
 
     for (int i = step; i < tile_size; i++) {
-        if ( frags_buffer[i].state )
+        if ( frags_buffer[i].state ) {
             phong(&frags_buffer[i]);
+        }
     }
 
     return (void*)args;

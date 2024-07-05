@@ -335,18 +335,18 @@ const static void shadowface(Shadowface *f, const Srt srt[], const unsigned int 
 }
 const float shadowTest(vec4f frag) {
     unsigned int sm_index;
-    sm_index = (frag[2] <= STA) ? 0 : (frag[2] > STA && frag[2] <= STB) ? 1 : (frag[2] > STB && frag[2] <= STC) ? 2 : 3;
+    float frag_dist = len_vec(frag - camera[Pos]);
+    sm_index = (frag_dist <= STA) ? 0 : (frag_dist > STA && frag_dist <= STB) ? 1 : (frag_dist > STB && frag_dist <= STC) ? 2 : 3;
     if (sm_index > 2)
         return 0;
 
 
-    // float sb[3] = { 0.1, 0.05, 0.025 };
+    // float sb[3] = { 0.09, 0.04, 0.023 };
     // if (dot_product(n, ld) < 0.9)
     //     return 0;
 
-    /* Transform to Model space coordinates. */ /* Transform to Light space coordinates. */
-    frag[3] = 1.f;
-    setvecxm(&frag, mxm(*point_mat, ortholightMat[sm_index]));
+    /* Transform to Light space coordinates. */
+    setvecxm(&frag, ortholightMat[sm_index]);
 
     /* Transform to Screen space coordinates. */
     frag[0] = (1.0 + frag[0]) * (main_wa.width >> 1);
@@ -369,7 +369,7 @@ const float shadowTest(vec4f frag) {
     }
 
     return shadow / 9.f;
-    // return 3;
+    // return sm_index;
 }
 /* Releases all members of the given inside Shadow pipeline lvl 1 Mesh. */
 const static void releaseMeshShadowStepOne(MeshShadowStepOne *c) {
