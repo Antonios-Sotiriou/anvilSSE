@@ -98,8 +98,9 @@ const Mat4x4 screenSpaceMatrix() {
     Mat4x4 m = { 0 };
     m.m[0][0] = 1000.f * 0.5;
     m.m[1][1] = 1000.f * 0.5;
+
     m.m[2][2] = 1.0f;
-    m.m[2][3] = 1.f;
+    m.m[2][3] = 0.f;
     m.m[3][2] = 0.f;
     m.m[3][3] = 1.f;
     return m;
