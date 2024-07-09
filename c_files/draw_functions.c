@@ -369,7 +369,7 @@ const static void edgetexGeneral(face *f, Material *mtr, int minX, int maxX, int
                         const vec2f texel = a[0] * f->vt[2] + a[1] * f->vt[0] + a[2] * f->vt[1];
 
                         frags_buffer[padxDB].tex_y = (texel[1] * (mtr->texture_height - 1)) / frag[3];
-                        frags_buffer[padxDB].tex_x = (texel[0] * (mtr->texture_width - 1)) / frag[3];
+                        frags_buffer[padxDB].tex_x = (texel[0] * (mtr->texture_width)) / frag[3];
                     }
 
                     frags_buffer[padxDB].pos = (vec4f){ x, y, frag[2], frag[3] };
@@ -437,7 +437,7 @@ const static void scanlinetexGeneral(face *f, Material *mtr, const Srt srt[]) {
     int yA = 0;
     if (tymy[0] != 0)
         for (int y = y_start; y < y_end1; y++) {
-            const int padyDB = y * point_attrib->width;
+            const int padyDB = y * point_tiles->end_width;
 
             const int x_start = (ma * yA) + txs[0];
             const int x_end = (mb * yA) + txs[0];
@@ -463,7 +463,7 @@ const static void scanlinetexGeneral(face *f, Material *mtr, const Srt srt[]) {
                             const vec2f texel = a[0] * f->vt[2] + a[1] * f->vt[0] + a[2] * f->vt[1];
 
                             frags_buffer[padxDB].tex_y = (texel[1] * (mtr->texture_height - 1)) / frag[3];
-                            frags_buffer[padxDB].tex_x = (texel[0] * (mtr->texture_width - 1)) / frag[3];
+                            frags_buffer[padxDB].tex_x = (texel[0] * (mtr->texture_width)) / frag[3];
                         // }
 
                         frags_buffer[padxDB].pos = (vec4f){ x, y, frag[2], frag[3] };
@@ -490,7 +490,7 @@ const static void scanlinetexGeneral(face *f, Material *mtr, const Srt srt[]) {
 
     int yB = -tymy[1];
     for (int y = y_end1; y < y_end2; y++) {
-        const int padyDB = y * point_attrib->width;
+        const int padyDB = y * point_tiles->end_width;
 
         const int x_start = (ma * yB) + txs[2];
         const int x_end = (mb * yB) + txs[2];
@@ -516,7 +516,7 @@ const static void scanlinetexGeneral(face *f, Material *mtr, const Srt srt[]) {
                         const vec2f texel = a[0] * f->vt[2] + a[1] * f->vt[0] + a[2] * f->vt[1];
                         
                         frags_buffer[padxDB].tex_y = (texel[1] * (mtr->texture_height - 1)) / frag[3];
-                        frags_buffer[padxDB].tex_x = (texel[0] * (mtr->texture_width - 1)) / frag[3];
+                        frags_buffer[padxDB].tex_x = (texel[0] * (mtr->texture_width)) / frag[3];
                     // }
 
                     frags_buffer[padxDB].pos = (vec4f){ x, y, frag[2], frag[3] };

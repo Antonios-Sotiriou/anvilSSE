@@ -107,67 +107,70 @@ const void loadtexture(Mesh *m, const unsigned int lvl) {
     }
     fclose(fp);
 }
-const void adoptdetailMesh(Mesh *m) {
+const void adoptdetailMesh(Mesh *m, const int dist) {
     if ( m->lodlevels < 1 )
         return;
 
-    const int distance = len_vec(m->pivot - lookAt.m[3]);
     const int lcache_0 = m->currentlod;
 
-    if ( (distance >= 0 && distance <= (20 * m->scale) ) && (m->currentlod != 1) ) {
+    if ( (dist >= 0 && dist <= (20 * m->scale) ) && (m->currentlod != 1) ) {
         m->currentlod = 1;
-    } else if ( (distance > (20 * m->scale)  && distance <= (40 * m->scale) ) && (m->currentlod != 2) ) {
+    } else if ( (dist > (20 * m->scale)  && dist <= (40 * m->scale) ) && (m->currentlod != 2) ) {
         m->currentlod = 2;
-    } else if ( (distance > (40 * m->scale)  && distance <= (60 * m->scale) ) && (m->currentlod != 3) ) {
+    } else if ( (dist > (40 * m->scale)  && dist <= (60 * m->scale) ) && (m->currentlod != 3) ) {
         m->currentlod = 3;
-    } else if ( (distance > (60 * m->scale)  && distance <= (80 * m->scale) ) && (m->currentlod != 4) ) {
+    } else if ( (dist > (60 * m->scale)  && dist <= (80 * m->scale) ) && (m->currentlod != 4) ) {
         m->currentlod = 4;
-    } else if ( (distance > (80 * m->scale)  && distance <= (100 * m->scale) ) && (m->currentlod != 5) ) {
+    } else if ( (dist > (80 * m->scale)  && dist <= (100 * m->scale) ) && (m->currentlod != 5) ) {
         m->currentlod = 5;
-    } else if ( (distance > (100 * m->scale)) && (m->currentlod != 6) ) {
+    } else if ( (dist > (100 * m->scale)) && (m->currentlod != 6) ) {
         m->currentlod = 6;
     }
 
-    if (m->currentlod > m->lodlevels)
+    if ( m->currentlod > m->lodlevels )
         m->currentlod = m->lodlevels;
 
-    if (lcache_0 != m->currentlod) {
+    if ( lcache_0 != m->currentlod ) {
         releaseMesh(m);
         loadMesh(m, m->name, m->currentlod);
-        // enWorldMesh(m);
         printf("adoptDetailMesh()\n");
     }
 }
-const void adoptdetailTexture(Mesh *m) {
+const void adoptdetailTexture(Mesh *m, const int dist) {
     if ( !m->material.texlevels )
         return;
 
-    const int distance = len_vec(m->pivot - lookAt.m[3]);
-    const int lcache_0 = m->material.texlod - 1;
+    const int lcache_0 = m->material.texlod;
 
-    if ( (distance >= 0 && distance <= (20 * m->scale) ) && (m->material.texlod != 1) ) {
+    if ( (dist >= 0 && dist <= (20 * m->scale) ) && (m->material.texlod != 0) ) {
+        m->material.texlod = 0;
+    } else if ( (dist > (20 * m->scale)  && dist <= (40 * m->scale) ) && (m->material.texlod != 1) ) {
         m->material.texlod = 1;
-    } else if ( (distance > (20 * m->scale)  && distance <= (40 * m->scale) ) && (m->material.texlod != 2) ) {
+    } else if ( (dist > (40 * m->scale)  && dist <= (60 * m->scale) ) && (m->material.texlod != 2) ) {
         m->material.texlod = 2;
-    } else if ( (distance > (40 * m->scale)  && distance <= (60 * m->scale) ) && (m->material.texlod != 3) ) {
+    } else if ( (dist > (60 * m->scale)  && dist <= (80 * m->scale) ) && (m->material.texlod != 3) ) {
         m->material.texlod = 3;
-    } else if ( (distance > (60 * m->scale)  && distance <= (80 * m->scale) ) && (m->material.texlod != 4) ) {
+    } else if ( (dist > (80 * m->scale)  && dist <= (100 * m->scale) ) && (m->material.texlod != 4) ) {
         m->material.texlod = 4;
-    } else if ( (distance > (80 * m->scale)  && distance <= (100 * m->scale) ) && (m->material.texlod != 5) ) {
+    } else if ( (dist > (100 * m->scale)  && dist <= (300 * m->scale) ) && (m->material.texlod != 5) ) {
         m->material.texlod = 5;
-    } else if ( (distance > (100 * m->scale)  && distance <= (300 * m->scale) ) && (m->material.texlod != 6) ) {
+    } else if ( (dist > (300 * m->scale)  && dist <= (400 * m->scale) ) && (m->material.texlod != 6) ) {
         m->material.texlod = 6;
-    } else if ( (distance > (300 * m->scale)  && distance <= (400 * m->scale) ) && (m->material.texlod != 7) ) {
+    } else if ( (dist > (400 * m->scale)  && dist <= (500 * m->scale) ) && (m->material.texlod != 7) ) {
         m->material.texlod = 7;
-    } else if ( (distance > (400 * m->scale)  && distance <= (500 * m->scale) ) && (m->material.texlod != 8) ) {
+    } else if ( (dist > (500 * m->scale)) && (m->material.texlod != 8) ) {
         m->material.texlod = 8;
-    } else if ( (distance > (500 * m->scale)) && (m->material.texlod != 9) ) {
-        m->material.texlod = 9;
     }
 
-    const int index = m->material.texlod - 1;
-    if (strcmp(m->material.texlvl[lcache_0], m->material.texlvl[index]) != 0) {
-        loadtexture(m, index);
+    if ( !m->material.init ) {
+        loadtexture(m, m->material.texlod);
+        m->material.init = 1;
+        printf("Initializing Texture of mesh.id: %d\n", m->id);
+        return;
+    }
+
+    if ( strcmp(m->material.texlvl[lcache_0], m->material.texlvl[m->material.texlod]) != 0 ) {
+        loadtexture(m, m->material.texlod);
         printf("adoptDetailTexture()\n");
     }
 }

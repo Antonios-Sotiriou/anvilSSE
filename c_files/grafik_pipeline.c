@@ -3,22 +3,21 @@
 const static MeshStepTwo assemblyfaces(MeshStepOne *m, unsigned int *indices, const int len);
 const static void ppdiv(MeshStepTwo *m, const int len);
 const static MeshStepTwo bfculling(const MeshStepTwo m, const int len);
-const static int viewtoscreen(MeshStepTwo *m, const int len);
+const static int viewtoscreen(MeshStepTwo *m, const int len, const int tile_index);
 const static void rasterize(MeshStepTwo *m, Material *mtr);
 const static void releaseMeshStepOne(MeshStepOne *c);
 const static void releaseMeshStepTwo(MeshStepTwo *c);
 const static void initMeshStepOne(MeshStepOne *a, Mesh *b);
 
 /* Passes the scene Meshes throught the graphic pipeline. */
-const void grafikPipeline(Scene *s) {
+void *grafikPipeline(void *args) {
+    int thread_id = *(int*)args;
+    point_tiles = &tiles[thread_id];
     MeshStepOne cache_0 = { 0 };
 
-    for (int i = 0; i < s->m_indexes; i++) {
+    for (int i = 0; i < scene.m_indexes; i++) {
 
-        // adoptdetailMesh(&s->m[i]);
-        adoptdetailTexture(&s->m[i]);
-
-        initMeshStepOne(&cache_0, &s->m[i]);
+        initMeshStepOne(&cache_0, &scene.m[i]);
 
         cache_0.bbox.v = setvecsarrayxm(cache_0.bbox.v, cache_0.bbox.v_indexes, worldMat);
 
@@ -27,9 +26,9 @@ const void grafikPipeline(Scene *s) {
             Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
 
             vec4f pos = { 0 };
-            Mat4x4 mfQ = MatfromQuat(s->m[i].Q, pos);
-            sclMatrix = mxm(mfQ, scaleMatrix(s->m[i].scale));
-            trMatrix = translationMatrix(s->m[i].pivot[0], s->m[i].pivot[1], s->m[i].pivot[2]);
+            Mat4x4 mfQ = MatfromQuat(scene.m[i].Q, pos);
+            sclMatrix = mxm(mfQ, scaleMatrix(scene.m[i].scale));
+            trMatrix = translationMatrix(scene.m[i].pivot[0], scene.m[i].pivot[1], scene.m[i].pivot[2]);
             enWorldMatrix = mxm(sclMatrix, trMatrix);
 
             Mat4x4 vecsMat = mxm(enWorldMatrix, worldMat);
@@ -38,7 +37,7 @@ const void grafikPipeline(Scene *s) {
             cache_0.n = setvecsarrayxm(cache_0.n, cache_0.n_indexes, mxm(mfQ, trMatrix));
 
             /* Assembly and create the faces from the mesh vertices, normals and texture arrays, through the indexes. */
-            MeshStepTwo cache_1 = assemblyfaces(&cache_0, s->m[i].f, s->m[i].f_indexes);
+            MeshStepTwo cache_1 = assemblyfaces(&cache_0, scene.m[i].f, scene.m[i].f_indexes);
             releaseMeshStepOne(&cache_0);
 
             /* Clipping against near Plane in View Space. */
@@ -72,12 +71,12 @@ const void grafikPipeline(Scene *s) {
             }
 
             /* Sending to translation from NDC to Screen Coordinates. */
-            if (!viewtoscreen(&cache_1, cache_1.f_indexes)) {
+            if (!viewtoscreen(&cache_1, cache_1.f_indexes, thread_id)) {
                 releaseMeshStepTwo(&cache_1);
                 continue;
             }
 
-            rasterize(&cache_1, &s->m[i].material);
+            rasterize(&cache_1, &scene.m[i].material);
             releaseMeshStepTwo(&cache_1);
         } else {
             releaseMeshStepOne(&cache_0);
@@ -148,7 +147,7 @@ const static MeshStepTwo bfculling(const MeshStepTwo m, const int len) {
     return r;
 }
 /* Translates the Mesh's Triangles from world to Screen Coordinates. */
-const static int viewtoscreen(MeshStepTwo *m, const int len) {
+const static int viewtoscreen(MeshStepTwo *m, const int len, const int tile_index) {
     // Mat4x4 ssm = screenSpaceMatrix();
     for (int i = 0; i < len; i++) {
         for (int j = 0; j < 3; j++) {
@@ -170,25 +169,26 @@ const static int viewtoscreen(MeshStepTwo *m, const int len) {
     }
 
     /* Viewport clipping. */
-    vec4f plane_up_p = { 0.0f, 0.0f, 0.0f },
+    int clipp_bias = tile_index == 0 ? 0 : 1;
+    vec4f plane_up_p = { 0.0f, tiles[tile_index].start_height - tile_index, 0.0f },
         plane_up_n = { 0.0f, 1.0f, 0.0f };
     *m = clipp(m, plane_up_p, plane_up_n);
     if(!m->f_indexes)
         return 0;
 
-    vec4f plane_down_p = { 0.0f, main_wa.height - 1.0f, 0.0f },
+    vec4f plane_down_p = { 0.0f, tiles[tile_index].end_height, 0.0f },
         plane_down_n = { 0.0f, -1.0f, 0.0f };
     *m = clipp(m, plane_down_p, plane_down_n);
     if(!m->f_indexes)
         return 0;
 
-    vec4f plane_left_p = { 0.0f, 0.0f, 0.0f },
+    vec4f plane_left_p = { tiles[tile_index].start_width, 0.0f, 0.0f },
         plane_left_n = { 1.0f, 0.0f, 0.0f };
     *m = clipp(m, plane_left_p, plane_left_n);
     if(!m->f_indexes)
         return 0;
 
-    vec4f plane_right_p = { main_wa.width - 1.0f, 0.0f, 0.0f },
+    vec4f plane_right_p = { tiles[tile_index].end_width, 0.0f, 0.0f },
         plane_right_n = { -1.0f, 0.0f, 0.0f };
     *m = clipp(m, plane_right_p, plane_right_n);
     if(!m->f_indexes)

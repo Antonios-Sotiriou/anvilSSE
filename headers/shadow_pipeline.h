@@ -35,7 +35,7 @@ extern unsigned int STB;
 extern unsigned int STC;
 extern float FPlane, NPlane, ASPECTRATIO;
 extern XWindowAttributes main_wa;
-extern Mat4x4 ortholightMat[3], viewMat,  *point_mat;
+extern Mat4x4 ortholightMat[3], viewMat;
 extern float *shadow_buffer[3], shadow_bias;
 extern Light sunlight;
 extern vec4f *eye, camera[4];

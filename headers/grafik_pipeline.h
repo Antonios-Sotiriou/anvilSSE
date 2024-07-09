@@ -29,11 +29,13 @@
 extern int HALFH, HALFW, PROJECTIONVIEW, DEBUG;
 extern float FPlane, NPlane;
 extern XWindowAttributes main_wa;
+extern Scene scene;
+extern Tile *tiles, *point_tiles;
 extern Mat4x4 viewMat, worldMat, lookAt, *point_mat;
 extern vec4c *frame_buffer, *point_frame_buffer;
 extern float *main_depth_buffer, *point_depth_buffer;
 
-const void grafikPipeline(Scene *s);
+void *grafikPipeline(void *args);
 
 #endif /* _GRAFIK_PIPELINE_H */
 

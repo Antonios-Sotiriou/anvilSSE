@@ -73,7 +73,7 @@ typedef struct {
     vec4f diffuse;
     vec4f specular;
     float shinniness;
-    int reflect, texlevels, texlod;
+    int reflect, texlevels, texlod, init;
     signed int texture_height, texture_width;
     vec4f *texture;
     char texlvl[9][10];
@@ -171,6 +171,11 @@ typedef struct {
     Quad *quads;    /* This pointer to pointer holds the ids of the meshes that belong to each quad index. */
     int vecWidth, vecHeight, quadsArea, quadRows, quadCols;
 } TerrainInfo;
+
+/* Structs wiche help us to save and pass arround usefull Tile informations for Parallel rendering. */
+typedef struct {
+    int start_width, start_height, end_width, end_height;
+} Tile;
 
 /* Light struct to create different kind of light sources. */
 typedef struct {

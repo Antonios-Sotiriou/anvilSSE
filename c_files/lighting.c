@@ -1,5 +1,6 @@
 #include "../headers/lighting.h"
-
+#include <stdio.h>
+#include "../headers/logging.h"
 const void phong(Fragment *fr) {
     vec4f basecolor;
 
