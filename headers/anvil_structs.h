@@ -193,7 +193,7 @@ typedef struct {
     vec4f pos,               /* Screen Space Position. */
     nrm;                     /* The normal of the given position.It is always in View Space */
     Material *mtr;
-    int state, tex_x, tex_y;
+    unsigned int tex_x, tex_y;
 } Fragment;
 
 /* BMP Image file reading structs. */

@@ -66,9 +66,12 @@ const void drawLine(float x1, float y1, float x2, float y2, vec4f color) {
 /* Draws face edges of given mesh with color. */
 const void edgeMesh(MeshStepTwo *m, const vec4f color) {
     for (int i = 0; i < m->f_indexes; i++) {
-        drawLine(m->f[i].v[0][0], m->f[i].v[0][1], m->f[i].v[1][0], m->f[i].v[1][1], color);
-        drawLine(m->f[i].v[1][0], m->f[i].v[1][1], m->f[i].v[2][0], m->f[i].v[2][1], color);
-        drawLine(m->f[i].v[2][0], m->f[i].v[2][1], m->f[i].v[0][0], m->f[i].v[0][1], color);
+        // drawLine(m->f[i].v[0][0], m->f[i].v[0][1], m->f[i].v[1][0], m->f[i].v[1][1], color);
+        // drawLine(m->f[i].v[1][0], m->f[i].v[1][1], m->f[i].v[2][0], m->f[i].v[2][1], color);
+        // drawLine(m->f[i].v[2][0], m->f[i].v[2][1], m->f[i].v[0][0], m->f[i].v[0][1], color);
+        XDrawLine(displ, mainwin, gc, m->f[i].v[0][0], m->f[i].v[0][1], m->f[i].v[1][0], m->f[i].v[1][1]);
+        XDrawLine(displ, mainwin, gc, m->f[i].v[1][0], m->f[i].v[1][1], m->f[i].v[2][0], m->f[i].v[2][1]);
+        XDrawLine(displ, mainwin, gc, m->f[i].v[2][0], m->f[i].v[2][1], m->f[i].v[0][0], m->f[i].v[0][1]);
     }
 }
 /* ######################################## FILLING FUNCTIONS ######################################## */
@@ -149,7 +152,6 @@ const static void edgefillGeneral(const face f, Material *mtr, int minX, int max
                     frags_buffer[padxDB].pos = (vec4f){ x, y, frag[2], frag[3] };
                     frags_buffer[padxDB].nrm = normal;
                     frags_buffer[padxDB].mtr = mtr;
-                    frags_buffer[padxDB].state = 1;
                     point_depth_buffer[padxDB] = frag[3];
                 }
                 xflag++;
@@ -235,7 +237,7 @@ const static void scanlinefillGeneral(const face f, Material *mtr, const Srt srt
                         frags_buffer[padxDB].pos = (vec4f){ x, y, frag[2], frag[3] };
                         frags_buffer[padxDB].nrm = normal;
                         frags_buffer[padxDB].mtr = mtr;
-                        frags_buffer[padxDB].state = 1;
+
                         point_depth_buffer[padxDB] = frag[3];
                     }
                 }
@@ -280,7 +282,6 @@ const static void scanlinefillGeneral(const face f, Material *mtr, const Srt srt
                     frags_buffer[padxDB].pos = (vec4f){ x, y, frag[2], frag[3] };
                     frags_buffer[padxDB].nrm = normal;
                     frags_buffer[padxDB].mtr = mtr;
-                    frags_buffer[padxDB].state = 1;
                     point_depth_buffer[padxDB] = frag[3];
                 }
             }
@@ -375,7 +376,6 @@ const static void edgetexGeneral(face *f, Material *mtr, int minX, int maxX, int
                     frags_buffer[padxDB].pos = (vec4f){ x, y, frag[2], frag[3] };
                     frags_buffer[padxDB].nrm = normal;
                     frags_buffer[padxDB].mtr = mtr;
-                    frags_buffer[padxDB].state = 1;
                     point_depth_buffer[padxDB] = frag[3];
                 }
                 xflag++;
@@ -469,7 +469,6 @@ const static void scanlinetexGeneral(face *f, Material *mtr, const Srt srt[]) {
                         frags_buffer[padxDB].pos = (vec4f){ x, y, frag[2], frag[3] };
                         frags_buffer[padxDB].nrm = normal;
                         frags_buffer[padxDB].mtr = mtr;
-                        frags_buffer[padxDB].state = 1;
                         point_depth_buffer[padxDB] = frag[3];
                     }
                 }
@@ -522,7 +521,6 @@ const static void scanlinetexGeneral(face *f, Material *mtr, const Srt srt[]) {
                     frags_buffer[padxDB].pos = (vec4f){ x, y, frag[2], frag[3] };
                     frags_buffer[padxDB].nrm = normal;
                     frags_buffer[padxDB].mtr = mtr;
-                    frags_buffer[padxDB].state = 1;
                     point_depth_buffer[padxDB] = frag[3];
                 }
             }

@@ -37,10 +37,7 @@
 extern Mat4x4 lookAt, worldMat, viewMat, perspMat, orthoMat;
 extern float FPlane, NPlane;
 extern int HALFW, HALFH, PROJECTIONVIEW;
-
-extern Window mainwin;
-extern Display *displ;
-extern GC gc;
+extern Tile *tiles;
 
 const void swap(void *a, void *b, unsigned long size);
 const float radians(const float value);
@@ -53,7 +50,7 @@ const void adoptdetailTexture(Mesh *m, const int dist);
 const void enWorldMesh(Mesh *m);
 const void enworldBbox(Mesh *m);
 const void placeMesh(Mesh *m, const vec4f pos);
-const int frustumCulling(vec4f v[], const int v_indexes);
+const int frustumCulling(vec4f v[], const int v_indexes, const int thread_id);
 const void checkVisibles(Scene *s, Mesh *m, const int viewProj);
 const void displayVec4f(const vec4f v_start, const vec4f v_end, const Mat4x4 vm);
 const void displayBbox(vec4f v[], const int v_indexes, const Mat4x4 vm);

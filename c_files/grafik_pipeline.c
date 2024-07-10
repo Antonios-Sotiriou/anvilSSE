@@ -1,5 +1,5 @@
 #include "../headers/grafik_pipeline.h"
-#include "../headers/logging.h"
+
 const static MeshStepTwo assemblyfaces(MeshStepOne *m, unsigned int *indices, const int len);
 const static void ppdiv(MeshStepTwo *m, const int len);
 const static MeshStepTwo bfculling(const MeshStepTwo m, const int len);
@@ -21,7 +21,7 @@ void *grafikPipeline(void *args) {
 
         cache_0.bbox.v = setvecsarrayxm(cache_0.bbox.v, cache_0.bbox.v_indexes, worldMat);
 
-        if (frustumCulling(cache_0.bbox.v, cache_0.bbox.v_indexes)) {
+        if (frustumCulling(cache_0.bbox.v, cache_0.bbox.v_indexes, thread_id)) {
 
             Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
 

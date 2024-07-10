@@ -119,11 +119,34 @@ const void logQuat(const Quat q) {
     fprintf(stdout, "w: %f  v[x: %f, y: %f, z: %f]\n", q.w, q.v[0], q.v[1], q.v[2]);
 }
 
+/* Prints the members of given Quad index. */
+const void logTerrainQuad(const TerrainInfo ti, const int quad_index) {
+    if (quad_index < 0) {
+        /* Mesh is out of terrain if its quadIndex is less than Zero. */
+        return;
+    }
+    if (!ti.quads[quad_index].members) {
+        fprintf(stderr, "Quad %d has no members.\n", quad_index);
+        return;
+    }
+    printf("Quad %d members: ", quad_index);
+    for (int i = 0; i < ti.quads[quad_index].members_indexes; i++) {
+        printf("%d, ", ti.quads[quad_index].members[i]);
+    }
+    printf(": quad indexes: %d", ti.quads[quad_index].members_indexes);
+    printf("\n");
+}
+
 const void logDm(const DimensionsLimits dm) {
     printf("dm min: ");
     logVec4f(dm.min);
     printf("dm max: ");
     logVec4f(dm.max);
+}
+
+const void logTile(const Tile t) {
+    printf("tile.start_width: %d    tile.start_height: %d\n", t.start_width, t.start_height);
+    printf("tile.end_width  : %d    tile.end_height  : %d\n", t.end_width, t.end_height);
 }
 
 const void logBMP_Header(const BMP_Header bmp_h) {

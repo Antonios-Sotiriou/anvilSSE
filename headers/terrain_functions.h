@@ -30,7 +30,6 @@ const float getTerrainHeight(Mesh *terrain, vec4f coords, Mesh *m);
 const int getTerrainQuadIndex(Mesh *t, vec4f coords);
 const void addMeshToQuad(Mesh *m);
 const void removeMeshFromQuad(Mesh *m);
-const void printQuad(const int quad_index);
 
 #endif /* _TERRAIN_FUNCTIONS_H */
 

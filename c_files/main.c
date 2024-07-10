@@ -84,7 +84,7 @@ static float ZFAR         = 100.0f;
 float ASPECTRATIO         = 1;
 static int BSIZE          = 0;
 float NPlane              = 1.0f;
-float FPlane              = 20000.0f;
+float FPlane              = 100000.0f;
 float AmbientStrength     = 0.5f;
 float SpecularStrength    = 0.5f;
 float DiffuseStrength     = 0.5f;
@@ -116,7 +116,7 @@ Light sunlight = {
 vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
 const float movScalar = 100.f;
-const float cameraMov = 10.f;
+const float cameraMov = 1.f;
 
 /* Variables usefull for mesh click select. */
 unsigned int getClick = 0;
@@ -477,9 +477,7 @@ static void *oscillator(void *args) {
         tile_size += ypol;
 
     for (int i = step; i < tile_size; i++) {
-        if ( frags_buffer[i].state ) {
-            phong(&frags_buffer[i]);
-        }
+        phong(&frags_buffer[i]);
     }
 
     return (void*)args;
@@ -516,7 +514,7 @@ const static void project(void) {
 
     for (int i = 0; i < scene.m_indexes; i++) {
         const int distance = len_vec(scene.m[i].pivot - camera[Pos]);
-        // adoptdetailMesh(&scene.m[i]);
+        adoptdetailMesh(&scene.m[i], distance);
         adoptdetailTexture(&scene.m[i], distance);
     }
 
@@ -567,8 +565,8 @@ const static void drawFrame(void) {
     pixmapdisplay(main_pixmap, mainwin, main_wa.width, main_wa.height);
 
     memcpy(frame_buffer, reset_frame_buffer, BSIZE);
-    memcpy(main_depth_buffer, reset_depth_buffer, BSIZE); 
-    memcpy(frags_buffer, reset_frags_buffer, MAIN_EMVADON * sizeof(Fragment));
+    memcpy(main_depth_buffer, reset_depth_buffer, BSIZE);
+    // memcpy(frags_buffer, reset_frags_buffer, MAIN_EMVADON * sizeof(Fragment));
 }
 const static void initMainWindow(void) {
     sa.event_mask = EXPOSEMASKS | KEYBOARDMASKS | POINTERMASKS;

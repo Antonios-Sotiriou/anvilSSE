@@ -166,8 +166,7 @@ const void createTerrain(Mesh *m, const char path[]) {
 }
 /* Assigns the Terrain *t quad index to the given mesh. */
 const void initMeshQuadInfo(Mesh *t, Mesh *m) {
-    const int quad_index = getTerrainQuadIndex(t, m->pivot);
-    m->quadIndex = quad_index;
+    m->quadIndex = getTerrainQuadIndex(t, m->pivot);
     addMeshToQuad(m);
 }
 /* Retrieves Terrain *t height at given coords and, sets given meshes *m terain quadIndex to the id of the quad at those coords. */
@@ -303,23 +302,5 @@ const void removeMeshFromQuad(Mesh *m) {
     tf.quads[quad_index].members = realloc(new_array, (num_of_indexes * 4));
     tf.quads[quad_index].members_indexes = num_of_indexes;
 }
-/* Prints the members of given Quad index. */
-const void printQuad(const int quad_index) {
-    if (quad_index < 0) {
-        /* Mesh is out of terrain if its quadIndex is less than Zero. */
-        return;
-    }
-    if (!tf.quads[quad_index].members) {
-        fprintf(stderr, "Quad %d has no members.\n", quad_index);
-        return;
-    }
-    printf("Quad %d members: ", quad_index);
-    for (int i = 0; i < tf.quads[quad_index].members_indexes; i++) {
-        printf("%d, ", tf.quads[quad_index].members[i]);
-    }
-    printf(": quad indexes: %d", tf.quads[quad_index].members_indexes);
-    printf("\n");
-}
-
 
 

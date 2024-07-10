@@ -113,17 +113,17 @@ const void adoptdetailMesh(Mesh *m, const int dist) {
 
     const int lcache_0 = m->currentlod;
 
-    if ( (dist >= 0 && dist <= (20 * m->scale) ) && (m->currentlod != 1) ) {
+    if ( (dist >= 0) && (dist <= 20 * m->scale) ) {
         m->currentlod = 1;
-    } else if ( (dist > (20 * m->scale)  && dist <= (40 * m->scale) ) && (m->currentlod != 2) ) {
+    } else if ( (dist > 20 * m->scale) && (dist <= 40 * m->scale) ) {
         m->currentlod = 2;
-    } else if ( (dist > (40 * m->scale)  && dist <= (60 * m->scale) ) && (m->currentlod != 3) ) {
+    } else if ( (dist > 40 * m->scale) && (dist <= 60 * m->scale) ) {
         m->currentlod = 3;
-    } else if ( (dist > (60 * m->scale)  && dist <= (80 * m->scale) ) && (m->currentlod != 4) ) {
+    } else if ( (dist > 60 * m->scale) && (dist <= 80 * m->scale) ) {
         m->currentlod = 4;
-    } else if ( (dist > (80 * m->scale)  && dist <= (100 * m->scale) ) && (m->currentlod != 5) ) {
+    } else if ( (dist > 80 * m->scale) && (dist <= 100 * m->scale) ) {
         m->currentlod = 5;
-    } else if ( (dist > (100 * m->scale)) && (m->currentlod != 6) ) {
+    } else if ( (dist > 100 * m->scale) ) {
         m->currentlod = 6;
     }
 
@@ -144,21 +144,21 @@ const void adoptdetailTexture(Mesh *m, const int dist) {
 
     if ( (dist >= 0 && dist <= (20 * m->scale) ) && (m->material.texlod != 0) ) {
         m->material.texlod = 0;
-    } else if ( (dist > (20 * m->scale)  && dist <= (40 * m->scale) ) && (m->material.texlod != 1) ) {
+    } else if ( (dist > (20 * m->scale)) && (dist <= (40 * m->scale)) ) {
         m->material.texlod = 1;
-    } else if ( (dist > (40 * m->scale)  && dist <= (60 * m->scale) ) && (m->material.texlod != 2) ) {
+    } else if ( (dist > (40 * m->scale)) && (dist <= (60 * m->scale)) ) {
         m->material.texlod = 2;
-    } else if ( (dist > (60 * m->scale)  && dist <= (80 * m->scale) ) && (m->material.texlod != 3) ) {
+    } else if ( (dist > (60 * m->scale)) && (dist <= (80 * m->scale)) ) {
         m->material.texlod = 3;
-    } else if ( (dist > (80 * m->scale)  && dist <= (100 * m->scale) ) && (m->material.texlod != 4) ) {
+    } else if ( (dist > (80 * m->scale)) && (dist <= (100 * m->scale)) ) {
         m->material.texlod = 4;
-    } else if ( (dist > (100 * m->scale)  && dist <= (300 * m->scale) ) && (m->material.texlod != 5) ) {
+    } else if ( (dist > (100 * m->scale)) && (dist <= (300 * m->scale)) ) {
         m->material.texlod = 5;
-    } else if ( (dist > (300 * m->scale)  && dist <= (400 * m->scale) ) && (m->material.texlod != 6) ) {
+    } else if ( (dist > (300 * m->scale)) && (dist <= (400 * m->scale)) ) {
         m->material.texlod = 6;
-    } else if ( (dist > (400 * m->scale)  && dist <= (500 * m->scale) ) && (m->material.texlod != 7) ) {
+    } else if ( (dist > (400 * m->scale)) && (dist <= (500 * m->scale)) ) {
         m->material.texlod = 7;
-    } else if ( (dist > (500 * m->scale)) && (m->material.texlod != 8) ) {
+    } else if ( dist > (500 * m->scale) ) {
         m->material.texlod = 8;
     }
 
@@ -204,8 +204,9 @@ const void placeMesh(Mesh *m, const vec4f pos) {
     m->n = setvecsarrayxm(m->n, m->n_indexes, trMatrix);
     m->pivot = pos;
 }
+#include "../headers/logging.h"
 /* Cull Mesh to view frustum. viewProj: (1 for Prespective and 0 for orthographic Projection). Thats for the perspective divide usefull.viewMat the matrix of the point of view. */
-const int frustumCulling(vec4f v[], const int v_indexes) {
+const int frustumCulling(vec4f v[], const int v_indexes, const int thread_id) {
     /* Thats a fix for unitialized meshes that cannot become visible due to no vectors initialization. That will be corrected with bounding boxes. */
     if (!v_indexes) {
         return 1;
@@ -226,8 +227,11 @@ const int frustumCulling(vec4f v[], const int v_indexes) {
 
     DimensionsLimits dm = getDimensionsLimits(vec_arr, v_indexes);
 
+    const float minY = ((float)tiles[thread_id].start_height / HALFW) - 1.f; 
+    const float maxY = ((float)tiles[thread_id].end_height / HALFH) - 1.f;
+
     if ( ((dm.min[2] > FPlane) || (dm.max[2] < NPlane)) ||
-            ((dm.min[1] > 1.f) || (dm.max[1] < -1.f)) ||
+            ((dm.min[1] > maxY) || (dm.max[1] < minY)) ||
             ((dm.min[0] > 1.f) || (dm.max[0] < -1.f)) ) {
 
         free(vec_arr);

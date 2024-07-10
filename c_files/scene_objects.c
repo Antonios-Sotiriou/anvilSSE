@@ -1,6 +1,6 @@
 #include "../headers/scene_objects.h"
 
-#define MESH_NUM 5
+#define MESH_NUM 6
 
 /* This function is responsible to position the objects in world space. */
 const void initWorldObjects(Scene *s) {
@@ -33,7 +33,7 @@ const void initWorldObjects(Scene *s) {
     memcpy(s->m[1].name, "planet", sizeof("planet"));
     // createCube(&s->m[1]);
     loadMaterial(&s->m[1].material, "stones");
-    loadMesh(&s->m[1], "objfiles/cubesmooth", 1);
+    // loadMesh(&s->m[1], "planet", 1);
     loadBbox(&s->m[1].bbox, "objfiles/cubesmooth/bbox_cubesmooth");
 
     s->m[1].type = Player;
@@ -46,7 +46,7 @@ const void initWorldObjects(Scene *s) {
     s->m[1].pivot[2] = 30.f;
 
     s->m[1].cull = 1;
-    s->m[1].lodlevels = 5;
+    s->m[1].lodlevels = 6;
     // s->m[1].visible = 1;
     s->m[1].mass = 0.5;
     // s->m[1].grounded = 1;
@@ -58,7 +58,7 @@ const void initWorldObjects(Scene *s) {
     // /* ######################################################################################################## */
     // createCube(&s->m[2]);
     memcpy(s->m[2].name, "cubesmooth", sizeof("cubesmooth"));
-    loadMesh(&s->m[2], "objfiles/cubesmooth", 1);
+    loadMesh(&s->m[2], "cubesmooth", 1);
     loadMaterial(&s->m[2].material, "jade");
     loadBbox(&s->m[2].bbox, "objfiles/cubesmooth/bbox_cubesmooth");
 
@@ -122,28 +122,28 @@ const void initWorldObjects(Scene *s) {
     enworldBbox(&s->m[4]);
 
     /* ######################################################################################################## */
-    // memcpy(s->m[5].name, "spacedomsmooth", sizeof("spacedomsmooth"));
-    // loadMaterial(&s->m[5].material, "spacedom");
-    // loadMesh(&s->m[5], "objfiles/spacedomsmooth", 1);
-    // loadBbox(&s->m[5].bbox, "objfiles/planet/bbox_planet");
+    memcpy(s->m[5].name, "spacedomsmooth", sizeof("spacedomsmooth"));
+    loadMaterial(&s->m[5].material, "spacedom");
+    loadMesh(&s->m[5], "spacedomsmooth", 1);
+    loadBbox(&s->m[5].bbox, "objfiles/planet/bbox_planet");
 
-    // s->m[5].type = Celestial;
-    // s->m[5].id = 5;
+    s->m[5].type = Celestial;
+    s->m[5].id = 5;
 
-    // s->m[5].scale = 10000.f;
+    s->m[5].scale = 10000.f;
 
-    // s->m[5].pivot[0] = 0.f;
-    // s->m[5].pivot[1] = 0.f;
-    // s->m[5].pivot[2] = 0.f;
+    s->m[5].pivot[0] = 0.f;
+    s->m[5].pivot[1] = 0.f;
+    s->m[5].pivot[2] = 0.f;
 
-    // s->m[5].cull = 1;
-    // s->m[5].lodlevels = 1;
-    // // s->m[5].visible = 1;
-    // s->m[5].mass = 0;
-    // // s->m[5].material.reflect = 1;
-    // s->m[5].Q = unitQuat();
-    // // enWorldMesh(&s->m[5]);
-    // enworldBbox(&s->m[5]);
+    s->m[5].cull = 1;
+    s->m[5].lodlevels = 1;
+    // s->m[5].visible = 1;
+    s->m[5].mass = 0;
+    // s->m[5].material.reflect = 1;
+    s->m[5].Q = unitQuat();
+    // enWorldMesh(&s->m[5]);
+    enworldBbox(&s->m[5]);
 
     /* ######################################################################################################## */
     // for (int i = 5; i < MESH_NUM; i++) {
