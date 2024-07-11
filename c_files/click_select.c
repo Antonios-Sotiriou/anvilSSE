@@ -27,27 +27,28 @@ const int clickSelect(const vec4f cs) {
 
     return id;
 }
-const int clickvsBbox(TerrainInfo *tf, Scene *s, vec4f wsc) {
+const int clickvsBbox(TerrainInfo *ti, Scene *s, vec4f wsc) {
     const int quadIndex = getTerrainQuadIndex(&s->m[Terrain_1], wsc);
     vec4i iwsc = __builtin_convertvector(wsc + 0.5f, vec4i);
 
     // printf("quad_index: %d\n", quadIndex);
-    // printQuad(quadIndex);
+    // logTerrainQuad(*ti, quadIndex);
     if (quadIndex < 0) {
         fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", quadIndex);
         return -1;
     }
 
-    const int num_of_members = tf->quads[quadIndex].members_indexes;
+    Mesh *cache;
+    const int num_of_members = ti->quads[quadIndex].members_indexes;
     for (int i = 0; i < num_of_members; i++) {
 
-        int inner_inx = tf->quads[quadIndex].members[i];
+        cache = ti->quads[quadIndex].members[i];
 
-        if ( s->m[inner_inx].id != s->m[Terrain_1].id ) {
+        // if ( cache->id != s->m[Terrain_1].id ) {
 
-            s->m[inner_inx].dm = getDimensionsLimits(s->m[inner_inx].bbox.v, s->m[inner_inx].bbox.v_indexes);
-            vec4i min = __builtin_convertvector(s->m[inner_inx].dm.min + 0.5, vec4i);
-            vec4i max = __builtin_convertvector(s->m[inner_inx].dm.max + 0.5f, vec4i);
+            cache->dm = getDimensionsLimits(cache->bbox.v, cache->bbox.v_indexes);
+            vec4i min = __builtin_convertvector(cache->dm.min + 0.5, vec4i);
+            vec4i max = __builtin_convertvector(cache->dm.max + 0.5f, vec4i);
 
             if ( iwsc[2] >= min[2] && iwsc[2] <= max[2] ) {
 
@@ -57,12 +58,12 @@ const int clickvsBbox(TerrainInfo *tf, Scene *s, vec4f wsc) {
                         // logDm(s->m[i].dm);
                         // logVec4i(min);
                         // logVec4i(max);
-                        return s->m[inner_inx].id;
+                        return cache->id;
                     }
 
                 }
             }
-        }
+        // }
     }
 
     // const int num_of_members = s->m_indexes;

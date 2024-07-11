@@ -156,7 +156,7 @@ typedef struct {
 } Scene;
 
 typedef struct {
-    unsigned int *members;
+    Mesh **members;
     unsigned int members_indexes;
 } Quad;
 

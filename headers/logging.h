@@ -24,6 +24,7 @@ const void logFace(const face f, const int vec, const int tex, const int norm);
 const void logMatrix(const Mat4x4 m);
 const void logQuat(const Quat q);
 const void logTerrainQuad(const TerrainInfo ti, const int quad_index);
+const void logTerrainInfo(const TerrainInfo ti);
 const void logDm(const DimensionsLimits dm);
 const void logTile(const Tile t);
 const void logBMP_Header(const BMP_Header bmp_h);

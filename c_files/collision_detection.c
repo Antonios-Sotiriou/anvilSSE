@@ -14,6 +14,7 @@ const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
         object->pivot[1] += height_diff;
     }
 }
+#include "../headers/logging.h"
 const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *velocity) {
     if (obj->quadIndex < 0) {
         // fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
@@ -25,17 +26,19 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
     vec4f tnear, tfar;
     int f_nx, f_ny, f_nz, f_fx, f_fy, f_fz;
 
+    Mesh *cache;
     const int num_of_members = tf->quads[obj->quadIndex].members_indexes;
+
     for (int i = 0; i < num_of_members; i++) {
 
-        int inner_inx = tf->quads[obj->quadIndex].members[i];
+        cache = tf->quads[obj->quadIndex].members[i];
 
-        if ( s->m[inner_inx].id != obj->id ) {
+        if ( cache->id != obj->id ) {
 
-            s->m[inner_inx].dm = getDimensionsLimits(s->m[inner_inx].bbox.v, s->m[inner_inx].bbox.v_indexes);
+            cache->dm = getDimensionsLimits(cache->bbox.v, cache->v_indexes);
 
-            vec4i min = __builtin_convertvector((s->m[inner_inx].dm.min - (obj->pivot - obj->dm.min)) + 0.5, vec4i);
-            vec4i max = __builtin_convertvector((s->m[inner_inx].dm.max - (obj->pivot - obj->dm.max)) + 0.5, vec4i);
+            vec4i min = __builtin_convertvector((cache->dm.min - (obj->pivot - obj->dm.min)) + 0.5, vec4i);
+            vec4i max = __builtin_convertvector((cache->dm.max - (obj->pivot - obj->dm.max)) + 0.5, vec4i);
 
             tnear = (__builtin_convertvector(min, vec4f) - obj->pivot) / velocity[0];
             tfar =  (__builtin_convertvector(max, vec4f) - obj->pivot) / velocity[0];
@@ -169,7 +172,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
 
                 obj->pivot += velocity[0];
 
-                obj->momentum *= s->m[inner_inx].mass;
+                obj->momentum *= cache->mass;
                 float dot =  dot_product(normal, obj->mvdir);
                 obj->mvdir = obj->mvdir - (dot * normal);
                 velocity[0] = (obj->mvdir * obj->momentum);
@@ -192,17 +195,19 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
     vec4f tnear, tfar;
     int f_nx, f_ny, f_nz, f_fx, f_fy, f_fz;
 
+    Mesh *cache;
     const int num_of_members = tf->quads[obj->quadIndex].members_indexes;
+
     for (int i = 0; i < num_of_members; i++) {
 
-        int inner_inx = tf->quads[obj->quadIndex].members[i];
+        cache = tf->quads[obj->quadIndex].members[i];
 
-        if ( s->m[inner_inx].id != obj->id ) {
+        if ( cache->id != obj->id ) {
 
-            s->m[inner_inx].dm = getDimensionsLimits(s->m[inner_inx].bbox.v, s->m[inner_inx].bbox.v_indexes);
+            cache->dm = getDimensionsLimits(cache->bbox.v, cache->bbox.v_indexes);
 
-            vec4i min = __builtin_convertvector((s->m[inner_inx].dm.min - (obj->pivot - obj->dm.min)) + 0.5, vec4i);
-            vec4i max = __builtin_convertvector((s->m[inner_inx].dm.max - (obj->pivot - obj->dm.max)) + 0.5, vec4i);
+            vec4i min = __builtin_convertvector((cache->dm.min - (obj->pivot - obj->dm.min)) + 0.5, vec4i);
+            vec4i max = __builtin_convertvector((cache->dm.max - (obj->pivot - obj->dm.max)) + 0.5, vec4i);
 
             tnear = (__builtin_convertvector(min, vec4f) - obj->pivot);
             tfar =  (__builtin_convertvector(max, vec4f) - obj->pivot);
@@ -283,17 +288,19 @@ const void sortObjectCollisions(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *vel
     vec4f tnear, tfar;
     int f_nx, f_ny, f_nz, f_fx, f_fy, f_fz;
 
+    Mesh *cache_1;
     const int num_of_members = tf->quads[obj->quadIndex].members_indexes;
+
     for (int i = 0; i < num_of_members; i++) {
 
-        int inner_inx = tf->quads[obj->quadIndex].members[i];
-        s->m[inner_inx].collision_t = 1000000.f;
+        cache_1 = tf->quads[obj->quadIndex].members[i];
+        cache_1->collision_t = 1000000.f;
 
-        if ( s->m[inner_inx].id != obj->id ) {
-            s->m[inner_inx].dm = getDimensionsLimits(s->m[inner_inx].bbox.v, s->m[inner_inx].bbox.v_indexes);
+        if ( cache_1->id != obj->id ) {
+            cache_1->dm = getDimensionsLimits(cache_1->bbox.v, cache_1->bbox.v_indexes);
 
-            vec4i min = __builtin_convertvector((s->m[inner_inx].dm.min - (obj->pivot - obj->dm.min)) + 0.5, vec4i);
-            vec4i max = __builtin_convertvector((s->m[inner_inx].dm.max - (obj->pivot - obj->dm.max)) + 0.5, vec4i);
+            vec4i min = __builtin_convertvector((cache_1->dm.min - (obj->pivot - obj->dm.min)) + 0.5, vec4i);
+            vec4i max = __builtin_convertvector((cache_1->dm.max - (obj->pivot - obj->dm.max)) + 0.5, vec4i);
 
             tnear = (__builtin_convertvector(min, vec4f) - obj->pivot) / velocity[0];
             tfar =  (__builtin_convertvector(max, vec4f) - obj->pivot) / velocity[0];
@@ -335,16 +342,16 @@ const void sortObjectCollisions(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *vel
                 continue;
             }
 
-            s->m[inner_inx].collision_t = t_near;
+            cache_1->collision_t = t_near;
         }
     }
-
+    Mesh *cache_2;
     for (int i = 0; i < num_of_members; i++) {
-        int inner_inx = tf->quads[obj->quadIndex].members[i];
+        cache_1 = tf->quads[obj->quadIndex].members[i];
         for (int j = 0; j < num_of_members; j++) {
-            int most_inner_inx = tf->quads[obj->quadIndex].members[j];
-            if (s->m[most_inner_inx].id != obj->id) {
-                if (s->m[inner_inx].collision_t < s->m[most_inner_inx].collision_t) {
+            cache_2 = tf->quads[obj->quadIndex].members[j];
+            if (cache_1->id != obj->id) {
+                if (cache_1->collision_t < cache_2->collision_t) {
                     swap(&tf->quads[obj->quadIndex].members[i], &tf->quads[obj->quadIndex].members[j], 4);
                 }
             }

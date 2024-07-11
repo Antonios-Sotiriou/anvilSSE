@@ -40,6 +40,7 @@ const void logVec2f(const vec2f v) {
 
 /* Logging Mesh. */
 const void logMesh(const Mesh m) {
+    printf("Mesh id:       %d\n", m.id);
     printf("Mesh name:     %s\n", m.name);
     printf("pivot:         ");
     logVec4f(m.pivot);
@@ -57,6 +58,7 @@ const void logMesh(const Mesh m) {
     printf("meshlod:       %d\n", m.currentlod);
     printf("scale:         %f\n", m.scale);
     printf("visible:       %d\n", m.visible);
+    printf("quadIndex:     %d\n", m.quadIndex);
     logMaterial(m.material);
     printf("bboxv_indexes: %d\n", m.bbox.v_indexes);
 }
@@ -125,18 +127,30 @@ const void logTerrainQuad(const TerrainInfo ti, const int quad_index) {
         /* Mesh is out of terrain if its quadIndex is less than Zero. */
         return;
     }
-    if (!ti.quads[quad_index].members) {
+
+    printf("Quad: %d\n", quad_index);
+    printf("indexes: %d\n", ti.quads[quad_index].members_indexes);
+    if ( !ti.quads[quad_index].members ) {
         fprintf(stderr, "Quad %d has no members.\n", quad_index);
         return;
     }
-    printf("Quad %d members: ", quad_index);
+    printf("members ids: ", quad_index);
     for (int i = 0; i < ti.quads[quad_index].members_indexes; i++) {
-        printf("%d, ", ti.quads[quad_index].members[i]);
+        printf("%d, ", ti.quads[quad_index].members[i]->id);
     }
-    printf(": quad indexes: %d", ti.quads[quad_index].members_indexes);
     printf("\n");
 }
 
+/* Prints the TerrainInfo struct. */
+const void logTerrainInfo(const TerrainInfo ti) {
+    printf("vecWidth : %d\n", ti.vecWidth);
+    printf("vecHeight: %d\n", ti.vecHeight);
+    printf("quadRows : %d\n", ti.quadRows);
+    printf("quadCols : %d\n", ti.quadCols);
+    printf("quadsArea: %d\n", ti.quadsArea);
+}
+
+/* Prints the DimensionsLimits struct. */
 const void logDm(const DimensionsLimits dm) {
     printf("dm min: ");
     logVec4f(dm.min);
