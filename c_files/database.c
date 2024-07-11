@@ -65,7 +65,7 @@ const int createMaterialDatabase(void) {
             .specular = { 0.628281f, 0.555802f, 0.366065f, 0.0f },
             .shinniness = 0.4f * intensity,
             .reflect = 0,
-            .texlevels = 9,
+            .texlevels = 1,
             .texlvl = { "1640x1376", "1640x1376", "1640x1376", "1640x1376", "1640x1376", "1640x1376", "1640x1376", "1640x1376", "1640x1376" }
         },
         {

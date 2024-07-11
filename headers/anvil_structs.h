@@ -73,7 +73,7 @@ typedef struct {
     vec4f diffuse;
     vec4f specular;
     float shinniness;
-    int reflect, texlevels, texlod;
+    int reflect, texlevels, texlod, init;
     signed int texture_height, texture_width;
     vec4f *texture;
     char texlvl[9][10];
@@ -104,9 +104,8 @@ typedef struct {
     int v_indexes, n_indexes, t_indexes, f_indexes, /* vectors, normals, textors and faces indexes summary. */
     type,                                           /* type of the Mesh. Not sure yet how to categorize them. */
     cull, lodlevels, currentlod, visible,           /* visibillity and lod or texture lod usefull variables. */
-    floating, grounded, collide,                    /* variables usefull for physics and kinetics.  */
-    quadInit, quadIndex, id,                        /* Terrain quad position and id of meshes index in the scene. */
-    overlap;                                        /* flag to check if an object is above another object. Usefull for collisions with stairs */
+    floating, grounded,                             /* variables usefull for physics and kinetics.  */
+    quadInit, quadIndex, id;                        /* Terrain quad position and id of meshes index in the scene. */
     float scale, falling_time,                      /* Scale of the mesh and the time that is on Air. */
     momentum,                                       /* The momentum of the mesh. */
     roll,                                           /* If the mesh is rolling like wheels. */

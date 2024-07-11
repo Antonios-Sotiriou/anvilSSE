@@ -1,5 +1,5 @@
 #include "../headers/grafik_pipeline.h"
-#include "../headers/logging.h"
+
 const static MeshStepTwo assemblyfaces(MeshStepOne *m, unsigned int *indices, const int len);
 const static void ppdiv(MeshStepTwo *m, const int len);
 const static MeshStepTwo bfculling(const MeshStepTwo m, const int len);

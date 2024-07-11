@@ -81,7 +81,7 @@ const void logMaterial(const Material mt) {
         printf("    texture       : %p\n", mt.texture);
         printf("    texlvl[9][10] : ");
         for (int i = 0; i < 9; i++) {
-            printf("%s", mt.texlvl[i]);
+            printf("%s ", mt.texlvl[i]);
         }
         printf("\n");
         printf("}\n");

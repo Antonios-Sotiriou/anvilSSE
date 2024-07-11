@@ -289,7 +289,7 @@ const static void keypress(XEvent *event) {
         eye = (vec4f*)&camera;
 
     // printf("\x1b[H\x1b[J");
-    system("clear\n");
+    // system("clear\n");
     // printf("Key Pressed: %ld\n", keysym);
     // logEvent(*event);
 
@@ -467,13 +467,12 @@ static void *oscillator(void *args) {
     int tile_size = stuck * (thread_id + 1);
     int step = stuck * thread_id;
 
-    if ( ypol && (thread_id == THREADS) )
+    if ( ypol && (thread_id == (THREADS - 1)) )
         tile_size += ypol;
 
     for (int i = step; i < tile_size; i++) {
-        if ( frags_buffer[i].state ) {
+        if ( frags_buffer[i].state )
             phong(&frags_buffer[i]);
-        }
     }
 
     return (void*)args;
@@ -546,7 +545,7 @@ const static void drawFrame(void) {
     pixmapdisplay(main_pixmap, mainwin, main_wa.width, main_wa.height);
 
     memcpy(frame_buffer, reset_frame_buffer, BSIZE);
-    memcpy(main_depth_buffer, reset_depth_buffer, BSIZE); 
+    memcpy(main_depth_buffer, reset_depth_buffer, BSIZE);
     memcpy(frags_buffer, reset_frags_buffer, MAIN_EMVADON * sizeof(Fragment));
 }
 const static void initMainWindow(void) {

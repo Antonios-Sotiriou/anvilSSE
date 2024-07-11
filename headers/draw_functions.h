@@ -31,7 +31,6 @@ extern Fragment *frags_buffer;
 /* Defined in general_functions.c. */
 extern const void swap(void *a, void *b, unsigned long size);
 
-
 const void drawLine(float x1, float y1, float x2, float y2, vec4f color);
 
 const void edgeMesh(MeshStepTwo *m, const vec4f color);

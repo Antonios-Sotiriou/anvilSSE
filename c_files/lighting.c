@@ -3,7 +3,7 @@
 const void phong(Fragment *fr) {
     vec4f basecolor;
 
-    if (fr->mtr->texlevels) {
+    if ( fr->mtr->texlevels ) {
         basecolor = fr->mtr->texture[(fr->tex_y * fr->mtr->texture_width) + fr->tex_x];
     } else
         basecolor = fr->mtr->basecolor;
