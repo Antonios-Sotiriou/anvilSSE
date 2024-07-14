@@ -94,10 +94,10 @@ const Mat4x4 reperspectiveMatrix(const float fov, const float aspectratio) {
     return m;
 }
 /* Matrix which transforms from Clipp Space to Screen Space. */
-const Mat4x4 screenSpaceMatrix() {
+const Mat4x4 screenSpaceMatrix(const int screen_height, const int screen_width) {
     Mat4x4 m = { 0 };
-    m.m[0][0] = 1000.f * 0.5;
-    m.m[1][1] = 1000.f * 0.5;
+    m.m[0][0] = screen_width * 0.5;
+    m.m[1][1] = screen_height * 0.5;
     m.m[2][2] = 1.0f;
     m.m[2][3] = 0.f;
     m.m[3][2] = 0.f;

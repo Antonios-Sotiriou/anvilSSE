@@ -39,8 +39,9 @@ int SCANLINE = 1;
 #include "../headers/general_functions.h"
 #include "../headers/physics.h"
 #include "../headers/clipping.h"
-#include "../headers/shadow_pipeline.h"
 #include "../headers/grafik_pipeline.h"
+#include "../headers/shadow_pipeline.h"
+#include "../headers/edge_pipeline.h"
 #include "../headers/terrain_functions.h"
 #include "../headers/collision_detection.h"
 #include "../headers/camera.h"
@@ -116,7 +117,7 @@ Light sunlight = {
 vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
 const float movScalar = 100.f;
-const float cameraMov = 1.f;
+const float cameraMov = 10.f;
 
 /* Variables usefull for mesh click select. */
 unsigned int getClick = 0;
@@ -136,8 +137,9 @@ Tile *tiles, *point_tiles;
 /* X11 and mainwindow Global variables. */
 static int INIT = 0;
 static int RUNNING = 1;
-int HALFW = 0; // Half width of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
-int HALFH = 0; // Half height of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
+// int HALFW = 0; // Half width of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
+// int HALFH = 0; // Half height of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
+vec4i half_screen = { 0, 0, 1, 1 };
 int MAIN_EMVADON;
 int DEBUG = 0;
 
@@ -477,7 +479,8 @@ static void *oscillator(void *args) {
         tile_size += ypol;
 
     for (int i = step; i < tile_size; i++) {
-        phong(&frags_buffer[i]);
+        if ( frags_buffer[i].state )
+            phong(&frags_buffer[i]);
     }
 
     return (void*)args;
@@ -518,14 +521,18 @@ const static void project(void) {
         adoptdetailTexture(&scene.m[i], distance);
     }
 
-    /* Render in parallel according to tiles. */
-    for (int i = 0; i < THREADS; i++) {
-        if (pthread_create(&threads[i], NULL, &grafikPipeline, &thread_ids[i]))
-            fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
-    }
-    for (int i = 0; i < THREADS; i++) {
-        if (pthread_join(threads[i], NULL))
-            fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
+    if ( DEBUG == 1 ) {
+        edgePipeline();
+    } else {
+        /* Render in parallel according to tiles. */
+        for (int i = 0; i < THREADS; i++) {
+            if (pthread_create(&threads[i], NULL, &grafikPipeline, &thread_ids[i]))
+                fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
+        }
+        for (int i = 0; i < THREADS; i++) {
+            if (pthread_join(threads[i], NULL))
+                fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
+        }
     }
 
     /* Proceed the fragments buffer created by grafikPipeline and apply lighting. */
@@ -566,7 +573,7 @@ const static void drawFrame(void) {
 
     memcpy(frame_buffer, reset_frame_buffer, BSIZE);
     memcpy(main_depth_buffer, reset_depth_buffer, BSIZE);
-    // memcpy(frags_buffer, reset_frags_buffer, MAIN_EMVADON * sizeof(Fragment));
+    memcpy(frags_buffer, reset_frags_buffer, MAIN_EMVADON * sizeof(Fragment));
 }
 const static void initMainWindow(void) {
     sa.event_mask = EXPOSEMASKS | KEYBOARDMASKS | POINTERMASKS;
@@ -585,8 +592,10 @@ const static void initDependedVariables(void) {
     main_image = XCreateImage(displ, main_wa.visual, main_wa.depth, ZPixmap, 0, (char*)point_frame_buffer, main_wa.width, main_wa.height, 32, (main_wa.width * 4));
 
     ASPECTRATIO = ((float)main_wa.width / (float)main_wa.height);
-    HALFH = main_wa.height >> 1;
-    HALFW = main_wa.width >> 1;
+    // HALFH = main_wa.height >> 1;
+    // HALFW = main_wa.width >> 1;
+    half_screen[0] = main_wa.height >> 1;
+    half_screen[1] = main_wa.width >> 1;
     MAIN_EMVADON = main_wa.width * main_wa.height;
 
     /* Init thread_ids dynamically */

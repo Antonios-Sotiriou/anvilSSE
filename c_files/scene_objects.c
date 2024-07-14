@@ -9,7 +9,7 @@ const void initWorldObjects(Scene *s) {
 
     memcpy(s->m[0].name, "terrain0", sizeof("terrain0"));
     createTerrain(&s->m[0], "terrains/terrain0/hm_10x10.bmp");
-    loadMaterial(&s->m[0].material, "greece");
+    loadMaterial(&s->m[0].material, "pearl");
     loadBbox(&s->m[0].bbox, "terrains/terrain0/bbox_terrain0");
 
     s->m[0].type = Terrain;
@@ -30,10 +30,10 @@ const void initWorldObjects(Scene *s) {
     enworldBbox(&s->m[0]);
 
     /* ######################################################################################################## */
-    memcpy(s->m[1].name, "planet", sizeof("planet"));
+    memcpy(s->m[1].name, "cubesmooth", sizeof("cubesmooth"));
     // createCube(&s->m[1]);
     loadMaterial(&s->m[1].material, "stones");
-    // loadMesh(&s->m[1], "planet", 1);
+    loadMesh(&s->m[1], "cubesmooth", 1);
     loadBbox(&s->m[1].bbox, "objfiles/cubesmooth/bbox_cubesmooth");
 
     s->m[1].type = Player;
@@ -46,7 +46,7 @@ const void initWorldObjects(Scene *s) {
     s->m[1].pivot[2] = 30.f;
 
     s->m[1].cull = 1;
-    s->m[1].lodlevels = 6;
+    s->m[1].lodlevels = 1;
     // s->m[1].visible = 1;
     s->m[1].mass = 0.5;
     // s->m[1].grounded = 1;

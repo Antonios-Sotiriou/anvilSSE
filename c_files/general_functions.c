@@ -204,43 +204,6 @@ const void placeMesh(Mesh *m, const vec4f pos) {
     m->n = setvecsarrayxm(m->n, m->n_indexes, trMatrix);
     m->pivot = pos;
 }
-#include "../headers/logging.h"
-/* Cull Mesh to view frustum. viewProj: (1 for Prespective and 0 for orthographic Projection). Thats for the perspective divide usefull.viewMat the matrix of the point of view. */
-const int frustumCulling(vec4f v[], const int v_indexes, const int thread_id) {
-    /* Thats a fix for unitialized meshes that cannot become visible due to no vectors initialization. That will be corrected with bounding boxes. */
-    if (!v_indexes) {
-        return 1;
-    }
-
-    vec4f *vec_arr = malloc(v_indexes * 16);
-    memcpy(vec_arr, v, v_indexes * 16);
-
-    for (int j = 0; j < v_indexes; j++) {
-        /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
-        float z = vec_arr[j][2];
-
-        if (vec_arr[j][3] > 0) {
-            vec_arr[j] /= vec_arr[j][3];
-            vec_arr[j][2] = z;
-        }
-    }
-
-    DimensionsLimits dm = getDimensionsLimits(vec_arr, v_indexes);
-
-    const float minY = ((float)tiles[thread_id].start_height / HALFW) - 1.f; 
-    const float maxY = ((float)tiles[thread_id].end_height / HALFH) - 1.f;
-
-    if ( ((dm.min[2] > FPlane) || (dm.max[2] < NPlane)) ||
-            ((dm.min[1] > maxY) || (dm.max[1] < minY)) ||
-            ((dm.min[0] > 1.f) || (dm.max[0] < -1.f)) ) {
-
-        free(vec_arr);
-        return 0;
-    }
-
-    free(vec_arr);
-    return 1;
-}
 /* Check and set visibillity of scene objects seen from given meshes pivot point and direction. viewProj: (1 for Prespective and 0 for orthographic Projection).*/
 const void checkVisibles(Scene *s, Mesh *m, const int viewProj) {
     vec4f up = { 0.f, -1.f, 0.f };
@@ -306,11 +269,11 @@ const void displayVec4f(const vec4f v_start, const vec4f v_end, const Mat4x4 vm)
     if (temp_end[3] > 0)
         temp_end /= temp_end[3];
 
-    temp_start[0] = ((1 + temp_start[0]) * HALFW) + 0.5;
-    temp_start[1] = ((1 + temp_start[1]) * HALFH) + 0.5;
+    temp_start[0] = ((1 + temp_start[0]) * half_screen[0]) + 0.5;
+    temp_start[1] = ((1 + temp_start[1]) * half_screen[1]) + 0.5;
 
-    temp_end[0] = ((1 + temp_end[0]) * HALFW) + 0.5;
-    temp_end[1] = ((1 + temp_end[1]) * HALFH) + 0.5;
+    temp_end[0] = ((1 + temp_end[0]) * half_screen[0]) + 0.5;
+    temp_end[1] = ((1 + temp_end[1]) * half_screen[1]) + 0.5;
 
     XDrawLine(displ, mainwin, gc, temp_start[0], temp_start[1], temp_end[0], temp_end[1]);
 }
@@ -336,11 +299,11 @@ const void displayBbox(vec4f v[], const int v_indexes, const Mat4x4 vm) {
 
     DimensionsLimits dm = getDimensionsLimits(vec_arr, v_indexes);
 
-    dm.min[0] = ((1 + dm.min[0]) * HALFW) + 0.5;
-    dm.min[1] = ((1 + dm.min[1]) * HALFH) + 0.5;
+    dm.min[0] = ((1 + dm.min[0]) * half_screen[0]) + 0.5;
+    dm.min[1] = ((1 + dm.min[1]) * half_screen[1]) + 0.5;
 
-    dm.max[0] = ((1 + dm.max[0]) * HALFW) + 0.5;
-    dm.max[1] = ((1 + dm.max[1]) * HALFH) + 0.5;
+    dm.max[0] = ((1 + dm.max[0]) * half_screen[0]) + 0.5;
+    dm.max[1] = ((1 + dm.max[1]) * half_screen[1]) + 0.5;
 
     XDrawRectangle(displ, mainwin, gc, dm.min[0], dm.min[1], dm.max[0] - dm.min[0], dm.max[1] - dm.min[1]);
     free(vec_arr);

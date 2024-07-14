@@ -26,7 +26,8 @@
 #endif
 
 /* Defined in main.c. */
-extern int HALFH, HALFW, PROJECTIONVIEW;
+extern vec4i half_screen;
+extern int PROJECTIONVIEW;
 extern unsigned int SMA;
 extern unsigned int SMB;
 extern unsigned int SMC;

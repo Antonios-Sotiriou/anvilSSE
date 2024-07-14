@@ -26,7 +26,7 @@ const Mat4x4 rotateZMatrix(const float angle);
 const Mat4x4 orthographicMatrix(const float scaleX, const float scaleY, const float transX, const float transY, const float zn, const float zf);
 const Mat4x4 perspectiveMatrix(const float fov, const float aspectratio, const float zn, const float zf);
 const Mat4x4 reperspectiveMatrix(const float fov, const float aspectratio);
-const Mat4x4 screenSpaceMatrix();
+const Mat4x4 screenSpaceMatrix(const int screen_height, const int screen_width);
 vec4f *vecsarrayxm(vec4f vecs[], const int len, const Mat4x4 m);
 vec4f *setvecsarrayxm(vec4f vecs[], const int len, const Mat4x4 m);
 face *facesarrayxm(face fs[], const int len, const Mat4x4 m);
