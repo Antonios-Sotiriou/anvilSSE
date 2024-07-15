@@ -23,19 +23,23 @@
     typedef enum { Terrain_1, Player_1 } sceneMembers;
 #endif
 
-// extern test t;
-
-/* Primitive struct vec4 with 4 x 8bits unsigned char as members */
-typedef unsigned char vec4c __attribute__((vector_size(4)));
-
-/* Primitive struct vec with 2 x 32bits floats as members */
-typedef float vec2f __attribute__((vector_size(8)));
+/* Primitive struct vec4 with 4 x 32bits floats as members */
+typedef float vec4f __attribute__((vector_size(16)));
 
 /* Primitive struct vec4 with 4 x 32bits integers as members */
 typedef int vec4i __attribute__((vector_size(16)));
 
+/* Primitive struct vec with 2 x 32bits floats as members */
+typedef float vec2f __attribute__((vector_size(8)));
+
+/* Primitive struct vec with 2 x 32bits ints as members */
+typedef int vec2i __attribute__((vector_size(8)));
+
+/* Primitive struct vec4 with 4 x 8bits unsigned char as members */
+typedef unsigned char vec4c __attribute__((vector_size(4)));
+
 /* Primitive struct vec4 with 4 x 32bits floats as members */
-typedef float vec4f __attribute__((vector_size(16)));
+typedef float vec16f __attribute__((vector_size(64)));
 
 /* intrinsics float union. */
 typedef union {
@@ -73,8 +77,7 @@ typedef struct {
     vec4f diffuse;
     vec4f specular;
     float shinniness;
-    int reflect, texlevels, texlod, init;
-    signed int texture_height, texture_width;
+    int reflect, texlevels, texlod, init, texture_width, texture_height;
     vec4f *texture;
     char texlvl[9][10];
 } Material;
@@ -155,7 +158,7 @@ typedef struct {
 } Scene;
 
 typedef struct {
-    unsigned int *members;
+    Mesh **members;
     unsigned int members_indexes;
 } Quad;
 
@@ -170,6 +173,11 @@ typedef struct {
     Quad *quads;    /* This pointer to pointer holds the ids of the meshes that belong to each quad index. */
     int vecWidth, vecHeight, quadsArea, quadRows, quadCols;
 } TerrainInfo;
+
+/* Structs wiche help us to save and pass arround usefull Tile informations for Parallel rendering. */
+typedef struct {
+    int start_width, start_height, end_width, end_height;
+} Tile;
 
 /* Light struct to create different kind of light sources. */
 typedef struct {
@@ -187,7 +195,8 @@ typedef struct {
     vec4f pos,               /* Screen Space Position. */
     nrm;                     /* The normal of the given position.It is always in View Space */
     Material *mtr;
-    int state, tex_x, tex_y;
+    vec2f tex;
+    int state;
 } Fragment;
 
 /* BMP Image file reading structs. */

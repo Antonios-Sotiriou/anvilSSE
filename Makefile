@@ -5,7 +5,7 @@ CFLAGS = -Werror -g# -pg -O2 -Os -Og -O0
 OBJ = anvil
 LINKS = -lX11 -lm
 INTRINSICS = #-msse4.2 #-mavx2 #-mavx512f #-msse4.2 #-msse #-msse2 #-msse2avx #-msse3 -msse4 #-msse4.1 -msse4a -msse5 -msseregparm -mssse3 -msse-check=warning -msse2avx -march=CPU,i7 
-FILENAME = lighting.c
+FILENAME = draw_functions.c
 DIRECTORY = c_files/
 
 # install depended libraries.
@@ -25,6 +25,7 @@ all:
 		$(DIRECTORY)clipping.c\
 		$(DIRECTORY)grafik_pipeline.c\
 		$(DIRECTORY)shadow_pipeline.c\
+		$(DIRECTORY)edge_pipeline.c\
 		$(DIRECTORY)camera.c\
 		$(DIRECTORY)vectors_math.c\
 		$(DIRECTORY)scene_objects.c\

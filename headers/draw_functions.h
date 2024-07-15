@@ -26,7 +26,11 @@ extern int EDGEFUNC, SCANLINE;
 extern vec4c *point_frame_buffer;
 extern float *point_depth_buffer;
 extern XWindowAttributes *point_attrib;
+extern Window mainwin;
+extern Display *displ;
+extern GC gc;
 extern Fragment *frags_buffer;
+extern Tile *point_tiles;
 
 /* Defined in general_functions.c. */
 extern const void swap(void *a, void *b, unsigned long size);

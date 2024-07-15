@@ -1,15 +1,17 @@
 #include "../headers/shadow_pipeline.h"
 
-const static MeshShadowStepTwo assemblyfacesShadow(MeshShadowStepOne *m, unsigned int *indices, const int len);
-const static MeshShadowStepTwo shadowculling(const MeshShadowStepTwo c, const int len);
-const static float shadow_winding(const Shadowface f);
-const static int shadowtoscreen(MeshShadowStepTwo *m, const int len);
+const static MeshShadowStepTwo assemblyfaces(MeshShadowStepOne *m, unsigned int *indices, const int len);
+const static MeshShadowStepTwo bfculling(const MeshShadowStepTwo c, const int len);
+const static float shadowWinding(const Shadowface f);
+const static int viewtoscreen(MeshShadowStepTwo *m, const int len);
 const static void createShadowmap(MeshShadowStepTwo *m, const unsigned int sm_index);
 const static void shadowface(Shadowface *f, const Srt srt[], const unsigned int sm_index);
 const static void releaseMeshShadowStepOne(MeshShadowStepOne *c);
 const static void releaseMeshShadowStepTwo(MeshShadowStepTwo *c);
 const static void initMeshShadowStepOne(MeshShadowStepOne *a, Mesh *b);
 const static vec4i smask = { 1, 2, 0, 3 };
+const static vec4f add_one = { 1.f, 1.f, 0.f, 0.f };
+const static vec4f add_half = { 0.5f, 0.5f, 0.f, 0.f };
 static Mat4x4 lview;
 
 /* ################################################### CASCADE SHADOW MAPPING START   ################################################ */
@@ -92,7 +94,7 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
 
         cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, vecsMat);
 
-        MeshShadowStepTwo cache_1 = assemblyfacesShadow(&cache_0, s->m[i].f, s->m[i].f_indexes);
+        MeshShadowStepTwo cache_1 = assemblyfaces(&cache_0, s->m[i].f, s->m[i].f_indexes);
         releaseMeshShadowStepOne(&cache_0);
 
         /* At this Point triangles must be shadowclipped against near plane. */
@@ -115,14 +117,14 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
 
         /* Applying Backface culling before we proceed to full frustum shadowclipping. */
         if (cache_1.cull)
-            cache_1 = shadowculling(cache_1, cache_1.f_indexes);
+            cache_1 = bfculling(cache_1, cache_1.f_indexes);
         if (!cache_1.f_indexes) {
             releaseMeshShadowStepTwo(&cache_1);
             continue;
         }
 
         /* Sending to translation from NDC to Screen Coordinates. */
-        if (!shadowtoscreen(&cache_1, cache_1.f_indexes)) {
+        if (!viewtoscreen(&cache_1, cache_1.f_indexes)) {
             releaseMeshShadowStepTwo(&cache_1);
             continue;
         }
@@ -132,7 +134,7 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
     }
 }
 /* Assosiates vertices coordinate values from vector array through indexes. */
-const static MeshShadowStepTwo assemblyfacesShadow(MeshShadowStepOne *m, unsigned int *indices, const int len) {
+const static MeshShadowStepTwo assemblyfaces(MeshShadowStepOne *m, unsigned int *indices, const int len) {
     MeshShadowStepTwo r = { 0 };
     r.f_indexes = len / 9;
     r.f = malloc(sizeof(Shadowface) * r.f_indexes);
@@ -149,7 +151,7 @@ const static MeshShadowStepTwo assemblyfacesShadow(MeshShadowStepOne *m, unsigne
     return r;
 }
 /* Backface culling.Discarding Triangles that should not be painted.Creating a new dynamic Mesh stucture Triangles array. */
-const static MeshShadowStepTwo shadowculling(const MeshShadowStepTwo m, const int len) {
+const static MeshShadowStepTwo bfculling(const MeshShadowStepTwo m, const int len) {
     MeshShadowStepTwo r = m;
     size_t size = sizeof(Shadowface);
     int counter = 1;
@@ -159,7 +161,7 @@ const static MeshShadowStepTwo shadowculling(const MeshShadowStepTwo m, const in
         fprintf(stderr, "Could not allocate memory - bfculling() - malloc\n");
 
     for (int i = 0; i < len; i++) {
-        if (shadow_winding(m.f[i]) > 0.0f) {
+        if (shadowWinding(m.f[i]) > 0.0f) {
             r.f = realloc(r.f, size * counter);
 
             if (!r.f)
@@ -176,7 +178,7 @@ const static MeshShadowStepTwo shadowculling(const MeshShadowStepTwo m, const in
     return r;
 }
 /* Identifies if the Vectors are in clockwise order < CW > or not < CCW >. */
-const float shadow_winding(const Shadowface f) {
+const float shadowWinding(const Shadowface f) {
     vec4f xs = { f.v[0][0], f.v[1][0], f.v[2][0], 0.0f };
     vec4f ys = { f.v[0][1], f.v[1][1], f.v[2][1], 0.0f };
 
@@ -184,11 +186,13 @@ const float shadow_winding(const Shadowface f) {
     return r[0] + r[1] + r[2];
 }
 /* Translates the Mesh's Triangles from world to Screen Coordinates. */
-const static int shadowtoscreen(MeshShadowStepTwo *m, const int len) {
+const static int viewtoscreen(MeshShadowStepTwo *m, const int len) {
     for (int i = 0; i < len; i++) {
         for (int j = 0; j < 3; j++) {
-            m->f[i].v[j][0] = ((1 + m->f[i].v[j][0]) * HALFW) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
-            m->f[i].v[j][1] = ((1 + m->f[i].v[j][1]) * HALFH) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
+
+            m->f[i].v[j] = ((add_one + m->f[i].v[j]) * __builtin_convertvector(half_screen, vec4f)) + add_half;
+            // m->f[i].v[j][0] = ((1 + m->f[i].v[j][0]) * half_screen[0]) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
+            // m->f[i].v[j][1] = ((1 + m->f[i].v[j][1]) * half_screen[1]) + 0.5; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
             // m->f[i].v[j][2] = 1.f / m->f[i].v[j][2];
             // m->f[i].v[j][3] = 1.f / m->f[i].v[j][3];
         }
@@ -349,9 +353,7 @@ const float shadowTest(vec4f frag) {
     setvecxm(&frag, ortholightMat[sm_index]);
 
     /* Transform to Screen space coordinates. */
-    frag[0] = (1.0 + frag[0]) * (main_wa.width >> 1);
-    frag[1] = (1.0 + frag[1]) * (main_wa.height >> 1);
-    // frag[2] = 1.f / frag[2];
+    frag = (add_one + frag) * __builtin_convertvector(half_screen, vec4f) + add_half;
 
     float shadow = 0.0;
     for (int v = -1; v < 1; v++) {

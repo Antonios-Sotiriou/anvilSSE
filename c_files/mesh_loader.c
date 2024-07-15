@@ -14,10 +14,10 @@ static int t_indexes = 0;
 /* Face array indexes */
 static int f_indexes = 0;
 
-const void loadMesh(Mesh *m, const char path[], const unsigned int meshlod) {
-    size_t len = 10 + (strlen(path));
+const void loadMesh(Mesh *m, const char name[], const unsigned int meshlod) {
+    size_t len = 19 + (strlen(name));
     char objfile[len];
-    snprintf(objfile, len, "%s/lod%d.obj", path, meshlod);
+    snprintf(objfile, len, "objfiles/%s/lod%d.obj", name, meshlod);
 
     m->v = loadvectors(objfile);
     if (!m->v)

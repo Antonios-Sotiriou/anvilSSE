@@ -39,8 +39,9 @@ int SCANLINE = 1;
 #include "../headers/general_functions.h"
 #include "../headers/physics.h"
 #include "../headers/clipping.h"
-#include "../headers/shadow_pipeline.h"
 #include "../headers/grafik_pipeline.h"
+#include "../headers/shadow_pipeline.h"
+#include "../headers/edge_pipeline.h"
 #include "../headers/terrain_functions.h"
 #include "../headers/collision_detection.h"
 #include "../headers/camera.h"
@@ -84,7 +85,7 @@ static float ZFAR         = 100.0f;
 float ASPECTRATIO         = 1;
 static int BSIZE          = 0;
 float NPlane              = 1.0f;
-float FPlane              = 20000.0f;
+float FPlane              = 100000.0f;
 float AmbientStrength     = 0.5f;
 float SpecularStrength    = 0.5f;
 float DiffuseStrength     = 0.5f;
@@ -130,12 +131,15 @@ Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[
 Scene scene = { 0 };
 /* Terrain info struct is populated with data when terrain is created(createTerrain()). */
 TerrainInfo tf;
+/* Screen tiles info structs pointer. */
+Tile *tiles, *point_tiles;
 
 /* X11 and mainwindow Global variables. */
 static int INIT = 0;
 static int RUNNING = 1;
-int HALFW = 0; // Half width of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
-int HALFH = 0; // Half height of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
+// int HALFW = 0; // Half width of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
+// int HALFH = 0; // Half height of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
+vec4i half_screen = { 0, 0, 1, 1 };
 int MAIN_EMVADON;
 int DEBUG = 0;
 
@@ -215,6 +219,8 @@ const static void clientmessage(XEvent *event) {
         }
         free(tf.quads);
 
+        free(tiles);
+
         free(main_image);
         XFreeGC(displ, gc);
         XFreePixmap(displ, main_pixmap);
@@ -259,6 +265,8 @@ const static void configurenotify(XEvent *event) {
             free(reset_shadow_buffer);
 
             free(main_image);
+
+            free(tiles);
 
             initDependedVariables();
 
@@ -499,7 +507,7 @@ const static void project(void) {
     /* Draw in parallel the 3 Cascade shadow maps. */
     int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
     for (int i = 0; i < NUM_OF_CASCADES; i++) {
-        if (pthread_create(&threads[i], NULL, &cascade, &shadow_ids[i]))
+        if (pthread_create(&threads[i], NULL, &cascade, &thread_ids[i]))
             fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
     }
     for (int i = 0; i < NUM_OF_CASCADES; i++) {
@@ -507,8 +515,27 @@ const static void project(void) {
             fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
     }
 
-    grafikPipeline(&scene);
+    for (int i = 0; i < scene.m_indexes; i++) {
+        const int distance = len_vec(scene.m[i].pivot - camera[Pos]);
+        adoptdetailMesh(&scene.m[i], distance);
+        adoptdetailTexture(&scene.m[i], distance);
+    }
 
+    if ( DEBUG == 1 ) {
+        edgePipeline();
+    } else {
+        /* Render in parallel according to tiles. */
+        for (int i = 0; i < THREADS; i++) {
+            if (pthread_create(&threads[i], NULL, &grafikPipeline, &thread_ids[i]))
+                fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
+        }
+        for (int i = 0; i < THREADS; i++) {
+            if (pthread_join(threads[i], NULL))
+                fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
+        }
+    }
+
+    /* Proceed the fragments buffer created by grafikPipeline and apply lighting. */
     for (int i = 0; i < THREADS; i++) {
         if (pthread_create(&threads[i], NULL, &oscillator, &thread_ids[i]))
             fprintf(stderr, "ERROR: project() -- oscillator -- pthread_create()\n");
@@ -565,14 +592,33 @@ const static void initDependedVariables(void) {
     main_image = XCreateImage(displ, main_wa.visual, main_wa.depth, ZPixmap, 0, (char*)point_frame_buffer, main_wa.width, main_wa.height, 32, (main_wa.width * 4));
 
     ASPECTRATIO = ((float)main_wa.width / (float)main_wa.height);
-    HALFH = main_wa.height >> 1;
-    HALFW = main_wa.width >> 1;
+    // HALFH = main_wa.height >> 1;
+    // HALFW = main_wa.width >> 1;
+    half_screen[0] = main_wa.height >> 1;
+    half_screen[1] = main_wa.width >> 1;
     MAIN_EMVADON = main_wa.width * main_wa.height;
 
     /* Init thread_ids dynamically */
     thread_ids = malloc(THREADS * 4);
     for (int i = 0; i < THREADS; i++)
         thread_ids[i] = i;
+
+    /* Init tiles dynamically  ######################################################################## */
+    tiles = calloc(THREADS, sizeof(Tile));
+    int tileHeightYpol = main_wa.height % THREADS;
+    int tileHeight = main_wa.height / THREADS;
+
+    for (int i = 0; i < THREADS; i++) {
+        tiles[i].start_width = 0;
+        tiles[i].end_width = main_wa.width;
+        tiles[i].start_height += tileHeight * i;
+        tiles[i].end_height += tileHeight * (i + 1);
+
+        if ( (i == THREADS - 1) && (tileHeightYpol) ) {
+            tiles[i].end_height += tileHeightYpol;
+        }
+    }
+    /* ################################################################################################ */
 
     BSIZE = main_wa.width * main_wa.height * 4;
 

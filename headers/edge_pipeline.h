@@ -1,5 +1,5 @@
-#ifndef _GRAFIK_PIPELINE_H
-#define _GRAFIK_PIPELINE_H 1
+#ifndef _EDGE_PIPELINE_H
+#define _EDGE_PIPELINE_H 1
 
 #ifndef _ANVIL_STRUCTS_H
     #include "anvil_structs.h"
@@ -36,8 +36,8 @@ extern Mat4x4 viewMat, worldMat, lookAt, *point_mat;
 extern vec4c *frame_buffer, *point_frame_buffer;
 extern float *main_depth_buffer, *point_depth_buffer;
 
-void *grafikPipeline(void *args);
+const void edgePipeline(void);
 
-#endif /* _GRAFIK_PIPELINE_H */
+#endif /* _EDGE_PIPELINE_H */
 
 

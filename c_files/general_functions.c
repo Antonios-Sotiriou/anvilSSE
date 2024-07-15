@@ -107,68 +107,65 @@ const void loadtexture(Mesh *m, const unsigned int lvl) {
     }
     fclose(fp);
 }
-const void adoptdetailMesh(Mesh *m) {
+const void adoptdetailMesh(Mesh *m, const int dist) {
     if ( m->lodlevels < 1 )
         return;
 
-    const int distance = len_vec(m->pivot - lookAt.m[3]);
     const int lcache_0 = m->currentlod;
 
-    if ( (distance >= 0 && distance <= (20 * m->scale) ) && (m->currentlod != 1) ) {
+    if ( (dist >= 0) && (dist <= 20 * m->scale) ) {
         m->currentlod = 1;
-    } else if ( (distance > (20 * m->scale)  && distance <= (40 * m->scale) ) && (m->currentlod != 2) ) {
+    } else if ( (dist > 20 * m->scale) && (dist <= 40 * m->scale) ) {
         m->currentlod = 2;
-    } else if ( (distance > (40 * m->scale)  && distance <= (60 * m->scale) ) && (m->currentlod != 3) ) {
+    } else if ( (dist > 40 * m->scale) && (dist <= 60 * m->scale) ) {
         m->currentlod = 3;
-    } else if ( (distance > (60 * m->scale)  && distance <= (80 * m->scale) ) && (m->currentlod != 4) ) {
+    } else if ( (dist > 60 * m->scale) && (dist <= 80 * m->scale) ) {
         m->currentlod = 4;
-    } else if ( (distance > (80 * m->scale)  && distance <= (100 * m->scale) ) && (m->currentlod != 5) ) {
+    } else if ( (dist > 80 * m->scale) && (dist <= 100 * m->scale) ) {
         m->currentlod = 5;
-    } else if ( (distance > (100 * m->scale)) && (m->currentlod != 6) ) {
+    } else if ( (dist > 100 * m->scale) ) {
         m->currentlod = 6;
     }
 
-    if (m->currentlod > m->lodlevels)
+    if ( m->currentlod > m->lodlevels )
         m->currentlod = m->lodlevels;
 
-    if (lcache_0 != m->currentlod) {
+    if ( lcache_0 != m->currentlod ) {
         releaseMesh(m);
         loadMesh(m, m->name, m->currentlod);
-        // enWorldMesh(m);
         printf("adoptDetailMesh()\n");
     }
 }
-const void adoptdetailTexture(Mesh *m) {
+const void adoptdetailTexture(Mesh *m, const int dist) {
     if ( !m->material.texlevels )
         return;
 
-    const int distance = len_vec(m->pivot - lookAt.m[3]);
     const int lcache_0 = m->material.texlod;
 
-    if ( (distance >= 0 && distance <= (20 * m->scale) ) ) {
+    if ( (dist >= 0 && dist <= (20 * m->scale) ) && (m->material.texlod != 0) ) {
         m->material.texlod = 0;
-    } else if ( (distance > (20 * m->scale))  && (distance <= (40 * m->scale)) ) {
+    } else if ( (dist > (20 * m->scale)) && (dist <= (40 * m->scale)) ) {
         m->material.texlod = 1;
-    } else if ( (distance > (40 * m->scale))  && (distance <= (60 * m->scale)) ) {
+    } else if ( (dist > (40 * m->scale)) && (dist <= (60 * m->scale)) ) {
         m->material.texlod = 2;
-    } else if ( (distance > (60 * m->scale))  && (distance <= (80 * m->scale)) ) {
+    } else if ( (dist > (60 * m->scale)) && (dist <= (80 * m->scale)) ) {
         m->material.texlod = 3;
-    } else if ( (distance > (80 * m->scale))  && (distance <= (100 * m->scale)) ) {
+    } else if ( (dist > (80 * m->scale)) && (dist <= (100 * m->scale)) ) {
         m->material.texlod = 4;
-    } else if ( (distance > (100 * m->scale))  && (distance <= (300 * m->scale)) ) {
+    } else if ( (dist > (100 * m->scale)) && (dist <= (300 * m->scale)) ) {
         m->material.texlod = 5;
-    } else if ( (distance > (300 * m->scale))  && (distance <= (400 * m->scale)) ) {
+    } else if ( (dist > (300 * m->scale)) && (dist <= (400 * m->scale)) ) {
         m->material.texlod = 6;
-    } else if ( (distance > (400 * m->scale))  && (distance <= (500 * m->scale)) ) {
+    } else if ( (dist > (400 * m->scale)) && (dist <= (500 * m->scale)) ) {
         m->material.texlod = 7;
-    } else if ( (distance > (500 * m->scale)) ) {
+    } else if ( dist > (500 * m->scale) ) {
         m->material.texlod = 8;
     }
 
     if ( !m->material.init ) {
-        printf("Initializing Texture of mesh_in: %d...\n", m->id);
         loadtexture(m, m->material.texlod);
         m->material.init = 1;
+        printf("Initializing Texture of mesh.id: %d\n", m->id);
         return;
     }
 
@@ -206,39 +203,6 @@ const void placeMesh(Mesh *m, const vec4f pos) {
     m->v = setvecsarrayxm(m->v, m->v_indexes, trMatrix);
     m->n = setvecsarrayxm(m->n, m->n_indexes, trMatrix);
     m->pivot = pos;
-}
-/* Cull Mesh to view frustum. viewProj: (1 for Prespective and 0 for orthographic Projection). Thats for the perspective divide usefull.viewMat the matrix of the point of view. */
-const int frustumCulling(vec4f v[], const int v_indexes) {
-    /* Thats a fix for unitialized meshes that cannot become visible due to no vectors initialization. That will be corrected with bounding boxes. */
-    if (!v_indexes) {
-        return 1;
-    }
-
-    vec4f *vec_arr = malloc(v_indexes * 16);
-    memcpy(vec_arr, v, v_indexes * 16);
-
-    for (int j = 0; j < v_indexes; j++) {
-        /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
-        float z = vec_arr[j][2];
-
-        if (vec_arr[j][3] > 0) {
-            vec_arr[j] /= vec_arr[j][3];
-            vec_arr[j][2] = z;
-        }
-    }
-
-    DimensionsLimits dm = getDimensionsLimits(vec_arr, v_indexes);
-
-    if ( ((dm.min[2] > FPlane) || (dm.max[2] < NPlane)) ||
-            ((dm.min[1] > 1.f) || (dm.max[1] < -1.f)) ||
-            ((dm.min[0] > 1.f) || (dm.max[0] < -1.f)) ) {
-
-        free(vec_arr);
-        return 0;
-    }
-
-    free(vec_arr);
-    return 1;
 }
 /* Check and set visibillity of scene objects seen from given meshes pivot point and direction. viewProj: (1 for Prespective and 0 for orthographic Projection).*/
 const void checkVisibles(Scene *s, Mesh *m, const int viewProj) {
@@ -305,11 +269,11 @@ const void displayVec4f(const vec4f v_start, const vec4f v_end, const Mat4x4 vm)
     if (temp_end[3] > 0)
         temp_end /= temp_end[3];
 
-    temp_start[0] = ((1 + temp_start[0]) * HALFW) + 0.5;
-    temp_start[1] = ((1 + temp_start[1]) * HALFH) + 0.5;
+    temp_start[0] = ((1 + temp_start[0]) * half_screen[0]) + 0.5;
+    temp_start[1] = ((1 + temp_start[1]) * half_screen[1]) + 0.5;
 
-    temp_end[0] = ((1 + temp_end[0]) * HALFW) + 0.5;
-    temp_end[1] = ((1 + temp_end[1]) * HALFH) + 0.5;
+    temp_end[0] = ((1 + temp_end[0]) * half_screen[0]) + 0.5;
+    temp_end[1] = ((1 + temp_end[1]) * half_screen[1]) + 0.5;
 
     XDrawLine(displ, mainwin, gc, temp_start[0], temp_start[1], temp_end[0], temp_end[1]);
 }
@@ -335,11 +299,11 @@ const void displayBbox(vec4f v[], const int v_indexes, const Mat4x4 vm) {
 
     DimensionsLimits dm = getDimensionsLimits(vec_arr, v_indexes);
 
-    dm.min[0] = ((1 + dm.min[0]) * HALFW) + 0.5;
-    dm.min[1] = ((1 + dm.min[1]) * HALFH) + 0.5;
+    dm.min[0] = ((1 + dm.min[0]) * half_screen[0]) + 0.5;
+    dm.min[1] = ((1 + dm.min[1]) * half_screen[1]) + 0.5;
 
-    dm.max[0] = ((1 + dm.max[0]) * HALFW) + 0.5;
-    dm.max[1] = ((1 + dm.max[1]) * HALFH) + 0.5;
+    dm.max[0] = ((1 + dm.max[0]) * half_screen[0]) + 0.5;
+    dm.max[1] = ((1 + dm.max[1]) * half_screen[1]) + 0.5;
 
     XDrawRectangle(displ, mainwin, gc, dm.min[0], dm.min[1], dm.max[0] - dm.min[0], dm.max[1] - dm.min[1]);
     free(vec_arr);

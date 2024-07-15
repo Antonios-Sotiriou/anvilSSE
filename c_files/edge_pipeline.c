@@ -1,10 +1,10 @@
-#include "../headers/grafik_pipeline.h"
+#include "../headers/edge_pipeline.h"
 
-const static int frustumCulling(vec4f v[], const int v_indexes, const int thread_id);
+const static int frustumCulling(vec4f v[], const int v_indexes);
 const static MeshStepTwo assemblyfaces(MeshStepOne *m, unsigned int *indices, const int len);
 const static void ppdiv(MeshStepTwo *m, const int len);
 const static MeshStepTwo bfculling(const MeshStepTwo m, const int len);
-const static int viewtoscreen(MeshStepTwo *m, const int len, const int tile_index);
+const static int viewtoscreen(MeshStepTwo *m, const int len);
 const static void rasterize(MeshStepTwo *m, Material *mtr);
 const static void releaseMeshStepOne(MeshStepOne *c);
 const static void releaseMeshStepTwo(MeshStepTwo *c);
@@ -13,9 +13,8 @@ const static vec4f add_one = { 1.f, 1.f, 0.f, 0.f };
 const static vec4f add_half = { 0.5f, 0.5f, 0.f, 0.f };
 
 /* Passes the scene Meshes throught the graphic pipeline. */
-void *grafikPipeline(void *args) {
-    int thread_id = *(int*)args;
-    point_tiles = &tiles[thread_id];
+const void edgePipeline(void) {
+
     MeshStepOne cache_0 = { 0 };
 
     for (int i = 0; i < scene.m_indexes; i++) {
@@ -24,7 +23,7 @@ void *grafikPipeline(void *args) {
 
         cache_0.bbox.v = setvecsarrayxm(cache_0.bbox.v, cache_0.bbox.v_indexes, worldMat);
 
-        if (frustumCulling(cache_0.bbox.v, cache_0.bbox.v_indexes, thread_id)) {
+        if (frustumCulling(cache_0.bbox.v, cache_0.bbox.v_indexes)) {
 
             Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
 
@@ -37,7 +36,6 @@ void *grafikPipeline(void *args) {
             Mat4x4 vecsMat = mxm(enWorldMatrix, worldMat);
 
             cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, vecsMat);
-            cache_0.n = setvecsarrayxm(cache_0.n, cache_0.n_indexes, mxm(mfQ, trMatrix));
 
             /* Assembly and create the faces from the mesh vertices, normals and texture arrays, through the indexes. */
             MeshStepTwo cache_1 = assemblyfaces(&cache_0, scene.m[i].f, scene.m[i].f_indexes);
@@ -74,7 +72,7 @@ void *grafikPipeline(void *args) {
             }
 
             /* Sending to translation from NDC to Screen Coordinates. */
-            if (!viewtoscreen(&cache_1, cache_1.f_indexes, thread_id)) {
+            if (!viewtoscreen(&cache_1, cache_1.f_indexes)) {
                 releaseMeshStepTwo(&cache_1);
                 continue;
             }
@@ -87,7 +85,7 @@ void *grafikPipeline(void *args) {
     }
 }
 /* Cull Mesh to view frustum. viewProj: (1 for Prespective and 0 for orthographic Projection). Thats for the perspective divide usefull.viewMat the matrix of the point of view. */
-const static int frustumCulling(vec4f v[], const int v_indexes, const int thread_id) {
+const static int frustumCulling(vec4f v[], const int v_indexes) {
     /* Thats a fix for unitialized meshes that cannot become visible due to no vectors initialization. That will be corrected with bounding boxes. */
     if (!v_indexes) {
         return 1;
@@ -108,11 +106,8 @@ const static int frustumCulling(vec4f v[], const int v_indexes, const int thread
 
     DimensionsLimits dm = getDimensionsLimits(vec_arr, v_indexes);
 
-    const float minY = ((float)tiles[thread_id].start_height / half_screen[1]) - 1.f;
-    const float maxY = ((float)tiles[thread_id].end_height / half_screen[1]) - 1.f;
-
     if ( ((dm.min[2] > FPlane) || (dm.max[2] < NPlane)) ||
-            ((dm.min[1] > maxY) || (dm.max[1] < minY)) ||
+            ((dm.min[1] > 1.f) || (dm.max[1] < -1.f)) ||
             ((dm.min[0] > 1.f) || (dm.max[0] < -1.f)) ) {
 
         free(vec_arr);
@@ -133,14 +128,6 @@ const static MeshStepTwo assemblyfaces(MeshStepOne *m, unsigned int *indices, co
         r.f[index].v[0] = m->v[indices[i]];
         r.f[index].v[1] = m->v[indices[i + 3]];
         r.f[index].v[2] = m->v[indices[i + 6]];
-
-        r.f[index].vt[0] = m->t[indices[i + 1]];
-        r.f[index].vt[1] = m->t[indices[i + 4]];
-        r.f[index].vt[2] = m->t[indices[i + 7]];
-
-        r.f[index].vn[0] = m->n[indices[i + 2]];
-        r.f[index].vn[1] = m->n[indices[i + 5]];
-        r.f[index].vn[2] = m->n[indices[i + 8]];
         index++;
     }
 
@@ -186,51 +173,34 @@ const static MeshStepTwo bfculling(const MeshStepTwo m, const int len) {
     return r;
 }
 /* Translates the Mesh's Triangles from world to Screen Coordinates. */
-const static int viewtoscreen(MeshStepTwo *m, const int len, const int tile_index) {
-    // Mat4x4 ssm = screenSpaceMatrix(1000, 1000);
+const static int viewtoscreen(MeshStepTwo *m, const int len) {
+    // Mat4x4 ssm = screenSpaceMatrix();
     for (int i = 0; i < len; i++) {
         for (int j = 0; j < 3; j++) {
-
-            // printf("before  ");
-            // logVec4f(vecxm(m->f[i].v[j] + add_one, ssm));
-
-            m->f[i].vt[j] /= m->f[i].v[j][3];
-
-            m->f[i].v[j] = ((add_one + m->f[i].v[j]) * __builtin_convertvector(half_screen, vec4f));
-
-            // m->f[i].v[j][0] = ((1 + m->f[i].v[j][0]) * half_screen[0]) + 0.5f; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
-            // m->f[i].v[j][1] = ((1 + m->f[i].v[j][1]) * half_screen[1]) + 0.5f; /* adding 0.5 at this point so we can convert to integer at drawing stage. */
-            // m->f[i].v[j][2] = 1.f / m->f[i].v[j][2];
-            m->f[i].v[j][3] = 1.f / m->f[i].v[j][3];
-
-            // printf("After   ");
-            // logVec4f(m->f[i].v[j]);
-            // printf("\n");
+            m->f[i].v[j] = ((add_one + m->f[i].v[j]) * __builtin_convertvector(half_screen, vec4f)) + add_half;
         }
     }
 
     /* Viewport clipping. */
-    int clipp_bias = tile_index == 0 ? 0 : 1;
-    int clipp_height = tile_index == 7 ? 1 : 0;
-    vec4f plane_up_p = { 0.0f, tiles[tile_index].start_height - clipp_bias, 0.0f },
+    vec4f plane_up_p = { 0.0f, 0.f, 0.0f },
         plane_up_n = { 0.0f, 1.0f, 0.0f };
     *m = clipp(m, plane_up_p, plane_up_n);
     if(!m->f_indexes)
         return 0;
 
-    vec4f plane_down_p = { 0.0f, tiles[tile_index].end_height - clipp_height, 0.0f },
+    vec4f plane_down_p = { 0.0f, main_wa.height - 1, 0.0f },
         plane_down_n = { 0.0f, -1.0f, 0.0f };
     *m = clipp(m, plane_down_p, plane_down_n);
     if(!m->f_indexes)
         return 0;
 
-    vec4f plane_left_p = { tiles[tile_index].start_width, 0.0f, 0.0f },
+    vec4f plane_left_p = { 0.f, 0.0f, 0.0f },
         plane_left_n = { 1.0f, 0.0f, 0.0f };
     *m = clipp(m, plane_left_p, plane_left_n);
     if(!m->f_indexes)
         return 0;
 
-    vec4f plane_right_p = { tiles[tile_index].end_width, 0.0f, 0.0f },
+    vec4f plane_right_p = { main_wa.width - 1, 0.0f, 0.0f },
         plane_right_n = { -1.0f, 0.0f, 0.0f };
     *m = clipp(m, plane_right_p, plane_right_n);
     if(!m->f_indexes)
@@ -241,14 +211,8 @@ const static int viewtoscreen(MeshStepTwo *m, const int len, const int tile_inde
 /* Rasterize given Mesh by passing them to the appropriate function. */
 const static void rasterize(MeshStepTwo *m, Material *mtr) {
     point_frame_buffer = frame_buffer;
-    point_depth_buffer = main_depth_buffer;
-    point_attrib = &main_wa;
-    point_mat = &lookAt;
 
-    if (DEBUG == 2)
-        fillMesh(m, mtr);
-    else
-        texMesh(m, mtr);
+    edgeMesh(m, mtr->basecolor);
 }
 /* Releases all members of the given inside graphic pipeline lvl 1 Mesh. */
 const static void releaseMeshStepOne(MeshStepOne *c) {

@@ -12,7 +12,7 @@ const void applyForces(Scene *s) {
     int rotation_collide = 0;
     for (int i = 0; i < s->m_indexes; i++) {
 
-        if ( s->m[i].type != Terrain && s->m[i].type != Celestial ) {
+        if ( (s->m[i].type != Terrain) && (s->m[i].type != Celestial) ) {
 
             initMeshQuadInfo(&s->m[Terrain_1], &s->m[i]);
 

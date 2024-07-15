@@ -1,12 +1,10 @@
 #include "../headers/lighting.h"
 
 const void phong(Fragment *fr) {
-    vec4f basecolor;
-
-    if ( fr->mtr->texlevels ) {
-        basecolor = fr->mtr->texture[(fr->tex_y * fr->mtr->texture_width) + fr->tex_x];
-    } else
-        basecolor = fr->mtr->basecolor;
+    int tex_y = (fr->tex[1] * fr->mtr->texture_height) / fr->pos[3];
+    int tex_x = (fr->tex[0] * fr->mtr->texture_width) / fr->pos[3];
+    
+    vec4f basecolor = fr->mtr->texlevels ? fr->mtr->texture[(tex_y * fr->mtr->texture_width) + tex_x] : fr->mtr->basecolor;
 
     vec4f diffuse = { 0 }, specular = { 0 };
     vec4f ambient = sunlight.material.ambient * (basecolor * AmbientStrength);
@@ -41,7 +39,7 @@ const void phong(Fragment *fr) {
             vec4f reflectdir = cross_product(cross_product(fr->nrm, -lightdir), (-lightdir - fr->nrm)) * 2.00;
             // vec4f reflectdir = lightdir + viewdir;
 
-            float dot = dot_product(viewdir, norm_vec(reflectdir));
+            float dot = dot_product(-viewdir, norm_vec(reflectdir));
             // float dot = dot_product(fr->nrm, norm_vec(reflectdir));
             if ( dot > 0 ) {
                 float spec = powf(dot, fr->mtr->shinniness);
