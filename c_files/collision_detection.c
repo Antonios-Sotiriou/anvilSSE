@@ -263,9 +263,12 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
             if ( (t_near < 0) && (f_sum == 0) ) {
                 printf("PENETRATION!!! %f\n\n", t_near);
-
+                // printf("before:  ");
+                // logQuat(obj->r);
                 Quat rq = conjugateQuat(obj->r);
-
+                // printf("after :  ");
+                // logQuat(obj->r);
+                // printf("\n");
                 Mat4x4 rm = MatfromQuat(rq, obj->pivot);
                 obj->Q = multiplyQuats(obj->Q, rq);
 

@@ -187,7 +187,7 @@ const static MeshStepTwo bfculling(const MeshStepTwo m, const int len) {
 }
 /* Translates the Mesh's Triangles from world to Screen Coordinates. */
 const static int viewtoscreen(MeshStepTwo *m, const int len, const int tile_index) {
-    Mat4x4 ssm = screenSpaceMatrix(1000, 1000);
+    // Mat4x4 ssm = screenSpaceMatrix(1000, 1000);
     for (int i = 0; i < len; i++) {
         for (int j = 0; j < 3; j++) {
 

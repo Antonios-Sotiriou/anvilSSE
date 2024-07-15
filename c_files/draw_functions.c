@@ -36,12 +36,12 @@ const void drawLine(float x1, float y1, float x2, float y2, vec4f color) {
         if (delta_x < 0) {
             for (int x = start_x; x > end_x; x--) {
                 step_y = ((slope * (x - start_x)) + y1);
-                memcpy(&point_frame_buffer[(step_y * pad) + (x)], &rgba, 4);
+                point_frame_buffer[(step_y * pad) + (x)] = rgba;
             }
         } else {
             for (int x = start_x; x < end_x; x++) {
                 step_y = ((slope * (x - start_x)) + y1);
-                memcpy(&point_frame_buffer[(step_y * pad) + (x)], &rgba, 4);
+                point_frame_buffer[(step_y * pad) + (x)] = rgba;
             }
         }
     } else if ( fabsdx < fabsdy ) {
@@ -50,12 +50,12 @@ const void drawLine(float x1, float y1, float x2, float y2, vec4f color) {
         if (delta_y < 0) {
             for (int y = start_y; y > end_y; y--) {
                 step_x = ((slope * (y - start_y)) + x1);
-                memcpy(&point_frame_buffer[(y * pad) + (step_x)], &rgba, 4);
+                point_frame_buffer[(y * pad) + (step_x)] = rgba;
             }
         } else {
             for (int y = start_y; y < end_y; y++) {
                 step_x = ((slope * (y - start_y)) + x1);
-                memcpy(&point_frame_buffer[(y * pad) + (step_x)], &rgba, 4);
+                point_frame_buffer[(y * pad) + (step_x)] = rgba;
             }
         }
     } else {
@@ -144,10 +144,8 @@ const static void edgefillGeneral(const face f, Material *mtr, int minX, int max
                 const int padxDB = padyDB + x;
                 if (frag[3] > point_depth_buffer[padxDB]) {
 
-                    const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
-
                     frags_buffer[padxDB].pos = (vec4f){ x, y, frag[2], frag[3] };
-                    frags_buffer[padxDB].nrm = normal;
+                    frags_buffer[padxDB].nrm = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
                     frags_buffer[padxDB].mtr = mtr;
                     frags_buffer[padxDB].state = 1;
                     point_depth_buffer[padxDB] = frag[3];
@@ -230,10 +228,8 @@ const static void scanlinefillGeneral(const face f, Material *mtr, const Srt srt
                     const int padxDB = padyDB + x;
                     if ( frag[3] > point_depth_buffer[padxDB] ) {
 
-                        const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
-
                         frags_buffer[padxDB].pos = (vec4f){ x, y, frag[2], frag[3] };
-                        frags_buffer[padxDB].nrm = normal;
+                        frags_buffer[padxDB].nrm = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
                         frags_buffer[padxDB].mtr = mtr;
                         frags_buffer[padxDB].state = 1;
                         point_depth_buffer[padxDB] = frag[3];
@@ -275,10 +271,8 @@ const static void scanlinefillGeneral(const face f, Material *mtr, const Srt srt
                 const int padxDB = padyDB + x;
                 if ( frag[3] > point_depth_buffer[padxDB] ) {
 
-                    const vec4f normal = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
-
                     frags_buffer[padxDB].pos = (vec4f){ x, y, frag[2], frag[3] };
-                    frags_buffer[padxDB].nrm = normal;
+                    frags_buffer[padxDB].nrm = a[0] * f.vn[2] + a[1] * f.vn[0] + a[2] * f.vn[1];
                     frags_buffer[padxDB].mtr = mtr;
                     frags_buffer[padxDB].state = 1;
                     point_depth_buffer[padxDB] = frag[3];
@@ -363,19 +357,10 @@ const static void edgetexGeneral(face *f, Material *mtr, int minX, int maxX, int
                 const int padxDB = padyDB + x;
                 if (frag[3] > point_depth_buffer[padxDB]) {
 
-                    const vec4f normal = a[0] * f->vn[2] + a[1] * f->vn[0] + a[2] * f->vn[1];
-
-                    // if (mtr->texlevels) {
-                        const vec2f texel = a[0] * f->vt[2] + a[1] * f->vt[0] + a[2] * f->vt[1];
-
-                        // frags_buffer[padxDB].tex_y = (texel[1] * (mtr->texture_height - 1)) / frag[3];
-                        // frags_buffer[padxDB].tex_x = (texel[0] * (mtr->texture_width)) / frag[3];
-                    // }
-
                     frags_buffer[padxDB].pos = (vec4f){ x, y, frag[2], frag[3] };
-                    frags_buffer[padxDB].nrm = normal;
+                    frags_buffer[padxDB].nrm = a[0] * f->vn[2] + a[1] * f->vn[0] + a[2] * f->vn[1];
                     frags_buffer[padxDB].mtr = mtr;
-                    frags_buffer[padxDB].tex = texel;
+                    frags_buffer[padxDB].tex = a[0] * f->vt[2] + a[1] * f->vt[0] + a[2] * f->vt[1];
                     frags_buffer[padxDB].state = 1;
                     point_depth_buffer[padxDB] = frag[3];
                 }
@@ -458,19 +443,10 @@ const static void scanlinetexGeneral(face *f, Material *mtr, const Srt srt[]) {
                     const int padxDB = padyDB + x;
                     if ( frag[3] > point_depth_buffer[padxDB] ) {
 
-                        const vec4f normal = a[0] * f->vn[2] + a[1] * f->vn[0] + a[2] * f->vn[1];
-
-                        // if (mtr->texlevels) {
-                            const vec2f texel = a[0] * f->vt[2] + a[1] * f->vt[0] + a[2] * f->vt[1];
-
-                            // frags_buffer[padxDB].tex_y = (texel[1] * (mtr->texture_height - 1)) / frag[3];
-                            // frags_buffer[padxDB].tex_x = (texel[0] * (mtr->texture_width)) / frag[3];
-                        // }
-
                         frags_buffer[padxDB].pos = (vec4f){ x, y, frag[2], frag[3] };
-                        frags_buffer[padxDB].nrm = normal;
+                        frags_buffer[padxDB].nrm = a[0] * f->vn[2] + a[1] * f->vn[0] + a[2] * f->vn[1];
                         frags_buffer[padxDB].mtr = mtr;
-                        frags_buffer[padxDB].tex = texel;
+                        frags_buffer[padxDB].tex = a[0] * f->vt[2] + a[1] * f->vt[0] + a[2] * f->vt[1];
                         frags_buffer[padxDB].state = 1;
                         point_depth_buffer[padxDB] = frag[3];
                     }
@@ -512,20 +488,10 @@ const static void scanlinetexGeneral(face *f, Material *mtr, const Srt srt[]) {
                 const int padxDB = padyDB + x;
                 if ( frag[3] > point_depth_buffer[padxDB] ) {
 
-                    const vec4f normal = a[0] * f->vn[2] + a[1] * f->vn[0] + a[2] * f->vn[1];
-
-                    // if (mtr->texlevels) {
-                        const vec2f texel = a[0] * f->vt[2] + a[1] * f->vt[0] + a[2] * f->vt[1];
-                        
-                        // frags_buffer[padxDB].tex_y = (texel[1] * (mtr->texture_height - 1)) / frag[3];
-                        // frags_buffer[padxDB].tex_x = (texel[0] * (mtr->texture_width)) / frag[3];
-
-                    // }
-
                     frags_buffer[padxDB].pos = (vec4f){ x, y, frag[2], frag[3] };
-                    frags_buffer[padxDB].nrm = normal;
+                    frags_buffer[padxDB].nrm = a[0] * f->vn[2] + a[1] * f->vn[0] + a[2] * f->vn[1];
                     frags_buffer[padxDB].mtr = mtr;
-                    frags_buffer[padxDB].tex = texel;
+                    frags_buffer[padxDB].tex = a[0] * f->vt[2] + a[1] * f->vt[0] + a[2] * f->vt[1];
                     frags_buffer[padxDB].state = 1;
                     point_depth_buffer[padxDB] = frag[3];
                 }
