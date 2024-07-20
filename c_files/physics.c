@@ -4,8 +4,6 @@
 extern TerrainInfo tf;
 extern vec4f gravity_epicenter;
 
-#include "../headers/logging.h"
-
 const void applyForces(Scene *s) {
     Mat4x4 trans;
 
@@ -22,7 +20,7 @@ const void applyForces(Scene *s) {
                 // continue;
             }
 
-            if (!rotation_collide)
+            if ( !rotation_collide )
                 rotation_collide += rotationCollision(&tf, s, &s->m[Player_1]);
 
             if ( s->m[i].momentum > 0 ) {

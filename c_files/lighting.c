@@ -31,12 +31,12 @@ const void phong(Fragment *fr) {
     vec4f viewdir = norm_vec(camera[Pos] - pixel);
     float shadow = shadowTest(pixel);
 
-    float diff = dot_product(lightdir, fr->nrm);
+    float diff = dot_product(lightdir, nrm);
     if ( diff > 0 ) {
         diffuse = sunlight.material.diffuse * (diff * (basecolor * DiffuseStrength));
 
         if (fr->mtr->reflect) {
-            vec4f reflectdir = cross_product(cross_product(fr->nrm, -lightdir), (-lightdir - fr->nrm)) * 2.00;
+            vec4f reflectdir = cross_product(cross_product(nrm, -lightdir), (-lightdir - nrm)) * 2.00;
             // vec4f reflectdir = lightdir + viewdir;
 
             float dot = dot_product(-viewdir, norm_vec(reflectdir));

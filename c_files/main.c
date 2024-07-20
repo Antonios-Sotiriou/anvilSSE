@@ -297,7 +297,7 @@ const static void keypress(XEvent *event) {
         eye = (vec4f*)&camera;
 
     // printf("\x1b[H\x1b[J");
-    // system("clear\n");
+    system("clear\n");
     // printf("Key Pressed: %ld\n", keysym);
     // logEvent(*event);
 
@@ -505,7 +505,6 @@ const static void applyPhysics(void) {
 const static void project(void) {
 
     /* Draw in parallel the 3 Cascade shadow maps. */
-    int shadow_ids[NUM_OF_CASCADES] = { 0, 1, 2 };
     for (int i = 0; i < NUM_OF_CASCADES; i++) {
         if (pthread_create(&threads[i], NULL, &cascade, &thread_ids[i]))
             fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
@@ -719,8 +718,8 @@ const static void displayInfo(void) {
     // sprintf(info_string, "frame --> %d", Frame);
     // XDrawString(displ ,mainwin ,gc, 5, 48, info_string, strlen(info_string));
 
-    // sprintf(info_string, "%s\0", asctime(info));
-    // XDrawString(displ ,mainwin ,gc, 5, 48, info_string, strlen(info_string));
+    sprintf(info_string, "%s ", asctime(info));
+    XDrawString(displ ,mainwin ,gc, 5, 48, info_string, strlen(info_string));
 
     // sprintf(info_string, "Camera x: %f,    y: %f,    z: %f\0", camera[0][0], camera[0][1], camera[0][2]);
     // XDrawString(displ ,mainwin ,gc, 5, 60, info_string, strlen(info_string));
