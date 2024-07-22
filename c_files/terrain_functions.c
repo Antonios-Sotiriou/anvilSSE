@@ -52,10 +52,10 @@ const void createTerrain(Mesh *m, const char path[]) {
     const int faces_per_row = quad_vrows * 2;
     const int num_of_faces = quads * 2 * 9;
 
-    m->v = calloc(emvadon, 16);
-    m->n = calloc(emvadon, 16);
-    m->t = calloc(emvadon, 8);
-    m->f = calloc(num_of_faces, 4);
+    vec4f *v = calloc(emvadon, 16);
+    vec4f *n = calloc(emvadon, 16);
+    vec2f *t = calloc(emvadon, 8);
+    int *f = calloc(num_of_faces, 4);
 
     /* Vectors initialization. ############################## */ 
     float step_x = 2.f / bmp.info.Width;
@@ -77,11 +77,11 @@ const void createTerrain(Mesh *m, const char path[]) {
             vcols_count += bmp.info.Width;
         }
 
-        m->v[x][0] += x_step_cache;
+        v[x][0] += x_step_cache;
         // c->v[x][1] = (float)rand() / (float)(RAND_MAX / 0.09f);
-        m->v[x][1] = data[x] / 255.f;
-        m->v[x][2] = z_step_cache;
-        m->v[x][3] = 1.f;
+        v[x][1] = data[x] / 255.f;
+        v[x][2] = z_step_cache;
+        v[x][3] = 1.f;
 
         x_step_cache += step_x;
     }
@@ -90,7 +90,7 @@ const void createTerrain(Mesh *m, const char path[]) {
     /* Normals initialization. ############################## */
     vec4f normal = { 0.f, 1.f, 0.f, 0.f };
     for (int x = 0; x < emvadon; x++) {
-            m->n[x] = normal;
+            n[x] = normal;
     }
 
     /* Textors initialization. ############################## */
@@ -110,8 +110,8 @@ const void createTerrain(Mesh *m, const char path[]) {
 
             tx_count += bmp.info.Height;
         }
-        m->t[x][0] = tu_step_cache;
-        m->t[x][1] = tv_step_cache;
+        t[x][0] = tu_step_cache;
+        t[x][1] = tv_step_cache;
 
         tu_step_cache += step_tu;
     }
@@ -133,24 +133,24 @@ const void createTerrain(Mesh *m, const char path[]) {
         }
 
         /* Face 1st Up. */
-        m->f[x] = face_1_0;
-        m->f[x + 1] = face_1_0;
+        f[x] = face_1_0;
+        f[x + 1] = face_1_0;
 
-        m->f[x + 3] = face_1_1;
-        m->f[x + 4] = face_1_1;
+        f[x + 3] = face_1_1;
+        f[x + 4] = face_1_1;
 
-        m->f[x + 6] = face_1_2;
-        m->f[x + 7] = face_1_2;
+        f[x + 6] = face_1_2;
+        f[x + 7] = face_1_2;
 
         /* Face 2nd Down. */
-        m->f[x + 9] = face_1_0;
-        m->f[x + 10] = face_1_0;
+        f[x + 9] = face_1_0;
+        f[x + 10] = face_1_0;
 
-        m->f[x + 12] = face_1_2;
-        m->f[x + 13] = face_1_2;
+        f[x + 12] = face_1_2;
+        f[x + 13] = face_1_2;
 
-        m->f[x + 15] = face_1_0 + 1;
-        m->f[x + 16] = face_1_0 + 1;
+        f[x + 15] = face_1_0 + 1;
+        f[x + 16] = face_1_0 + 1;
 
         face_1_0++;
         face_1_1++;
@@ -159,10 +159,29 @@ const void createTerrain(Mesh *m, const char path[]) {
         face_counter += 2;
     }
 
-    m->v_indexes = emvadon;
-    m->n_indexes = emvadon;
-    m->t_indexes = emvadon;
-    m->f_indexes = num_of_faces;
+    m->f_indexes = num_of_faces / 9;
+    m->f = malloc(sizeof(face) * m->f_indexes);
+
+    int index = 0;
+    for (int i = 0; i < num_of_faces; i += 9) {
+        m->f[index].v[0] = v[f[i]];
+        m->f[index].v[1] = v[f[i + 3]];
+        m->f[index].v[2] = v[f[i + 6]];
+
+        m->f[index].vt[0] = t[f[i + 1]];
+        m->f[index].vt[1] = t[f[i + 4]];
+        m->f[index].vt[2] = t[f[i + 7]];
+
+        m->f[index].vn[0] = n[f[i + 2]];
+        m->f[index].vn[1] = n[f[i + 5]];
+        m->f[index].vn[2] = n[f[i + 8]];
+        index++;
+    }
+
+    free(v);
+    free(t);
+    free(n);
+    free(f);
 }
 /* Assigns the Terrain *t quad index to the given mesh. */
 const void initMeshQuadInfo(Mesh *t, Mesh *m) {
@@ -194,8 +213,8 @@ const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m) {
 
     /* Every quad has two faces incrementally. Every face constists of 9 indexes for vectors, normals, textors.
         So to get the right index we multiply faces with 9, because indexes are stored raw until now. */
-    const int Upperface = (quad_index * 2) * 9;
-    const int Lowerface = ((quad_index * 2) + 1) * 9;
+    const int Upperface = quad_index * 2;
+    const int Lowerface = (quad_index * 2) + 1;
 
     /* FInd in which triangle we are. */
     float x = ((t_coords[0] / quad_len));
@@ -205,13 +224,9 @@ const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m) {
 
     face f;
     if ( (x - z) <= 0 ) {
-        f.v[0] = t->v[t->f[Upperface]];
-        f.v[1] = t->v[t->f[Upperface + 3]];
-        f.v[2] = t->v[t->f[Upperface + 6]];
+        f = t->f[Upperface];
     } else {
-        f.v[0] = t->v[t->f[Lowerface]];
-        f.v[1] = t->v[t->f[Lowerface + 3]];
-        f.v[2] = t->v[t->f[Lowerface + 6]];
+        f = t->f[Lowerface];
     }
 
     /* Translate the face from object space to world space for the edge function to work and get the interpolated height value. */

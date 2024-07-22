@@ -3,7 +3,8 @@
 static vec4f *loadvectors(const char path[]);
 static vec2f *loadtextors(const char path[]);
 static vec4f *loadnormals(const char path[]);
-static unsigned int *loadfaces(const char path[]);
+static int *loadfaces(const char path[]);
+// const static void *assemblyfaces(MeshStepOne *m, unsigned int *indices, const int len);
 
 /* vectors array indexes */
 static int v_indexes = 0;
@@ -19,35 +20,56 @@ const void loadMesh(Mesh *m, const char name[], const unsigned int meshlod) {
     char objfile[len];
     snprintf(objfile, len, "objfiles/%s/lod%d.obj", name, meshlod);
 
-    m->v = loadvectors(objfile);
-    if (!m->v)
+    vec4f *v = loadvectors(objfile);
+    if (!v)
         fprintf(stderr, "Could not reallocate Vectors array. loadMesh() - get_vectors()\n");
-    m->v_indexes = v_indexes;
 
-    m->t = loadtextors(objfile);
-    if (!m->t)
+    vec2f *t = loadtextors(objfile);
+    if (!t)
         fprintf(stderr, "Could not create Vectors array. loadMesh() - get_textors()\n");
-    m->t_indexes = t_indexes;
 
-    m->n = loadnormals(objfile);
-    if (!m->n)
+    vec4f *n = loadnormals(objfile);
+    if (!n)
         fprintf(stderr, "Could not create Vectors array. loadMesh() - get_normals()\n");
-    m->n_indexes = n_indexes;
 
-    m->f = loadfaces(objfile);
-    if (!m->f)
+    int *f = loadfaces(objfile);
+    if (!f)
         fprintf(stderr, "Could not create Faces array. loadMesh() - get_faces()\n");
-    m->f_indexes = f_indexes;
+
+
+    m->f_indexes = f_indexes / 9;
+    m->f = malloc(sizeof(face) * m->f_indexes);
+
+    int index = 0;
+    for (int i = 0; i < f_indexes; i += 9) {
+        m->f[index].v[0] = v[f[i]];
+        m->f[index].v[1] = v[f[i + 3]];
+        m->f[index].v[2] = v[f[i + 6]];
+
+        m->f[index].vt[0] = t[f[i + 1]];
+        m->f[index].vt[1] = t[f[i + 4]];
+        m->f[index].vt[2] = t[f[i + 7]];
+
+        m->f[index].vn[0] = n[f[i + 2]];
+        m->f[index].vn[1] = n[f[i + 5]];
+        m->f[index].vn[2] = n[f[i + 8]];
+        index++;
+    }
+
+    free(v);
+    free(t);
+    free(n);
+    free(f);
 }
-static unsigned int *loadfaces(const char path[]) {
-    size_t facesize = sizeof(unsigned int);
+static int *loadfaces(const char path[]) {
+    size_t facesize = sizeof(int);
     FILE *fp = fopen(path, "r");
     if (!fp) {
         fprintf(stderr, "Could not open file : %s.\n", path);
         return NULL;
     }
 
-    unsigned int *f = malloc(facesize);
+    int *f = malloc(facesize);
     if (!f) {
         fprintf(stderr, "Could not allocate memory for Face struct. loadMesh() -- malloc().\n");
         fclose(fp);
@@ -217,5 +239,30 @@ static vec4f *loadnormals(const char path[]) {
     fclose(fp);
     return n;
 }
+// /* Assosiates vertices coordinate values from vector array through indexes. */
+// const static void *assemblyfaces(MeshStepOne *m, unsigned int *indices, const int len) {
+//     MeshStepTwo r = { 0 };
+//     r.f_indexes = len / 9;
+//     r.f = malloc(sizeof(face) * r.f_indexes);
+
+//     int index = 0;
+//     for (int i = 0; i < len; i += 9) {
+//         r.f[index].v[0] = m->v[indices[i]];
+//         r.f[index].v[1] = m->v[indices[i + 3]];
+//         r.f[index].v[2] = m->v[indices[i + 6]];
+
+//         r.f[index].vt[0] = m->t[indices[i + 1]];
+//         r.f[index].vt[1] = m->t[indices[i + 4]];
+//         r.f[index].vt[2] = m->t[indices[i + 7]];
+
+//         r.f[index].vn[0] = m->n[indices[i + 2]];
+//         r.f[index].vn[1] = m->n[indices[i + 5]];
+//         r.f[index].vn[2] = m->n[indices[i + 8]];
+//         index++;
+//     }
+
+//     r.cull = m->cull;
+//     return r;
+// }
 
 

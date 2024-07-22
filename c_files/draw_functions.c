@@ -64,7 +64,7 @@ const void drawLine(float x1, float y1, float x2, float y2, vec4f color) {
     }
 }
 /* Draws face edges of given mesh with color. */
-const void edgeMesh(MeshStepTwo *m, const vec4f color) {
+const void edgeMesh(Mesh *m, const vec4f color) {
     for (int i = 0; i < m->f_indexes; i++) {
         drawLine(m->f[i].v[0][0], m->f[i].v[0][1], m->f[i].v[1][0], m->f[i].v[1][1], color);
         drawLine(m->f[i].v[1][0], m->f[i].v[1][1], m->f[i].v[2][0], m->f[i].v[2][1], color);
@@ -74,7 +74,7 @@ const void edgeMesh(MeshStepTwo *m, const vec4f color) {
 /* ######################################## FILLING FUNCTIONS ######################################## */
 
 /* Fills given mesh with color according to mesh material und with the appropriate fill method. */
-const void fillMesh(MeshStepTwo *m, Material *mtr) {
+const void fillMesh(Mesh *m, Material *mtr) {
     struct fillDispatch {
         void (*fillfunction)(face, Material *m);
     } dis;
@@ -287,7 +287,7 @@ const static void scanlinefillGeneral(const face f, Material *mtr, const Srt srt
 /* ######################################## TEXTURE PAINTING FUNCTIONS ######################################## */
 
 /* Textures given Mesh using the choosen algorithm-> (Edge Function or Scanline Function). */
-const void texMesh(MeshStepTwo *m, Material *mtr) {
+const void texMesh(Mesh *m, Material *mtr) {
     struct fillDispatch {
         void (*fillfunction)(face *f, Material *m);
     } dis;

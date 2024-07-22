@@ -37,13 +37,13 @@ extern const void swap(void *a, void *b, unsigned long size);
 
 const void drawLine(float x1, float y1, float x2, float y2, vec4f color);
 
-const void edgeMesh(MeshStepTwo *m, const vec4f color);
+const void edgeMesh(Mesh *m, const vec4f color);
 
-const void fillMesh(MeshStepTwo *m, Material *mtr);
+const void fillMesh(Mesh *m, Material *mtr);
 const void edgefillface(const face f, Material *mtr);
 const void scanlinefillface(const face f, Material *mtr);
 
-const void texMesh(MeshStepTwo *m, Material *mtr);
+const void texMesh(Mesh *m, Material *mtr);
 const void edgetexface(face *f, Material *mtr);
 const void scanlinetexface(face *f, Material *mtr);
 

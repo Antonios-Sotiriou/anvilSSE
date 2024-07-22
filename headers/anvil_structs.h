@@ -98,13 +98,10 @@ typedef struct {
 typedef struct {
     char name[24];
     vec4f pivot, mvdir;
-    vec4f *v;
-    vec4f *n;
-    vec2f *t;
-    unsigned int *f;
+    face *f;
     Quat Q, r;
     // void (*drawMesh)(void *args);
-    int v_indexes, n_indexes, t_indexes, f_indexes, /* vectors, normals, textors and faces indexes summary. */
+    int f_indexes,                                  /* indexes summary. */
     type,                                           /* type of the Mesh. Not sure yet how to categorize them. */
     cull, lodlevels, currentlod, visible,           /* visibillity and lod or texture lod usefull variables. */
     floating, grounded,                             /* variables usefull for physics and kinetics.  */
@@ -118,38 +115,6 @@ typedef struct {
     Bbox bbox;
     Material material;
 } Mesh;
-
-// /* Inside graphic pipeline struct. Holds necessery data for the 1st step of the graphic pipeline. */
-typedef struct {
-    vec4f *v;
-    vec4f *n;
-    vec2f *t;
-    int v_indexes, n_indexes, t_indexes, cull;
-    Bbox bbox;
-} MeshStepOne;
-
-/* Inside graphic pipeline struct. Holds necessery data for the 2nd step of the graphic pipeline. */
-typedef struct {
-    face *f;
-    int f_indexes, cull;
-} MeshStepTwo;
-
-/* Base Shadow face aka(triangle) struct. */
-typedef struct {
-    vec4f v[3];
-} Shadowface;
-
-// /* Inside graphic pipeline struct. Holds necessery data for the 1st step of the graphic pipeline. */
-typedef struct {
-    vec4f *v;
-    int v_indexes, cull;
-} MeshShadowStepOne;
-
-/* Inside graphic pipeline struct. Holds necessery data for the 2nd step of the graphic pipeline. */
-typedef struct {
-    Shadowface *f;
-    int f_indexes, cull;
-} MeshShadowStepTwo;
 
 /* Scene structs which teams all the meshes into an objects array. */
 typedef struct {

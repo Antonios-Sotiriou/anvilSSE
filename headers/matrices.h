@@ -31,6 +31,7 @@ vec4f *vecsarrayxm(vec4f vecs[], const int len, const Mat4x4 m);
 vec4f *setvecsarrayxm(vec4f vecs[], const int len, const Mat4x4 m);
 face *facesarrayxm(face fs[], const int len, const Mat4x4 m);
 face *setfacesarrayxm(face fs[], const int len, const Mat4x4 m);
+face *compinedFaceNormals(face fs[], const int len, const Mat4x4 vm, const Mat4x4 nm);
 const vec4f vecxm(const vec4f v, const Mat4x4 m);
 const void setvecxm(vec4f *v, const Mat4x4 m);
 const face facexm(const face f, const Mat4x4 m);

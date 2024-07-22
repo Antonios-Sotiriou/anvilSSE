@@ -131,7 +131,7 @@ const void adoptdetailMesh(Mesh *m, const int dist) {
         m->currentlod = m->lodlevels;
 
     if ( lcache_0 != m->currentlod ) {
-        releaseMesh(m);
+        free(m->f);
         loadMesh(m, m->name, m->currentlod);
         printf("adoptDetailMesh()\n");
     }
@@ -174,18 +174,18 @@ const void adoptdetailTexture(Mesh *m, const int dist) {
         printf("adoptDetailTexture()\n");
     }
 }
-const void enWorldMesh(Mesh *m) {
-    Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
+// const void enWorldMesh(Mesh *m) {
+//     Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
 
-    vec4f pos = { 0 };
-    Mat4x4 mfQ = MatfromQuat(m->Q, pos);
-    sclMatrix = mxm(mfQ, scaleMatrix(m->scale));
-    trMatrix = translationMatrix(m->pivot[0], m->pivot[1], m->pivot[2]);
-    enWorldMatrix = mxm(sclMatrix, trMatrix);
+//     vec4f pos = { 0 };
+//     Mat4x4 mfQ = MatfromQuat(m->Q, pos);
+//     sclMatrix = mxm(mfQ, scaleMatrix(m->scale));
+//     trMatrix = translationMatrix(m->pivot[0], m->pivot[1], m->pivot[2]);
+//     enWorldMatrix = mxm(sclMatrix, trMatrix);
 
-    m->v = setvecsarrayxm(m->v, m->v_indexes, enWorldMatrix);
-    m->n = setvecsarrayxm(m->n, m->n_indexes, enWorldMatrix);
-}
+//     m->v = setvecsarrayxm(m->v, m->v_indexes, enWorldMatrix);
+//     m->n = setvecsarrayxm(m->n, m->n_indexes, enWorldMatrix);
+// }
 const void enworldBbox(Mesh *m) {
     Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
 
@@ -197,13 +197,13 @@ const void enworldBbox(Mesh *m) {
 
     m->bbox.v = setvecsarrayxm(m->bbox.v, m->bbox.v_indexes, enWorldMatrix);
 }
-const void placeMesh(Mesh *m, const vec4f pos) {
-    Mat4x4 trMatrix = translationMatrix(pos[0], pos[1], pos[2]);
+// const void placeMesh(Mesh *m, const vec4f pos) {
+//     Mat4x4 trMatrix = translationMatrix(pos[0], pos[1], pos[2]);
 
-    m->v = setvecsarrayxm(m->v, m->v_indexes, trMatrix);
-    m->n = setvecsarrayxm(m->n, m->n_indexes, trMatrix);
-    m->pivot = pos;
-}
+//     m->v = setvecsarrayxm(m->v, m->v_indexes, trMatrix);
+//     m->n = setvecsarrayxm(m->n, m->n_indexes, trMatrix);
+//     m->pivot = pos;
+// }
 /* Check and set visibillity of scene objects seen from given meshes pivot point and direction. viewProj: (1 for Prespective and 0 for orthographic Projection).*/
 const void checkVisibles(Scene *s, Mesh *m, const int viewProj) {
     vec4f up = { 0.f, -1.f, 0.f };
@@ -218,47 +218,47 @@ const void checkVisibles(Scene *s, Mesh *m, const int viewProj) {
     else
         collMat = mxm(inverse_mat(lk), orthoMat);
 
-    checkVisibility(s->m, s->m_indexes, collMat, viewProj);
+    // checkVisibility(s->m, s->m_indexes, collMat, viewProj);
 }
-/* Ccheck what is visible from a given point of view.Must be implemented with bounding boxes. */
-const static void checkVisibility(Mesh *m, const int len, Mat4x4 vm, const int viewProj) {
-    vec4f *vec_arr;
+// /* Ccheck what is visible from a given point of view.Must be implemented with bounding boxes. */
+// const static void checkVisibility(Mesh *m, const int len, Mat4x4 vm, const int viewProj) {
+//     vec4f *vec_arr;
 
-    for (int i = 0; i < len; i++) {
+//     for (int i = 0; i < len; i++) {
 
-        /* Thats a fix for unitialized meshes that cannot become visible due to no vectors initialization. That will be corrected with bounding boxes. */
-        if (!m[i].v_indexes) {
-            m[i].visible = 1;
-            continue;
-        }
+//         /* Thats a fix for unitialized meshes that cannot become visible due to no vectors initialization. That will be corrected with bounding boxes. */
+//         if (!m[i].v_indexes) {
+//             m[i].visible = 1;
+//             continue;
+//         }
 
-        vec_arr = vecsarrayxm(m[i].v, m[i].v_indexes, vm);
+//         vec_arr = vecsarrayxm(m[i].v, m[i].v_indexes, vm);
 
-        if (!viewProj)
-            for (int j = 0; j < m[i].v_indexes; j++) {
-                /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
-                float z = vec_arr[j][2];
+//         if (!viewProj)
+//             for (int j = 0; j < m[i].v_indexes; j++) {
+//                 /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
+//                 float z = vec_arr[j][2];
 
-                if (vec_arr[j][3] > 0) {
-                    vec_arr[j] /= vec_arr[j][3];
-                    vec_arr[j][2] = z;
-                }
-            }
+//                 if (vec_arr[j][3] > 0) {
+//                     vec_arr[j] /= vec_arr[j][3];
+//                     vec_arr[j][2] = z;
+//                 }
+//             }
 
-        DimensionsLimits dm = getDimensionsLimits(vec_arr, m[i].v_indexes);
+//         DimensionsLimits dm = getDimensionsLimits(vec_arr, m[i].v_indexes);
 
-        if ( ((dm.min[2] > FPlane ) || (dm.max[2] < NPlane)) ||
-            ((dm.min[1] > 1.f) || (dm.max[1] < -1.f)) ||
-            ((dm.min[0] > 1.f) || (dm.max[0] < -1.f)) ) {
+//         if ( ((dm.min[2] > FPlane ) || (dm.max[2] < NPlane)) ||
+//             ((dm.min[1] > 1.f) || (dm.max[1] < -1.f)) ||
+//             ((dm.min[0] > 1.f) || (dm.max[0] < -1.f)) ) {
 
-            free(vec_arr);
-            m[i].visible = 0;
-            continue;
-        }
-        free(vec_arr);
-        m[i].visible = 1;
-    }
-}
+//             free(vec_arr);
+//             m[i].visible = 0;
+//             continue;
+//         }
+//         free(vec_arr);
+//         m[i].visible = 1;
+//     }
+// }
 /* Displays given vector on screen given the view Matrix. */
 const void displayVec4f(const vec4f v_start, const vec4f v_end, const Mat4x4 vm) {
     vec4f temp_start = vecxm(v_start, vm);
@@ -312,29 +312,19 @@ const void displayBbox(vec4f v[], const int v_indexes, const Mat4x4 vm) {
 /* Initializing Mesh a from Mesh b. */
 const void initMesh(Mesh *a, const Mesh *b) {
     *a = *b;
-    size_t vsize = sizeof(vec4f) * b->v_indexes;
-    size_t nsize = sizeof(vec4f) * b->n_indexes;
-    size_t tsize = sizeof(vec2f) * b->t_indexes;
-    size_t fsize = sizeof(unsigned int) * b->f_indexes;
-
-    a->v = malloc(vsize);
-    memcpy(a->v, b->v, vsize);
-
-    a->n = malloc(nsize);
-    memcpy(a->n, b->n, nsize);
-
-    a->t = malloc(tsize);
-    memcpy(a->t, b->t, tsize);
+    size_t fsize = sizeof(face) * b->f_indexes;
+    size_t bbox_v = sizeof(vec4f) * b->bbox.v_indexes;
 
     a->f = malloc(fsize);
     memcpy(a->f, b->f, fsize);
+
+    a->bbox.v = malloc(bbox_v);
+    memcpy(a->bbox.v, b->bbox.v, bbox_v);
 }
 /* Releases all members of the given Mesh. */
 const void releaseMesh(Mesh *m) {
-    free(m->v);
-    free(m->n);
-    free(m->t);
     free(m->f);
+    free(m->bbox.v);
 }
 
 

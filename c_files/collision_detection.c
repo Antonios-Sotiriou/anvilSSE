@@ -35,7 +35,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
 
         if ( cache->id != obj->id ) {
 
-            cache->dm = getDimensionsLimits(cache->bbox.v, cache->v_indexes);
+            cache->dm = getDimensionsLimits(cache->bbox.v, cache->bbox.v_indexes);
 
             vec4i min = __builtin_convertvector((cache->dm.min - (obj->pivot - obj->dm.min)) + 0.5, vec4i);
             vec4i max = __builtin_convertvector((cache->dm.max - (obj->pivot - obj->dm.max)) + 0.5, vec4i);

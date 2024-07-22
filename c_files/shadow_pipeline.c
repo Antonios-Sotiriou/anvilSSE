@@ -1,14 +1,11 @@
 #include "../headers/shadow_pipeline.h"
 
-const static MeshShadowStepTwo assemblyfaces(MeshShadowStepOne *m, unsigned int *indices, const int len);
-const static MeshShadowStepTwo bfculling(const MeshShadowStepTwo c, const int len);
-const static float shadowWinding(const Shadowface f);
-const static int viewtoscreen(MeshShadowStepTwo *m, const int len);
-const static void createShadowmap(MeshShadowStepTwo *m, const unsigned int sm_index);
-const static void shadowface(Shadowface *f, const Srt srt[], const unsigned int sm_index);
-const static void releaseMeshShadowStepOne(MeshShadowStepOne *c);
-const static void releaseMeshShadowStepTwo(MeshShadowStepTwo *c);
-const static void initMeshShadowStepOne(MeshShadowStepOne *a, Mesh *b);
+const static Mesh bfculling(const Mesh c, const int len);
+const static float shadowWinding(const face f);
+const static int viewtoscreen(Mesh *m, const int len);
+const static void createShadowmap(Mesh *m, const unsigned int sm_index);
+const static void shadowface(face *f, const Srt srt[], const unsigned int sm_index);
+
 const static vec4i smask = { 1, 2, 0, 3 };
 const static vec4f add_one = { 1.f, 1.f, 0.f, 0.f };
 const static vec4f add_half = { 0.5f, 0.5f, 0.f, 0.f };
@@ -76,11 +73,12 @@ const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
 }
 /* ################################################### CASCADE SHADOW MAPPING FINISH ################################################ */
 const void shadowPipeline(Scene *s, const unsigned int sm_index) {
-    MeshShadowStepOne cache_0 = { 0 };
+
+    Mesh cache_0 = { 0 };
 
     for (int i = 0; i < s->m_indexes; i++) {
 
-        initMeshShadowStepOne(&cache_0, &s->m[i]);
+        initMesh(&cache_0, &s->m[i]);
 
         Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
 
@@ -92,68 +90,48 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
 
         Mat4x4 vecsMat = mxm(enWorldMatrix, ortholightMat[sm_index]);
 
-        cache_0.v = setvecsarrayxm(cache_0.v, cache_0.v_indexes, vecsMat);
-
-        MeshShadowStepTwo cache_1 = assemblyfaces(&cache_0, s->m[i].f, s->m[i].f_indexes);
-        releaseMeshShadowStepOne(&cache_0);
+        cache_0.f = setfacesarrayxm(cache_0.f, cache_0.f_indexes, vecsMat);
 
         /* At this Point triangles must be shadowclipped against near plane. */
         vec4f plane_near_p = { 0.0f, 0.0f, NPlane },
                 plane_near_n = { 0.0f, 0.0f, 1.0f };
-        cache_1 = shadowclipp(&cache_1, plane_near_p, plane_near_n);
-        if (!cache_1.f_indexes) {
-            releaseMeshShadowStepTwo(&cache_1);
+        cache_0 = shadowclipp(&cache_0, plane_near_p, plane_near_n);
+        if (!cache_0.f_indexes) {
+            releaseMesh(&cache_0);
             continue;
         }
 
         /* Clipping against far Plane in View Space. */
         vec4f plane_far_p = { 0.0f, 0.0f, FPlane },
                 plane_far_n = { 0.0f, 0.0f, -1.0f };
-        cache_1 = shadowclipp(&cache_1, plane_far_p, plane_far_n);
-        if (!cache_1.f_indexes) {
-            releaseMeshShadowStepTwo(&cache_1);
+        cache_0 = shadowclipp(&cache_0, plane_far_p, plane_far_n);
+        if (!cache_0.f_indexes) {
+            releaseMesh(&cache_0);
             continue;
         }
 
         /* Applying Backface culling before we proceed to full frustum shadowclipping. */
-        if (cache_1.cull)
-            cache_1 = bfculling(cache_1, cache_1.f_indexes);
-        if (!cache_1.f_indexes) {
-            releaseMeshShadowStepTwo(&cache_1);
+        if (cache_0.cull)
+            cache_0 = bfculling(cache_0, cache_0.f_indexes);
+        if (!cache_0.f_indexes) {
+            releaseMesh(&cache_0);
             continue;
         }
 
         /* Sending to translation from NDC to Screen Coordinates. */
-        if (!viewtoscreen(&cache_1, cache_1.f_indexes)) {
-            releaseMeshShadowStepTwo(&cache_1);
+        if (!viewtoscreen(&cache_0, cache_0.f_indexes)) {
+            releaseMesh(&cache_0);
             continue;
         }
 
-        createShadowmap(&cache_1, sm_index);
-        releaseMeshShadowStepTwo(&cache_1);
+        createShadowmap(&cache_0, sm_index);
+        releaseMesh(&cache_0);
     }
-}
-/* Assosiates vertices coordinate values from vector array through indexes. */
-const static MeshShadowStepTwo assemblyfaces(MeshShadowStepOne *m, unsigned int *indices, const int len) {
-    MeshShadowStepTwo r = { 0 };
-    r.f_indexes = len / 9;
-    r.f = malloc(sizeof(Shadowface) * r.f_indexes);
-
-    int index = 0;
-    for (int i = 0; i < len; i += 9) {
-        r.f[index].v[0] = m->v[indices[i]];
-        r.f[index].v[1] = m->v[indices[i + 3]];
-        r.f[index].v[2] = m->v[indices[i + 6]];
-        index++;
-    }
-
-    r.cull = m->cull;
-    return r;
 }
 /* Backface culling.Discarding Triangles that should not be painted.Creating a new dynamic Mesh stucture Triangles array. */
-const static MeshShadowStepTwo bfculling(const MeshShadowStepTwo m, const int len) {
-    MeshShadowStepTwo r = m;
-    size_t size = sizeof(Shadowface);
+const static Mesh bfculling(const Mesh m, const int len) {
+    Mesh r = m;
+    size_t size = sizeof(face);
     int counter = 1;
     int index = 0;
     r.f = malloc(size);
@@ -178,7 +156,7 @@ const static MeshShadowStepTwo bfculling(const MeshShadowStepTwo m, const int le
     return r;
 }
 /* Identifies if the Vectors are in clockwise order < CW > or not < CCW >. */
-const float shadowWinding(const Shadowface f) {
+const float shadowWinding(const face f) {
     vec4f xs = { f.v[0][0], f.v[1][0], f.v[2][0], 0.0f };
     vec4f ys = { f.v[0][1], f.v[1][1], f.v[2][1], 0.0f };
 
@@ -186,7 +164,7 @@ const float shadowWinding(const Shadowface f) {
     return r[0] + r[1] + r[2];
 }
 /* Translates the Mesh's Triangles from world to Screen Coordinates. */
-const static int viewtoscreen(MeshShadowStepTwo *m, const int len) {
+const static int viewtoscreen(Mesh *m, const int len) {
     for (int i = 0; i < len; i++) {
         for (int j = 0; j < 3; j++) {
 
@@ -224,7 +202,7 @@ const static int viewtoscreen(MeshShadowStepTwo *m, const int len) {
 
     return 1;
 }
-const static void createShadowmap(MeshShadowStepTwo *m, const unsigned int sm_index) {
+const static void createShadowmap(Mesh *m, const unsigned int sm_index) {
     for (int c = 0; c < m->f_indexes; c++) {
         /* Creating 2Arrays for X and Y values to sort them. */
         Srt srt[3] = {
@@ -246,7 +224,7 @@ const static void createShadowmap(MeshShadowStepTwo *m, const unsigned int sm_in
         shadowface(&m->f[c], srt, sm_index);
     }
 }
-const static void shadowface(Shadowface *f, const Srt srt[], const unsigned int sm_index) {
+const static void shadowface(face *f, const Srt srt[], const unsigned int sm_index) {
     vec4i xs = { f->v[srt[0].index][0], f->v[srt[1].index][0], f->v[srt[2].index][0], 0 };
     vec4i ys = { f->v[srt[0].index][1], f->v[srt[1].index][1], f->v[srt[2].index][1], 0 };
     vec4f zs = { f->v[srt[0].index][2], f->v[srt[1].index][2], f->v[srt[2].index][2], 0 };
@@ -373,23 +351,6 @@ const float shadowTest(vec4f frag) {
     return shadow / 9.f;
     // return sm_index;
 }
-/* Releases all members of the given inside Shadow pipeline lvl 1 Mesh. */
-const static void releaseMeshShadowStepOne(MeshShadowStepOne *c) {
-    free(c->v);
-}
-/* Releases all members of the given inside Shadow pipeline lvl 2 Mesh. */
-const static void releaseMeshShadowStepTwo(MeshShadowStepTwo *c) {
-    free(c->f);
-}
-/* Initializing a MeshShadowStepOne a from Mesh b. */
-const static void initMeshShadowStepOne(MeshShadowStepOne *a, Mesh *b) {
-    size_t vsize = sizeof(vec4f) * b->v_indexes;
 
-    a->v = malloc(vsize);
-    memcpy(a->v, b->v, vsize);
-    a->v_indexes = b->v_indexes;
-
-    a->cull = b->cull;
-}
 
 

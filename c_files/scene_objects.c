@@ -175,7 +175,6 @@ const void releaseScene(Scene *s) {
     for (int i = 0; i < s->m_indexes; i++) {
         free(s->m[i].material.texture);
         releaseMesh(&s->m[i]);
-        free(s->m[i].bbox.v);
     }
     free(s->m);
 }

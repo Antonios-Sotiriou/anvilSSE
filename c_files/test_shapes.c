@@ -1,14 +1,8 @@
 #include "../headers/test_shapes.h"
 #include "../headers/logging.h"
 
-const void createCube(Mesh *c) {
-    const size_t face_size = sizeof(unsigned int) * 108;
-    c->v = malloc(16 * 8);
-    c->n = malloc(16 * 8);
-    c->t = malloc(8 * 14);
-    c->f = malloc(face_size);
-
-    vec4f vectors[8] = {
+const void createCube(Mesh *m) {
+    vec4f v[8] = {
         { -1.000000, -1.000000, -1.000000, 1.0 },
         { -1.000000, 1.000000, -1.000000, 1.0 },
         { -1.000000, -1.000000, 1.000000, 1.0 },
@@ -18,7 +12,7 @@ const void createCube(Mesh *c) {
         { 1.000000, -1.000000, 1.000000, 1.0 },
         { 1.000000, 1.000000, 1.000000, 1.0 }
     };
-    vec4f normals[8] = {
+    vec4f n[8] = {
         { -0.5774, -0.5774, 0.5774, 0.0 },
         { -0.5774, -0.5774, -0.5774, 0.0 },
         { 0.5774, -0.5774, -0.5774, 0.0 },
@@ -28,7 +22,7 @@ const void createCube(Mesh *c) {
         { 0.5774, -0.5774, 0.5774, 0.0 },
         { -0.5774, 0.5774, -0.5774, 0.0 }
     };
-    vec2f textures[14] = {
+    vec2f t[14] = {
         { 0.250869, 0.999111 },
         { 0.000272, 0.664772 },
         { 0.999470, 0.666021 },
@@ -44,7 +38,7 @@ const void createCube(Mesh *c) {
         { 0.499504, 0.666010 },
         { 0.499493, 0.334624 }
     };
-    unsigned int faces[108] = {
+    int f[108] = {
         2, 6, 0, 0, 0, 1, 4, 8, 2,
         7, 13, 3, 3, 7, 4, 2, 6, 0,
         5, 11, 5, 7, 13, 3, 6, 12, 6,
@@ -58,24 +52,28 @@ const void createCube(Mesh *c) {
         3, 7, 4, 0, 1, 1, 2, 6, 0,
         1, 5, 7, 4, 9, 2, 0, 2, 1
     };
-    c->v_indexes = 8;
-    c->n_indexes = 8;
-    c->t_indexes = 14;
-    c->f_indexes = 108;
 
-    memcpy(c->v, vectors, 16 * 8);
-    memcpy(c->n, normals, 16 * 8);
-    memcpy(c->t, textures, 8 * 14);
-    memcpy(c->f, faces, face_size);
+    m->f_indexes = 108 / 9;
+    m->f = malloc(sizeof(face) * m->f_indexes);
+
+    int index = 0;
+    for (int i = 0; i < 108; i += 9) {
+        m->f[index].v[0] = v[f[i]];
+        m->f[index].v[1] = v[f[i + 3]];
+        m->f[index].v[2] = v[f[i + 6]];
+
+        m->f[index].vt[0] = t[f[i + 1]];
+        m->f[index].vt[1] = t[f[i + 4]];
+        m->f[index].vt[2] = t[f[i + 7]];
+
+        m->f[index].vn[0] = n[f[i + 2]];
+        m->f[index].vn[1] = n[f[i + 5]];
+        m->f[index].vn[2] = n[f[i + 8]];
+        index++;
+    }
 }
-const void createskybox(Mesh *c) {
-    const size_t face_size = sizeof(unsigned int) * 108;
-    c->v = malloc(16 * 8);
-    c->n = malloc(16 * 8);
-    c->t = malloc(8 * 14);
-    c->f = malloc(face_size);
-
-    vec4f vectors[8] = {
+const void createskybox(Mesh *m) {
+    vec4f v[8] = {
         { 1.000000f, 1.000000f, -1.000000f, 1.f },
         { 1.000000f, -1.000000f, -1.000000f, 1.f },
         { 1.000000f, 1.000000f, 1.000000f, 1.f },
@@ -85,7 +83,7 @@ const void createskybox(Mesh *c) {
         { -1.000000f, 1.000000f, 1.000000f, 1.f },
         { -1.000000f, -1.000000f, 1.000000f, 1.f }
     };
-    vec4f normals[8] = {
+    vec4f n[8] = {
         { -0.5774f, -0.5774f, -0.5774f, 0.f },
         { 0.5774f, -0.5774f, 0.5774f, 0.f },
         { -0.5774f, -0.5774f, 0.5774f, 0.f },
@@ -95,7 +93,7 @@ const void createskybox(Mesh *c) {
         { 0.5774f, -0.5774f, -0.5774f, 0.f },
         { -0.5774f, 0.5774f, 0.5774f, 0.f }
     };
-    vec2f textures[14] = {
+    vec2f t[14] = {
         { 0.250869, 0.999111 },
         { 0.000272, 0.664772 },
         { 0.999470, 0.666021 },
@@ -111,7 +109,7 @@ const void createskybox(Mesh *c) {
         { 0.499504, 0.666010 },
         { 0.499493, 0.334624 }
     };
-    unsigned int faces[108] = {
+    unsigned int f[108] = {
         2, 6, 0, 4, 8, 1, 0, 0, 2,
         7, 13, 3, 2, 6, 0, 3, 7, 4,
         5, 11, 5, 6, 12, 6, 7, 13, 3,
@@ -125,57 +123,71 @@ const void createskybox(Mesh *c) {
         3, 7, 4, 2, 6, 0, 0, 1, 2,
         1, 5, 7, 0, 2, 2, 4, 9, 1
     };
-    c->v_indexes = 8;
-    c->n_indexes = 8;
-    c->t_indexes = 14;
-    c->f_indexes = 108;
 
-    memcpy(c->v, vectors, 16 * 8);
-    memcpy(c->n, normals, 16 * 8);
-    memcpy(c->t, textures, 8 * 14);
-    memcpy(c->f, faces, face_size);
+    m->f_indexes = 108 / 9;
+    m->f = malloc(sizeof(face) * m->f_indexes);
+
+    int index = 0;
+    for (int i = 0; i < 108; i += 9) {
+        m->f[index].v[0] = v[f[i]];
+        m->f[index].v[1] = v[f[i + 3]];
+        m->f[index].v[2] = v[f[i + 6]];
+
+        m->f[index].vt[0] = t[f[i + 1]];
+        m->f[index].vt[1] = t[f[i + 4]];
+        m->f[index].vt[2] = t[f[i + 7]];
+
+        m->f[index].vn[0] = n[f[i + 2]];
+        m->f[index].vn[1] = n[f[i + 5]];
+        m->f[index].vn[2] = n[f[i + 8]];
+        index++;
+    }
 }
-const void createPlane(Mesh *c) {
-    const size_t face_size = sizeof(unsigned int) * 18;
-    c->v = malloc(16 * 4);
-    c->n = malloc(16 * 4);
-    c->t = malloc(8 * 4);
-    c->f = malloc(face_size);
-
-    vec4f vectors[4] = {
+const void createPlane(Mesh *m) {
+    vec4f v[4] = {
         { -1.000000f, 0.000000f, -1.000000f, 1.f },
         { -1.000000f, 0.000000f, 1.000000f, 1.f },
         { 1.000000f, 0.000000f, 1.000000f, 1.f },
         { 1.000000f, 0.000000f, -1.000000f, 1.f },
     };
-    vec4f normals[4] = {
+    vec4f n[4] = {
         { 0.f, 1.0f, 0.f, 0.f },
         { 0.f, 1.0f, 0.f, 0.f },
         { 0.f, 1.0f, 0.f, 0.f },
         { 0.f, 1.0f, 0.f, 0.f },
     };
-    vec2f textures[4] = {
+    vec2f t[4] = {
         { 0.f, 0.f },
         { 0.f, 1.f },
         { 1.f, 1.f },
         { 1.f, 0.f },
     };
-    unsigned int faces[18] = {
+    unsigned int f[18] = {
         0, 0, 0, 1, 1, 1, 2, 2, 2,
         0, 0, 0, 2, 2, 2, 3, 3, 3
     };
-    c->v_indexes = 4;
-    c->n_indexes = 4;
-    c->t_indexes = 4;
-    c->f_indexes = 18;
 
-    memcpy(c->v, vectors, 16 * 4);
-    memcpy(c->n, normals, 16 * 4);
-    memcpy(c->t, textures, 8 * 4);
-    memcpy(c->f, faces, face_size);
+    m->f_indexes = 18 / 9;
+    m->f = malloc(sizeof(face) * m->f_indexes);
+
+    int index = 0;
+    for (int i = 0; i < 18; i += 9) {
+        m->f[index].v[0] = v[f[i]];
+        m->f[index].v[1] = v[f[i + 3]];
+        m->f[index].v[2] = v[f[i + 6]];
+
+        m->f[index].vt[0] = t[f[i + 1]];
+        m->f[index].vt[1] = t[f[i + 4]];
+        m->f[index].vt[2] = t[f[i + 7]];
+
+        m->f[index].vn[0] = n[f[i + 2]];
+        m->f[index].vn[1] = n[f[i + 5]];
+        m->f[index].vn[2] = n[f[i + 8]];
+        index++;
+    }
 }
 /* Rows and colums here are given in Quads. Consider that each quad consists of 4 vertices. */
-const void createGrid(Mesh *c, int vrows, int vcols) {
+const void createGrid(Mesh *m, int vrows, int vcols) {
     if ( vrows == 0 || vcols == 0 ) {
         fprintf(stderr, "Zero value for %s. createGrid() --> ERROR 1\n", vrows == 0 ? "vrows" : vcols == 0 ? "vcols" : "input");
         exit(1);
@@ -196,10 +208,10 @@ const void createGrid(Mesh *c, int vrows, int vcols) {
     const int faces_per_row = quad_vrows * 2;
     const int num_of_faces = quads * 2 * 9;
 
-    c->v = calloc(emvadon, 16);
-    c->n = calloc(emvadon, 16);
-    c->t = calloc(emvadon, 8);
-    c->f = calloc(num_of_faces, 4);
+    vec4f * v = calloc(emvadon, 16);
+    vec4f * n = calloc(emvadon, 16);
+    vec2f * t = calloc(emvadon, 8);
+    int * f = calloc(num_of_faces, 4);
 
     /* Vectors initialization. ############################## */ 
     float step_x = (2.f / quad_vrows);
@@ -221,11 +233,11 @@ const void createGrid(Mesh *c, int vrows, int vcols) {
             vrows_count += vrows;
         }
 
-        c->v[x][0] += x_step_cache;
+        v[x][0] += x_step_cache;
         // c->v[x][1] = (float)rand() / (float)(RAND_MAX / 0.09f);
-        c->v[x][1] = 0;
-        c->v[x][2] = z_step_cache;
-        c->v[x][3] = 1.f;
+        v[x][1] = 0;
+        v[x][2] = z_step_cache;
+        v[x][3] = 1.f;
 
         x_step_cache += step_x;
     }
@@ -233,7 +245,7 @@ const void createGrid(Mesh *c, int vrows, int vcols) {
     /* Normals initialization. ############################## */
     vec4f normal = { 0.f, 1.f, 0.f, 0.f };
     for (int x = 0; x < emvadon; x++) {
-            c->n[x] = normal;
+            n[x] = normal;
     }
 
     /* Textors initialization. ############################## */
@@ -253,8 +265,8 @@ const void createGrid(Mesh *c, int vrows, int vcols) {
 
             tx_count += vrows;
         }
-        c->t[x][0] = tu_step_cache;
-        c->t[x][1] = tv_step_cache;
+        t[x][0] = tu_step_cache;
+        t[x][1] = tv_step_cache;
 
         tu_step_cache += step_tu;
     }
@@ -276,24 +288,24 @@ const void createGrid(Mesh *c, int vrows, int vcols) {
         }
 
         /* Face 1st Up. */
-        c->f[x] = face_1_0;
-        c->f[x + 1] = face_1_0;
+        f[x] = face_1_0;
+        f[x + 1] = face_1_0;
 
-        c->f[x + 3] = face_1_1;
-        c->f[x + 4] = face_1_1;
+        f[x + 3] = face_1_1;
+        f[x + 4] = face_1_1;
 
-        c->f[x + 6] = face_1_2;
-        c->f[x + 7] = face_1_2;
+        f[x + 6] = face_1_2;
+        f[x + 7] = face_1_2;
 
         /* Face 2nd Down. */
-        c->f[x + 9] = face_1_0;
-        c->f[x + 10] = face_1_0;
+        f[x + 9] = face_1_0;
+        f[x + 10] = face_1_0;
 
-        c->f[x + 12] = face_1_2;
-        c->f[x + 13] = face_1_2;
+        f[x + 12] = face_1_2;
+        f[x + 13] = face_1_2;
 
-        c->f[x + 15] = face_1_0 + 1;
-        c->f[x + 16] = face_1_0 + 1;
+        f[x + 15] = face_1_0 + 1;
+        f[x + 16] = face_1_0 + 1;
 
         face_1_0++;
         face_1_1++;
@@ -302,10 +314,29 @@ const void createGrid(Mesh *c, int vrows, int vcols) {
         face_counter += 2;
     }
 
-    c->v_indexes = emvadon;
-    c->n_indexes = emvadon;
-    c->t_indexes = emvadon;
-    c->f_indexes = num_of_faces;
+    m->f_indexes = num_of_faces / 9;
+    m->f = malloc(sizeof(face) * m->f_indexes);
+
+    int index = 0;
+    for (int i = 0; i < num_of_faces; i += 9) {
+        m->f[index].v[0] = v[f[i]];
+        m->f[index].v[1] = v[f[i + 3]];
+        m->f[index].v[2] = v[f[i + 6]];
+
+        m->f[index].vt[0] = t[f[i + 1]];
+        m->f[index].vt[1] = t[f[i + 4]];
+        m->f[index].vt[2] = t[f[i + 7]];
+
+        m->f[index].vn[0] = n[f[i + 2]];
+        m->f[index].vn[1] = n[f[i + 5]];
+        m->f[index].vn[2] = n[f[i + 8]];
+        index++;
+    }
+
+    free(v);
+    free(t);
+    free(n);
+    free(f);
 }
 
 

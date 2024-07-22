@@ -3,8 +3,8 @@
 /* Rotates object according to World X axis. */
 const void rotate_x(Mesh *c, const float angle) {
     Mat4x4 m = rotateXMatrix(radians(angle));
-    c->v = setvecsarrayxm(c->v, c->v_indexes, m);
-    c->n = setvecsarrayxm(c->n, c->n_indexes, m);
+    // c->v = setvecsarrayxm(c->v, c->v_indexes, m);
+    // c->n = setvecsarrayxm(c->n, c->n_indexes, m);
 
     c->bbox.v = setvecsarrayxm(c->bbox.v, c->bbox.v_indexes, m);
 }
@@ -32,8 +32,8 @@ const void rotate_y(Mesh *c, const float angle) {
 /* Rotates object according to World Z axis. */
 const void rotate_z(Mesh *c, const float angle) {
     Mat4x4 m = rotateZMatrix(radians(angle));
-    c->v = setvecsarrayxm(c->v, c->v_indexes, m);
-    c->n = setvecsarrayxm(c->n, c->n_indexes, m);
+    // c->v = setvecsarrayxm(c->v, c->v_indexes, m);
+    // c->n = setvecsarrayxm(c->n, c->n_indexes, m);
 
     c->bbox.v = setvecsarrayxm(c->bbox.v, c->bbox.v_indexes, m);
 }
@@ -71,8 +71,8 @@ const void rotate_light_cam(Mesh *l, const vec4f pivot, const float angle, float
     Quat xrot = rotationQuat(angle, axis);
     Mat4x4 m = MatfromQuat(xrot, n.v);
 
-    l->v = setvecsarrayxm(l->v, l->v_indexes, m);
-    l->n = setvecsarrayxm(l->n, l->n_indexes, m);
+    // l->v = setvecsarrayxm(l->v, l->v_indexes, m);
+    // l->n = setvecsarrayxm(l->n, l->n_indexes, m);
     // sunlight.pos = vecxm(l->pos, m);
     // sunlight.u = vecxm(l->u, m);
     // sunlight.v = vecxm(l->v, m);
