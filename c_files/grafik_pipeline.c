@@ -26,9 +26,9 @@ void *grafikPipeline(void *args) {
             Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
 
             vec4f pos = { 0 };
-            Mat4x4 mfQ = MatfromQuat(scene.m[i].Q, pos);
-            sclMatrix = mxm(mfQ, scaleMatrix(scene.m[i].scale));
-            trMatrix = translationMatrix(scene.m[i].cd.v[P][0], scene.m[i].cd.v[P][1], scene.m[i].cd.v[P][2]);
+            Mat4x4 mfQ = MatfromQuat(cache_0.Q, pos);
+            sclMatrix = mxm(mfQ, scaleMatrix(cache_0.scale));
+            trMatrix = translationMatrix(cache_0.cd.v[P][0], cache_0.cd.v[P][1], cache_0.cd.v[P][2]);
             enWorldMatrix = mxm(sclMatrix, trMatrix);
 
             Mat4x4 vecsMat = mxm(enWorldMatrix, worldMat);

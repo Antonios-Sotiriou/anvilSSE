@@ -100,24 +100,13 @@ unsigned int STA = 82;
 unsigned int STB = 320;
 unsigned int STC = 1280;
 
-/* Main Camera. Player */
-vec4f *eye;
-vec4f camera[N + 1] = {
-    { 0.0f, 0.0f, 0.0f, 1.0f },
-    { 1.0f, 0.0f, 0.0f, 0.0f },
-    { 0.0f, -1.0f, 0.0f, 0.0f },
-    { 0.0f, 0.0f, 1.0f, 0.0f }
-};
-Light sunlight = {
-    .pos = { 100.f, 10000.0f, 100.f, 1.f }, // y = 10000.f
-    .u = { 1.f, 0.f, 0.f, 0.f },
-    .v = { 0.f, 0.f, -1.f, 0.f },
-    .n = { 0.f, -1.f, 0.f, 0.f }
-};
+/* Point ov view. */
+Mesh *eye;
+
 vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
 const float movScalar = 100.f;
-const float cameraMov = 10.f;
+const float cameraMov = 1.f;
 
 /* Variables usefull for mesh click select. */
 unsigned int getClick = 0;
@@ -171,7 +160,7 @@ const static void initGlobalGC(void);
 const static void initDependedVariables(void);
 const static void initAtoms(void);
 const static void initBuffers(void);
-const static void initLightModel(Light *l);
+// const static void initLightModel(Light *l);
 const static void pixmapcreate(void);
 const static void pixmapdisplay(Drawable pixmap, Drawable window, unsigned int wdth, unsigned int heigth);
 const static void announceReadyState(void);
@@ -292,9 +281,9 @@ const static void keypress(XEvent *event) {
     KeySym keysym = XLookupKeysym(&event->xkey, 0);
 
     if (EYEPOINT)
-        eye = (vec4f*)&sunlight;
+        eye = &scene.m[7];
     else
-        eye = (vec4f*)&camera;
+        eye = &scene.m[6];
 
     // printf("\x1b[H\x1b[J");
     system("clear\n");
@@ -399,7 +388,7 @@ const static void keypress(XEvent *event) {
             break;
         case 114 : 
             vec4f center = { 0.f, 0.f, 0.f, 0.f };
-            rotate_light(&sunlight, center, 1, 1.0f, 0.0f, 0.0f);   /* r */
+            // rotate_light(&sunlight, center, 1, 1.0f, 0.0f, 0.0f);   /* r */
             break;
         case 99 :                                                        /* c */
             // rotate_origin(&scene.m[0], 10, 1.0f, 0.0f, 0.0f);
@@ -450,18 +439,7 @@ const static void keypress(XEvent *event) {
             break;
     }
 
-    lookAt = lookat(eye[P], eye[U], eye[V], eye[N]);
-    viewMat = inverse_mat(lookAt);
-    sunlight.newP = vecxm(sunlight.pos, viewMat);
-
-    // printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
-    // printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
-    createCascadeShadowMatrices(NUM_OF_CASCADES);
-
-    if (!PROJECTIONVIEW)
-        worldMat = mxm(viewMat, perspMat);
-    else
-        worldMat = mxm(viewMat, orthoMat);
+    logMesh(scene.m[6]);
 
     // applyForces(&scene);
 }
@@ -504,6 +482,19 @@ const static void applyPhysics(void) {
 }
 const static void project(void) {
 
+    lookAt = lookat(eye->cd.v[P], eye->cd.v[U], eye->cd.v[V], eye->cd.v[N]);
+    viewMat = inverse_mat(lookAt);
+    // sunlight.newP = vecxm(sunlight.pos, viewMat);
+
+    // printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
+    // printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
+    createCascadeShadowMatrices(NUM_OF_CASCADES);
+
+    if (!PROJECTIONVIEW)
+        worldMat = mxm(viewMat, perspMat);
+    else
+        worldMat = mxm(viewMat, orthoMat);
+
     /* Draw in parallel the 3 Cascade shadow maps. */
     for (int i = 0; i < NUM_OF_CASCADES; i++) {
         if (pthread_create(&threads[i], NULL, &cascade, &thread_ids[i]))
@@ -515,7 +506,7 @@ const static void project(void) {
     }
 
     for (int i = 0; i < scene.m_indexes; i++) {
-        const int distance = len_vec(scene.m[i].cd.v[P] - camera[P]);
+        const int distance = len_vec(scene.m[i].cd.v[P] - scene.m[6].cd.v[P]);
         adoptdetailMesh(&scene.m[i], distance);
         adoptdetailTexture(&scene.m[i], distance);
     }
@@ -654,16 +645,16 @@ const static void initBuffers(void) {
     for (int i = 0; i < MAIN_EMVADON; i++)
         reset_shadow_buffer[i] = 100000.f;
 }
-const static void initLightModel(Light *l) {
-    vec4f lightColor = { 1.0, 1.0, 1.0, 1.0 };
-    Material mt = {
-        .ambient = lightColor * AmbientStrength,
-        .specular = lightColor * SpecularStrength,
-        .diffuse = lightColor,
-        .basecolor = lightColor
-    };
-    l->material = mt;
-}
+// const static void initLightModel(Light *l) {
+//     vec4f lightColor = { 1.0, 1.0, 1.0, 1.0 };
+//     Material mt = {
+//         .ambient = lightColor * AmbientStrength,
+//         .specular = lightColor * SpecularStrength,
+//         .diffuse = lightColor,
+//         .basecolor = lightColor
+//     };
+//     l->material = mt;
+// }
 const static void pixmapcreate(void) {
     main_pixmap = XCreatePixmap(displ, mainwin, main_wa.width, main_wa.height, main_wa.depth);
 }
@@ -774,7 +765,7 @@ const static int board(void) {
 
     initDependedVariables();
     initBuffers();
-    initLightModel(&sunlight);
+    // initLightModel(&sunlight);
 
     createScene(&scene);     /*  Scene creation must happen after world objects initialization.    */
     initWorldObjects(&scene);

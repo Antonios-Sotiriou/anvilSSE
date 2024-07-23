@@ -7,7 +7,7 @@ const void phong(Fragment *fr) {
     vec4f basecolor = fr->mtr->texlevels ? fr->mtr->texture[(tex_y * fr->mtr->texture_width) + tex_x] : fr->mtr->basecolor;
 
     vec4f diffuse = { 0 }, specular = { 0 };
-    vec4f ambient = sunlight.material.ambient * (basecolor * AmbientStrength);
+    vec4f ambient = scene.m[7].material.ambient * (basecolor * AmbientStrength);
     vec4c fragcolor = { 0 };
 
     float w = 1.f / fr->pos[3];
@@ -27,13 +27,13 @@ const void phong(Fragment *fr) {
     vec4f nrm = norm_vec(fr->nrm);
 
     /* Applying shadow test by transforming View Space coordinates to light Space. */
-    vec4f lightdir = norm_vec(sunlight.pos - pixel);
-    vec4f viewdir = norm_vec(camera[P] - pixel);
+    vec4f lightdir = norm_vec(scene.m[7].cd.v[P] - pixel);
+    vec4f viewdir = norm_vec(scene.m[6].cd.v[P] - pixel);
     float shadow = shadowTest(pixel);
 
     float diff = dot_product(lightdir, nrm);
     if ( diff > 0 ) {
-        diffuse = sunlight.material.diffuse * (diff * (basecolor * DiffuseStrength));
+        diffuse = scene.m[7].material.diffuse * (diff * (basecolor * DiffuseStrength));
 
         if (fr->mtr->reflect) {
             vec4f reflectdir = cross_product(cross_product(nrm, -lightdir), (-lightdir - nrm)) * 2.00;
@@ -43,7 +43,7 @@ const void phong(Fragment *fr) {
             // float dot = dot_product(fr->nrm, norm_vec(reflectdir));
             if ( dot > 0 ) {
                 float spec = powf(dot, fr->mtr->shinniness);
-                specular = sunlight.material.specular * (spec * (basecolor * SpecularStrength));
+                specular = scene.m[7].material.specular * (spec * (basecolor * SpecularStrength));
             }
         }
     }

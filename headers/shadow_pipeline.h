@@ -38,8 +38,8 @@ extern float FPlane, NPlane, ASPECTRATIO;
 extern XWindowAttributes main_wa;
 extern Mat4x4 ortholightMat[3], viewMat;
 extern float *shadow_buffer[3], shadow_bias;
-extern Light sunlight;
-extern vec4f *eye, camera[4];
+
+extern Mesh *eye;
 
 /* For investigating shadow maps. Defined in main.c */
 extern unsigned int SMA, SMB, SMC, STA, STB ,STC;

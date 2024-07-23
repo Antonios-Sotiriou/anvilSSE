@@ -14,7 +14,7 @@
 #endif
 
 /* Defined in main.c. */
-extern Light sunlight;
+// extern Light sunlight;
 
 /* Defined in world_objects.c. */
 extern const void releaseMesh(Mesh *c);
@@ -27,8 +27,8 @@ const void rotate_x(Mesh *c, const float angle);
 const void rotate_y(Mesh *c, const float angle);
 const void rotate_z(Mesh *c, const float angle);
 const void rotate_origin(Mesh *obj, const float angle, float x, float y, float z);
-const void rotate_light(Light *l, const vec4f pos, const float angle, float x, float y, float z);
-const void rotate_light_cam(Mesh *l, const vec4f pos, const float angle, float x, float y, float z);
+// const void rotate_light(Light *l, const vec4f pos, const float angle, float x, float y, float z);
+// const void rotate_light_cam(Mesh *l, const vec4f pos, const float angle, float x, float y, float z);
 
 #endif /* _KINETICS_H */
 

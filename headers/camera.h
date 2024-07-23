@@ -9,6 +9,10 @@
     #include "quaternions.h"
 #endif
 
+#ifndef _MATRICES_H
+    #include "matrices.h"
+#endif
+
 #ifndef _VECTORS_MATH_H
     #include "vectors_math.h"
 #endif
@@ -16,15 +20,15 @@
 /* Defined in main.c. */
 extern float DeltaTime;
 
-const void look_left(vec4f *g, const float angle);
-const void look_right(vec4f *g, const float angle);
-const void look_up(vec4f *g, const float angle);
-const void look_down(vec4f *g, const float angle);
-const void move_forward(vec4f *g, const float vel);
-const void move_backward(vec4f *g, const float vel);
-const void move_left(vec4f *g, const float vel);
-const void move_right(vec4f *g, const float vel);
-const void move_up(vec4f *g, const float vel);
-const void move_down(vec4f *g, const float vel);
+const void look_left(Mesh *g, const float angle);
+const void look_right(Mesh *g, const float angle);
+const void look_up(Mesh *g, const float angle);
+const void look_down(Mesh *g, const float angle);
+const void move_forward(Mesh *g, const float vel);
+const void move_backward(Mesh *g, const float vel);
+const void move_left(Mesh *g, const float vel);
+const void move_right(Mesh *g, const float vel);
+const void move_up(Mesh *g, const float vel);
+const void move_down(Mesh *g, const float vel);
 
 #endif /* _CAMERA_H */

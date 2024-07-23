@@ -17,19 +17,19 @@ vec4f *worldSpaceFrustum(const float np, const float fp) {
     vec4f *va = malloc(128);
     const float fovRadius = (1.f / tanf(45.f * 0.5f / 180.0f * 3.14159f));
 
-    const vec4f nearcenter = (eye[0] + eye[3]) * np;
-    const vec4f farcenter = (eye[0] + eye[3]) * fp;
+    const vec4f nearcenter = (eye->cd.v[P] + eye->cd.v[N]) * np;
+    const vec4f farcenter = (eye->cd.v[P] + eye->cd.v[N]) * fp;
 
     const float nearHeight = tan(fovRadius) * np;
     const float farHeight = tan(fovRadius) * fp;
     const float nearWidth = nearHeight * ASPECTRATIO;
     const float farWidth = farHeight * ASPECTRATIO;
 
-    const vec4f yxnh = eye[2] * nearHeight;
-    const vec4f yxnw = eye[1] * nearWidth;
+    const vec4f yxnh = eye->cd.v[V] * nearHeight;
+    const vec4f yxnw = eye->cd.v[U] * nearWidth;
 
-    const vec4f yxfh = eye[2] * farHeight;
-    const vec4f yxfw = eye[1] * farWidth;
+    const vec4f yxfh = eye->cd.v[V] * farHeight;
+    const vec4f yxfw = eye->cd.v[U] * farWidth;
 
     va[2] = nearcenter + yxnh + yxnw;
     va[3] = nearcenter - yxnh + yxnw;
@@ -54,13 +54,13 @@ const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
         worldSpaceFrustum(NPlane, 400)
     };
     Mat4x4 lm[3] = {
-        lookat(eye[0] + ((eye[3] * (float)SMA)), sunlight.u, sunlight.v, sunlight.n),
-        lookat(eye[0] + ((eye[3] * (float)SMB)), sunlight.u, sunlight.v, sunlight.n),
-        lookat(eye[0] + ((eye[3] * (float)SMC)), sunlight.u, sunlight.v, sunlight.n)
+        lookat(eye->cd.v[P] + ((eye->cd.v[N] * (float)SMA)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N]),
+        lookat(eye->cd.v[P] + ((eye->cd.v[N] * (float)SMB)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N]),
+        lookat(eye->cd.v[P] + ((eye->cd.v[N] * (float)SMC)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N])
     };
 
     for (int i = 0; i < num_of_cascades; i++) {
-        lm[i].m[3][1] = sunlight.pos[1];
+        lm[i].m[3][1] = scene.m[7].cd.v[P][1];
         lview = inverse_mat(lm[i]);
         /* Transform view frustum to Space. */
         setvecsarrayxm(fr[i], 8, viewMat);
@@ -317,7 +317,7 @@ const static void shadowface(face *f, const Srt srt[], const unsigned int sm_ind
 }
 const float shadowTest(vec4f frag) {
     unsigned int sm_index;
-    float frag_dist = len_vec(frag - camera[P]);
+    float frag_dist = len_vec(frag - scene.m[6].cd.v[P]);
     sm_index = (frag_dist <= STA) ? 0 : (frag_dist > STA && frag_dist <= STB) ? 1 : (frag_dist > STB && frag_dist <= STC) ? 2 : 3;
     if (sm_index > 2)
         return 0;

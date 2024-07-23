@@ -42,19 +42,28 @@ const void logVec2f(const vec2f v) {
 const void logMesh(const Mesh m) {
     printf("Mesh id:       %d\n", m.id);
     printf("Mesh name:     %s\n", m.name);
-    printf("cd.v[P]:         ");
+    printf("cd.v[P]:       ");
     logVec4f(m.cd.v[P]);
+    printf("cd.v[U]:       ");
+    logVec4f(m.cd.v[U]);
+    printf("cd.v[V]:       ");
+    logVec4f(m.cd.v[V]);
+    printf("cd.v[N]:       ");
+    logVec4f(m.cd.v[N]);
     printf("f:             %p -->  ", m.f);
     printf("f_indexes:     %d\n", m.f_indexes);
+    printf("Quaternion:    ");
     logQuat(m.Q);
+    printf("Last Rotation: ");
+    logQuat(m.r);
     printf("cull:          %d\n", m.cull);
     printf("lodlevels:     %d\n", m.lodlevels);
     printf("meshlod:       %d\n", m.currentlod);
     printf("scale:         %f\n", m.scale);
     printf("visible:       %d\n", m.visible);
     printf("quadIndex:     %d\n", m.quadIndex);
-    logMaterial(m.material);
     printf("bboxv_indexes: %d\n", m.bbox.v_indexes);
+    logMaterial(m.material);
 }
 
 const void logMaterial(const Material mt) {

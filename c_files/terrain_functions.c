@@ -307,7 +307,7 @@ const void removeMeshFromQuad(Mesh *m) {
     }
     const int num_of_indexes = tf.quads[quad_index].members_indexes - 1;
 
-    Mesh **new_array = calloc(num_of_indexes, 4);
+    Mesh **new_array = calloc(num_of_indexes, 8);
 
     int inc = 0;
     for (int i = 0; i < tf.quads[quad_index].members_indexes; i++) {

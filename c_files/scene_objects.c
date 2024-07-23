@@ -1,5 +1,5 @@
 #include "../headers/scene_objects.h"
-#define MESH_NUM 7
+#define MESH_NUM 8
 
 /* This function is responsible to position the objects in world space. */
 const void initWorldObjects(Scene *s) {
@@ -69,6 +69,7 @@ const void initWorldObjects(Scene *s) {
     s->m[2].cd.v[P][0] = 100;
     s->m[2].cd.v[P][1] = 0;
     s->m[2].cd.v[P][2] = 100;
+
     s->m[2].cull = 1;
     s->m[2].lodlevels = 0;
     // s->m[2].visible = 1;
@@ -90,6 +91,7 @@ const void initWorldObjects(Scene *s) {
     s->m[3].cd.v[P][0] = 100;
     s->m[3].cd.v[P][1] = 30;
     s->m[3].cd.v[P][2] = 120;
+
     s->m[3].cull = 1;
     s->m[3].lodlevels = 0;
     // s->m[3].visible = 1;
@@ -111,6 +113,7 @@ const void initWorldObjects(Scene *s) {
     s->m[4].cd.v[P][0] = 120;
     s->m[4].cd.v[P][1] = 30;
     s->m[4].cd.v[P][2] = 100;
+
     s->m[4].cull = 1;
     s->m[4].lodlevels = 0;
     // s->m[4].visible = 1;
@@ -153,12 +156,15 @@ const void initWorldObjects(Scene *s) {
     s->m[6].type = Camera;
     s->m[6].id = 6;
 
-    s->m[6].scale = 1.f;
+    s->m[6].scale = 10.f;
     
-
-    // s->m[6].cd.v[P][0] = 0.f;
-    // s->m[6].cd.v[P][1] = 0.f;
-    // s->m[6].cd.v[P][2] = 0.f;
+    vec4f camera[4] = {
+        { 0.0f, 0.0f, 0.0f, 1.0f },
+        { 1.0f, 0.0f, 0.0f, 0.0f },
+        { 0.0f, -1.0f, 0.0f, 0.0f },
+        { 0.0f, 0.0f, 1.0f, 0.0f }
+    };
+    memcpy(s->m[6].cd.v, camera, 64);
 
     s->m[6].cull = 1;
     s->m[6].lodlevels = 1;
@@ -168,6 +174,34 @@ const void initWorldObjects(Scene *s) {
     s->m[6].Q = unitQuat();
     // enWorldMesh(&s->m[6]);
     enworldBbox(&s->m[6]);
+
+    /* ######################################################################################################## */
+    memcpy(s->m[7].name, "cubeflat", sizeof("cubeflat"));
+    loadMaterial(&s->m[7].material, "sunlight");
+    loadMesh(&s->m[7], s->m[7].name, 1);
+    loadBbox(&s->m[7].bbox, "objfiles/cubeflat/bbox_cubeflat");
+
+    s->m[7].type = LightSource;
+    s->m[7].id = 7;
+
+    s->m[7].scale = 1.f;
+    
+    vec4f lightSource[4] = {
+        { 100.f, 500.0f, 100.f, 1.f },
+        { 1.f, 0.f, 0.f, 0.f },
+        { 0.f, 0.f, -1.f, 0.f },
+        { 0.f, -1.f, 0.f, 0.f }
+    };
+    memcpy(s->m[7].cd.v, lightSource, 64);
+
+    s->m[7].cull = 1;
+    s->m[7].lodlevels = 1;
+    // s->m[7].visible = 1;
+    s->m[7].mass = 0;
+    // s->m[7].material.reflect = 1;
+    s->m[7].Q = unitQuat();
+    // enWorldMesh(&s->m[7]);
+    enworldBbox(&s->m[7]);
 
     /* ######################################################################################################## */
     // for (int i = 5; i < MESH_NUM; i++) {

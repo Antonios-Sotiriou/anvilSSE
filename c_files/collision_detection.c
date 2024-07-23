@@ -269,9 +269,11 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
                 Mat4x4 rm = MatfromQuat(rq, obj->cd.v[P]);
                 obj->Q = multiplyQuats(obj->Q, rq);
-
+                getc(stdin);
+                setvecsarrayxm(obj->cd.v, 4, rm);
                 setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, rm);
                 obj->r = unitQuat();
+                // memset(&obj->r, 0, sizeof(Quat));
 
                 return 1;
             }
