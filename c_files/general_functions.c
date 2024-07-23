@@ -180,7 +180,7 @@ const void adoptdetailTexture(Mesh *m, const int dist) {
 //     vec4f pos = { 0 };
 //     Mat4x4 mfQ = MatfromQuat(m->Q, pos);
 //     sclMatrix = mxm(mfQ, scaleMatrix(m->scale));
-//     trMatrix = translationMatrix(m->pivot[0], m->pivot[1], m->pivot[2]);
+//     trMatrix = translationMatrix(m->cd.v[P][0], m->cd.v[P][1], m->cd.v[P][2]);
 //     enWorldMatrix = mxm(sclMatrix, trMatrix);
 
 //     m->v = setvecsarrayxm(m->v, m->v_indexes, enWorldMatrix);
@@ -192,26 +192,26 @@ const void enworldBbox(Mesh *m) {
     vec4f pos = { 0 };
     Mat4x4 mfQ = MatfromQuat(m->Q, pos);
     sclMatrix = mxm(mfQ, scaleMatrix(m->scale));
-    trMatrix = translationMatrix(m->pivot[0], m->pivot[1], m->pivot[2]);
+    trMatrix = translationMatrix(m->cd.v[P][0], m->cd.v[P][1], m->cd.v[P][2]);
     enWorldMatrix = mxm(sclMatrix, trMatrix);
 
-    m->bbox.v = setvecsarrayxm(m->bbox.v, m->bbox.v_indexes, enWorldMatrix);
+    setvecsarrayxm(m->bbox.v, m->bbox.v_indexes, enWorldMatrix);
 }
 // const void placeMesh(Mesh *m, const vec4f pos) {
 //     Mat4x4 trMatrix = translationMatrix(pos[0], pos[1], pos[2]);
 
 //     m->v = setvecsarrayxm(m->v, m->v_indexes, trMatrix);
 //     m->n = setvecsarrayxm(m->n, m->n_indexes, trMatrix);
-//     m->pivot = pos;
+//     m->cd.v[P] = pos;
 // }
-/* Check and set visibillity of scene objects seen from given meshes pivot point and direction. viewProj: (1 for Prespective and 0 for orthographic Projection).*/
+/* Check and set visibillity of scene objects seen from given meshes cd.v[P] point and direction. viewProj: (1 for Prespective and 0 for orthographic Projection).*/
 const void checkVisibles(Scene *s, Mesh *m, const int viewProj) {
     vec4f up = { 0.f, -1.f, 0.f };
     vec4f u = cross_product(m->mvdir, up);
     vec4f v = cross_product(u, m->mvdir);
 
     Mat4x4 collMat;
-    Mat4x4 lk = lookat(m->pivot, u, v, m->mvdir);
+    Mat4x4 lk = lookat(m->cd.v[P], u, v, m->mvdir);
 
     if (viewProj)
         collMat = mxm(inverse_mat(lk), perspMat);

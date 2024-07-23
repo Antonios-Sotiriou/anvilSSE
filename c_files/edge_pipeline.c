@@ -18,7 +18,7 @@ const void edgePipeline(void) {
 
         initMesh(&cache_0, &scene.m[i]);
 
-        cache_0.bbox.v = setvecsarrayxm(cache_0.bbox.v, cache_0.bbox.v_indexes, worldMat);
+        setvecsarrayxm(cache_0.bbox.v, cache_0.bbox.v_indexes, worldMat);
 
         if (frustumCulling(cache_0.bbox.v, cache_0.bbox.v_indexes)) {
 
@@ -27,12 +27,12 @@ const void edgePipeline(void) {
             vec4f pos = { 0 };
             Mat4x4 mfQ = MatfromQuat(scene.m[i].Q, pos);
             sclMatrix = mxm(mfQ, scaleMatrix(scene.m[i].scale));
-            trMatrix = translationMatrix(scene.m[i].pivot[0], scene.m[i].pivot[1], scene.m[i].pivot[2]);
+            trMatrix = translationMatrix(scene.m[i].cd.v[P][0], scene.m[i].cd.v[P][1], scene.m[i].cd.v[P][2]);
             enWorldMatrix = mxm(sclMatrix, trMatrix);
 
             Mat4x4 vecsMat = mxm(enWorldMatrix, worldMat);
 
-            cache_0.f = setfacesarrayxm(cache_0.f, cache_0.f_indexes, vecsMat);
+            setfacesarrayxm(cache_0.f, cache_0.f_indexes, vecsMat);
 
             /* Clipping against near Plane in View Space. */
             vec4f plane_near_p = { 0.0f, 0.0f, NPlane },

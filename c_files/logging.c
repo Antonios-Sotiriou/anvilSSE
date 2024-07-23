@@ -42,8 +42,8 @@ const void logVec2f(const vec2f v) {
 const void logMesh(const Mesh m) {
     printf("Mesh id:       %d\n", m.id);
     printf("Mesh name:     %s\n", m.name);
-    printf("pivot:         ");
-    logVec4f(m.pivot);
+    printf("cd.v[P]:         ");
+    logVec4f(m.cd.v[P]);
     printf("f:             %p -->  ", m.f);
     printf("f_indexes:     %d\n", m.f_indexes);
     logQuat(m.Q);

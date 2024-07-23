@@ -15,12 +15,12 @@
 
 #ifndef _COORDSYS_ENUM
     #define _COORDSYS_ENUM 1
-    typedef enum { Pos, U, V, N, C, newPos } CoordSys;
+    typedef enum { P, U, V, N, C, newP } CoordinatesMembers;
 #endif
 
 #ifndef _SCENE_MEMBERS_ENUM
     #define _SCENE_MEMBERS_ENUM 1
-    typedef enum { Terrain_1, Player_1 } sceneMembers;
+    typedef enum { Terrain_1, Player_1 } SceneMembers;
 #endif
 
 /* Primitive struct vec4 with 4 x 32bits floats as members */
@@ -94,12 +94,21 @@ typedef struct {
     vec2f vt[3];
 } face;
 
+/* Base struct to keep position, orientation of a mesh or of just a point in world. */
+typedef struct {
+    vec4f v[4];
+} Coordinates;
+
 /* General Mesh struct from which the scene consists. It holds all the information before the graphic pipeline. */
 typedef struct {
     char name[24];
-    vec4f pivot, mvdir;
-    face *f;
+    Material material;
+    DimensionsLimits dm;
+    Bbox bbox;
+    Coordinates cd;
+    vec4f mvdir;
     Quat Q, r;
+    face *f;
     // void (*drawMesh)(void *args);
     int f_indexes,                                  /* indexes summary. */
     type,                                           /* type of the Mesh. Not sure yet how to categorize them. */
@@ -111,9 +120,6 @@ typedef struct {
     roll,                                           /* If the mesh is rolling like wheels. */
     mass,                                           /* Mass of the mesh. */
     collision_t;                                    /* Collison time, usefull to sort the collisions. */
-    DimensionsLimits dm;
-    Bbox bbox;
-    Material material;
 } Mesh;
 
 /* Scene structs which teams all the meshes into an objects array. */
@@ -146,7 +152,7 @@ typedef struct {
 
 /* Light struct to create different kind of light sources. */
 typedef struct {
-    vec4f pos, u, v, n, newPos;
+    vec4f pos, u, v, n, newP;
     Material material;
 } Light;
 

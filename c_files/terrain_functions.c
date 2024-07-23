@@ -185,7 +185,7 @@ const void createTerrain(Mesh *m, const char path[]) {
 }
 /* Assigns the Terrain *t quad index to the given mesh. */
 const void initMeshQuadInfo(Mesh *t, Mesh *m) {
-    m->quadIndex = getTerrainQuadIndex(t, m->pivot);
+    m->quadIndex = getTerrainQuadIndex(t, m->cd.v[P]);
     addMeshToQuad(m);
 }
 /* Retrieves Terrain *t height at given coords and, sets given meshes *m terain quadIndex to the id of the quad at those coords. */
@@ -194,7 +194,7 @@ const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m) {
     float quad_len = t_scale / tf.vecWidth;
     const int t_limit = t_scale - quad_len;
 
-    vec4f t_coords = coords - (t->pivot - (t->scale));
+    vec4f t_coords = coords - (t->cd.v[P] - (t->scale));
     if ( (t_coords[0] >= t_limit || t_coords[0] < 0) || (t_coords[2] >= t_limit || t_coords[2] < 0) ) {
         // fprintf(stderr, "Out of terrain Limits -- getTerrainHeight().\n");
         m->quadIndex = -1;
@@ -233,7 +233,7 @@ const float getTerrainHeight(Mesh *t, vec4f coords, Mesh *m) {
     Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
 
     sclMatrix = scaleMatrix(t->scale);
-    trMatrix = translationMatrix(t->pivot[0], t->pivot[1], t->pivot[2]);
+    trMatrix = translationMatrix(t->cd.v[P][0], t->cd.v[P][1], t->cd.v[P][2]);
     enWorldMatrix = mxm(sclMatrix, trMatrix);
 
     f = facexm(f, enWorldMatrix);
@@ -257,7 +257,7 @@ const int getTerrainQuadIndex(Mesh *t, vec4f coords) {
     float quad_len = t_scale / tf.vecWidth;
     const int t_limit = t_scale - quad_len;
 
-    vec4f t_coords = coords - (t->pivot - (t->scale));
+    vec4f t_coords = coords - (t->cd.v[P] - (t->scale));
     if ( (t_coords[0] >= t_limit || t_coords[0] < 0) || (t_coords[2] >= t_limit || t_coords[2] < 0) ) {
         // fprintf(stderr, "Out of terrain Limits -- getTerrainQuadIndex().\n");
         return -1;

@@ -63,7 +63,7 @@ const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
         lm[i].m[3][1] = sunlight.pos[1];
         lview = inverse_mat(lm[i]);
         /* Transform view frustum to Space. */
-        fr[i] = setvecsarrayxm(fr[i], 8, viewMat);
+        setvecsarrayxm(fr[i], 8, viewMat);
 
         dl = getDimensionsLimits(fr[i], 8);
         free(fr[i]);
@@ -85,12 +85,12 @@ const void shadowPipeline(Scene *s, const unsigned int sm_index) {
         vec4f pos = { 0 };
         Mat4x4 mfQ = MatfromQuat(s->m[i].Q, pos);
         sclMatrix = mxm(mfQ, scaleMatrix(s->m[i].scale));
-        trMatrix = translationMatrix(s->m[i].pivot[0], s->m[i].pivot[1], s->m[i].pivot[2]);
+        trMatrix = translationMatrix(s->m[i].cd.v[P][0], s->m[i].cd.v[P][1], s->m[i].cd.v[P][2]);
         enWorldMatrix = mxm(sclMatrix, trMatrix);
 
         Mat4x4 vecsMat = mxm(enWorldMatrix, ortholightMat[sm_index]);
 
-        cache_0.f = setfacesarrayxm(cache_0.f, cache_0.f_indexes, vecsMat);
+        setfacesarrayxm(cache_0.f, cache_0.f_indexes, vecsMat);
 
         /* At this Point triangles must be shadowclipped against near plane. */
         vec4f plane_near_p = { 0.0f, 0.0f, NPlane },
@@ -317,7 +317,7 @@ const static void shadowface(face *f, const Srt srt[], const unsigned int sm_ind
 }
 const float shadowTest(vec4f frag) {
     unsigned int sm_index;
-    float frag_dist = len_vec(frag - camera[Pos]);
+    float frag_dist = len_vec(frag - camera[P]);
     sm_index = (frag_dist <= STA) ? 0 : (frag_dist > STA && frag_dist <= STB) ? 1 : (frag_dist > STB && frag_dist <= STC) ? 2 : 3;
     if (sm_index > 2)
         return 0;

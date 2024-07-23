@@ -1,8 +1,8 @@
 #include "../headers/collision_detection.h"
 
 const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
-    const float height = getTerrainHeight(terrain, object->pivot, object);
-    float height_diff = height - (object->pivot[1] - object->scale);
+    const float height = getTerrainHeight(terrain, object->cd.v[P], object);
+    float height_diff = height - (object->cd.v[P][1] - object->scale);
     if (height_diff >= 0) {
         object->grounded = 1;
         object->falling_time = 0;
@@ -10,8 +10,8 @@ const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
     if (object->grounded) {
         Mat4x4 dr = translationMatrix(0, height_diff, 0);
 
-        object->bbox.v = setvecsarrayxm(object->bbox.v, object->bbox.v_indexes, dr);
-        object->pivot[1] += height_diff;
+        setvecsarrayxm(object->bbox.v, object->bbox.v_indexes, dr);
+        object->cd.v[P][1] += height_diff;
     }
 }
 #include "../headers/logging.h"
@@ -37,11 +37,11 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
 
             cache->dm = getDimensionsLimits(cache->bbox.v, cache->bbox.v_indexes);
 
-            vec4i min = __builtin_convertvector((cache->dm.min - (obj->pivot - obj->dm.min)) + 0.5, vec4i);
-            vec4i max = __builtin_convertvector((cache->dm.max - (obj->pivot - obj->dm.max)) + 0.5, vec4i);
+            vec4i min = __builtin_convertvector((cache->dm.min - (obj->cd.v[P] - obj->dm.min)) + 0.5, vec4i);
+            vec4i max = __builtin_convertvector((cache->dm.max - (obj->cd.v[P] - obj->dm.max)) + 0.5, vec4i);
 
-            tnear = (__builtin_convertvector(min, vec4f) - obj->pivot) / velocity[0];
-            tfar =  (__builtin_convertvector(max, vec4f) - obj->pivot) / velocity[0];
+            tnear = (__builtin_convertvector(min, vec4f) - obj->cd.v[P]) / velocity[0];
+            tfar =  (__builtin_convertvector(max, vec4f) - obj->cd.v[P]) / velocity[0];
 
             f_nx = tnear[0] == 0 ? 1 : __isnanf(tnear[0]) ? -1 : 0;
             f_ny = tnear[1] == 0 ? 1 : __isnanf(tnear[1]) ? -1 : 0;
@@ -168,9 +168,9 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
 
                 Mat4x4 trans = translationMatrix(velocity[0][0], velocity[0][1], velocity[0][2]);
 
-                obj->bbox.v = setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, trans);
+                setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, trans);
 
-                obj->pivot += velocity[0];
+                obj->cd.v[P] += velocity[0];
 
                 obj->momentum *= cache->mass;
                 float dot =  dot_product(normal, obj->mvdir);
@@ -207,11 +207,11 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
             cache->dm = getDimensionsLimits(cache->bbox.v, cache->bbox.v_indexes);
 
-            vec4i min = __builtin_convertvector((cache->dm.min - (obj->pivot - obj->dm.min)) + 0.5, vec4i);
-            vec4i max = __builtin_convertvector((cache->dm.max - (obj->pivot - obj->dm.max)) + 0.5, vec4i);
+            vec4i min = __builtin_convertvector((cache->dm.min - (obj->cd.v[P] - obj->dm.min)) + 0.5, vec4i);
+            vec4i max = __builtin_convertvector((cache->dm.max - (obj->cd.v[P] - obj->dm.max)) + 0.5, vec4i);
 
-            tnear = (__builtin_convertvector(min, vec4f) - obj->pivot);
-            tfar =  (__builtin_convertvector(max, vec4f) - obj->pivot);
+            tnear = (__builtin_convertvector(min, vec4f) - obj->cd.v[P]);
+            tfar =  (__builtin_convertvector(max, vec4f) - obj->cd.v[P]);
 
             f_nx = tnear[0] == 0 ? 1 : __isnanf(tnear[0]) ? -1 : 0;
             f_ny = tnear[1] == 0 ? 1 : __isnanf(tnear[1]) ? -1 : 0;
@@ -267,10 +267,10 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
                 Quat rq = conjugateQuat(obj->r);
 
-                Mat4x4 rm = MatfromQuat(rq, obj->pivot);
+                Mat4x4 rm = MatfromQuat(rq, obj->cd.v[P]);
                 obj->Q = multiplyQuats(obj->Q, rq);
 
-                obj->bbox.v = setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, rm);
+                setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, rm);
                 obj->r = unitQuat();
 
                 return 1;
@@ -301,11 +301,11 @@ const void sortObjectCollisions(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *vel
         if ( cache_1->id != obj->id ) {
             cache_1->dm = getDimensionsLimits(cache_1->bbox.v, cache_1->bbox.v_indexes);
 
-            vec4i min = __builtin_convertvector((cache_1->dm.min - (obj->pivot - obj->dm.min)) + 0.5, vec4i);
-            vec4i max = __builtin_convertvector((cache_1->dm.max - (obj->pivot - obj->dm.max)) + 0.5, vec4i);
+            vec4i min = __builtin_convertvector((cache_1->dm.min - (obj->cd.v[P] - obj->dm.min)) + 0.5, vec4i);
+            vec4i max = __builtin_convertvector((cache_1->dm.max - (obj->cd.v[P] - obj->dm.max)) + 0.5, vec4i);
 
-            tnear = (__builtin_convertvector(min, vec4f) - obj->pivot) / velocity[0];
-            tfar =  (__builtin_convertvector(max, vec4f) - obj->pivot) / velocity[0];
+            tnear = (__builtin_convertvector(min, vec4f) - obj->cd.v[P]) / velocity[0];
+            tfar =  (__builtin_convertvector(max, vec4f) - obj->cd.v[P]) / velocity[0];
 
             f_nx = tnear[0] == 0 ? 1 : __isnanf(tnear[0]) ? -1 : 0;
             f_ny = tnear[1] == 0 ? 1 : __isnanf(tnear[1]) ? -1 : 0;

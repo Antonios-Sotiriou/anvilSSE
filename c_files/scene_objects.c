@@ -1,5 +1,5 @@
 #include "../headers/scene_objects.h"
-#define MESH_NUM 6
+#define MESH_NUM 7
 
 /* This function is responsible to position the objects in world space. */
 const void initWorldObjects(Scene *s) {
@@ -16,9 +16,9 @@ const void initWorldObjects(Scene *s) {
 
     s->m[0].scale = 1000.f;
 
-    s->m[0].pivot[0] = 1000.f;
-    s->m[0].pivot[1] = 0.f;
-    s->m[0].pivot[2] = 1000.f;
+    s->m[0].cd.v[P][0] = 1000.f;
+    s->m[0].cd.v[P][1] = 0.f;
+    s->m[0].cd.v[P][2] = 1000.f;
 
     s->m[0].cull = 1;
     s->m[0].lodlevels = 0;
@@ -40,9 +40,9 @@ const void initWorldObjects(Scene *s) {
 
     s->m[1].scale = 10.f;
 
-    s->m[1].pivot[0] = 30.f;
-    s->m[1].pivot[1] = 0.f;
-    s->m[1].pivot[2] = 30.f;
+    s->m[1].cd.v[P][0] = 30.f;
+    s->m[1].cd.v[P][1] = 0.f;
+    s->m[1].cd.v[P][2] = 30.f;
 
     s->m[1].cull = 1;
     s->m[1].lodlevels = 1;
@@ -66,9 +66,9 @@ const void initWorldObjects(Scene *s) {
     
     s->m[2].scale = 10.f;
 
-    s->m[2].pivot[0] = 100;
-    s->m[2].pivot[1] = 0;
-    s->m[2].pivot[2] = 100;
+    s->m[2].cd.v[P][0] = 100;
+    s->m[2].cd.v[P][1] = 0;
+    s->m[2].cd.v[P][2] = 100;
     s->m[2].cull = 1;
     s->m[2].lodlevels = 0;
     // s->m[2].visible = 1;
@@ -87,9 +87,9 @@ const void initWorldObjects(Scene *s) {
     s->m[3].id = 3;
     
     s->m[3].scale = 10.f;
-    s->m[3].pivot[0] = 100;
-    s->m[3].pivot[1] = 30;
-    s->m[3].pivot[2] = 120;
+    s->m[3].cd.v[P][0] = 100;
+    s->m[3].cd.v[P][1] = 30;
+    s->m[3].cd.v[P][2] = 120;
     s->m[3].cull = 1;
     s->m[3].lodlevels = 0;
     // s->m[3].visible = 1;
@@ -108,9 +108,9 @@ const void initWorldObjects(Scene *s) {
     s->m[4].id = 4;
     
     s->m[4].scale = 10.f;
-    s->m[4].pivot[0] = 120;
-    s->m[4].pivot[1] = 30;
-    s->m[4].pivot[2] = 100;
+    s->m[4].cd.v[P][0] = 120;
+    s->m[4].cd.v[P][1] = 30;
+    s->m[4].cd.v[P][2] = 100;
     s->m[4].cull = 1;
     s->m[4].lodlevels = 0;
     // s->m[4].visible = 1;
@@ -131,9 +131,9 @@ const void initWorldObjects(Scene *s) {
 
     s->m[5].scale = 10000.f;
 
-    s->m[5].pivot[0] = 0.f;
-    s->m[5].pivot[1] = 0.f;
-    s->m[5].pivot[2] = 0.f;
+    s->m[5].cd.v[P][0] = 0.f;
+    s->m[5].cd.v[P][1] = 0.f;
+    s->m[5].cd.v[P][2] = 0.f;
 
     s->m[5].cull = 1;
     s->m[5].lodlevels = 1;
@@ -145,6 +145,31 @@ const void initWorldObjects(Scene *s) {
     enworldBbox(&s->m[5]);
 
     /* ######################################################################################################## */
+    memcpy(s->m[6].name, "cubeflat", sizeof("cubeflat"));
+    loadMaterial(&s->m[6].material, "obsidian");
+    loadMesh(&s->m[6], s->m[6].name, 1);
+    loadBbox(&s->m[6].bbox, "objfiles/cubeflat/bbox_cubeflat");
+
+    s->m[6].type = Camera;
+    s->m[6].id = 6;
+
+    s->m[6].scale = 1.f;
+    
+
+    // s->m[6].cd.v[P][0] = 0.f;
+    // s->m[6].cd.v[P][1] = 0.f;
+    // s->m[6].cd.v[P][2] = 0.f;
+
+    s->m[6].cull = 1;
+    s->m[6].lodlevels = 1;
+    // s->m[6].visible = 1;
+    s->m[6].mass = 0;
+    // s->m[6].material.reflect = 1;
+    s->m[6].Q = unitQuat();
+    // enWorldMesh(&s->m[6]);
+    enworldBbox(&s->m[6]);
+
+    /* ######################################################################################################## */
     // for (int i = 5; i < MESH_NUM; i++) {
     //     createCube(&s->m[i]);
     //     loadMaterial(&s->m[i].material, "jade");
@@ -153,9 +178,9 @@ const void initWorldObjects(Scene *s) {
     //     s->m[i].id = i;
         
     //     s->m[i].scale = 3.f;
-    //     s->m[i].pivot[0] = (float)rand() / (float)(RAND_MAX / 400);
-    //     s->m[i].pivot[1] = (float)rand() / (float)(RAND_MAX / 100);
-    //     s->m[i].pivot[2] = (float)rand() / (float)(RAND_MAX / 400);
+    //     s->m[i].cd.v[P][0] = (float)rand() / (float)(RAND_MAX / 400);
+    //     s->m[i].cd.v[P][1] = (float)rand() / (float)(RAND_MAX / 100);
+    //     s->m[i].cd.v[P][2] = (float)rand() / (float)(RAND_MAX / 400);
     //     s->m[i].cull = 1;
     //     s->m[i].lodlevels = 0;
     //     // s->m[1].visible = 1;

@@ -74,27 +74,27 @@ const void look_down(vec4f *g, const float angle) {
 }
 /* Moves camera position forward. */
 const void move_forward(vec4f *g, const float vel) {
-    g[Pos] = g[Pos] + (g[N] * vel);
+    g[P] = g[P] + (g[N] * vel);
 }
 /* Moves camera position backwards. */
 const void move_backward(vec4f *g, const float vel) {
-    g[Pos] = g[Pos] - (g[N] * vel);
+    g[P] = g[P] - (g[N] * vel);
 }
 /* Moves camera position left. */
 const void move_left(vec4f *g, const float vel) {
-    g[Pos] = g[Pos] - (g[U] * vel);
+    g[P] = g[P] - (g[U] * vel);
 }
 /* Moves camera position right. */
 const void move_right(vec4f *g, const float vel) {
-    g[Pos] = g[Pos] + (g[U] * vel);
+    g[P] = g[P] + (g[U] * vel);
 }
 /* Moves camera position Up. */
 const void move_up(vec4f *g, const float vel) {
-    // g[Pos] = sub_vecs(g[Pos], mul_vec(g[V], vel));
-    g[Pos][1] += vel;
+    // g[P] = sub_vecs(g[P], mul_vec(g[V], vel));
+    g[P][1] += vel;
 }
 /* Moves camera position Down. */
 const void move_down(vec4f *g, const float vel) {
-    // g[Pos] = add_vecs(g[Pos], mul_vec(g[V], vel));
-    g[Pos][1] -= vel;
+    // g[P] = add_vecs(g[P], mul_vec(g[V], vel));
+    g[P][1] -= vel;
 }

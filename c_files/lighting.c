@@ -28,7 +28,7 @@ const void phong(Fragment *fr) {
 
     /* Applying shadow test by transforming View Space coordinates to light Space. */
     vec4f lightdir = norm_vec(sunlight.pos - pixel);
-    vec4f viewdir = norm_vec(camera[Pos] - pixel);
+    vec4f viewdir = norm_vec(camera[P] - pixel);
     float shadow = shadowTest(pixel);
 
     float diff = dot_product(lightdir, nrm);

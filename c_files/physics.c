@@ -51,9 +51,9 @@ const void applyForces(Scene *s) {
 
                     trans = translationMatrix(velocity[0][0], velocity[0][1], velocity[0][2]);
 
-                    s->m[i].bbox.v = setvecsarrayxm(s->m[i].bbox.v, s->m[i].bbox.v_indexes, trans);
+                    setvecsarrayxm(s->m[i].bbox.v, s->m[i].bbox.v_indexes, trans);
 
-                    s->m[i].pivot += velocity[0];
+                    s->m[i].cd.v[P] += velocity[0];
                 }
             }
             if (s->m[i].type != Celestial)

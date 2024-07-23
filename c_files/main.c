@@ -112,7 +112,7 @@ Light sunlight = {
     .pos = { 100.f, 10000.0f, 100.f, 1.f }, // y = 10000.f
     .u = { 1.f, 0.f, 0.f, 0.f },
     .v = { 0.f, 0.f, -1.f, 0.f },
-    .n = { 0.f, -1.f, 0.f, 0.f },
+    .n = { 0.f, -1.f, 0.f, 0.f }
 };
 vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
@@ -450,9 +450,9 @@ const static void keypress(XEvent *event) {
             break;
     }
 
-    lookAt = lookat(eye[Pos], eye[U], eye[V], eye[N]);
+    lookAt = lookat(eye[P], eye[U], eye[V], eye[N]);
     viewMat = inverse_mat(lookAt);
-    sunlight.newPos = vecxm(sunlight.pos, viewMat);
+    sunlight.newP = vecxm(sunlight.pos, viewMat);
 
     // printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
     // printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
@@ -515,7 +515,7 @@ const static void project(void) {
     }
 
     for (int i = 0; i < scene.m_indexes; i++) {
-        const int distance = len_vec(scene.m[i].pivot - camera[Pos]);
+        const int distance = len_vec(scene.m[i].cd.v[P] - camera[P]);
         adoptdetailMesh(&scene.m[i], distance);
         adoptdetailTexture(&scene.m[i], distance);
     }
