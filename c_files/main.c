@@ -9,6 +9,9 @@
 #include <unistd.h>
 #include <sys/time.h>
 
+/* Library to cooperate with Postgres Database. */
+#include <postgresql/libpq-fe.h>
+
 /* signal */
 #include <signal.h>
 // #include <immintrin.h>
@@ -286,7 +289,7 @@ const static void keypress(XEvent *event) {
         eye = &scene.m[6];
 
     // printf("\x1b[H\x1b[J");
-    system("clear\n");
+    // system("clear\n");
     // printf("Key Pressed: %ld\n", keysym);
     // logEvent(*event);
 
@@ -438,8 +441,6 @@ const static void keypress(XEvent *event) {
                 PROJECTIONVIEW = 0;
             break;
     }
-
-    logMesh(scene.m[6]);
 
     // applyForces(&scene);
 }
@@ -674,7 +675,7 @@ const static void announceReadyState(void) {
 }
 const static void InitTimeCounter(void) {
     gettimeofday(&tv0, NULL);
-    FramesPerFPS = 30;
+    FramesPerFPS = 60;
 }
 const static void UpdateTimeCounter(void) {
     LastFrameTimeCounter = TimeCounter;
@@ -683,12 +684,12 @@ const static void UpdateTimeCounter(void) {
     DeltaTime = TimeCounter - LastFrameTimeCounter;
 }
 const static void CalculateFPS(void) {
-    Frame ++;
+    Frame++;
 
-    if ( (Frame % FramesPerFPS) == 0 ) {
-        FPS = ((float)(FramesPerFPS)) / (TimeCounter - prevTime);
+    // if ( (Frame % FramesPerFPS) == 0 ) {
+        FPS = Frame / TimeCounter;
         prevTime = TimeCounter;
-    }
+    // }
 }
 const static void displayInfo(void) {
     char info_string[64];
@@ -697,20 +698,23 @@ const static void displayInfo(void) {
     struct tm *info;
     info = localtime(&t);
 
-    sprintf(info_string, "Resolution: %d x %d", main_wa.width, main_wa.height);
+    sprintf(info_string, "Resolution   : %d x %d", main_wa.width, main_wa.height);
     XDrawString(displ ,mainwin ,gc, 5, 12, info_string, strlen(info_string));
 
-    sprintf(info_string, "Running Time: %4.1f", TimeCounter);
+    sprintf(info_string, "Running Time : %4.1f", TimeCounter);
     XDrawString(displ ,mainwin ,gc, 5, 24, info_string, strlen(info_string));
 
-    sprintf(info_string, "%4.1f fps", FPS);
+    sprintf(info_string, "FPS          : %4.1f", FPS);
     XDrawString(displ ,mainwin ,gc, 5, 36, info_string, strlen(info_string));
 
-    // sprintf(info_string, "frame --> %d", Frame);
-    // XDrawString(displ ,mainwin ,gc, 5, 48, info_string, strlen(info_string));
-
-    sprintf(info_string, "%s ", asctime(info));
+    sprintf(info_string, "Frames Drawn : %d", Frame);
     XDrawString(displ ,mainwin ,gc, 5, 48, info_string, strlen(info_string));
+
+    sprintf(info_string, "DeltaTime    : %f ", DeltaTime);
+    XDrawString(displ ,mainwin ,gc, 5, 60, info_string, strlen(info_string));
+
+    sprintf(info_string, "Date Time    : %s ", asctime(info));
+    XDrawString(displ ,mainwin ,gc, 5, 72, info_string, strlen(info_string));
 
     // sprintf(info_string, "Camera x: %f,    y: %f,    z: %f\0", camera[0][0], camera[0][1], camera[0][2]);
     // XDrawString(displ ,mainwin ,gc, 5, 60, info_string, strlen(info_string));
@@ -743,10 +747,10 @@ const static int predicate(Display *d, XEvent *e, XPointer arg) {
 /* General initialization and event handling. */
 const static int board(void) {
 
-    if (!XInitThreads()) {
-        fprintf(stderr, "Warning: board() -- XInitThreads()\n");
-        return EXIT_FAILURE;
-    }
+    // if (!XInitThreads()) {
+    //     fprintf(stderr, "Warning: board() -- XInitThreads()\n");
+    //     return EXIT_FAILURE;
+    // }
     // XLockDisplay(displ);
     XEvent event = { 0 }, event_cache = { 0 };
 
@@ -775,7 +779,7 @@ const static int board(void) {
     /* Announcing to event despatcher that starting initialization is done. We send a Keyress event to Despatcher to awake Projection. */
     announceReadyState();
 
-    // float time_dif;
+    float time_dif;
     while (RUNNING) {
 
         // clock_t start_time = start();
@@ -786,17 +790,18 @@ const static int board(void) {
         project();
         // end(start_time);
 
-        // time_dif = DeltaTime > 0.01666 ? (DeltaTime - 0.01666) - 0.01666 : DeltaTime < 0.01666 ? (0.01666 - DeltaTime) + 0.01666 : 0.01666;
-
         while (XPending(displ)) {
+
             XNextEvent(displ, &event);
 
             if (handler[event.type])
                 handler[event.type](&event);
         }
 
-        // printf("time_df: %f\n", DeltaTime);
-        usleep(1000);
+        time_dif = DeltaTime > 0.016666 ? 0 : (0.016666 - DeltaTime) * 100000;
+        // printf("events: %d\n", XPending(displ));
+        // XSync(displ, 1);
+        usleep(time_dif);
     }
 
     return EXIT_SUCCESS;

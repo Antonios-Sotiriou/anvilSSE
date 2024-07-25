@@ -21,7 +21,7 @@ const void applyForces(Scene *s) {
             }
 
             if ( !rotation_collide )
-                rotation_collide += rotationCollision(&tf, s, &s->m[Player_1]);
+                rotation_collide += rotationCollision(&tf, s, &s->m[i]);
 
             // if ( s->m[i].momentum > 0 ) {
                 s->m[i].falling_time += DeltaTime;

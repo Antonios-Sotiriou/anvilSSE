@@ -19,6 +19,7 @@ const void initWorldObjects(Scene *s) {
     s->m[0].cd.v[P][0] = 1000.f;
     s->m[0].cd.v[P][1] = 0.f;
     s->m[0].cd.v[P][2] = 1000.f;
+    s->m[0].cd.v[P][3] = 1.f;
 
     s->m[0].cull = 1;
     s->m[0].lodlevels = 0;
@@ -43,6 +44,7 @@ const void initWorldObjects(Scene *s) {
     s->m[1].cd.v[P][0] = 30.f;
     s->m[1].cd.v[P][1] = 0.f;
     s->m[1].cd.v[P][2] = 30.f;
+    s->m[1].cd.v[P][3] = 1.f;
 
     s->m[1].cull = 1;
     s->m[1].lodlevels = 1;
@@ -69,6 +71,7 @@ const void initWorldObjects(Scene *s) {
     s->m[2].cd.v[P][0] = 100;
     s->m[2].cd.v[P][1] = 0;
     s->m[2].cd.v[P][2] = 100;
+    s->m[2].cd.v[P][3] = 1.f;
 
     s->m[2].cull = 1;
     s->m[2].lodlevels = 0;
@@ -91,6 +94,7 @@ const void initWorldObjects(Scene *s) {
     s->m[3].cd.v[P][0] = 100;
     s->m[3].cd.v[P][1] = 30;
     s->m[3].cd.v[P][2] = 120;
+    s->m[3].cd.v[P][3] = 1.f;
 
     s->m[3].cull = 1;
     s->m[3].lodlevels = 0;
@@ -110,9 +114,11 @@ const void initWorldObjects(Scene *s) {
     s->m[4].id = 4;
     
     s->m[4].scale = 10.f;
+
     s->m[4].cd.v[P][0] = 120;
     s->m[4].cd.v[P][1] = 30;
     s->m[4].cd.v[P][2] = 100;
+    s->m[4].cd.v[P][3] = 1.f;
 
     s->m[4].cull = 1;
     s->m[4].lodlevels = 0;
@@ -137,6 +143,7 @@ const void initWorldObjects(Scene *s) {
     s->m[5].cd.v[P][0] = 0.f;
     s->m[5].cd.v[P][1] = 0.f;
     s->m[5].cd.v[P][2] = 0.f;
+    s->m[5].cd.v[P][3] = 1.f;
 
     s->m[5].cull = 1;
     s->m[5].lodlevels = 1;
