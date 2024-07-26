@@ -178,7 +178,7 @@ const static int viewtoscreen(Mesh *m, const int len, const int tile_index) {
 
     /* Viewport clipping. */
     int clipp_bias = tile_index == 0 ? 0 : 1;
-    int clipp_height = tile_index == 7 ? 1 : 0;
+    int clipp_height = tile_index == 5 ? 1 : 0;
     vec4f plane_up_p = { 0.0f, tiles[tile_index].start_height - clipp_bias, 0.0f },
         plane_up_n = { 0.0f, 1.0f, 0.0f };
     *m = clipp(m, plane_up_p, plane_up_n);

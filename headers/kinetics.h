@@ -16,9 +16,6 @@
 /* Defined in main.c. */
 // extern Light sunlight;
 
-/* Defined in world_objects.c. */
-extern const void releaseMesh(Mesh *c);
-
 /* Defined in general_functions.c. */
 extern const float radians(const float value);
 

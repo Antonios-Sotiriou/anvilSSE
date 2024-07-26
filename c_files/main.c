@@ -58,7 +58,7 @@ enum { Win_Close, Win_Name, Atom_Type, Atom_Last};
 #define MAP_WIDTH                 200
 #define MAP_HEIGHT                200
 #define POINTERMASKS              ( ButtonPressMask )
-#define KEYBOARDMASKS             ( KeyPressMask | KeyReleaseMask )
+#define KEYBOARDMASKS             ( KeyPressMask )
 #define EXPOSEMASKS               ( StructureNotifyMask )
 #define NUM_OF_CASCADES           3
 
@@ -138,7 +138,7 @@ int DEBUG = 0;
 /* Display usefull measurements. */
 float			        TimeCounter = 0, LastFrameTimeCounter = 0, DeltaTime = 0, prevTime = 0.0, FPS = 0;
 struct timeval		    tv, tv0;
-int			            Frame = 0, FramesPerFPS;
+int			            Frame = 0;
 
 /* Event handling functions. */
 const static void clientmessage(XEvent *event);
@@ -173,7 +173,7 @@ const static void CalculateFPS(void);
 const static void displayInfo(void);
 const static void sigsegv_handler(const int sig);
 const static int registerSig(const int signal);
-const static int board(void);
+static void *board(void *args);
 static void (*handler[LASTEvent]) (XEvent *event) = {
     [ClientMessage] = clientmessage,
     [ReparentNotify] = reparentnotify,
@@ -187,36 +187,6 @@ static void (*handler[LASTEvent]) (XEvent *event) = {
 const static void clientmessage(XEvent *event) {
     printf("Received client message event\n");
     if (event->xclient.data.l[0] == wmatom[Win_Close]) {
-
-        releaseScene(&scene);
-
-        free(frame_buffer);
-        free(reset_frame_buffer);
-
-        free(main_depth_buffer);
-        free(reset_depth_buffer);
-
-        free(frags_buffer);
-        free(reset_frags_buffer);
-        free(thread_ids);
-
-        free(shadow_buffer[0]);
-        free(shadow_buffer[1]);
-        free(shadow_buffer[2]);
-        free(reset_shadow_buffer);
-
-        for (int i = 0; i < tf.quadsArea; i++) {
-            if (tf.quads[i].members)
-                free(tf.quads[i].members);
-        }
-        free(tf.quads);
-
-        free(tiles);
-
-        free(main_image);
-        XFreeGC(displ, gc);
-        XFreePixmap(displ, main_pixmap);
-        XDestroyWindow(displ, mainwin);
 
         RUNNING = 0;
     }
@@ -249,7 +219,6 @@ const static void configurenotify(XEvent *event) {
 
             free(frags_buffer);
             free(reset_frags_buffer);
-            free(thread_ids);
 
             free(shadow_buffer[0]);
             free(shadow_buffer[1]);
@@ -448,13 +417,13 @@ static void *oscillator(void *args) {
 
     int thread_id = *(int*)args;
 
-    int ypol = ( (MAIN_EMVADON) % THREADS);
-    int stuck = ( (MAIN_EMVADON) / THREADS);
+    int ypol = ( (MAIN_EMVADON) % 6);
+    int stuck = ( (MAIN_EMVADON) / 6);
 
     int tile_size = stuck * (thread_id + 1);
     int step = stuck * thread_id;
 
-    if ( ypol && (thread_id == (THREADS - 1)) )
+    if ( ypol && (thread_id == 5) )
         tile_size += ypol;
 
     for (int i = step; i < tile_size; i++) {
@@ -516,22 +485,22 @@ const static void project(void) {
         edgePipeline();
     } else {
         /* Render in parallel according to tiles. */
-        for (int i = 0; i < THREADS; i++) {
+        for (int i = 0; i < 6; i++) {
             if (pthread_create(&threads[i], NULL, &grafikPipeline, &thread_ids[i]))
                 fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
         }
-        for (int i = 0; i < THREADS; i++) {
+        for (int i = 0; i < 6; i++) {
             if (pthread_join(threads[i], NULL))
                 fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
         }
     }
 
     /* Proceed the fragments buffer created by grafikPipeline and apply lighting. */
-    for (int i = 0; i < THREADS; i++) {
+    for (int i = 0; i < 6; i++) {
         if (pthread_create(&threads[i], NULL, &oscillator, &thread_ids[i]))
             fprintf(stderr, "ERROR: project() -- oscillator -- pthread_create()\n");
     }
-    for (int i = 0; i < THREADS; i++) {
+    for (int i = 0; i < 6; i++) {
         if (pthread_join(threads[i], NULL))
             fprintf(stderr, "ERROR: project() -- oscillator -- pthread_join()\n");
     }
@@ -573,6 +542,12 @@ const static void initMainWindow(void) {
     XMapWindow(displ, mainwin);
     XGetWindowAttributes(displ, mainwin, &main_wa);
 }
+const static void initThreads(void) {
+    /* Init thread_ids dynamically */
+    thread_ids = malloc(THREADS * 4);
+    for (int i = 0; i < THREADS; i++)
+        thread_ids[i] = i;
+}
 const static void initGlobalGC(void) {
     gcvalues.foreground = 0xffffff;
     gcvalues.background = 0x000000;
@@ -589,23 +564,18 @@ const static void initDependedVariables(void) {
     half_screen[1] = main_wa.width >> 1;
     MAIN_EMVADON = main_wa.width * main_wa.height;
 
-    /* Init thread_ids dynamically */
-    thread_ids = malloc(THREADS * 4);
-    for (int i = 0; i < THREADS; i++)
-        thread_ids[i] = i;
-
     /* Init tiles dynamically  ######################################################################## */
-    tiles = calloc(THREADS, sizeof(Tile));
-    int tileHeightYpol = main_wa.height % THREADS;
-    int tileHeight = main_wa.height / THREADS;
+    tiles = calloc(6, sizeof(Tile));
+    int tileHeightYpol = main_wa.height % 6;
+    int tileHeight = main_wa.height / 6;
 
-    for (int i = 0; i < THREADS; i++) {
+    for (int i = 0; i < 6; i++) {
         tiles[i].start_width = 0;
         tiles[i].end_width = main_wa.width;
         tiles[i].start_height += tileHeight * i;
         tiles[i].end_height += tileHeight * (i + 1);
 
-        if ( (i == THREADS - 1) && (tileHeightYpol) ) {
+        if ( (i == 5) && (tileHeightYpol) ) {
             tiles[i].end_height += tileHeightYpol;
         }
     }
@@ -675,7 +645,6 @@ const static void announceReadyState(void) {
 }
 const static void InitTimeCounter(void) {
     gettimeofday(&tv0, NULL);
-    FramesPerFPS = 60;
 }
 const static void UpdateTimeCounter(void) {
     LastFrameTimeCounter = TimeCounter;
@@ -685,11 +654,8 @@ const static void UpdateTimeCounter(void) {
 }
 const static void CalculateFPS(void) {
     Frame++;
-
-    // if ( (Frame % FramesPerFPS) == 0 ) {
-        FPS = Frame / TimeCounter;
-        prevTime = TimeCounter;
-    // }
+    FPS = Frame / TimeCounter;
+    prevTime = TimeCounter;
 }
 const static void displayInfo(void) {
     char info_string[64];
@@ -745,63 +711,55 @@ const static int predicate(Display *d, XEvent *e, XPointer arg) {
     return (e->type == ClientMessage);
 }
 /* General initialization and event handling. */
-const static int board(void) {
+static void *board(void *args) {
+    int th_id = *(int*)args;
 
-    // if (!XInitThreads()) {
-    //     fprintf(stderr, "Warning: board() -- XInitThreads()\n");
-    //     return EXIT_FAILURE;
-    // }
-    // XLockDisplay(displ);
-    XEvent event = { 0 }, event_cache = { 0 };
+    if ( th_id == 7 ) {
+        initGlobalGC();
+        pixmapcreate();
+        initAtoms();
+        // registerSig(SIGSEGV);
 
-    displ = XOpenDisplay(NULL);
-    if (displ == NULL) {
-        fprintf(stderr, "Warning: board() -- XOpenDisplay()\n");
-        return EXIT_FAILURE;
-    }
+        initDependedVariables();
+        initBuffers();
 
-    initMainWindow();
-    InitTimeCounter();
-    initGlobalGC();
-    pixmapcreate();
-    initAtoms();
-    // registerSig(SIGSEGV);
+        createScene(&scene);     /*  Scene creation must happen after world objects initialization.    */
+        initWorldObjects(&scene);
 
-    initDependedVariables();
-    initBuffers();
-    // initLightModel(&sunlight);
+        // initTerrainInfo(&tf);
 
-    createScene(&scene);     /*  Scene creation must happen after world objects initialization.    */
-    initWorldObjects(&scene);
+        /* Announcing to event despatcher that starting initialization is done. We send a Keyress event to Despatcher to awake Projection. */
+        announceReadyState();
 
-    // initTerrainInfo(&tf);
+        float time_dif;
+        while(RUNNING) {
 
-    /* Announcing to event despatcher that starting initialization is done. We send a Keyress event to Despatcher to awake Projection. */
-    announceReadyState();
+            UpdateTimeCounter();
+            CalculateFPS();
+            displayInfo();
+            applyPhysics();
+            project();
 
-    float time_dif;
-    while (RUNNING) {
+            time_dif = DeltaTime > 0.016666 ? 0 : (0.016666 - DeltaTime) * 100000;
+            usleep(time_dif);
+        }
+    } else {
+        XEvent event = { 0 };
+        while(RUNNING) {
 
-        // clock_t start_time = start();
-        UpdateTimeCounter();
-        CalculateFPS();
-        displayInfo();
-        applyPhysics();
-        project();
-        // end(start_time);
+            // XNextEvent(displ, &event);
+            XCheckTypedEvent(displ, KeyPress, &event);
+            // XCheckTypedEvent(displ, KeyRelease, &event_cache);
 
-        while (XPending(displ)) {
-
-            XNextEvent(displ, &event);
+            XCheckMaskEvent(displ, EXPOSEMASKS | POINTERMASKS, &event);
+            XCheckTypedEvent(displ, ClientMessage, &event);
 
             if (handler[event.type])
                 handler[event.type](&event);
-        }
 
-        time_dif = DeltaTime > 0.016666 ? 0 : (0.016666 - DeltaTime) * 100000;
-        // printf("events: %d\n", XPending(displ));
-        // XSync(displ, 1);
-        usleep(time_dif);
+            event.type = 0;
+            usleep(3300);
+        }
     }
 
     return EXIT_SUCCESS;
@@ -820,15 +778,64 @@ const int main(int argc, char *argv[]) {
         }
     }
 
-    createMaterialDatabase();
+    // if (!XInitThreads()) {
+    //     fprintf(stderr, "Warning: board() -- XInitThreads()\n");
+    //     return EXIT_FAILURE;
+    // }
+    // XLockDisplay(displ);
 
-    if (board()) {
-        fprintf(stderr, "ERROR: main() -- board()\n");
+    displ = XOpenDisplay(NULL);
+    if (displ == NULL) {
+        fprintf(stderr, "Warning: board() -- XOpenDisplay()\n");
         return EXIT_FAILURE;
     }
 
+    initMainWindow();
+    InitTimeCounter();
+
+    createMaterialDatabase();
+
+    initThreads();
+
+    for (int i = 7; i > 5; i--)
+        pthread_create(&threads[i], NULL, &board, &thread_ids[i]);
+
+    for (int i = 7; i > 5 ; i--)
+        pthread_join(threads[i], NULL);
+
+    free(frame_buffer);
+    free(reset_frame_buffer);
+
+    free(main_depth_buffer);
+    free(reset_depth_buffer);
+
+    free(frags_buffer);
+    free(reset_frags_buffer);
+
+    free(shadow_buffer[0]);
+    free(shadow_buffer[1]);
+    free(shadow_buffer[2]);
+    free(reset_shadow_buffer);
+
+    for (int i = 0; i < tf.quadsArea; i++) {
+        if (tf.quads[i].members)
+            free(tf.quads[i].members);
+    }
+    free(tf.quads);
+
+    free(tiles);
+
+    releaseScene(&scene);
+
+    free(main_image);
+    XFreeGC(displ, gc);
+    XFreePixmap(displ, main_pixmap);
+    XDestroyWindow(displ, mainwin);
+
+    free(thread_ids);
     XCloseDisplay(displ);
     
     return EXIT_SUCCESS;
 }
+
 
