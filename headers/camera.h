@@ -24,11 +24,11 @@ const void look_left(Mesh *g, const float angle);
 const void look_right(Mesh *g, const float angle);
 const void look_up(Mesh *g, const float angle);
 const void look_down(Mesh *g, const float angle);
-const void move_forward(Mesh *g, const float vel);
-const void move_backward(Mesh *g, const float vel);
-const void move_left(Mesh *g, const float vel);
-const void move_right(Mesh *g, const float vel);
-const void move_up(Mesh *g, const float vel);
-const void move_down(Mesh *g, const float vel);
+const void move_forward(Mesh *g, const float force);
+const void move_backward(Mesh *g, const float force);
+const void move_left(Mesh *g, const float force);
+const void move_right(Mesh *g, const float force);
+const void move_up(Mesh *g, const float force);
+const void move_down(Mesh *g, const float force);
 
 #endif /* _CAMERA_H */

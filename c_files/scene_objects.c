@@ -49,7 +49,7 @@ const void initWorldObjects(Scene *s) {
     s->m[1].cull = 1;
     s->m[1].lodlevels = 1;
     // s->m[1].visible = 1;
-    s->m[1].mass = 0.5;
+    s->m[1].mass = 1.f;
     // s->m[1].grounded = 1;
     // s->m[1].material.reflect = 1;
     s->m[1].Q = unitQuat();
@@ -176,7 +176,7 @@ const void initWorldObjects(Scene *s) {
     s->m[6].cull = 1;
     s->m[6].lodlevels = 1;
     // s->m[6].visible = 1;
-    s->m[6].mass = 0;
+    s->m[6].mass = 82.f;
     // s->m[6].material.reflect = 1;
     s->m[6].Q = unitQuat();
     // enWorldMesh(&s->m[6]);

@@ -168,7 +168,7 @@ const void adoptdetailTexture(Mesh *m, const int dist) {
         printf("Initializing Texture of mesh.id: %d\n", m->id);
         return;
     }
-
+    return;
     if ( strcmp(m->material.texlvl[lcache_0], m->material.texlvl[m->material.texlod]) != 0 ) {
         loadtexture(m, m->material.texlod);
         printf("adoptDetailTexture()\n");

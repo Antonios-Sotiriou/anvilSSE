@@ -3,8 +3,8 @@
 const static Mesh bfculling(const Mesh c, const int len);
 const static float shadowWinding(const face f);
 const static int viewtoscreen(Mesh *m, const int len);
-const static void createShadowmap(Mesh *m, const unsigned int sm_index);
-const static void shadowface(face *f, const Srt srt[], const unsigned int sm_index);
+const static void createShadowmap(Mesh *m, const int sm_index);
+const static void shadowface(face *f, const Srt srt[], const int sm_index);
 
 const static vec4i smask = { 1, 2, 0, 3 };
 const static vec4f add_one = { 1.f, 1.f, 0.f, 0.f };
@@ -46,17 +46,19 @@ vec4f *worldSpaceFrustum(const float np, const float fp) {
 const Mat4x4 createOrthoMatrixFromLimits(const DimensionsLimits dl) {
     return orthographicMatrix(dl.min[0], dl.max[0], dl.min[1], dl.max[1], dl.min[2], dl.max[2]);
 }
-const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
+const void createCascadeShadowMatrices(const int num_of_cascades) {
     DimensionsLimits dl;
-    vec4f *fr[3] = {
+    vec4f *fr[4] = {
         worldSpaceFrustum(NPlane, 100),
         worldSpaceFrustum(NPlane, 200),
-        worldSpaceFrustum(NPlane, 400)
+        worldSpaceFrustum(NPlane, 400),
+        worldSpaceFrustum(NPlane, 800),
     };
-    Mat4x4 lm[3] = {
+    Mat4x4 lm[4] = {
         lookat(eye->cd.v[P] + ((eye->cd.v[N] * (float)SMA)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N]),
         lookat(eye->cd.v[P] + ((eye->cd.v[N] * (float)SMB)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N]),
-        lookat(eye->cd.v[P] + ((eye->cd.v[N] * (float)SMC)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N])
+        lookat(eye->cd.v[P] + ((eye->cd.v[N] * (float)SMC)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N]),
+        lookat(eye->cd.v[P] + ((eye->cd.v[N] * (float)SMD)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N])
     };
 
     for (int i = 0; i < num_of_cascades; i++) {
@@ -72,7 +74,7 @@ const void createCascadeShadowMatrices(const unsigned int num_of_cascades) {
     }
 }
 /* ################################################### CASCADE SHADOW MAPPING FINISH ################################################ */
-const void shadowPipeline(Scene *s, const unsigned int sm_index) {
+const void shadowPipeline(Scene *s, const int sm_index) {
 
     Mesh cache_0 = { 0 };
 
@@ -182,7 +184,7 @@ const static int viewtoscreen(Mesh *m, const int len) {
     if (!m->f_indexes)
         return 0;
 
-    vec4f plane_down_p = { 0.0, main_wa.height - 1.0, 0.0 },
+    vec4f plane_down_p = { 0.0, main_wa.height, 0.0 },
           plane_down_n = { 0.0, -1.0, 0.0 };
     *m = shadowclipp(m, plane_down_p, plane_down_n);
     if (!m->f_indexes)
@@ -194,7 +196,7 @@ const static int viewtoscreen(Mesh *m, const int len) {
     if (!m->f_indexes)
         return 0;
 
-    vec4f plane_right_p = { main_wa.width - 1.0, 0.0, 0.0 },
+    vec4f plane_right_p = { main_wa.width, 0.0, 0.0 },
           plane_right_n = { -1.0, 0.0, 0.0 };
     *m = shadowclipp(m, plane_right_p, plane_right_n);
     if (!m->f_indexes)
@@ -202,7 +204,7 @@ const static int viewtoscreen(Mesh *m, const int len) {
 
     return 1;
 }
-const static void createShadowmap(Mesh *m, const unsigned int sm_index) {
+const static void createShadowmap(Mesh *m, const int sm_index) {
     for (int c = 0; c < m->f_indexes; c++) {
         /* Creating 2Arrays for X and Y values to sort them. */
         Srt srt[3] = {
@@ -224,7 +226,7 @@ const static void createShadowmap(Mesh *m, const unsigned int sm_index) {
         shadowface(&m->f[c], srt, sm_index);
     }
 }
-const static void shadowface(face *f, const Srt srt[], const unsigned int sm_index) {
+const static void shadowface(face *f, const Srt srt[], const int sm_index) {
     vec4i xs = { f->v[srt[0].index][0], f->v[srt[1].index][0], f->v[srt[2].index][0], 0 };
     vec4i ys = { f->v[srt[0].index][1], f->v[srt[1].index][1], f->v[srt[2].index][1], 0 };
     vec4f zs = { f->v[srt[0].index][2], f->v[srt[1].index][2], f->v[srt[2].index][2], 0 };
@@ -316,10 +318,10 @@ const static void shadowface(face *f, const Srt srt[], const unsigned int sm_ind
     }
 }
 const float shadowTest(vec4f frag) {
-    unsigned int sm_index;
+    int sm_index;
     float frag_dist = len_vec(frag - scene.m[6].cd.v[P]);
-    sm_index = (frag_dist <= STA) ? 0 : (frag_dist > STA && frag_dist <= STB) ? 1 : (frag_dist > STB && frag_dist <= STC) ? 2 : 3;
-    if (sm_index > 2)
+    sm_index = (frag_dist <= STA) ? 0 : (frag_dist > STA && frag_dist <= STB) ? 1 : (frag_dist > STB && frag_dist <= STC) ? 2 : (frag_dist > STC && frag_dist <= STD) ? 3 : 4;
+    if (sm_index > 3)
         return 0;
 
 
@@ -348,8 +350,8 @@ const float shadowTest(vec4f frag) {
         }
     }
 
-    return shadow / 9.f;
-    // return sm_index;
+    // return shadow / 9.f;
+    return sm_index;
 }
 
 

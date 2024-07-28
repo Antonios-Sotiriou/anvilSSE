@@ -58,9 +58,9 @@ enum { Win_Close, Win_Name, Atom_Type, Atom_Last};
 #define MAP_WIDTH                 200
 #define MAP_HEIGHT                200
 #define POINTERMASKS              ( ButtonPressMask )
-#define KEYBOARDMASKS             ( KeyPressMask )
+#define KEYBOARDMASKS             ( KeyPressMask | KeyReleaseMask )
 #define EXPOSEMASKS               ( StructureNotifyMask )
-#define NUM_OF_CASCADES           3
+#define NUM_OF_CASCADES           4
 
 /* X Global Structures. */
 Display *displ;
@@ -99,9 +99,11 @@ int INCORDEC = -1;
 unsigned int SMA = 0;
 unsigned int SMB = 200;
 unsigned int SMC = 400;
+unsigned int SMD = 800;
 unsigned int STA = 82;
 unsigned int STB = 320;
 unsigned int STC = 1280;
+unsigned int STD = 5120;
 
 /* Point ov view. */
 Mesh *eye;
@@ -109,7 +111,7 @@ Mesh *eye;
 vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
 const float movScalar = 100.f;
-const float cameraMov = 1.f;
+const float cameraMov = 1.42f;
 
 /* Variables usefull for mesh click select. */
 unsigned int getClick = 0;
@@ -117,7 +119,7 @@ int mesh_id = 0;
 vec4f click = { 0 };
 
 /* Global Matrices */
-Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[3], persplightMat, *point_mat;
+Mat4x4 perspMat, lookAt, viewMat, reperspMat, orthoMat, worldMat, ortholightMat[NUM_OF_CASCADES], persplightMat, *point_mat;
 
 /* Anvil global Objects Meshes and Scene. */
 Scene scene = { 0 };
@@ -148,13 +150,13 @@ const static void resizerequest(XEvent *event);
 const static void configurenotify(XEvent *event);
 const static void buttonpress(XEvent *event);
 const static void keypress(XEvent *event);
+const static void keyrelease(XEvent *event);
 
 /* Self explanatory. Physics and collisions are computed whithin. */
 const static void applyPhysics(void);
 
 /* Represantation functions */
 const static void project(void);
-const void reverseFragmentsToWorld(Fragment *frags_buffer);
 const static void drawFrame(void);
 
 /* Xlib relative functions and event dispatcher. */
@@ -166,7 +168,7 @@ const static void initBuffers(void);
 // const static void initLightModel(Light *l);
 const static void pixmapcreate(void);
 const static void pixmapdisplay(Drawable pixmap, Drawable window, unsigned int wdth, unsigned int heigth);
-const static void announceReadyState(void);
+// const static void initLightModel(Mesh *m);
 const static void InitTimeCounter(void);
 const static void UpdateTimeCounter(void);
 const static void CalculateFPS(void);
@@ -182,6 +184,7 @@ static void (*handler[LASTEvent]) (XEvent *event) = {
     [ConfigureNotify] = configurenotify,
     [ButtonPress] = buttonpress,
     [KeyPress] = keypress,
+    [KeyRelease] = keyrelease,
 };
 
 const static void clientmessage(XEvent *event) {
@@ -204,9 +207,9 @@ const static void resizerequest(XEvent *event) {
     printf("resizerequest event received\n");
 }
 const static void configurenotify(XEvent *event) {
-
+    printf("configurenotify event received\n");
     if (!event->xconfigure.send_event) {
-        printf("configurenotify event received\n");
+        printf("configurenotify Send event received\n");
         XGetWindowAttributes(displ, mainwin, &main_wa);
 
         if (INIT) {
@@ -223,6 +226,7 @@ const static void configurenotify(XEvent *event) {
             free(shadow_buffer[0]);
             free(shadow_buffer[1]);
             free(shadow_buffer[2]);
+            free(shadow_buffer[3]);
             free(reset_shadow_buffer);
 
             free(main_image);
@@ -252,14 +256,9 @@ const static void keypress(XEvent *event) {
 
     KeySym keysym = XLookupKeysym(&event->xkey, 0);
 
-    if (EYEPOINT)
-        eye = &scene.m[7];
-    else
-        eye = &scene.m[6];
-
     // printf("\x1b[H\x1b[J");
     // system("clear\n");
-    // printf("Key Pressed: %ld\n", keysym);
+    printf("Key Pressed: %ld\n", keysym);
     // logEvent(*event);
 
     switch (keysym) {
@@ -267,29 +266,31 @@ const static void keypress(XEvent *event) {
         case 49 : SMA += INCORDEC; break;
         case 50 : SMB += INCORDEC; break;
         case 51 : SMC += INCORDEC; break;
+        case 52 : SMD += INCORDEC; break;
         case 48 : STA += INCORDEC; break;
         case 57 : STB += INCORDEC; break;
         case 56 : STC += INCORDEC; break;
+        case 55 : STD += INCORDEC; break;
         case 98 : DISPLAYBBOX = DISPLAYBBOX == 0 ? 1 : 0; break;  /* b */
-        case 97 : look_left(eye, 0.2);             /* a */
+        case 97 : look_left(&scene.m[6], 2.0);             /* a */
             break;
-        case 100 : look_right(eye, 0.2);           /* d */
+        case 100 : look_right(&scene.m[6], 2.0);           /* d */
             break;
-        case 113 : look_up(eye, 2.2);              /* q */
+        case 113 : look_up(&scene.m[6], 2.0);              /* q */
             break;
-        case 101 : look_down(eye, 2.2);            /* e */
+        case 101 : look_down(&scene.m[6], 2.0);            /* e */
             break;
-        case 119 : move_forward(eye, cameraMov);         /* w */
+        case 119 : move_forward(&scene.m[6], cameraMov);         /* w */
             break;
-        case 115 : move_backward(eye, cameraMov);        /* s */
+        case 115 : move_backward(&scene.m[6], cameraMov);        /* s */
             break;
-        case 65361 : move_left(eye, cameraMov);          /* left arrow */
+        case 65361 : move_left(&scene.m[6], cameraMov);          /* left arrow */
             break;
-        case 65363 : move_right(eye, cameraMov);         /* right arrow */
+        case 65363 : move_right(&scene.m[6], cameraMov);         /* right arrow */
             break;
-        case 65362 : move_up(eye, cameraMov);            /* up arror */
+        case 65362 : move_up(&scene.m[6], cameraMov);            /* up arror */
             break;
-        case 65364 : move_down(eye, cameraMov);          /* down arrow */
+        case 65364 : move_down(&scene.m[6], cameraMov);          /* down arrow */
             break;
         case 65451 :shadow_bias += 0.001;             /* + */
             printf("shadow_bias: %f\n", shadow_bias);
@@ -321,7 +322,7 @@ const static void keypress(XEvent *event) {
             scene.m[1].grounded = 0;
             vec4f mvc = { 0.f, 1.f, 0.f };
             scene.m[1].mvdir = mvc;
-            scene.m[1].momentum = 100 * DeltaTime;
+            scene.m[1].momentum = 10 * scene.m[1].mass;
             scene.m[1].falling_time = 0.f;
             break;
         case 65435 : //sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
@@ -332,10 +333,6 @@ const static void keypress(XEvent *event) {
         case 65431 : //sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
             // vec4f mve = norm_vec(camera[U] + camera[N]);
             vec4f mve = { 0.f, 0.f, 1.f };
-            // rotate_origin(&scene.m[1], 10, 1.0f, 0.0f, 0.0f);
-            // const vec4f pull_pointe = { 0.f, -1.f, 0.f };
-            // const float g_accelaratione = (9.81f * scene.m[Player_1].falling_time) * scene.m[Player_1].mass;
-            // scene.m[1].mvdir = (pull_pointe * g_accelaratione) + mve;
             scene.m[1].mvdir = mve;
             scene.m[1].momentum = movScalar * DeltaTime;
             scene.m[1].roll = 1;
@@ -343,9 +340,6 @@ const static void keypress(XEvent *event) {
         case 65433 : //sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
             // vec4f mvf = -norm_vec(camera[U] + camera[N]);
             vec4f mvf = { 0.f, 0.f, -1.f };
-            // const vec4f pull_pointf = { 0.f, -1.f, 0.f };
-            // const float g_accelarationf = (9.81f * scene.m[Player_1].falling_time) * scene.m[Player_1].mass;
-            // scene.m[1].mvdir = (pull_pointf * g_accelarationf) + mvf;
             scene.m[1].mvdir = mvf;
             scene.m[1].momentum = movScalar * DeltaTime;
             scene.m[1].roll = 1;
@@ -375,7 +369,7 @@ const static void keypress(XEvent *event) {
             break;
         case 112 :
             printf("keycode: %d\n", event->xkey.keycode);
-            if (PROJECTBUFFER == 5)
+            if (PROJECTBUFFER == 6)
                 PROJECTBUFFER = 0;
             PROJECTBUFFER++;
             if (PROJECTBUFFER == 1) {
@@ -401,7 +395,6 @@ const static void keypress(XEvent *event) {
                 EYEPOINT = 1;
             else
                 EYEPOINT = 0;
-            announceReadyState();
             return;
         case 118 :
             if (!PROJECTIONVIEW)               /* v */
@@ -412,6 +405,14 @@ const static void keypress(XEvent *event) {
     }
 
     // applyForces(&scene);
+}
+const static void keyrelease(XEvent *event) {
+
+    KeySym keysym = XLookupKeysym(&event->xkey, 0);
+
+    printf("Key Released: %ld\n", keysym);
+    eye->momentum = 0;
+    eye->rot_angle = 0;
 }
 static void *oscillator(void *args) {
 
@@ -452,12 +453,17 @@ const static void applyPhysics(void) {
 }
 const static void project(void) {
 
+
+    if (EYEPOINT)
+        eye = &scene.m[7];
+    else
+        eye = &scene.m[6];
+
     lookAt = lookat(eye->cd.v[P], eye->cd.v[U], eye->cd.v[V], eye->cd.v[N]);
     viewMat = inverse_mat(lookAt);
-    // sunlight.newP = vecxm(sunlight.pos, viewMat);
 
-    // printf("SMA: %d    SMB: %d    SMC: %d    INCORDEC: %d\n", SMA, SMB, SMC, INCORDEC);
-    // printf("STA: %d    STB: %d    STC: %d    INCORDEC: %d\n", STA, STB, STC, INCORDEC);
+    // printf("SMA: %d    SMB: %d    SMC: %d    SMD: %d    INCORDEC: %d\n", SMA, SMB, SMC, SMD, INCORDEC);
+    // printf("STA: %d    STB: %d    STC: %d    STD: %d    INCORDEC: %d\n", STA, STB, STC, STD, INCORDEC);
     createCascadeShadowMatrices(NUM_OF_CASCADES);
 
     if (!PROJECTIONVIEW)
@@ -527,6 +533,8 @@ const static void drawFrame(void) {
         main_image->data = (char*)shadow_buffer[1];
     else if (PROJECTBUFFER == 5)
         main_image->data = (char*)shadow_buffer[2];
+    else if (PROJECTBUFFER == 6)
+        main_image->data = (char*)shadow_buffer[3];
 
     XPutImage(displ, main_pixmap, gc, main_image, 0, 0, 0, 0, main_wa.width, main_wa.height);
     pixmapdisplay(main_pixmap, mainwin, main_wa.width, main_wa.height);
@@ -558,8 +566,7 @@ const static void initDependedVariables(void) {
     main_image = XCreateImage(displ, main_wa.visual, main_wa.depth, ZPixmap, 0, (char*)point_frame_buffer, main_wa.width, main_wa.height, 32, (main_wa.width * 4));
 
     ASPECTRATIO = ((float)main_wa.width / (float)main_wa.height);
-    // HALFH = main_wa.height >> 1;
-    // HALFW = main_wa.width >> 1;
+
     half_screen[0] = main_wa.height >> 1;
     half_screen[1] = main_wa.width >> 1;
     MAIN_EMVADON = main_wa.width * main_wa.height;
@@ -611,12 +618,13 @@ const static void initBuffers(void) {
     shadow_buffer[0] = calloc(MAIN_EMVADON, 4);
     shadow_buffer[1] = calloc(MAIN_EMVADON, 4);
     shadow_buffer[2] = calloc(MAIN_EMVADON, 4);
+    shadow_buffer[3] = calloc(MAIN_EMVADON, 4);
 
     reset_shadow_buffer = malloc(MAIN_EMVADON * 4);
     for (int i = 0; i < MAIN_EMVADON; i++)
         reset_shadow_buffer[i] = 100000.f;
 }
-// const static void initLightModel(Light *l) {
+// const static void initLightModel(Mesh *m) {
 //     vec4f lightColor = { 1.0, 1.0, 1.0, 1.0 };
 //     Material mt = {
 //         .ambient = lightColor * AmbientStrength,
@@ -624,7 +632,7 @@ const static void initBuffers(void) {
 //         .diffuse = lightColor,
 //         .basecolor = lightColor
 //     };
-//     l->material = mt;
+//     m->material = mt;
 // }
 const static void pixmapcreate(void) {
     main_pixmap = XCreatePixmap(displ, mainwin, main_wa.width, main_wa.height, main_wa.depth);
@@ -707,8 +715,8 @@ const static int registerSig(const int signal) {
     }
     return EXIT_SUCCESS;
 }
-const static int predicate(Display *d, XEvent *e, XPointer arg) {
-    return (e->type == ClientMessage);
+static int predicate(Display *d, XEvent *e, XPointer arg) {
+    return (e->type == KeyPress);
 }
 /* General initialization and event handling. */
 static void *board(void *args) {
@@ -726,10 +734,9 @@ static void *board(void *args) {
         createScene(&scene);     /*  Scene creation must happen after world objects initialization.    */
         initWorldObjects(&scene);
 
-        // initTerrainInfo(&tf);
+        // initLightModel(&scene.m[Light_1]);
 
-        /* Announcing to event despatcher that starting initialization is done. We send a Keyress event to Despatcher to awake Projection. */
-        announceReadyState();
+        // initTerrainInfo(&tf);
 
         float time_dif;
         while(RUNNING) {
@@ -744,20 +751,27 @@ static void *board(void *args) {
             usleep(time_dif);
         }
     } else {
-        XEvent event = { 0 };
+        XEvent event, cache_0;
+
         while(RUNNING) {
 
-            // XNextEvent(displ, &event);
-            XCheckTypedEvent(displ, KeyPress, &event);
-            // XCheckTypedEvent(displ, KeyRelease, &event_cache);
+            XNextEvent(displ, &event);
+            if ( event.type == KeyRelease ) {
+                XEvent cache_1 = { 0 };
 
-            XCheckMaskEvent(displ, EXPOSEMASKS | POINTERMASKS, &event);
-            XCheckTypedEvent(displ, ClientMessage, &event);
+                usleep(3300);
+                if ( XEventsQueued(displ, QueuedAfterReading) ) {
+
+                    XPeekEvent(displ, &cache_1);
+                    if ( cache_1.type == KeyPress && (cache_1.xkey.serial == event.xkey.serial) && (cache_1.xkey.time == event.xkey.time) ) {
+                        XNextEvent(displ, &event);
+                    }
+                }
+            }
 
             if (handler[event.type])
                 handler[event.type](&event);
 
-            event.type = 0;
             usleep(3300);
         }
     }
@@ -791,6 +805,7 @@ const int main(int argc, char *argv[]) {
     }
 
     initMainWindow();
+
     InitTimeCounter();
 
     createMaterialDatabase();
@@ -815,6 +830,7 @@ const int main(int argc, char *argv[]) {
     free(shadow_buffer[0]);
     free(shadow_buffer[1]);
     free(shadow_buffer[2]);
+    free(shadow_buffer[3]);
     free(reset_shadow_buffer);
 
     for (int i = 0; i < tf.quadsArea; i++) {
@@ -838,4 +854,37 @@ const int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
+    //     int iteration = 0;
+    //     while(RUNNING) {
 
+    //         XNextEvent(displ, &event);
+
+    //         if ( event.type == KeyRelease ) {
+    //             // if ( (event.xkey.serial > cache_0.xkey.serial) && (event.xkey.time > cache_0.xkey.time) ) {
+    //                 printf("KeyRelease Event.\n");
+    //             //     // cache_0 = event;
+    //             //     // continue;
+    //             // } else {
+    //                 cache_0 = event;
+    //                 continue;
+    //             // }
+    //         }
+
+    //         if ( event.type == KeyPress ) {
+    //             if ( (event.xkey.serial == cache_0.xkey.serial) && (event.xkey.time == cache_0.xkey.time) ) {
+    //                 printf("KeyRepeat Event.\n");
+    //                 cache_0 = event;
+    //             }
+    //         }
+
+    //         // printf("type: %d    serial: %d    time: %ld    keycode: %d\n", event.type, event.xkey.serial, event.xkey.time, event.xkey.keycode);
+    //         // printf("type: %d    serial: %d    time: %ld    keycode: %d\n", cache_0.type, cache_0.xkey.serial, cache_0.xkey.time, cache_0.xkey.keycode);
+
+    //         if (handler[event.type])
+    //             handler[event.type](&event);
+
+    //         // usleep(3300);
+    //         printf("Iteration: %d\n", iteration);
+    //         iteration++;
+    //     }
+    // }

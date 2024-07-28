@@ -31,13 +31,15 @@ extern int PROJECTIONVIEW;
 extern unsigned int SMA;
 extern unsigned int SMB;
 extern unsigned int SMC;
+extern unsigned int SMD;
 extern unsigned int STA;
 extern unsigned int STB;
 extern unsigned int STC;
+extern unsigned int STD;
 extern float FPlane, NPlane, ASPECTRATIO;
 extern XWindowAttributes main_wa;
-extern Mat4x4 ortholightMat[3], viewMat;
-extern float *shadow_buffer[3], shadow_bias;
+extern Mat4x4 ortholightMat[4], viewMat;
+extern float *shadow_buffer[4], shadow_bias;
 
 extern Mesh *eye;
 
@@ -46,8 +48,8 @@ extern unsigned int SMA, SMB, SMC, STA, STB ,STC;
 
 vec4f *worldSpaceFrustum(const float np, const float fp);
 const Mat4x4 createOrthoMatrixFromLimits(const DimensionsLimits dl);
-const void createCascadeShadowMatrices(const unsigned int num_of_cascades);
-const void shadowPipeline(Scene *s, const unsigned int sm_index);
+const void createCascadeShadowMatrices(const int num_of_cascades);
+const void shadowPipeline(Scene *s, const int sm_index);
 const float shadowTest(vec4f frag);
 
 #endif /* _SHADOW_PIPELINE_H */

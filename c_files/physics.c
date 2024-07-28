@@ -14,16 +14,20 @@ const void applyForces(Scene *s) {
 
             initMeshQuadInfo(&s->m[Terrain_1], &s->m[i]);
 
-            s->m[i].momentum -= DeltaTime;
-            if ( s->m[i].momentum < 0 ) {
-                s->m[i].momentum = s->m[i].roll = 0.f;
-                // continue;
+            if ( s->m[i].rot_angle ) {
+
+                Mat4x4 tm = MatfromQuat(s->m[i].r, s->m[i].cd.v[P]);
+
+                setvecsarrayxm(s->m[i].cd.v, 4, tm);
+                setvecsarrayxm(s->m[i].bbox.v, s->m[i].bbox.v_indexes, tm);
+
+                s->m[i].Q = multiplyQuats(s->m[i].Q, s->m[i].r);
             }
 
             if ( !rotation_collide )
                 rotation_collide += rotationCollision(&tf, s, &s->m[i]);
 
-            // if ( s->m[i].momentum > 0 ) {
+            if ( s->m[i].momentum ) {
                 s->m[i].falling_time += DeltaTime;
                 
                 const float g_accelaration = (9.81f * s->m[i].falling_time) * s->m[i].mass;
@@ -39,15 +43,6 @@ const void applyForces(Scene *s) {
 
                         collide = objectEnvironmentCollision(&tf, s, &s->m[i], velocity);
                     }
-                    
-                    // vec4f axis = { 1.f, 0.f, 0.f };
-                    // if (s->m[i].roll) {
-                    //     s->m[i].roll = s->m[i].momentum * 10;
-
-                    //     Quat xrot = rotationQuat(s->m[i].roll, axis);
-
-                    //     s->m[i].Q = multiplyQuats(s->m[i].Q, xrot);
-                    // }
 
                     trans = translationMatrix(velocity[0][0], velocity[0][1], velocity[0][2]);
 
@@ -55,8 +50,8 @@ const void applyForces(Scene *s) {
 
                     s->m[i].cd.v[P] += velocity[0];
                 // }
-            // }
-            if ( s->m[i].type != Celestial && s->m[i].type != Camera )
+            }
+            if ( s->m[i].type != Celestial || !s->m[i].grounded )
                 objectTerrainCollision(&s->m[Terrain_1], &s->m[i]);
         }
     }

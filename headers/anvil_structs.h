@@ -15,12 +15,12 @@
 
 #ifndef _COORDSYS_ENUM
     #define _COORDSYS_ENUM 1
-    typedef enum { P, U, V, N, C, newP } CoordinatesMembers;
+    typedef enum { P, U, V, N } CoordinatesMembers;
 #endif
 
 #ifndef _SCENE_MEMBERS_ENUM
     #define _SCENE_MEMBERS_ENUM 1
-    typedef enum { Terrain_1, Player_1 } SceneMembers;
+    typedef enum { Terrain_1, Player_1, a, b, c, d, Camera_1, Light_1 } SceneMembers;
 #endif
 
 /* Primitive struct vec4 with 4 x 32bits floats as members */
@@ -117,6 +117,7 @@ typedef struct {
     quadInit, quadIndex, id;                        /* Terrain quad position and id of meshes index in the scene. */
     float scale, falling_time,                      /* Scale of the mesh and the time that is on Air. */
     momentum,                                       /* The momentum of the mesh. */
+    rot_angle,                                      /* The Rotation angle of the mesh. Useful for smooth camera rotation. */
     roll,                                           /* If the mesh is rolling like wheels. */
     mass,                                           /* Mass of the mesh. */
     collision_t;                                    /* Collison time, usefull to sort the collisions. */

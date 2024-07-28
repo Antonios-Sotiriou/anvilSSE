@@ -57,7 +57,7 @@ const void phong(Fragment *fr) {
     // else if (shadow == 2)
     //     fragcolor = __builtin_convertvector(((vec4f){ 1.f, 0.f, 0.f } * basecolor) * 255, vec4c);
     // else if (shadow == 3)
-    //     fragcolor = __builtin_convertvector(basecolor * 255, vec4c);
+    //     fragcolor = __builtin_convertvector(((vec4f){ 0.f, 1.f, 0.f } * basecolor) * 255, vec4c);
 
     // fragcolor = __builtin_convertvector((((ambient + (1.f - shadow))) * basecolor) * 255, vec4c);
     // fragcolor = __builtin_convertvector(basecolor * 255, vec4c);
