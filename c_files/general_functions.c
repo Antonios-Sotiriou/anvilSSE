@@ -168,7 +168,7 @@ const void adoptdetailTexture(Mesh *m, const int dist) {
         printf("Initializing Texture of mesh.id: %d\n", m->id);
         return;
     }
-    return;
+    return; /* Must be removed for enabled texture level of details. ################################################################## */
     if ( strcmp(m->material.texlvl[lcache_0], m->material.texlvl[m->material.texlod]) != 0 ) {
         loadtexture(m, m->material.texlod);
         printf("adoptDetailTexture()\n");
@@ -277,7 +277,7 @@ const void displayVec4f(const vec4f v_start, const vec4f v_end, const Mat4x4 vm)
 
     XDrawLine(displ, mainwin, gc, temp_start[0], temp_start[1], temp_end[0], temp_end[1]);
 }
-/* Displays given vector on screen given the view Matrix. */
+/* Displays given Bounding Box on screen given the view Matrix. Bounding box must be in World Space. */
 const void displayBbox(vec4f v[], const int v_indexes, const Mat4x4 vm) {
     /* Thats a fix for unitialized meshes that cannot become visible due to no vectors initialization. That will be corrected with bounding boxes. */
     if (!v_indexes) {

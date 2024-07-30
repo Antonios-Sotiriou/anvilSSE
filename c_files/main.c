@@ -55,12 +55,9 @@ enum { Win_Close, Win_Name, Atom_Type, Atom_Last};
 
 #define WIDTH                     1000
 #define HEIGHT                    1000
-#define MAP_WIDTH                 200
-#define MAP_HEIGHT                200
 #define POINTERMASKS              ( ButtonPressMask )
 #define KEYBOARDMASKS             ( KeyPressMask | KeyReleaseMask )
 #define EXPOSEMASKS               ( StructureNotifyMask )
-#define NUM_OF_CASCADES           4
 
 /* X Global Structures. */
 Display *displ;
@@ -105,7 +102,7 @@ unsigned int STB = 320;
 unsigned int STC = 1280;
 unsigned int STD = 5120;
 
-/* Point ov view. */
+/* Point of view. */
 Mesh *eye;
 
 vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
@@ -331,14 +328,14 @@ const static void keypress(XEvent *event) {
             scene.m[1].momentum = movScalar * DeltaTime;
             break;
         case 65431 : //sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
-            // vec4f mve = norm_vec(camera[U] + camera[N]);
+            // vec4f mve = norm_vec(scene.m[Camera_1].cd.v[U] + scene.m[Camera_1].cd.v[N]);
             vec4f mve = { 0.f, 0.f, 1.f };
             scene.m[1].mvdir = mve;
             scene.m[1].momentum = movScalar * DeltaTime;
             scene.m[1].roll = 1;
             break;
         case 65433 : //sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
-            // vec4f mvf = -norm_vec(camera[U] + camera[N]);
+            // vec4f mvf = -norm_vec(scene.m[Camera_1].cd.v[U] + scene.m[Camera_1].cd.v[N]);
             vec4f mvf = { 0.f, 0.f, -1.f };
             scene.m[1].mvdir = mvf;
             scene.m[1].momentum = movScalar * DeltaTime;
@@ -413,6 +410,8 @@ const static void keyrelease(XEvent *event) {
     printf("Key Released: %ld\n", keysym);
     eye->momentum = 0;
     eye->rot_angle = 0;
+    if (keysym == 99)
+        scene.m[mesh_id].rot_angle = 0;
 }
 static void *oscillator(void *args) {
 
@@ -464,7 +463,7 @@ const static void project(void) {
 
     // printf("SMA: %d    SMB: %d    SMC: %d    SMD: %d    INCORDEC: %d\n", SMA, SMB, SMC, SMD, INCORDEC);
     // printf("STA: %d    STB: %d    STC: %d    STD: %d    INCORDEC: %d\n", STA, STB, STC, STD, INCORDEC);
-    createCascadeShadowMatrices(NUM_OF_CASCADES);
+    createCascadeShadowMatrices();
 
     if (!PROJECTIONVIEW)
         worldMat = mxm(viewMat, perspMat);
@@ -744,15 +743,19 @@ static void *board(void *args) {
             UpdateTimeCounter();
             CalculateFPS();
             displayInfo();
+            // clock_t start_time = start();
             applyPhysics();
+            // end(start_time);
+            // clock_t start_time = start();
             project();
+            // end(start_time);
 
             time_dif = DeltaTime > 0.016666 ? 0 : (0.016666 - DeltaTime) * 100000;
             usleep(time_dif);
         }
     } else {
-        XEvent event, cache_0;
-
+        XEvent event;
+        int is_repeated = 0;
         while(RUNNING) {
 
             XNextEvent(displ, &event);
@@ -765,9 +768,15 @@ static void *board(void *args) {
                     XPeekEvent(displ, &cache_1);
                     if ( cache_1.type == KeyPress && (cache_1.xkey.serial == event.xkey.serial) && (cache_1.xkey.time == event.xkey.time) ) {
                         XNextEvent(displ, &event);
+                        is_repeated = 1;
                     }
                 }
             }
+
+            // if ( is_repeated ) {
+            //     is_repeated = 0;
+            //     continue;
+            // }
 
             if (handler[event.type])
                 handler[event.type](&event);

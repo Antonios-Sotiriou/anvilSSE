@@ -42,16 +42,9 @@ const void rotate_z(Mesh *c, const float angle) {
 /* Rotates Mesh according to own axis in relation with its cd.v[P] point. */
 const void rotate_origin(Mesh *m, const float angle, float x, float y, float z) {
     vec4f axis = { x, y, z };
-
     Quat xrot = rotationQuat(angle, axis);
-    Mat4x4 tm = MatfromQuat(xrot, m->cd.v[P]);
-
-    m->Q = multiplyQuats(m->Q, xrot);
-
     m->r = xrot;
-
-    setvecsarrayxm(m->cd.v, 4, tm);
-    setvecsarrayxm(m->bbox.v, m->bbox.v_indexes, tm);
+    m->rot_angle = angle;
 }
 /* Rotates light arround a given cd.v[P] point. */
 // const void rotate_light(Light *l, const vec4f pos, const float angle, float x, float y, float z) {

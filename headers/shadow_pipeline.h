@@ -48,7 +48,7 @@ extern unsigned int SMA, SMB, SMC, STA, STB ,STC;
 
 vec4f *worldSpaceFrustum(const float np, const float fp);
 const Mat4x4 createOrthoMatrixFromLimits(const DimensionsLimits dl);
-const void createCascadeShadowMatrices(const int num_of_cascades);
+const void createCascadeShadowMatrices(void);
 const void shadowPipeline(Scene *s, const int sm_index);
 const float shadowTest(vec4f frag);
 

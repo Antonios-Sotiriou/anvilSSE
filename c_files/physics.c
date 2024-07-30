@@ -22,10 +22,12 @@ const void applyForces(Scene *s) {
                 setvecsarrayxm(s->m[i].bbox.v, s->m[i].bbox.v_indexes, tm);
 
                 s->m[i].Q = multiplyQuats(s->m[i].Q, s->m[i].r);
+
+                rotationCollision(&tf, s, &s->m[i]);
             }
 
-            if ( !rotation_collide )
-                rotation_collide += rotationCollision(&tf, s, &s->m[i]);
+            // if ( !rotation_collide )
+            //     rotation_collide += rotationCollision(&tf, s, &s->m[i]);
 
             if ( s->m[i].momentum ) {
                 s->m[i].falling_time += DeltaTime;

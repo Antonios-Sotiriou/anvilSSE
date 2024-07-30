@@ -46,22 +46,22 @@ vec4f *worldSpaceFrustum(const float np, const float fp) {
 const Mat4x4 createOrthoMatrixFromLimits(const DimensionsLimits dl) {
     return orthographicMatrix(dl.min[0], dl.max[0], dl.min[1], dl.max[1], dl.min[2], dl.max[2]);
 }
-const void createCascadeShadowMatrices(const int num_of_cascades) {
+const void createCascadeShadowMatrices(void) {
     DimensionsLimits dl;
-    vec4f *fr[4] = {
+    vec4f *fr[NUM_OF_CASCADES] = {
         worldSpaceFrustum(NPlane, 100),
         worldSpaceFrustum(NPlane, 200),
         worldSpaceFrustum(NPlane, 400),
         worldSpaceFrustum(NPlane, 800),
     };
-    Mat4x4 lm[4] = {
+    Mat4x4 lm[NUM_OF_CASCADES] = {
         lookat(eye->cd.v[P] + ((eye->cd.v[N] * (float)SMA)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N]),
         lookat(eye->cd.v[P] + ((eye->cd.v[N] * (float)SMB)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N]),
         lookat(eye->cd.v[P] + ((eye->cd.v[N] * (float)SMC)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N]),
         lookat(eye->cd.v[P] + ((eye->cd.v[N] * (float)SMD)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N])
     };
 
-    for (int i = 0; i < num_of_cascades; i++) {
+    for (int i = 0; i < NUM_OF_CASCADES; i++) {
         lm[i].m[3][1] = scene.m[7].cd.v[P][1];
         lview = inverse_mat(lm[i]);
         /* Transform view frustum to Space. */
@@ -350,8 +350,8 @@ const float shadowTest(vec4f frag) {
         }
     }
 
-    // return shadow / 9.f;
-    return sm_index;
+    return shadow / 9.f;
+    // return sm_index;
 }
 
 

@@ -11,10 +11,11 @@ const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
         Mat4x4 dr = translationMatrix(0, height_diff, 0);
 
         setvecsarrayxm(object->bbox.v, object->bbox.v_indexes, dr);
-        object->cd.v[P][1] += height_diff;
+        setvecsarrayxm(object->cd.v, 4, dr);
     }
 }
 const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *velocity) {
+
     if (obj->quadIndex < 0) {
         // fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
         return 0;
@@ -185,6 +186,7 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
     return 0;
 }
 const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
+
     if (obj->quadIndex < 0) {
         // fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
         return 0;
@@ -271,7 +273,7 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
                 setvecsarrayxm(obj->cd.v, 4, rm);
                 setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, rm);
-                obj->r = unitQuat();
+                // obj->r = unitQuat();
                 // memset(&obj->r, 0, sizeof(Quat));
 
                 return 1;
