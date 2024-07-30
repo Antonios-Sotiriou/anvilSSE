@@ -8,10 +8,10 @@ const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
         object->falling_time = 0;
     }
     if (object->grounded) {
-        Mat4x4 dr = translationMatrix(0, height_diff, 0);
+        Mat4x4 tm = translationMatrix(0, height_diff, 0);
 
-        setvecsarrayxm(object->bbox.v, object->bbox.v_indexes, dr);
-        setvecsarrayxm(object->cd.v, 4, dr);
+        setvecsarrayxm(object->cd.v, 4, tm);
+        setvecsarrayxm(object->bbox.v, object->bbox.v_indexes, tm);
     }
 }
 const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *velocity) {
@@ -168,9 +168,9 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
 
                 Mat4x4 trans = translationMatrix(velocity[0][0], velocity[0][1], velocity[0][2]);
 
+                setvecsarrayxm(obj->cd.v, 4, trans);
                 setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, trans);
-
-                obj->cd.v[P] += velocity[0];
+                // obj->cd.v[P] += velocity[0];
 
                 obj->momentum *= cache->mass;
                 float dot =  dot_product(normal, obj->mvdir);

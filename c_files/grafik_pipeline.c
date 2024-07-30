@@ -37,7 +37,7 @@ void *grafikPipeline(void *args) {
 
             /* Clipping against near Plane in View Space. */
             vec4f plane_near_p = { 0.0f, 0.0f, NPlane },
-                    plane_near_n = { 0.0f, 0.0f, 1.0f };
+                plane_near_n = { 0.0f, 0.0f, 1.0f };
             cache_0 = clipp(&cache_0, plane_near_p, plane_near_n);
             if (!cache_0.f_indexes) {
                 releaseMesh(&cache_0);

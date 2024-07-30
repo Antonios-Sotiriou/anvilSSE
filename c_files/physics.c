@@ -48,9 +48,10 @@ const void applyForces(Scene *s) {
 
                     trans = translationMatrix(velocity[0][0], velocity[0][1], velocity[0][2]);
 
+                    setvecsarrayxm(s->m[i].cd.v, 4, trans);
                     setvecsarrayxm(s->m[i].bbox.v, s->m[i].bbox.v_indexes, trans);
 
-                    s->m[i].cd.v[P] += velocity[0];
+                    // s->m[i].cd.v[P] += velocity[0];
                 // }
             }
             if ( s->m[i].type != Celestial || !s->m[i].grounded )
