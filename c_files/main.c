@@ -470,7 +470,7 @@ const static void project(void) {
         worldMat = mxm(viewMat, orthoMat);
 
     // clock_t time_0 = start();
-    /* Draw in parallel the 3 Cascade shadow maps. */
+    /* Draw in parallel the 4 Cascade shadow maps. */
     for (int i = 0; i < 4; i++) {
         if (pthread_create(&threads[i], NULL, &cascade, &thread_ids[i]))
             fprintf(stderr, "ERROR: project() -- graphicsPipeline -- pthread_create()\n");
@@ -482,9 +482,9 @@ const static void project(void) {
     }
     // printf("Shadow Pipeline  : %f\n", end(time_0));
 
-    // clock_t time_1 = start();
+    clock_t time_1 = start();
     graphicsPipeline(NULL);
-    // printf("Graphics Pipeline: %f\n", end(time_1));
+    printf("Graphics Pipeline: %f\n", end(time_1));
 
     // clock_t time_2 = start();
     /* Proceed the fragments buffer created by grafikPipeline and apply lighting. */
