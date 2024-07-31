@@ -46,33 +46,5 @@ const void rotate_origin(Mesh *m, const float angle, float x, float y, float z) 
     m->r = xrot;
     m->rot_angle = angle;
 }
-/* Rotates light arround a given cd.v[P] point. */
-// const void rotate_light(Light *l, const vec4f pos, const float angle, float x, float y, float z) {
-//     vec4f axis = { x, y, z };
-//     Quat n = setQuat(0, pos);
-
-//     Quat xrot = rotationQuat(angle, axis);
-//     Mat4x4 m = MatfromQuat(xrot, n.v);
-
-//     sunlight.pos = vecxm(l->pos, m);
-//     sunlight.u = vecxm(l->u, m);
-//     sunlight.v = vecxm(l->v, m);
-//     sunlight.n = vecxm(l->n, m);
-// }
-// /* Rotates light according to camera position. */
-// const void rotate_light_cam(Mesh *l, const vec4f pos, const float angle, float x, float y, float z) {
-//     vec4f axis = { x, y, z };
-//     Quat n = setQuat(0, pos);
-
-//     Quat xrot = rotationQuat(angle, axis);
-//     Mat4x4 m = MatfromQuat(xrot, n.v);
-
-//     // l->v = setvecsarrayxm(l->v, l->v_indexes, m);
-//     // l->n = setvecsarrayxm(l->n, l->n_indexes, m);
-//     // sunlight.pos = vecxm(l->pos, m);
-//     // sunlight.u = vecxm(l->u, m);
-//     // sunlight.v = vecxm(l->v, m);
-//     // sunlight.n = vecxm(l->n, m);
-// }
 
 

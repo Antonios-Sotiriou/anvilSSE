@@ -25,7 +25,6 @@ all:
 		$(DIRECTORY)clipping.c\
 		$(DIRECTORY)graphics_pipeline.c\
 		$(DIRECTORY)shadow_pipeline.c\
-		$(DIRECTORY)edge_pipeline.c\
 		$(DIRECTORY)camera.c\
 		$(DIRECTORY)vectors_math.c\
 		$(DIRECTORY)scene_objects.c\

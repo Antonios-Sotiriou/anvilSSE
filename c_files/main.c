@@ -43,7 +43,6 @@ int SCANLINE = 1;
 #include "../headers/clipping.h"
 #include "../headers/graphics_pipeline.h"
 #include "../headers/shadow_pipeline.h"
-#include "../headers/edge_pipeline.h"
 #include "../headers/terrain_functions.h"
 #include "../headers/collision_detection.h"
 #include "../headers/camera.h"
@@ -127,9 +126,7 @@ Tile *tiles, *point_tiles;
 /* X11 and mainwindow Global variables. */
 static int INIT = 0;
 static int RUNNING = 1;
-// int HALFW = 0; // Half width of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
-// int HALFH = 0; // Half height of the screen; This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
-vec4i half_screen = { 0, 0, 1, 1 };
+vec4i half_screen = { 0, 0, 1, 1 }; // This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
 int MAIN_EMVADON;
 int DEBUG = 0;
 
@@ -161,7 +158,6 @@ const static void initGlobalGC(void);
 const static void initDependedVariables(void);
 const static void initAtoms(void);
 const static void initBuffers(void);
-// const static void initLightModel(Light *l);
 const static void pixmapcreate(void);
 const static void pixmapdisplay(Drawable pixmap, Drawable window, unsigned int wdth, unsigned int heigth);
 // const static void initLightModel(Mesh *m);
@@ -452,7 +448,6 @@ const static void applyPhysics(void) {
 }
 const static void project(void) {
 
-
     if (EYEPOINT)
         eye = &scene.m[7];
     else
@@ -487,10 +482,6 @@ const static void project(void) {
             fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
     }
     // printf("Shadow Pipeline  : %f\n", end(time_0));
-
-    // clock_t time_1 = start();
-    // graphicsPipeline(NULL);
-    // printf("Graphics Pipeline: %f\n", end(time_1));
 
     // clock_t time_2 = start();
     /* Proceed the fragments buffer created by grafikPipeline and apply lighting. */

@@ -239,30 +239,5 @@ static vec4f *loadnormals(const char path[]) {
     fclose(fp);
     return n;
 }
-// /* Assosiates vertices coordinate values from vector array through indexes. */
-// const static void *assemblyfaces(MeshStepOne *m, unsigned int *indices, const int len) {
-//     MeshStepTwo r = { 0 };
-//     r.f_indexes = len / 9;
-//     r.f = malloc(sizeof(face) * r.f_indexes);
-
-//     int index = 0;
-//     for (int i = 0; i < len; i += 9) {
-//         r.f[index].v[0] = m->v[indices[i]];
-//         r.f[index].v[1] = m->v[indices[i + 3]];
-//         r.f[index].v[2] = m->v[indices[i + 6]];
-
-//         r.f[index].vt[0] = m->t[indices[i + 1]];
-//         r.f[index].vt[1] = m->t[indices[i + 4]];
-//         r.f[index].vt[2] = m->t[indices[i + 7]];
-
-//         r.f[index].vn[0] = m->n[indices[i + 2]];
-//         r.f[index].vn[1] = m->n[indices[i + 5]];
-//         r.f[index].vn[2] = m->n[indices[i + 8]];
-//         index++;
-//     }
-
-//     r.cull = m->cull;
-//     return r;
-// }
 
 

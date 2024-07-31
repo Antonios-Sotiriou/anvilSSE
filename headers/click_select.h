@@ -9,6 +9,10 @@
     #include "../headers/matrices.h"
 #endif
 
+#ifndef _TERRAIN_FUNCTIONS_H
+    #include "../headers/terrain_functions.h"
+#endif
+
 /* Defined in main.c. */
 extern TerrainInfo tf;
 extern Scene scene;
