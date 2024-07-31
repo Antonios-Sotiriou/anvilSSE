@@ -99,7 +99,7 @@ const void loadtexture(Mesh *m, const unsigned int lvl) {
         if (!m->material.texture)
             fprintf(stderr, "Could not allocate memmory for texture: %s. loadtexture()\n", texpath);
 
-        vec4c temp = { 0, 0, 0, 1 };
+        vec4c temp = { 0, 0, 0, 255 };
         for (int i = 0; i < texSize; i++) {
             fread(&temp, 3, 1, fp);
             m->material.texture[i] = __builtin_convertvector(temp, vec4f) / 255.f;

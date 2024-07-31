@@ -21,6 +21,10 @@
     #include <string.h>
 #endif
 
+#ifndef _PTHREAD_H
+    #include <pthread.h>
+#endif
+
 /* Defined in main.c file. */
 extern int EDGEFUNC, SCANLINE;
 extern vec4c *point_frame_buffer;
@@ -43,8 +47,8 @@ const void fillMesh(Mesh *m, Material *mtr);
 const void edgefillface(const face f, Material *mtr);
 const void scanlinefillface(const face f, Material *mtr);
 
-const void texMesh(Mesh *m, Material *mtr);
-const void edgetexface(face *f, Material *mtr);
+void *texMesh(void *args);
+const void edgetexface(face *f, Material *mtr, Tile *t);
 const void scanlinetexface(face *f, Material *mtr);
 
 #endif /* _DRAW_FUNCTIONS_H */

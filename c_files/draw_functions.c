@@ -7,7 +7,7 @@ const vec4i rgbmask = { 2, 1, 0, 3 };
 const static void edgefillGeneral(const face f, Material *mtr, const int minX, const int maxX, const int minY, const int maxY);
 const static void scanlinefillGeneral(const face f, Material *mtr, const Srt srt[]);
 
-const static void edgetexGeneral(face *f, Material *mtr, const int minX, const int maxX, const int minY, const int maxY);
+const static void edgetexGeneral(face *f, Material *mtr, Tile *t, const int minX, const int maxX, const int minY, const int maxY);
 const static void scanlinetexGeneral(face *f, Material *mtr, const Srt srt[]);
 
 
@@ -287,21 +287,14 @@ const static void scanlinefillGeneral(const face f, Material *mtr, const Srt srt
 /* ######################################## TEXTURE PAINTING FUNCTIONS ######################################## */
 
 /* Textures given Mesh using the choosen algorithm-> (Edge Function or Scanline Function). */
-const void texMesh(Mesh *m, Material *mtr) {
-    struct fillDispatch {
-        void (*fillfunction)(face *f, Material *m);
-    } dis;
+void *texMesh(void *args) {
+    Args ar = *(Args*)args;
 
-    if (EDGEFUNC)
-        dis.fillfunction = &edgetexface;
-    else if (SCANLINE)
-        dis.fillfunction = &scanlinetexface;
-
-    for (int i = 0; i < m->f_indexes; i++) {
-        dis.fillfunction(&m->f[i], mtr);
+    for (int i = 0; i < ar.m->f_indexes; i++) {
+        edgetexface(&ar.m->f[i], ar.mtr, ar.tile);
     }
 }
-const void edgetexface(face *f, Material *mtr) {
+const void edgetexface(face *f, Material *mtr, Tile *t) {
     /* Creating 2Arrays for X and Y values to sort them-> */
     int Ys[3] = { f->v[0][1], f->v[1][1], f->v[2][1] };
     int Xs[3] = { f->v[0][0], f->v[1][0], f->v[2][0] };
@@ -323,9 +316,9 @@ const void edgetexface(face *f, Material *mtr) {
             }
         }
 
-    edgetexGeneral(f, mtr, Xs[0], Xs[2], Ys[0], Ys[2]);
+    edgetexGeneral(f, mtr, t, Xs[0], Xs[2], Ys[0], Ys[2]);
 }
-const static void edgetexGeneral(face *f, Material *mtr, int minX, int maxX, int minY, int maxY) {
+const static void edgetexGeneral(face *f, Material *mtr, Tile *t, int minX, int maxX, int minY, int maxY) {
     const vec4i xs = { f->v[0][0],  f->v[1][0], f->v[2][0], 0};
     const vec4i ys = { f->v[0][1],  f->v[1][1], f->v[2][1], 0};
 
@@ -335,6 +328,9 @@ const static void edgetexGeneral(face *f, Material *mtr, int minX, int maxX, int
     const int tps0 = ((ymy[0] == 0) && (ys[2] > ys[1])) || (ymy[0] < 0) ? 1 : 0;
     const int tps1 = ((ymy[1] == 0) && (ys[0] > ys[2])) || (ymy[1] < 0) ? 1 : 0;
     const int tps2 = ((ymy[2] == 0) && (ys[1] > ys[0])) || (ymy[2] < 0) ? 1 : 0;
+
+    minY = minY < t->start_height ? t->start_height : minY;
+    maxY = maxY > t->end_height ? t->end_height : maxY;
 
     const float area = ((xs[0] - xs[1]) * ymy[1]) - ((ys[0] - ys[1]) * xmx[1]);
     vec4i ya = ((minX - xs) * ymy) - ((minY - ys) * xmx);

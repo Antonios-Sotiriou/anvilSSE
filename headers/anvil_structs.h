@@ -151,6 +151,13 @@ typedef struct {
     int start_width, start_height, end_width, end_height;
 } Tile;
 
+/* Struct to pass to thread functions arguments, that we can use in thread. */
+typedef struct {
+    Mesh *m;
+    Material *mtr;
+    Tile *tile;
+} Args;
+
 /* Light struct to create different kind of light sources. */
 typedef struct {
     vec4f pos, u, v, n, newP;

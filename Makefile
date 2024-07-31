@@ -23,7 +23,7 @@ all:
 		$(DIRECTORY)quaternions.c\
 		$(DIRECTORY)kinetics.c\
 		$(DIRECTORY)clipping.c\
-		$(DIRECTORY)grafik_pipeline.c\
+		$(DIRECTORY)graphics_pipeline.c\
 		$(DIRECTORY)shadow_pipeline.c\
 		$(DIRECTORY)edge_pipeline.c\
 		$(DIRECTORY)camera.c\

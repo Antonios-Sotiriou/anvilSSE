@@ -25,7 +25,8 @@ extern Mat4x4 reperspMat, *point_mat;
 extern vec4c *point_frame_buffer;
 extern Scene scene;
 extern Light sunlight;
-// extern vec4f camera[4];
+extern vec4i half_screen;
+
 extern float AmbientStrength, SpecularStrength, DiffuseStrength;
 
 /* Defined in shadow_pipeline.c. */

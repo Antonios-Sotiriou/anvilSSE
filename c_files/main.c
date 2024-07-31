@@ -23,14 +23,13 @@
 
 /* ############################################## MULTITHREADING ################################################################### */
 #include <pthread.h>
-#define THREADS 8
 pthread_t threads[THREADS];
 int *thread_ids;
 /* ############################################## MULTITHREADING ################################################################### */
 
 /* CHOOSE WITH WHICH FUNCTION TO RASTERIZE. */
-int EDGEFUNC = 0;
-int SCANLINE = 1;
+int EDGEFUNC = 1;
+int SCANLINE = 0;
 
 /* Project specific headers */
 #include "../headers/anvil_structs.h"
@@ -42,7 +41,7 @@ int SCANLINE = 1;
 #include "../headers/general_functions.h"
 #include "../headers/physics.h"
 #include "../headers/clipping.h"
-#include "../headers/grafik_pipeline.h"
+#include "../headers/graphics_pipeline.h"
 #include "../headers/shadow_pipeline.h"
 #include "../headers/edge_pipeline.h"
 #include "../headers/terrain_functions.h"
@@ -410,10 +409,19 @@ const static void keyrelease(XEvent *event) {
     printf("Key Released: %ld\n", keysym);
     eye->momentum = 0;
     eye->rot_angle = 0;
-    if (keysym == 99)
+    if ( keysym == 99 )
         scene.m[mesh_id].rot_angle = 0;
 }
-static void *oscillator(void *args) {
+static void *cascade(void *args) {
+
+    int shadow_id = *(int*)args;
+
+    memcpy(shadow_buffer[shadow_id], reset_shadow_buffer, BSIZE);
+    shadowPipeline(&scene, shadow_id);
+
+    return (void*)args;
+}
+static void *fragmentShader(void *args) {
 
     int thread_id = *(int*)args;
 
@@ -430,15 +438,6 @@ static void *oscillator(void *args) {
         if ( frags_buffer[i].state )
             phong(&frags_buffer[i]);
     }
-
-    return (void*)args;
-}
-static void *cascade(void *args) {
-
-    int shadow_id = *(int*)args;
-
-    memcpy(shadow_buffer[shadow_id], reset_shadow_buffer, BSIZE);
-    shadowPipeline(&scene, shadow_id);
 
     return (void*)args;
 }
@@ -470,52 +469,41 @@ const static void project(void) {
     else
         worldMat = mxm(viewMat, orthoMat);
 
+    // clock_t time_0 = start();
     /* Draw in parallel the 3 Cascade shadow maps. */
-    for (int i = 0; i < NUM_OF_CASCADES; i++) {
+    for (int i = 0; i < 4; i++) {
         if (pthread_create(&threads[i], NULL, &cascade, &thread_ids[i]))
-            fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
+            fprintf(stderr, "ERROR: project() -- graphicsPipeline -- pthread_create()\n");
     }
-    for (int i = 0; i < NUM_OF_CASCADES; i++) {
+
+    for (int i = 0; i < 4; i++) {
         if (pthread_join(threads[i], NULL))
             fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
     }
+    // printf("Shadow Pipeline  : %f\n", end(time_0));
 
-    for (int i = 0; i < scene.m_indexes; i++) {
-        const int distance = len_vec(scene.m[i].cd.v[P] - scene.m[6].cd.v[P]);
-        adoptdetailMesh(&scene.m[i], distance);
-        adoptdetailTexture(&scene.m[i], distance);
-    }
+    // clock_t time_1 = start();
+    graphicsPipeline(NULL);
+    // printf("Graphics Pipeline: %f\n", end(time_1));
 
-    if ( DEBUG == 1 ) {
-        edgePipeline();
-    } else {
-        /* Render in parallel according to tiles. */
-        for (int i = 0; i < 6; i++) {
-            if (pthread_create(&threads[i], NULL, &grafikPipeline, &thread_ids[i]))
-                fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
-        }
-        for (int i = 0; i < 6; i++) {
-            if (pthread_join(threads[i], NULL))
-                fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
-        }
-    }
-
+    // clock_t time_2 = start();
     /* Proceed the fragments buffer created by grafikPipeline and apply lighting. */
     for (int i = 0; i < 6; i++) {
-        if (pthread_create(&threads[i], NULL, &oscillator, &thread_ids[i]))
+        if (pthread_create(&threads[i], NULL, &fragmentShader, &thread_ids[i]))
             fprintf(stderr, "ERROR: project() -- oscillator -- pthread_create()\n");
     }
     for (int i = 0; i < 6; i++) {
         if (pthread_join(threads[i], NULL))
             fprintf(stderr, "ERROR: project() -- oscillator -- pthread_join()\n");
     }
+    // printf("Fragment Shader  : %f\n", end(time_2));
 
     if ( getClick ) {
         mesh_id = clickSelect(frags_buffer[((int)click[1] * main_wa.width) + (int)click[0]].pos);
         getClick = 0;
     }
 
-    if (DISPLAYBBOX)
+    if ( DISPLAYBBOX )
         displayBbox(scene.m[mesh_id].bbox.v, scene.m[mesh_id].bbox.v_indexes, worldMat);
 
     drawFrame();
@@ -824,7 +812,7 @@ const int main(int argc, char *argv[]) {
     for (int i = 7; i > 5; i--)
         pthread_create(&threads[i], NULL, &board, &thread_ids[i]);
 
-    for (int i = 7; i > 5 ; i--)
+    for (int i = 7; i > 5; i--)
         pthread_join(threads[i], NULL);
 
     free(frame_buffer);
@@ -863,37 +851,5 @@ const int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
-    //     int iteration = 0;
-    //     while(RUNNING) {
 
-    //         XNextEvent(displ, &event);
 
-    //         if ( event.type == KeyRelease ) {
-    //             // if ( (event.xkey.serial > cache_0.xkey.serial) && (event.xkey.time > cache_0.xkey.time) ) {
-    //                 printf("KeyRelease Event.\n");
-    //             //     // cache_0 = event;
-    //             //     // continue;
-    //             // } else {
-    //                 cache_0 = event;
-    //                 continue;
-    //             // }
-    //         }
-
-    //         if ( event.type == KeyPress ) {
-    //             if ( (event.xkey.serial == cache_0.xkey.serial) && (event.xkey.time == cache_0.xkey.time) ) {
-    //                 printf("KeyRepeat Event.\n");
-    //                 cache_0 = event;
-    //             }
-    //         }
-
-    //         // printf("type: %d    serial: %d    time: %ld    keycode: %d\n", event.type, event.xkey.serial, event.xkey.time, event.xkey.keycode);
-    //         // printf("type: %d    serial: %d    time: %ld    keycode: %d\n", cache_0.type, cache_0.xkey.serial, cache_0.xkey.time, cache_0.xkey.keycode);
-
-    //         if (handler[event.type])
-    //             handler[event.type](&event);
-
-    //         // usleep(3300);
-    //         printf("Iteration: %d\n", iteration);
-    //         iteration++;
-    //     }
-    // }
