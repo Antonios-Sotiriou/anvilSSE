@@ -199,26 +199,8 @@ const static void rasterize(Mesh *m, Material *mtr) {
         edgeMesh(m, mtr->basecolor);
     else if (DEBUG == 2)
         fillMesh(m, mtr);
-    else {
-        Args args[6];
-        int args_index = 0;
-        /* Render in parallel according to tiles. */
-        for (int i = 0; i < 6; i++) {
-            args[args_index].m = m;
-            args[args_index].mtr = mtr;
-            args[args_index].tile = &tiles[args_index];
-
-            if (pthread_create(&threads[i], NULL, &texMesh, &args[args_index]))
-                fprintf(stderr, "ERROR: project() -- cascade -- pthread_create()\n");
-
-            args_index++;
-        }
-
-        for (int i = 0; i < 6; i++) {
-            if (pthread_join(threads[i], NULL))
-                fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
-        }
-    }
+    else
+        texMesh(m, mtr);
 }
 
 

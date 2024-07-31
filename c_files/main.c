@@ -28,8 +28,8 @@ int *thread_ids;
 /* ############################################## MULTITHREADING ################################################################### */
 
 /* CHOOSE WITH WHICH FUNCTION TO RASTERIZE. */
-int EDGEFUNC = 1;
-int SCANLINE = 0;
+int EDGEFUNC = 0;
+int SCANLINE = 1;
 
 /* Project specific headers */
 #include "../headers/anvil_structs.h"
@@ -424,14 +424,15 @@ static void *cascade(void *args) {
 static void *fragmentShader(void *args) {
 
     int thread_id = *(int*)args;
+    const int threads = THREADS - 2;
 
-    int ypol = ( (MAIN_EMVADON) % 6);
-    int stuck = ( (MAIN_EMVADON) / 6);
+    int ypol = ( (MAIN_EMVADON) % threads);
+    int stuck = ( (MAIN_EMVADON) / threads);
 
     int tile_size = stuck * (thread_id + 1);
     int step = stuck * thread_id;
 
-    if ( ypol && (thread_id == 5) )
+    if ( ypol && (thread_id == (threads - 1)) )
         tile_size += ypol;
 
     for (int i = step; i < tile_size; i++) {
@@ -471,28 +472,33 @@ const static void project(void) {
 
     // clock_t time_0 = start();
     /* Draw in parallel the 4 Cascade shadow maps. */
-    for (int i = 0; i < 4; i++) {
-        if (pthread_create(&threads[i], NULL, &cascade, &thread_ids[i]))
-            fprintf(stderr, "ERROR: project() -- graphicsPipeline -- pthread_create()\n");
+    for (int i = 0; i < 5; i++) {
+        if ( i == 0 ) {
+            if (pthread_create(&threads[i], NULL, &graphicsPipeline, NULL))
+                fprintf(stderr, "ERROR: project() -- graphicsPipeline -- pthread_create()\n");
+        } else {
+            if (pthread_create(&threads[i], NULL, &cascade, &thread_ids[i]))
+                fprintf(stderr, "ERROR: project() -- graphicsPipeline -- pthread_create()\n");
+        }
     }
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 5; i++) {
         if (pthread_join(threads[i], NULL))
             fprintf(stderr, "ERROR: project() -- cascade -- pthread_join()\n");
     }
     // printf("Shadow Pipeline  : %f\n", end(time_0));
 
-    clock_t time_1 = start();
-    graphicsPipeline(NULL);
-    printf("Graphics Pipeline: %f\n", end(time_1));
+    // clock_t time_1 = start();
+    // graphicsPipeline(NULL);
+    // printf("Graphics Pipeline: %f\n", end(time_1));
 
     // clock_t time_2 = start();
     /* Proceed the fragments buffer created by grafikPipeline and apply lighting. */
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < THREADS - 2; i++) {
         if (pthread_create(&threads[i], NULL, &fragmentShader, &thread_ids[i]))
             fprintf(stderr, "ERROR: project() -- oscillator -- pthread_create()\n");
     }
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < THREADS - 2; i++) {
         if (pthread_join(threads[i], NULL))
             fprintf(stderr, "ERROR: project() -- oscillator -- pthread_join()\n");
     }
@@ -709,7 +715,7 @@ static int predicate(Display *d, XEvent *e, XPointer arg) {
 static void *board(void *args) {
     int th_id = *(int*)args;
 
-    if ( th_id == 7 ) {
+    if ( th_id == THREADS - 1 ) {
         initGlobalGC();
         pixmapcreate();
         initAtoms();
@@ -809,10 +815,10 @@ const int main(int argc, char *argv[]) {
 
     initThreads();
 
-    for (int i = 7; i > 5; i--)
+    for (int i = THREADS - 1; i > THREADS - 3; i--)
         pthread_create(&threads[i], NULL, &board, &thread_ids[i]);
 
-    for (int i = 7; i > 5; i--)
+    for (int i = THREADS - 1; i > THREADS - 3; i--)
         pthread_join(threads[i], NULL);
 
     free(frame_buffer);
