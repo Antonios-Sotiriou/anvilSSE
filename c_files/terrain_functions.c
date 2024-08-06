@@ -78,8 +78,9 @@ const void createTerrain(Mesh *m, const char path[]) {
         }
 
         v[x][0] += x_step_cache;
-        // c->v[x][1] = (float)rand() / (float)(RAND_MAX / 0.09f);
-        v[x][1] = data[x] / 255.f;
+        // v[x][1] = (float)rand() / (float)(RAND_MAX / 0.09f);
+        v[x][1] = 0.f;
+        // v[x][1] = data[x] / 255.f;
         v[x][2] = z_step_cache;
         v[x][3] = 1.f;
 

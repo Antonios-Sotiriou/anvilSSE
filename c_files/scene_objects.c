@@ -49,7 +49,9 @@ const void initWorldObjects(Scene *s) {
     s->m[1].cull = 1;
     s->m[1].lodlevels = 1;
     // s->m[1].visible = 1;
-    s->m[1].mass = 1.f;
+    s->m[1].weight = 82 * 9.81;
+    s->m[1].mass = s->m[1].weight / 9.81;
+    s->m[1].fr_coef = 0.5;
     // s->m[1].grounded = 1;
     // s->m[1].material.reflect = 1;
     s->m[1].Q = unitQuat();
@@ -77,6 +79,7 @@ const void initWorldObjects(Scene *s) {
     s->m[2].lodlevels = 0;
     // s->m[2].visible = 1;
     s->m[2].mass = 0.5;
+    s->m[2].fr_coef = 0.5;
     // s->m[2].grounded = 1;
     s->m[2].Q = unitQuat();
     // enWorldMesh(&s->m[2]);
@@ -100,6 +103,7 @@ const void initWorldObjects(Scene *s) {
     s->m[3].lodlevels = 0;
     // s->m[3].visible = 1;
     s->m[3].mass = 0.5;
+    s->m[3].fr_coef = 0.5;
     // s->m[3].grounded = 1;
     s->m[3].Q = unitQuat();
     // enWorldMesh(&s->m[3]);
@@ -124,6 +128,7 @@ const void initWorldObjects(Scene *s) {
     s->m[4].lodlevels = 0;
     // s->m[4].visible = 1;
     s->m[4].mass = 0.5;
+    s->m[4].fr_coef = 0.5;
     // s->m[4].grounded = 1;
     s->m[4].Q = unitQuat();
     // enWorldMesh(&s->m[4]);
@@ -163,20 +168,22 @@ const void initWorldObjects(Scene *s) {
     s->m[6].type = Camera;
     s->m[6].id = 6;
 
-    s->m[6].scale = 10.f;
+    s->m[6].scale = 1.f;
     
     vec4f camera[4] = {
-        { 0.0f, 0.0f, 0.0f, 1.0f },
-        { 1.0f, 0.0f, 0.0f, 0.0f },
-        { 0.0f, -1.0f, 0.0f, 0.0f },
-        { 0.0f, 0.0f, 1.0f, 0.0f }
+        { 0.0f, 0.0f, 0.0f, 1.0f },    // { 0.0f, 0.0f, 0.0f, 1.0f },
+        { 0.669131f, 0.0f, -0.743145f, 0.0f },    // { 1.0f, 0.0f, 0.0f, 0.0f },
+        { 0.0f, -1.0f, 0.0f, 0.0f },    // { 0.0f, -1.0f, 0.0f, 0.0f },
+        { 0.743145f, 0.0f, 0.669131f, 0.0f }    // { 0.0f, 0.0f, 1.0f, 0.0f }
     };
     memcpy(s->m[6].cd.v, camera, 64);
 
     s->m[6].cull = 1;
     s->m[6].lodlevels = 1;
     // s->m[6].visible = 1;
-    s->m[6].mass = 82.f;
+    s->m[6].weight = 82 * 9.81;
+    s->m[6].mass = s->m[6].weight / 9.81;
+    s->m[6].fr_coef = 0.5;
     // s->m[6].material.reflect = 1;
     s->m[6].Q = unitQuat();
     // enWorldMesh(&s->m[6]);
@@ -205,6 +212,7 @@ const void initWorldObjects(Scene *s) {
     s->m[7].lodlevels = 1;
     // s->m[7].visible = 1;
     s->m[7].mass = 0;
+    s->m[7].fr_coef = 0.5;
     // s->m[7].material.reflect = 1;
     s->m[7].Q = unitQuat();
     // enWorldMesh(&s->m[7]);

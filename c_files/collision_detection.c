@@ -1,13 +1,15 @@
 #include "../headers/collision_detection.h"
 
+#include "../headers/logging.h"
+
 const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
     const float height = getTerrainHeight(terrain, object->cd.v[P], object);
     float height_diff = height - (object->cd.v[P][1] - object->scale);
-    if (height_diff >= 0) {
+    if ( height_diff >= 0 ) {
         object->grounded = 1;
         object->falling_time = 0;
     }
-    if (object->grounded) {
+    if ( object->grounded ) {
         Mat4x4 tm = translationMatrix(0, height_diff, 0);
 
         setvecsarrayxm(object->cd.v, 4, tm);
@@ -16,8 +18,8 @@ const void objectTerrainCollision(Mesh *terrain, Mesh *object) {
 }
 const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *velocity) {
 
-    if (obj->quadIndex < 0) {
-        // fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
+    if ( obj->quadIndex < 0 ) {
+        fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
         return 0;
     }
 
@@ -43,6 +45,14 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             tnear = (__builtin_convertvector(min, vec4f) - obj->cd.v[P]) / velocity[0];
             tfar =  (__builtin_convertvector(max, vec4f) - obj->cd.v[P]) / velocity[0];
 
+            /* Those if statements here are importand to correct precission errors when the objects are touching each other. */
+            if ( (tnear[1] <= 0.000001) && !__isinff(tnear[1]) ) {
+                tnear[1] = 0;
+            }
+            if ( (tfar[1] <= 0.000001) && !__isinff(tfar[1]) ) {
+                tfar[1] = 0;
+            }
+
             f_nx = tnear[0] == 0 ? 1 : __isnanf(tnear[0]) ? -1 : 0;
             f_ny = tnear[1] == 0 ? 1 : __isnanf(tnear[1]) ? -1 : 0;
             f_nz = tnear[2] == 0 ? 1 : __isnanf(tnear[2]) ? -1 : 0;
@@ -50,119 +60,71 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
             f_fy = tfar[1] == 0 ? 1 : __isnanf(tfar[1]) ? -1 : 0;
             f_fz = tfar[2] == 0 ? 1 : __isnanf(tfar[2]) ? -1 : 0;
 
-            // printf("id: %d\n", s->m[inner_inx].id);
-
-            // printf("f_chk: %d!!!\n", (f_nx | f_ny | f_nz | f_fx | f_fy | f_fz));
-            if ( (f_nx | f_ny | f_nz | f_fx | f_fy | f_fz) < 0 ) {
-                // loadMaterial(&s->m[inner_inx].material, "jade");
-                // printf("Nan value has occured!!!\n");
+            if ( (f_nx | f_ny | f_nz | f_fx | f_fy | f_fz) < 0 )
                 continue;
-            }
 
             const int f_sum = f_nx + f_ny + f_nz + f_fx + f_fy + f_fz;
-            // printf("f_sum: %d!!!\n", f_sum);
-            if (tnear[0] > tfar[0]) swap(&tnear[0], &tfar[0], 4);
-            if (tnear[1] > tfar[1]) swap(&tnear[1], &tfar[1], 4);
-            if (tnear[2] > tfar[2]) swap(&tnear[2], &tfar[2], 4);
 
-            if (tnear[0] > tfar[2] || tnear[2] > tfar[0]) {
-                // printf("(tnear[0] > tfar[2] || tnear[2] > tfar[0])\n");
-                // loadMaterial(&s->m[inner_inx].material, "jade");
+            if ( tnear[0] > tfar[0] ) swap(&tnear[0], &tfar[0], 4);
+            if ( tnear[1] > tfar[1] ) swap(&tnear[1], &tfar[1], 4);
+            if ( tnear[2] > tfar[2] ) swap(&tnear[2], &tfar[2], 4);
+
+            if ( tnear[0] > tfar[2] || tnear[2] > tfar[0] )
                 continue;
-            }
 
             float t_near = tnear[0] > tnear[2] ? tnear[0] : tnear[2];
             float t_far = tfar[0] < tfar[2] ? tfar[0] : tfar[2];
 
             /* ##################### Y ############################ */
-            if (t_near > tfar[1] || tnear[1] > t_far) {
-                // printf("(t_near > tfar[1] || tnear[1] > t_far)\n");
-                // getc(stdin);
-                // loadMaterial(&s->m[inner_inx].material, "jade");
+            if ( t_near > tfar[1] || tnear[1] > t_far )
                 continue;
-            }
 
-            if (tnear[1] > t_near) {
+            if ( tnear[1] > t_near )
                 t_near = tnear[1];
-                // printf("(tnear[1] > t_near)\n");
-                // getc(stdin);
-            }
-            if (tfar[1] < t_far) {
+            if ( tfar[1] < t_far )
                 t_far = tfar[1];
-                // printf("(tfar[1] < t_far)\n");
-                // getc(stdin);
-            }
-            /* ##################### Y ############################ */          
+            /* ##################### Y ############################ */
 
-            if ( ((t_far < 0) || (t_near < 0)) || (t_near > 1.f) ) { 
-                // printf("(t_far < 0 || t_near < 0) || (t_near > 1.f)\n");
-                // loadMaterial(&s->m[inner_inx].material, "jade");
+            if ( ((t_far < 0) || (t_near < 0)) || (t_near > 1.f) )
                 continue;
-            }
-
-            // printf("minx: %d    miny: %d    minz: %d\n", minx, miny, minz);
-            // printf("maxx: %d    maxy: %d    maxz: %d\n", maxx, maxy, maxz);
-
-            // printf("FLAGS: f_nx: %d    f_ny: %d    f_nz: %d\n", f_nx, f_ny, f_nz);
-            // printf("FLAGS: f_fx: %d    f_fy: %d    f_fz: %d\n", f_fx, f_fy, f_fz);
-
-            // printf("id: %d\n", s->m[inner_inx].id);
-            // printf("\ntnear[0]: %f    tnear[1]: %f    tnear[2]: %f\n", tnear[0], tnear[1], tnear[2]);
-            // printf("tfar[0]  : %f    tfar[1]  : %f    tfar[2]  : %f\n", tfar[0], tfar[1], tfar[2]);
-
 
             vec4f normal = { 0.f };
             if ( tnear[0] >= tnear[1] && tnear[0] >= tnear[2] ) {
                 if ( velocity[0][0] < 0 ) {
                     normal[0] = 1.f;
-                    // printf("Right\n");
                 } else if ( velocity[0][0] > 0 ) {     
                     normal[0] = -1.f;
-                    // printf("Left\n");
                 }
             } else if ( tnear[1] >= tnear[0] && tnear[1] >= tnear[2] ) {
                 if ( velocity[0][1] < 0 ) {
                     normal[1] = 1.f;
-                    // printf("Up\n");
                 } else if ( velocity[0][1] > 0 ) {
                     normal[1] = -1.f;
-                    // printf("Down\n");
                 }
             } else if ( tnear[2] >= tnear[0] && tnear[2] >= tnear[1] ) {
                 if ( velocity[0][2] < 0 ) {
                     normal[2] = 1.f;
-                    // printf("Back\n");
                 } else if ( velocity[0][2] > 0 ) {
                     normal[2] = -1.f;
-                    // printf("Front\n");
                 }
-            } else {
-                // printf("EXTRA CASE\n");
-                // continue;
             }
 
-            // printf("t_near   :    ----> %f\n", t_near);
-
-            if ( t_near == 0.f && f_sum <= 1 ) {
+            if ( t_near == 0.f && f_sum >= 0 ) {
                 printf("Sliding....\n");
 
                 float dot =  dot_product(normal, obj->mvdir);
                 obj->mvdir = obj->mvdir - (dot * normal);
 
                 if ( tnear[1] == 0 ) {
-                    obj->falling_time = 1.f;
+                    obj->falling_time = 0.f;
                     velocity[0] = (obj->mvdir * obj->momentum);
-                    // printf("tnear[1] == 0.f || tfar[1] == 0.f\n\n");
                 } else {
-                    // printf("else CASE\n\n");
-                    // obj->momentum *= s->m[inner_inx].mass;
                     velocity[0] = (gravity_epicenter * (9.81f * obj->falling_time) * obj->mass) + (obj->mvdir * obj->momentum);
                 }
-                // loadMaterial(&s->m[inner_inx].material, "pearl");
-                return 1;
+                return 2;
 
             } else if ( ((t_near > 0.f) && (t_near <= 1.f)) ) {
-                printf("COLLISION!!!\n\n");
+                printf("COLLISION : %f\n", t_near);
 
                 velocity[0] *= t_near;
 
@@ -170,14 +132,11 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
 
                 setvecsarrayxm(obj->cd.v, 4, trans);
                 setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, trans);
-                // obj->cd.v[P] += velocity[0];
 
-                obj->momentum *= cache->mass;
+                obj->momentum *= cache->fr_coef;
                 float dot =  dot_product(normal, obj->mvdir);
                 obj->mvdir = obj->mvdir - (dot * normal);
                 velocity[0] = (obj->mvdir * obj->momentum);
-
-                // loadMaterial(&s->m[inner_inx].material, "gold");
 
                 return 1;
             }
@@ -187,8 +146,8 @@ const int objectEnvironmentCollision(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f
 }
 const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
-    if (obj->quadIndex < 0) {
-        // fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
+    if ( obj->quadIndex < 0 ) {
+        fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. rotationCollision().\n", obj->quadIndex);
         return 0;
     }
 
@@ -221,50 +180,37 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
             f_fy = tfar[1] == 0 ? 1 : __isnanf(tfar[1]) ? -1 : 0;
             f_fz = tfar[2] == 0 ? 1 : __isnanf(tfar[2]) ? -1 : 0;
 
-            // printf("FLAGS: f_nx: %d    f_ny: %d    f_nz: %d\n", f_nx, f_ny, f_nz);
-            // printf("FLAGS: f_fx: %d    f_fy: %d    f_fz: %d\n", f_fx, f_fy, f_fz);
-
-            // printf("id: %d\n", s->m[inner_inx].id);
-            // printf("\ntnear[0]: %f    tnear[1]: %f    tnear[2]: %f\n", tnear[0], tnear[1], tnear[2]);
-            // printf("tfar[0]  : %f    tfar[1]  : %f    tfar[2]  : %f\n", tfar[0], tfar[1], tfar[2]);
-
-            if ( (f_nx | f_ny | f_nz | f_fx | f_fy | f_fz) < 0 ) {
+            if ( (f_nx | f_ny | f_nz | f_fx | f_fy | f_fz) < 0 )
                 continue;
-            }
 
             /* This or we have to devide tnear and tfar with 0 for penetration detection to work. */
             const int f_sum = f_nx + f_ny + f_nz + f_fx + f_fy + f_fz;
 
-            if (tnear[0] > tfar[0]) swap(&tnear[0], &tfar[0], 4);
-            if (tnear[1] > tfar[1]) swap(&tnear[1], &tfar[1], 4);
-            if (tnear[2] > tfar[2]) swap(&tnear[2], &tfar[2], 4);
+            if ( tnear[0] > tfar[0] ) swap(&tnear[0], &tfar[0], 4);
+            if ( tnear[1] > tfar[1] ) swap(&tnear[1], &tfar[1], 4);
+            if ( tnear[2] > tfar[2] ) swap(&tnear[2], &tfar[2], 4);
 
-            if (tnear[0] > tfar[2] || tnear[2] > tfar[0]) {
+            if ( tnear[0] > tfar[2] || tnear[2] > tfar[0] )
                 continue;
-            }
 
             float t_near = tnear[0] > tnear[2] ? tnear[0] : tnear[2];
             float t_far = tfar[0] < tfar[2] ? tfar[0] : tfar[2];
 
             /* ##################### Y ############################ */
-            if (t_near > tfar[1] || tnear[1] > t_far) {
+            if ( t_near > tfar[1] || tnear[1] > t_far )
                 continue;
-            }
 
-            if (tnear[1] > t_near) {
+            if ( tnear[1] > t_near )
                 t_near = tnear[1];
-            }
-            if (tfar[1] < t_far) {
+            if ( tfar[1] < t_far )
                 t_far = tfar[1];
-            }
             /* ##################### Y ############################ */          
 
-            if ( (t_far < 0) || (t_near > 1.f) ) { 
+            if ( (t_far < 0) || (t_near > 1.f) ) 
                 continue;
-            }
 
-            if ( (t_near < 0) && (f_sum == 0) ) {
-                printf("PENETRATION!!! %f\n\n", t_near);
+            if ( (t_near < 0) && (f_sum == 0) ) {            /* f_sum == 0 */
+                printf("PENETRATION: %f\n", t_near);
 
                 Quat rq = conjugateQuat(obj->r);
 
@@ -273,8 +219,6 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
 
                 setvecsarrayxm(obj->cd.v, 4, rm);
                 setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, rm);
-                // obj->r = unitQuat();
-                // memset(&obj->r, 0, sizeof(Quat));
 
                 return 1;
             }
@@ -283,8 +227,8 @@ const int rotationCollision(TerrainInfo *tf, Scene *s, Mesh *obj) {
     return 0;
 }
 const void sortObjectCollisions(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *velocity) {
-    if (obj->quadIndex < 0) {
-        // fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. ObjectEnvironmentCollision().\n", obj->quadIndex);
+    if ( obj->quadIndex < 0 ) {
+        fprintf(stderr, "obj->quadIndex : %d. Out of Terrain. sortObjectCollision().\n", obj->quadIndex);
         return;
     }
 
@@ -321,31 +265,28 @@ const void sortObjectCollisions(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *vel
                 continue;
             }
 
-            if (tnear[0] > tfar[0]) swap(&tnear[0], &tfar[0], 4);
-            if (tnear[1] > tfar[1]) swap(&tnear[1], &tfar[1], 4);
-            if (tnear[2] > tfar[2]) swap(&tnear[2], &tfar[2], 4);
+            if ( tnear[0] > tfar[0] ) swap(&tnear[0], &tfar[0], 4);
+            if ( tnear[1] > tfar[1] ) swap(&tnear[1], &tfar[1], 4);
+            if ( tnear[2] > tfar[2] ) swap(&tnear[2], &tfar[2], 4);
 
-            if (tnear[0] > tfar[2] || tnear[2] > tfar[0]) {
+            if ( tnear[0] > tfar[2] || tnear[2] > tfar[0] )
                 continue;
-            }
 
             float t_near = tnear[0] > tnear[2] ? tnear[0] : tnear[2];
             float t_far = tfar[0] < tfar[2] ? tfar[0] : tfar[2];
 
-            if (t_near > tfar[1] || tnear[1] > t_far) {
+            /* ##################### Y ############################ */
+            if ( t_near > tfar[1] || tnear[1] > t_far )
                 continue;
-            }
 
-            if (tnear[1] > t_near) {
+            if ( tnear[1] > t_near )
                 t_near = tnear[1];
-            }
-            if (tfar[1] < t_far) {
+            if ( tfar[1] < t_far )
                 t_far = tfar[1];
-            }
+            /* ##################### Y ############################ */
 
-            if (t_far < 0) { 
+            if ( t_far < 0 )
                 continue;
-            }
 
             cache_1->collision_t = t_near;
         }
@@ -355,8 +296,8 @@ const void sortObjectCollisions(TerrainInfo *tf, Scene *s, Mesh *obj, vec4f *vel
         cache_1 = tf->quads[obj->quadIndex].members[i];
         for (int j = 0; j < num_of_members; j++) {
             cache_2 = tf->quads[obj->quadIndex].members[j];
-            if (cache_1->id != obj->id) {
-                if (cache_1->collision_t < cache_2->collision_t) {
+            if ( cache_1->id != obj->id ) {
+                if ( cache_1->collision_t < cache_2->collision_t ) {
                     swap(&tf->quads[obj->quadIndex].members[i], &tf->quads[obj->quadIndex].members[j], 4);
                 }
             }

@@ -1,6 +1,8 @@
 #ifndef _ANVIL_FLAGS_H
 #define _ANVIL_FLAGS_H 1
 
+#define G_ACL                9.81
+
 #define THREADS              8
 #define NUM_OF_CASCADES      4
 

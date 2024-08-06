@@ -105,8 +105,8 @@ Mesh *eye;
 
 vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
-const float movScalar = 100.f;
-const float cameraMov = 1.42f;
+const float movScalar = 0.142f;
+const float moveForce = 0.142f;
 
 /* Variables usefull for mesh click select. */
 unsigned int getClick = 0;
@@ -249,8 +249,8 @@ const static void keypress(XEvent *event) {
     KeySym keysym = XLookupKeysym(&event->xkey, 0);
 
     // printf("\x1b[H\x1b[J");
-    // system("clear\n");
-    printf("Key Pressed: %ld\n", keysym);
+    system("clear\n");
+    // printf("Key Pressed: %ld\n", keysym);
     // logEvent(*event);
 
     switch (keysym) {
@@ -272,17 +272,17 @@ const static void keypress(XEvent *event) {
             break;
         case 101 : look_down(&scene.m[6], 2.0);            /* e */
             break;
-        case 119 : move_forward(&scene.m[6], cameraMov);         /* w */
+        case 119 : move_forward(&scene.m[6], moveForce);         /* w */
             break;
-        case 115 : move_backward(&scene.m[6], cameraMov);        /* s */
+        case 115 : move_backward(&scene.m[6], moveForce);        /* s */
             break;
-        case 65361 : move_left(&scene.m[6], cameraMov);          /* left arrow */
+        case 65361 : move_left(&scene.m[6], moveForce);          /* left arrow */
             break;
-        case 65363 : move_right(&scene.m[6], cameraMov);         /* right arrow */
+        case 65363 : move_right(&scene.m[6], moveForce);         /* right arrow */
             break;
-        case 65362 : move_up(&scene.m[6], cameraMov);            /* up arror */
+        case 65362 : move_up(&scene.m[6], moveForce);            /* up arror */
             break;
-        case 65364 : move_down(&scene.m[6], cameraMov);          /* down arrow */
+        case 65364 : move_down(&scene.m[6], moveForce);          /* down arrow */
             break;
         case 65451 :shadow_bias += 0.001;             /* + */
             printf("shadow_bias: %f\n", shadow_bias);
@@ -300,40 +300,40 @@ const static void keypress(XEvent *event) {
             // vec4f mva = norm_vec(camera[N] - camera[U]);
             vec4f mva = { -1.f, 0.f, 0.f };
             scene.m[1].mvdir = mva;
-            scene.m[1].momentum = movScalar * DeltaTime;
+            scene.m[1].momentum = movScalar * scene.m[1].mass;
             scene.m[1].roll = 1;
             break;
         case 65432 : //sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
             // vec4f mvb = -norm_vec(camera[N] - camera[U]);
             vec4f mvb = { 1.f, 0.f, 0.f };
             scene.m[1].mvdir = mvb;
-            scene.m[1].momentum = movScalar * DeltaTime;
+            scene.m[1].momentum = movScalar * scene.m[1].mass;
             scene.m[1].roll = 1;
             break;
         case 65434 : //sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
             scene.m[1].grounded = 0;
             vec4f mvc = { 0.f, 1.f, 0.f };
             scene.m[1].mvdir = mvc;
-            scene.m[1].momentum = 10 * scene.m[1].mass;
+            scene.m[1].momentum = 0.981 * scene.m[1].mass;
             scene.m[1].falling_time = 0.f;
             break;
         case 65435 : //sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
             vec4f mvd = { 0.f, -1.f, 0.f };
             scene.m[1].mvdir = mvd;
-            scene.m[1].momentum = movScalar * DeltaTime;
+            scene.m[1].momentum = movScalar * scene.m[1].mass;
             break;
         case 65431 : //sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
             // vec4f mve = norm_vec(scene.m[Camera_1].cd.v[U] + scene.m[Camera_1].cd.v[N]);
             vec4f mve = { 0.f, 0.f, 1.f };
             scene.m[1].mvdir = mve;
-            scene.m[1].momentum = movScalar * DeltaTime;
+            scene.m[1].momentum = movScalar * scene.m[1].mass;
             scene.m[1].roll = 1;
             break;
         case 65433 : //sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
             // vec4f mvf = -norm_vec(scene.m[Camera_1].cd.v[U] + scene.m[Camera_1].cd.v[N]);
             vec4f mvf = { 0.f, 0.f, -1.f };
             scene.m[1].mvdir = mvf;
-            scene.m[1].momentum = movScalar * DeltaTime;
+            scene.m[1].momentum = movScalar * scene.m[1].mass;
             scene.m[1].roll = 1;
             break;
         case 120 : rotate_x(&scene.m[0], 1);                     /* x */
@@ -397,12 +397,13 @@ const static void keypress(XEvent *event) {
     }
 
     // applyForces(&scene);
+    // logMesh(scene.m[1]);
 }
 const static void keyrelease(XEvent *event) {
 
     KeySym keysym = XLookupKeysym(&event->xkey, 0);
 
-    printf("Key Released: %ld\n", keysym);
+    // printf("Key Released: %ld\n", keysym);
     eye->momentum = 0;
     eye->rot_angle = 0;
     if ( keysym == 99 )
@@ -468,11 +469,11 @@ const static void project(void) {
     // clock_t time_0 = start();
     /* Draw in parallel the 4 Cascade shadow maps. */
     for (int i = 0; i < 5; i++) {
-        if ( i == 0 ) {
-            if (pthread_create(&threads[i], NULL, &graphicsPipeline, NULL))
+        if ( i < 4 ) {
+            if (pthread_create(&threads[i], NULL, &cascade, &thread_ids[i]))
                 fprintf(stderr, "ERROR: project() -- graphicsPipeline -- pthread_create()\n");
         } else {
-            if (pthread_create(&threads[i], NULL, &cascade, &thread_ids[i]))
+            if (pthread_create(&threads[i], NULL, &graphicsPipeline, NULL))
                 fprintf(stderr, "ERROR: project() -- graphicsPipeline -- pthread_create()\n");
         }
     }
@@ -730,10 +731,10 @@ static void *board(void *args) {
             displayInfo();
             // clock_t start_time = start();
             applyPhysics();
-            // end(start_time);
+            // printf("Apply Physics  : %f\n", end(start_time));
             // clock_t start_time = start();
             project();
-            // end(start_time);
+            // printf("Project     : %f\n", end(start_time));;
 
             time_dif = DeltaTime > 0.016666 ? 0 : (0.016666 - DeltaTime) * 100000;
             usleep(time_dif);
@@ -741,13 +742,13 @@ static void *board(void *args) {
     } else {
         XEvent event;
         int is_repeated = 0;
-        while(RUNNING) {
+        while ( RUNNING ) {
 
             XNextEvent(displ, &event);
             if ( event.type == KeyRelease ) {
                 XEvent cache_1 = { 0 };
 
-                usleep(3300);
+                usleep(500);
                 if ( XEventsQueued(displ, QueuedAfterReading) ) {
 
                     XPeekEvent(displ, &cache_1);
@@ -758,15 +759,15 @@ static void *board(void *args) {
                 }
             }
 
-            // if ( is_repeated ) {
-            //     is_repeated = 0;
-            //     continue;
-            // }
+        // if ( is_repeated ) {
+        //     is_repeated = 0;
+        //     continue;
+        // }
 
             if (handler[event.type])
                 handler[event.type](&event);
 
-            usleep(3300);
+            // usleep(3300);
         }
     }
 

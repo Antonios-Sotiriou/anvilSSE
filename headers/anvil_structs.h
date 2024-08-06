@@ -119,7 +119,10 @@ typedef struct {
     momentum,                                       /* The momentum of the mesh. */
     rot_angle,                                      /* The Rotation angle of the mesh. Useful for smooth camera rotation. */
     roll,                                           /* If the mesh is rolling like wheels. */
-    mass,                                           /* Mass of the mesh. */
+    mass,                                           /* Mass of the mesh.  m = Weight / 9.81. Newtons */
+    weight,                                         /* Weight of the mesh. W = mass * 9.81. Kilogramms */
+    fr_coef ,                                       /* Friction of the mesh. Scalar from 0 - 1.  */
+    fr_force,                                       /* Friction Force of the mesh. f = f_coeficient * N ( N = normal force in Newtons = Weight ) */
     collision_t;                                    /* Collison time, usefull to sort the collisions. */
 } Mesh;
 
