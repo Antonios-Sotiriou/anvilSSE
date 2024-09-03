@@ -16,9 +16,9 @@ static int t_indexes = 0;
 static int f_indexes = 0;
 
 const void loadMesh(Mesh *m, const char name[], const unsigned int meshlod) {
-    size_t len = 19 + (strlen(name));
+    size_t len = 17 + (strlen(name));
     char objfile[len];
-    snprintf(objfile, len, "objfiles/%s/lod%d.obj", name, meshlod);
+    snprintf(objfile, len, "meshes/%s/lod%d.obj", name, meshlod);
 
     vec4f *v = loadvectors(objfile);
     if (!v)

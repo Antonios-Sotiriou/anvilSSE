@@ -3,6 +3,7 @@ anvil
 headers/code_cache.h
 headers/bmp.h
 textures/*
-objfiles/*
 gmon.*
 perf.*
+
+
