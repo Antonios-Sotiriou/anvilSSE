@@ -1,8 +1,5 @@
 anvil
 *.s
-headers/code_cache.h
-headers/bmp.h
-textures/*
 gmon.*
 perf.*
 

@@ -47,9 +47,9 @@ const void initWorldObjects(Scene *s) {
     // createCube(&s->m[1]);
     loadMaterial(&s->m[1].material, "earth");
     loadtexture(&s->m[1], 1);
-    loadMesh(&s->m[1], "cubesmooth", 0);
-    loadBboxVectors(&s->m[1], "meshes/cubesmooth/bbox_cubesmooth");
-    loadBboxFaces(&s->m[1], "meshes/cubesmooth/lod0");
+    loadMesh(&s->m[1], "cube_smooth", 0);
+    loadBboxVectors(&s->m[1], "meshes/cube_smooth/cube_smooth");
+    loadBboxFaces(&s->m[1], "meshes/cube_smooth/lod0");
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, testTexture[1]);
@@ -86,12 +86,12 @@ const void initWorldObjects(Scene *s) {
 
     // /* ######################################################################################################## */
     // createCube(&s->m[2]);
-    memcpy(s->m[2].name, "cubesmooth", sizeof("cubesmooth"));
-    loadMesh(&s->m[2], "cubesmooth", 1);
+    memcpy(s->m[2].name, "cube_smooth", sizeof("cube_smooth"));
+    loadMesh(&s->m[2], "cube_smooth", 0);
     loadMaterial(&s->m[2].material, "gold");
     loadtexture(&s->m[2], 1);
-    loadBboxVectors(&s->m[2], "meshes/cubesmooth/bbox_cubesmooth");
-    loadBboxFaces(&s->m[2], "meshes/cubesmooth/lod1");
+    loadBboxVectors(&s->m[2], "meshes/cube_smooth/lod0");
+    loadBboxFaces(&s->m[2], "meshes/cube_smooth/lod0");
 
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, testTexture[2]);
@@ -127,8 +127,8 @@ const void initWorldObjects(Scene *s) {
     /* ######################################################################################################## */
     createCube(&s->m[3]);
     loadMaterial(&s->m[3].material, "jade");
-    loadBboxVectors(&s->m[3], "meshes/cubesmooth/bbox_cubesmooth");
-    loadBboxFaces(&s->m[3], "meshes/cubesmooth/lod1");
+    loadBboxVectors(&s->m[3], "meshes/cube_smooth/cube_smooth");
+    loadBboxFaces(&s->m[3], "meshes/cube_smooth/lod0");
 
     s->m[3].type = MovingObject;
     s->m[3].id = 3;
@@ -153,8 +153,8 @@ const void initWorldObjects(Scene *s) {
     /* ######################################################################################################## */
     createCube(&s->m[4]);
     loadMaterial(&s->m[4].material, "jade");
-    loadBboxVectors(&s->m[4], "meshes/cubesmooth/bbox_cubesmooth");
-    loadBboxFaces(&s->m[4], "meshes/cubesmooth/lod1");
+    loadBboxVectors(&s->m[4], "meshes/cube_smooth/cube_smooth");
+    loadBboxFaces(&s->m[4], "meshes/cube_smooth/lod0");
 
     s->m[4].type = MovingObject;
     s->m[4].id = 4;
@@ -177,11 +177,11 @@ const void initWorldObjects(Scene *s) {
     enworldBbox(&s->m[4]);
 
     /* ######################################################################################################## */
-    memcpy(s->m[5].name, "spacedomsmooth", sizeof("spacedomsmooth"));
-    loadMaterial(&s->m[5].material, "spacedom");
-    loadMesh(&s->m[5], "spacedomsmooth", 1);
-    loadBboxVectors(&s->m[5], "meshes/planet/bbox_planet");
-    loadBboxFaces(&s->m[5], "meshes/spacedomsmooth/lod1");
+    memcpy(s->m[5].name, "dom_smooth", sizeof("dom_smooth"));
+    loadMaterial(&s->m[5].material, "space");
+    loadMesh(&s->m[5], "dom_smooth", 0);
+    loadBboxVectors(&s->m[5], "meshes/cube_smooth/cube_smooth");
+    loadBboxFaces(&s->m[5], "meshes/cube_smooth/lod0");
 
     s->m[5].type = Celestial;
     s->m[5].id = 5;
@@ -194,7 +194,7 @@ const void initWorldObjects(Scene *s) {
     s->m[5].cd.v[P][3] = 1.f;
 
     s->m[5].cull = 1;
-    s->m[5].lodlevels = 1;
+    s->m[5].lodlevels = 0;
     // s->m[5].visible = 1;
     s->m[5].mass = 0;
     // s->m[5].material.reflect = 1;
@@ -203,11 +203,11 @@ const void initWorldObjects(Scene *s) {
     enworldBbox(&s->m[5]);
 
     /* ######################################################################################################## */
-    memcpy(s->m[6].name, "cubeflat", sizeof("cubeflat"));
+    memcpy(s->m[6].name, "cube_flat", sizeof("cube_flat"));
     loadMaterial(&s->m[6].material, "gold");
-    loadMesh(&s->m[6], s->m[6].name, 1);
-    loadBboxVectors(&s->m[6], "meshes/cubeflat/bbox_cubeflat");
-    loadBboxFaces(&s->m[6], "meshes/cubeflat/lod1");
+    loadMesh(&s->m[6], s->m[6].name, 0);
+    loadBboxVectors(&s->m[6], "meshes/cube_flat/cube_flat");
+    loadBboxFaces(&s->m[6], "meshes/cube_flat/lod0");
 
     s->m[6].type = Camera;
     s->m[6].id = 6;
@@ -223,7 +223,7 @@ const void initWorldObjects(Scene *s) {
     memcpy(s->m[6].cd.v, camera, 64);
 
     s->m[6].cull = 1;
-    s->m[6].lodlevels = 1;
+    s->m[6].lodlevels = 0;
     // s->m[6].visible = 1;
     s->m[6].weight = 82 * 9.81;
     s->m[6].mass = s->m[6].weight / 9.81;
@@ -234,11 +234,11 @@ const void initWorldObjects(Scene *s) {
     enworldBbox(&s->m[6]);
 
     /* ######################################################################################################## */
-    memcpy(s->m[7].name, "cubeflat", sizeof("cubeflat"));
+    memcpy(s->m[7].name, "cube_flat", sizeof("cube_flat"));
     loadMaterial(&s->m[7].material, "sunlight");
-    loadMesh(&s->m[7], s->m[7].name, 1);
-    loadBboxVectors(&s->m[7], "meshes/cubeflat/bbox_cubeflat");
-    loadBboxFaces(&s->m[7], "meshes/cubeflat/lod1");
+    loadMesh(&s->m[7], s->m[7].name, 0);
+    loadBboxVectors(&s->m[7], "meshes/cube_flat/cube_flat");
+    loadBboxFaces(&s->m[7], "meshes/cube_flat/lod0");
 
     s->m[7].type = Celestial;
     s->m[7].id = 7;
@@ -254,7 +254,7 @@ const void initWorldObjects(Scene *s) {
     memcpy(s->m[7].cd.v, lightSource, 64);
 
     s->m[7].cull = 1;
-    s->m[7].lodlevels = 1;
+    s->m[7].lodlevels = 0;
     // s->m[7].visible = 1;
     s->m[7].mass = 0;
     s->m[7].fr_coef = 0.5;

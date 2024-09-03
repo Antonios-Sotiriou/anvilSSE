@@ -25,7 +25,7 @@ const int createMaterialDatabase(void) {
             .texlvl = { "2048x1536", "2048x1536", "2048x1536", "2048x1536", "2048x1536", "2048x1536", "2048x1536", "2048x1536", "2048x1536" }
         },
         {
-            .name = "spacedom",
+            .name = "space",
             .basecolor = { 1.0f, 0.8f, 0.0f, 0.0f },
             .ambient = { 0.24725f, 0.1995f, 0.0745f, 0.0f },
             .specular = { 0.628281f, 0.555802f, 0.366065f, 0.0f },
