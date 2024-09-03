@@ -16,7 +16,7 @@
 
 int mainShaderProgram, shadowShaderProgram, debugShaderProgram;
 /* Locations of uniforms of the shaders. */
-GLint transformLocA, transformLocB, transformLocC, transformLocD, transformLocE, transformLocF, transformLocG, transformLocH, transformLocI, texLoc0, texLoc1, texLoc2;
+GLint transformLocA, transformLocB, transformLocC, transformLocD, transformLocE, transformLocF, transformLocG, transformLocH, transformLocI, texLoc0, texLoc1, texLoc2, texLoc3;
 
 /* Library to cooperate with Postgres Database. */
 #include <postgresql/libpq-fe.h>
@@ -60,7 +60,7 @@ enum { Win_Close, Win_Name, Atom_Type, Atom_Last};
 
 #define WIDTH                     1000
 #define HEIGHT                    1000
-#define POINTERMASKS              ( ButtonPressMask | PointerMotionMask )
+#define POINTERMASKS              ( ButtonPressMask ) // PointerMotionMask
 #define KEYBOARDMASKS             ( KeyPressMask | KeyReleaseMask )
 #define EXPOSEMASKS               ( StructureNotifyMask )
 
@@ -78,7 +78,7 @@ GLXContext              glc;
 Colormap                cmap;
 XVisualInfo             *vinfo;
 GLint                   att[]   = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
-GLuint VBO, testTexture[3], shadowDepthMap, shadowDepthMapFBO;
+GLuint VBO, testTexture[4], shadowDepthMap, shadowDepthMapFBO;
 
 /* Project Global Variables. */
 int PROJECTIONVIEW        = 0;
@@ -548,7 +548,7 @@ const static void project(void) {
     glUniformMatrix4fv(transformLocB, 1, GL_FALSE, lightSpaceMatrix);
     glUniform3fv(transformLocD, 1, lightPos);
     glUniform3fv(transformLocE, 1, cameraPos);
-    glUniform1i(transformLocF, 3);
+    glUniform1i(transformLocF, 4);
 
     if (!DEBUG)
         glPolygonMode(GL_FRONT, GL_FILL);
@@ -591,6 +591,7 @@ const static void project(void) {
     }
 
     glXSwapBuffers(displ, mainwin);
+    displayPoint(scene.m[1].cd.v[P], worldMatrix, 0xff00a7); //0028ff
 }
 const static void initMainWindow(void) {
     int screen = XDefaultScreen(displ);
@@ -657,21 +658,20 @@ const void createBuffers(void) {
 }
 const void createTextures(void) {
     /* Main Textures. */
-    glGenTextures(3, testTexture);
-    printf("testTexture: %d, %d, %d\n", testTexture[0], testTexture[1], testTexture[2]);
+    glGenTextures(4, testTexture);
+    printf("testTexture: %d, %d, %d, %d\n", testTexture[0], testTexture[1], testTexture[2], testTexture[3]);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-
     /* Create a 2D Texture to use it as the depth buffer for the Shadow Map. */
     const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
     glGenTextures(1, &shadowDepthMap);
     printf("shadowDepthMap: %d\n", shadowDepthMap);
-    glActiveTexture(GL_TEXTURE3);
+    glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, shadowDepthMap);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -875,7 +875,7 @@ const static int board(void) {
             if (handler[event.type])
                 handler[event.type](&event);
         }
-        time_dif = DeltaTime > 0.016666 ? 0 : (0.016666 - DeltaTime) * 1000000;
+        time_dif = DeltaTime > 0.016666 ? 0 : (0.016666 - DeltaTime) * 100000;
         usleep(time_dif);
     }
     return EXIT_SUCCESS;

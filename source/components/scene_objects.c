@@ -179,12 +179,24 @@ const void initWorldObjects(Scene *s) {
     /* ######################################################################################################## */
     memcpy(s->m[5].name, "dom_smooth", sizeof("dom_smooth"));
     loadMaterial(&s->m[5].material, "space");
+    loadtexture(&s->m[5], 1);
     loadMesh(&s->m[5], "dom_smooth", 0);
     loadBboxVectors(&s->m[5], "meshes/cube_smooth/cube_smooth");
     loadBboxFaces(&s->m[5], "meshes/cube_smooth/lod0");
 
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, testTexture[3]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s->m[5].material.texture_width, s->m[5].material.texture_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, s->m[5].material.texture);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    free(s->m[5].material.texture);
+
+    if ( (texLoc3 = glGetUniformLocation(mainShaderProgram, "ourTexture[3]")) != 9 )
+        fprintf(stderr, "Could not locate uniform variable with name: ourTexture[0]. Error: %d\n", texLoc3);
+    glUniform1i(texLoc3, 3);
+
     s->m[5].type = Celestial;
     s->m[5].id = 5;
+    s->m[5].tex_index = 3;
 
     s->m[5].scale = 100000.f;
 

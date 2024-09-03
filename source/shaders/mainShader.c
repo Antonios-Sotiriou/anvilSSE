@@ -39,7 +39,7 @@ const char *fragmentShaderSource = "#version 450 core\n"
     "uniform vec3 lightPos;\n"
     "uniform vec3 cameraPos;\n"
     "uniform sampler2D shadowDepthMap;\n"
-    "uniform sampler2D ourTexture[3];\n"
+    "uniform sampler2D ourTexture[4];\n"
     "uniform int v_index;\n"
 
     "layout (location = 0) out vec4 FragColor;\n"
