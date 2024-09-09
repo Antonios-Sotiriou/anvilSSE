@@ -1,6 +1,6 @@
 #include "../../headers/shaders/mainShader.h"
 
-const char *vertexShaderSource = "#version 450 core\n"
+const static char *vertexShaderSource = "#version 450 core\n"
     "layout (location = 0) in vec3 vsPos;\n"
     "layout (location = 1) in vec2 vsTexels;\n"
     "layout (location = 2) in vec3 vsNormal;\n"
@@ -27,7 +27,7 @@ const char *vertexShaderSource = "#version 450 core\n"
 
     "    gl_Position = vs_out.fsPos;\n"
     "}\n\0";
-const char *fragmentShaderSource = "#version 450 core\n"
+const static char *fragmentShaderSource = "#version 450 core\n"
     "in VS_OUT {\n"
     "    vec4 fsPos;\n"
     "    vec3 fragPosWS;\n"

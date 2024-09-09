@@ -1,6 +1,6 @@
 #include "../../headers/shaders/debugShader.h"
 
-const char *debugVertexShaderSource = "#version 450 core\n"
+const static char *debugVertexShaderSource = "#version 450 core\n"
     "layout (location = 0) in vec3 vsPos;\n"
     "layout (location = 1) in vec2 vsTexels;\n"
 
@@ -14,7 +14,7 @@ const char *debugVertexShaderSource = "#version 450 core\n"
     "    fsTexels = vsTexels;\n"
 
     "}\n\0";
-const char *debugFragmentShaderSource = "#version 450 core\n"
+const static char *debugFragmentShaderSource = "#version 450 core\n"
     "layout (location = 0) in vec4 fsPos;\n"
     "layout (location = 1) in vec2 fsTexels;\n"
 

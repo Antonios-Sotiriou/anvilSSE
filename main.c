@@ -14,12 +14,12 @@
 #include <GL/glx.h>     /* libglx-dev */
 #include <GL/glu.h>     /* libglu1-mesa-dev */
 
-int mainShaderProgram, shadowShaderProgram, debugShaderProgram;
+int mainShaderProgram, shadowShaderProgram, debugShaderProgram, clickSelectShaderProgram;
 /* Locations of uniforms of the shaders. */
 GLint transformLocA, transformLocB, transformLocC, transformLocD, transformLocE, transformLocF, transformLocG, transformLocH, transformLocI, texLoc0, texLoc1, texLoc2, texLoc3;
 
 /* Library to cooperate with Postgres Database. */
-#include <postgresql/libpq-fe.h>
+#include <postgresql/libpq-fe.h>  /* libpq-dev */
 
 /* signal */
 #include <signal.h>
@@ -43,6 +43,7 @@ int ENABLE_GDB_BREAKPOINT = 0;
 #include "headers/shaders/mainShader.h"
 #include "headers/shaders/shadowShader.h"
 #include "headers/shaders/debugShader.h"
+#include "headers/shaders/clickSelectShader.h"
 #include "headers/components/anvil_structs.h"
 #include "headers/components/quaternions.h"
 #include "headers/components/database.h"
@@ -78,7 +79,7 @@ GLXContext              glc;
 Colormap                cmap;
 XVisualInfo             *vinfo;
 GLint                   att[]   = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
-GLuint VBO, testTexture[4], shadowDepthMap, shadowDepthMapFBO;
+GLuint VBO, testTexture[4], shadowDepthMap, shadowDepthMapFBO, clickSelectMap, clickSelectMapFBO;
 
 /* Project Global Variables. */
 int PROJECTIONVIEW        = 0;
@@ -416,8 +417,10 @@ const static void keyrelease(XEvent *event) {
     KeySym keysym = XLookupKeysym(&event->xkey, 0);
 
     // printf("Key Released: %ld\n", keysym);
-    eye->momentum = 0;
-    eye->rot_angle = 0;
+    if (eye) {
+        eye->momentum = 0;
+        eye->rot_angle = 0;
+    }
     if ( keysym == 99 )
         scene.m[mesh_id].rot_angle = 0;
 }
@@ -441,6 +444,70 @@ const int frustumCulling(vec4f v[], const int v_indexes, const Mat4x4 wm) {
 
     free(vec_arr);
     return 1;
+}
+const static void clickSelect() {
+
+    glUseProgram(clickSelectShaderProgram);
+
+    glViewport(0, 0, WIDTH, HEIGHT);
+    glBindFramebuffer(GL_FRAMEBUFFER, clickSelectMapFBO);
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    if (EYEPOINT)
+        eye = &scene.m[7];
+    else
+        eye = &scene.m[6];
+
+    lookAtMatrix = lookat(eye->cd.v[P], eye->cd.v[U], eye->cd.v[V], eye->cd.v[N]);
+    viewMatrix = inverse_mat(lookAtMatrix);
+
+    if (!PROJECTIONVIEW) {
+        worldMatrix = mxm(viewMatrix, perspMatrix);
+    } else {
+        worldMatrix = mxm(viewMatrix, orthoMatrix);
+    }
+
+    GLfloat vpMatrix[16], modelMatrix[16];
+    memcpy(&vpMatrix, &worldMatrix, 64);
+
+    glUniformMatrix4fv(0, 1, GL_FALSE, vpMatrix);
+
+    if (!DEBUG)
+        glPolygonMode(GL_FRONT, GL_FILL);
+    else if (DEBUG == 1)
+        glPolygonMode(GL_FRONT, GL_LINE);
+    else
+        glPolygonMode(GL_FRONT, GL_POINT);
+
+    for (int i = 0; i < scene.m_indexes; i++) {
+
+        if ( frustumCulling(scene.m[i].bbox.v, scene.m[i].bbox.v_indexes, worldMatrix) ) {
+
+            Mat4x4 sclMatrix, trMatrix;
+
+            vec4f pos = { 0 };
+            Mat4x4 mfQ = MatfromQuat(scene.m[i].Q, pos);
+            sclMatrix = mxm(mfQ, scaleMatrix(scene.m[i].scale));
+            trMatrix = translationMatrix(scene.m[i].cd.v[P][0], scene.m[i].cd.v[P][1], scene.m[i].cd.v[P][2]);
+            scene.m[i].modelMx = mxm(sclMatrix, trMatrix);
+            memcpy(&modelMatrix, &scene.m[i].modelMx, 64);
+
+            glUniformMatrix4fv(1, 1, GL_FALSE, modelMatrix);
+
+            glBufferData(GL_ARRAY_BUFFER, scene.m[i].vba_indexes * 32, scene.m[i].vba, GL_STATIC_DRAW);
+
+            glDrawArrays(GL_TRIANGLES, 0, scene.m[i].vba_indexes);
+        }
+    }
+
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        fprintf(stderr, "< %d >  ", err);
+        perror("OpenGL ERROR: ");
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // glXSwapBuffers(displ, mainwin);
 }
 const static void shadowCast() {
 
@@ -479,7 +546,7 @@ const static void shadowCast() {
 
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        fprintf(stderr, "An OpenGL ERROR has occured: %d\n", err);
+        fprintf(stderr, "< %d >  ", err);
         perror("OpenGL ERROR: ");
     }
 
@@ -493,7 +560,7 @@ const static void debug(void) {
     glViewport(0, 0, WIDTH, HEIGHT);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glUniform1i(transformLocI, 3);
+    glUniform1i(transformLocI, 5);
 
     vec8f quad[4] = {
         { 1.f, -1.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f },
@@ -511,7 +578,7 @@ const static void debug(void) {
 
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        fprintf(stderr, "An OpenGL ERROR has occured: %d\n", err);
+        fprintf(stderr, "< %d >  ", err);
         perror("OpenGL ERROR: ");
     }
 
@@ -586,12 +653,14 @@ const static void project(void) {
 
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        fprintf(stderr, "An OpenGL ERROR has occured: %d\n", err);
+        fprintf(stderr, "< %d >  ", err);
         perror("OpenGL ERROR: ");
     }
 
     glXSwapBuffers(displ, mainwin);
-    displayPoint(scene.m[1].cd.v[P], worldMatrix, 0xff00a7); //0028ff
+    // displayPoint(scene.m[1].cd.v[P], worldMatrix, 0xff00a7); //0028ff
+    // displayMeshKinetics(&scene.m[1], worldMatrix); //0028ff
+    // displayBboxFaces(&scene.m[1], worldMatrix); //0028ff
 }
 const static void initMainWindow(void) {
     int screen = XDefaultScreen(displ);
@@ -655,6 +724,7 @@ const void createBuffers(void) {
 
     /* Generate a framebuffer object to save the depth values for the shadow Map. */
     glGenFramebuffers(1, &shadowDepthMapFBO);
+    glGenFramebuffers(1, &clickSelectMapFBO);
 }
 const void createTextures(void) {
     /* Main Textures. */
@@ -682,6 +752,26 @@ const void createTextures(void) {
     /* Attach the generated 2D Texture to our Shadow Map framebuffer's depth buffer */
     glBindFramebuffer(GL_FRAMEBUFFER, shadowDepthMapFBO);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowDepthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    /* Create a 2D Texture to use it for clickSelect aka. (pick objects on mouse click). */
+    const unsigned int CS_WIDTH = WIDTH, CS_HEIGHT = HEIGHT;
+
+    glGenTextures(1, &clickSelectMap);
+    printf("clickSelectMap: %d\n", clickSelectMap);
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, clickSelectMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, CS_WIDTH, CS_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    /* Attach the generated 2D Texture to our Shadow Map framebuffer's depth buffer */
+    glBindFramebuffer(GL_FRAMEBUFFER, clickSelectMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, clickSelectMap, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -849,9 +939,10 @@ const static int board(void) {
         applyPhysics(&scene);
         // printf("Apply Physics  : %f\n", end(start_time));
         // clock_t start_time = start();
-        shadowCast();
-        // debug();
-        project();
+        // shadowCast();
+        clickSelect();
+        debug();
+        // project();
         // printf("Project     : %f\n", end(start_time));;
 
         while ( XPending(displ) ) {
@@ -914,6 +1005,7 @@ const int main(int argc, char *argv[]) {
     mainShaderProgram = initMainShader();
     shadowShaderProgram = initShadowShader();
     debugShaderProgram = initDebugShader();
+    clickSelectShaderProgram = initClickSelectShader();
     glUseProgram(mainShaderProgram);
     assignUniformLocations();
 

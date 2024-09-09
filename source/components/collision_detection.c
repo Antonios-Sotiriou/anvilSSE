@@ -18,7 +18,7 @@ const void terrainCollision(Mesh *terrain, Mesh *obj) {
 }
 const void terrainHeightDifference(Mesh *terrain, Mesh *obj) {
     vec4f next_pos = obj->cd.v[P] + obj->velocity + (obj->mvdir * obj->scale);
-    displayPoint(next_pos, worldMatrix, 0xffccaa);
+    // displayPoint(next_pos, worldMatrix, 0xffccaa);
     TerrainPointInfo tp_0 = getTerrainPointData(terrain, obj->cd.v[0], obj);
     TerrainPointInfo tp_1 = getTerrainPointData(terrain, next_pos, obj);
 
@@ -114,7 +114,7 @@ const int aabbCollision(TerrainInfo *ti, Scene *s, Mesh *obj) {
             if ( t_near == 0.f ) {
                 printf("Sliding.... %f\n", t_near);
                 /* Displaying Collision Point. */
-                displayPoint(obj->cd.v[0] + (norm_vec(cache->cd.v[0] - obj->cd.v[0]) * obj->scale), worldMatrix, 0xff0000);
+                // displayPoint(obj->cd.v[0] + (norm_vec(cache->cd.v[0] - obj->cd.v[0]) * obj->scale), worldMatrix, 0xff0000);
 
                 float dot =  dot_product(normal, obj->mvdir);
                 obj->mvdir = obj->mvdir - (dot * normal);
@@ -141,7 +141,7 @@ const int aabbCollision(TerrainInfo *ti, Scene *s, Mesh *obj) {
                 setfacesarrayxm(obj->bbox.f, obj->bbox.f_indexes, trans);
 
                 /* Displaying Collision Point. */
-                displayPoint(obj->cd.v[0] + (norm_vec(cache->cd.v[0] - obj->cd.v[0]) * obj->scale), worldMatrix, 0xff0000);
+                // displayPoint(obj->cd.v[0] + (norm_vec(cache->cd.v[0] - obj->cd.v[0]) * obj->scale), worldMatrix, 0xff0000);
                 // float coll_dot = dot_product(normal, norm_vec(obj->cd.v[0] + (norm_vec(cache->cd.v[0] - obj->cd.v[0]) * obj->scale)));
 
                 obj->momentum *= cache->fr_coef;

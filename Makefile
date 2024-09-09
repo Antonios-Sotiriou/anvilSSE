@@ -21,6 +21,7 @@ all:
 		$(DIRECTORY)shaders/mainShader.c\
 		$(DIRECTORY)shaders/shadowShader.c\
 		$(DIRECTORY)shaders/debugShader.c\
+		$(DIRECTORY)shaders/clickSelectShader.c\
 		$(DIRECTORY)components/matrices.c\
 		$(DIRECTORY)components/quaternions.c\
 		$(DIRECTORY)components/kinetics.c\
@@ -38,8 +39,8 @@ all:
 		$(DIRECTORY)components/test_shapes.c\
 		$(DIRECTORY)components/logging.c\
 		$(DIRECTORY)components/click_select.c\
-		-o\
-	$(OBJ) $(LINKS)\
+		$(LINKS)\
+	    -o $(OBJ)\
 
 exec:
 	./$(OBJ)

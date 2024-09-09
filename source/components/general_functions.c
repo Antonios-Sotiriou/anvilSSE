@@ -233,7 +233,7 @@ const void checkVisibles(Scene *s, Mesh *m, const int viewProj) {
 
     // checkVisibility(s->m, s->m_indexes, collMat, viewProj);
 }
-// /* Ccheck what is visible from a given point of view.Must be implemented with bounding boxes. */
+// /* Check what is visible from a given point of view.Must be implemented with bounding boxes. */
 // const static void checkVisibility(Mesh *m, const int len, Mat4x4 vm, const int viewProj) {
 //     vec4f *vec_arr;
 
@@ -274,7 +274,8 @@ const void checkVisibles(Scene *s, Mesh *m, const int viewProj) {
 // }
 /* Displays given point on screen given the view Matrix. */
 const void displayPoint(const vec4f p, const Mat4x4 vm, const int color) {
-    vec4f point = vecxm(p, vm);
+    Mat4x4 tm = mxm(viewMatrix, perspectiveMatrix(45.f, -1.f, 10.f, __INT32_MAX__));
+    vec4f point = vecxm(p, tm);
 
     if (point[3] > 0)
         point /= point[3];
@@ -294,11 +295,12 @@ const void displayPoint(const vec4f p, const Mat4x4 vm, const int color) {
 }
 /* Displays given Meshe's pivot point and moving direction on screen given the view Matrix. */
 const void displayMeshKinetics(Mesh *m, const Mat4x4 vm) {
+    Mat4x4 tm = mxm(viewMatrix, perspectiveMatrix(45.f, -1.f, 10.f, __INT32_MAX__));
     vec4f temp_start = m->cd.v[0];
     vec4f temp_end = m->cd.v[0] + (m->mvdir * m->scale);
 
-    setvecxm(&temp_start, vm);
-    setvecxm(&temp_end, vm);
+    setvecxm(&temp_start, tm);
+    setvecxm(&temp_end, tm);
 
     if (temp_start[3] > 0)
         temp_start /= temp_start[3];
@@ -316,7 +318,8 @@ const void displayMeshKinetics(Mesh *m, const Mat4x4 vm) {
 }
 /* Displays given Bounding Box on screen given the view Matrix. Bounding box must be in World Space. */
 const void displayBbox(Mesh *m, const Mat4x4 vm) {
-    vec4f *vec_arr = vecsarrayxm(m->bbox.v, m->bbox.v_indexes, vm);
+    Mat4x4 tm = mxm(viewMatrix, perspectiveMatrix(45.f, -1.f, 10.f, __INT32_MAX__));
+    vec4f *vec_arr = vecsarrayxm(m->bbox.v, m->bbox.v_indexes, tm);
 
     for (int j = 0; j < m->bbox.v_indexes; j++) {
         /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
@@ -341,7 +344,8 @@ const void displayBbox(Mesh *m, const Mat4x4 vm) {
 }
 /* Displays given Bounding Box on screen given the view Matrix. Bounding box must be in World Space. */
 const void displayBboxFaces(Mesh *m, const Mat4x4 vm) {
-    face *vec_arr = facesarrayxm(m->bbox.f, m->bbox.f_indexes, vm);
+    Mat4x4 tm = mxm(viewMatrix, perspectiveMatrix(45.f, -1.f, 10.f, __INT32_MAX__));
+    face *vec_arr = facesarrayxm(m->bbox.f, m->bbox.f_indexes, tm);
 
     for (int i = 0; i < m->bbox.f_indexes; i++) {
         for (int j = 0; j < 3; j++) {
