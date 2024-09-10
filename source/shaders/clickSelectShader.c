@@ -27,10 +27,10 @@ const static char *fragmentShaderSource = "#version 450 core\n"
 
     "void main() {\n"
 
-    // "    FragColor = gl_FragCoord;\n"
-
+    "    FragColor = vec4(linearizeDepth(gl_FragCoord.z) / far);\n"
+    // "    FragColor = fsPos;\n"
     // "    gl_FragDepth = fsPos.z;\n"
-    "    gl_FragDepth = linearizeDepth(gl_FragCoord.z) / far;\n"
+    // "    gl_FragDepth = linearizeDepth(gl_FragCoord.z) / far;\n"
     "}\n\0";
 
 const int initClickSelectShader(void) {

@@ -79,7 +79,7 @@ GLXContext              glc;
 Colormap                cmap;
 XVisualInfo             *vinfo;
 GLint                   att[]   = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
-GLuint VBO, testTexture[4], shadowDepthMap, shadowDepthMapFBO, clickSelectMap, clickSelectMapFBO;
+GLint VBO, testTexture[4], shadowDepthMap, shadowDepthMapFBO, clickSelectMap, clickSelectMapFBO;
 
 /* Project Global Variables. */
 int PROJECTIONVIEW        = 0;
@@ -97,14 +97,14 @@ float shadow_bias         = 0.0f;//0.003105;//0.002138;//0.000487f;
 int DISPLAYBBOX           = 0;
 /* For investigating shadow map usefull global variables. */
 int INCORDEC = -1;
-unsigned int SMA = 0;
-unsigned int SMB = 2000;
-unsigned int SMC = 4000;
-unsigned int SMD = 8000;
-unsigned int STA = 820;
-unsigned int STB = 3200;
-unsigned int STC = 12800;
-unsigned int STD = 51200;
+int SMA = 0;
+int SMB = 2000;
+int SMC = 4000;
+int SMD = 8000;
+int STA = 820;
+int STB = 3200;
+int STC = 12800;
+int STD = 51200;
 
 /* Point of view. */
 Mesh *eye;
@@ -115,7 +115,7 @@ const float movScalar = 1.f;
 const float moveForce = 0.2f;
 
 /* Variables usefull for mesh click select. */
-unsigned int getClick = 0;
+int getClick = 0;
 int mesh_id = 0;
 vec4f click = { 0 };
 
@@ -207,9 +207,14 @@ const static void clientmessage(XEvent *event) {
         glDeleteBuffers(1, &VBO);
         glDeleteBuffers(1, &shadowDepthMap);
         glDeleteBuffers(1, &shadowDepthMapFBO);
+        glDeleteBuffers(1, &clickSelectMap);
+        glDeleteBuffers(1, &clickSelectMapFBO);
 
         glDeleteProgram(mainShaderProgram);
         glDeleteProgram(shadowShaderProgram);
+        glDeleteProgram(debugShaderProgram);
+        glDeleteProgram(clickSelectShaderProgram);
+
         glXMakeCurrent(displ, None, NULL);
         glXDestroyContext(displ, glc);
 
@@ -451,7 +456,8 @@ const static void clickSelect() {
 
     glViewport(0, 0, WIDTH, HEIGHT);
     glBindFramebuffer(GL_FRAMEBUFFER, clickSelectMapFBO);
-    glClear(GL_DEPTH_BUFFER_BIT);
+    // glClear(GL_DEPTH_BUFFER_BIT);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (EYEPOINT)
         eye = &scene.m[7];
@@ -504,6 +510,13 @@ const static void clickSelect() {
     while ((err = glGetError()) != GL_NO_ERROR) {
         fprintf(stderr, "< %d >  ", err);
         perror("OpenGL ERROR: ");
+    }
+
+    float pixel[4] = { 0 };
+    if ( getClick ) {
+        glReadPixels(click[0], click[1], 1, 1, GL_RGBA, GL_FLOAT, &pixel);
+        printf("x: %f    y: %f    z: %f    w: %f\n", pixel[0], pixel[1], pixel[2], pixel[3]);
+        getClick = 0;
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -748,32 +761,46 @@ const void createTextures(void) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     /* Attach the generated 2D Texture to our Shadow Map framebuffer's depth buffer */
     glBindFramebuffer(GL_FRAMEBUFFER, shadowDepthMapFBO);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowDepthMap, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
+    if ( glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE )
+        perror("Incomplete shadowDepthMapFBO ");
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     /* Create a 2D Texture to use it for clickSelect aka. (pick objects on mouse click). */
-    const unsigned int CS_WIDTH = WIDTH, CS_HEIGHT = HEIGHT;
-
     glGenTextures(1, &clickSelectMap);
     printf("clickSelectMap: %d\n", clickSelectMap);
     glActiveTexture(GL_TEXTURE5);
     glBindTexture(GL_TEXTURE_2D, clickSelectMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, CS_WIDTH, CS_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    /* Create a render buffer object for stencil and depth buffer. */
+    // GLint rbo;
+    // glGenRenderbuffers(1, &rbo);
+    // glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    // glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
+    // glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
 
     /* Attach the generated 2D Texture to our Shadow Map framebuffer's depth buffer */
     glBindFramebuffer(GL_FRAMEBUFFER, clickSelectMapFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, clickSelectMap, 0);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, clickSelectMap, 0);
+    // glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+    // glDrawBuffer(GL_NONE);
+    // glReadBuffer(GL_NONE);
+    if ( glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE )
+        perror("Incomplete clickSelectMapFBO ");
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 const int assignUniformLocations(void) {
