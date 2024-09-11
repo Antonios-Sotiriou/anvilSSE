@@ -18,7 +18,6 @@ const void initWorldObjects(Scene *s) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s->m[0].material.texture_width, s->m[0].material.texture_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, s->m[0].material.texture);
     glGenerateMipmap(GL_TEXTURE_2D);
     free(s->m[0].material.texture);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
     if ( (texLoc0 = glGetUniformLocation(mainShaderProgram, "ourTexture[0]")) != 6 )
         fprintf(stderr, "Could not locate uniform variable with name: ourTexture[0]. Error: %d\n", texLoc0);
@@ -57,7 +56,6 @@ const void initWorldObjects(Scene *s) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s->m[1].material.texture_width, s->m[1].material.texture_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, s->m[1].material.texture);
     glGenerateMipmap(GL_TEXTURE_2D);
     free(s->m[1].material.texture);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
     if ( (texLoc1 = glGetUniformLocation(mainShaderProgram, "ourTexture[1]")) != 7 )
         fprintf(stderr, "Could not locate uniform variable with name: ourTexture[1]. Error: %d\n", texLoc1);
@@ -100,7 +98,6 @@ const void initWorldObjects(Scene *s) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s->m[2].material.texture_width, s->m[2].material.texture_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, s->m[2].material.texture);
     glGenerateMipmap(GL_TEXTURE_2D);
     free(s->m[2].material.texture);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
     if ( (texLoc2 = glGetUniformLocation(mainShaderProgram, "ourTexture[2]")) != 8 )
         fprintf(stderr, "Could not locate uniform variable with name: ourTexture[2]. Error: %d\n", texLoc2);
@@ -192,7 +189,6 @@ const void initWorldObjects(Scene *s) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s->m[5].material.texture_width, s->m[5].material.texture_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, s->m[5].material.texture);
     glGenerateMipmap(GL_TEXTURE_2D);
     free(s->m[5].material.texture);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
     if ( (texLoc3 = glGetUniformLocation(mainShaderProgram, "ourTexture[3]")) != 9 )
         fprintf(stderr, "Could not locate uniform variable with name: ourTexture[0]. Error: %d\n", texLoc3);

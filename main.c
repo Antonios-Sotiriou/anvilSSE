@@ -457,7 +457,7 @@ const static void clickSelect() {
     glViewport(0, 0, WIDTH, HEIGHT);
     glBindFramebuffer(GL_FRAMEBUFFER, clickSelectMapFBO);
     // glClear(GL_DEPTH_BUFFER_BIT);
-    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (EYEPOINT)
         eye = &scene.m[7];
@@ -517,6 +517,11 @@ const static void clickSelect() {
         glReadPixels(click[0], click[1], 1, 1, GL_RGBA, GL_FLOAT, &pixel);
         printf("x: %f    y: %f    z: %f    w: %f\n", pixel[0], pixel[1], pixel[2], pixel[3]);
         getClick = 0;
+        vec4f r = { pixel[0], pixel[1], pixel[2], pixel[3] };
+        setvecxm(&r, reperspMatrix);
+        r[3] = 1.f;
+        setvecxm(&r, lookAtMatrix);
+        logVec4f(r);
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -761,7 +766,6 @@ const void createTextures(void) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
     /* Attach the generated 2D Texture to our Shadow Map framebuffer's depth buffer */
     glBindFramebuffer(GL_FRAMEBUFFER, shadowDepthMapFBO);
@@ -782,25 +786,23 @@ const void createTextures(void) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
     /* Create a render buffer object for stencil and depth buffer. */
-    // GLint rbo;
-    // glGenRenderbuffers(1, &rbo);
-    // glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    // glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
-    // glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    GLint rbo;
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
 
     /* Attach the generated 2D Texture to our Shadow Map framebuffer's depth buffer */
     glBindFramebuffer(GL_FRAMEBUFFER, clickSelectMapFBO);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, clickSelectMap, 0);
-    // glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
     // glDrawBuffer(GL_NONE);
     // glReadBuffer(GL_NONE);
     if ( glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE )
         perror("Incomplete clickSelectMapFBO ");
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 const int assignUniformLocations(void) {
