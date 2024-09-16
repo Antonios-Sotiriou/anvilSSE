@@ -26,7 +26,7 @@ extern const int getTerrainQuadIndex(Mesh *t, vec4f coords);
 extern const DimensionsLimits getDimensionsLimits(vec4f va[], const int len);
 
 // const int clickSelect(const vec4f cs);
-const int clickvsBbox(TerrainInfo *tf, Scene *s, vec4f wsc);
+const int pointVsBbox(TerrainInfo *tf, Scene *s, vec4f wsc);
 
 #endif /* _CLICK_SELECT_H */
 

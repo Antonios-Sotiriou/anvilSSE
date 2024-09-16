@@ -227,7 +227,7 @@ const void initWorldObjects(Scene *s) {
     s->m[6].scale = 100.f;
     
     vec4f camera[4] = {
-        { 1000.0f, 0.0f, 0.0f, 1.0f },
+        { 0.0f, 0.0f, 0.0f, 1.0f },
         { 1.0f, 0.0f, 0.0f, 0.0f },
         { 0.0f, 1.0f, 0.0f, 0.0f },
         { 0.0f, 0.0f, 1.0f, 0.0f }

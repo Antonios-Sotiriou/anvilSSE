@@ -4,38 +4,23 @@ const static char *debugVertexShaderSource = "#version 450 core\n"
     "layout (location = 0) in vec3 vsPos;\n"
     "layout (location = 1) in vec2 vsTexels;\n"
 
-    "layout (location = 0) out vec4 fsPos;\n"
-    "layout (location = 1) out vec2 fsTexels;\n"
+    "layout (location = 0) out vec2 fsTexels;\n"
 
     "void main() {\n"
 
     "    gl_Position = vec4(vsPos, 1.f);\n"
-    "    fsPos = gl_Position;\n"
     "    fsTexels = vsTexels;\n"
 
     "}\n\0";
 const static char *debugFragmentShaderSource = "#version 450 core\n"
-    "layout (location = 0) in vec4 fsPos;\n"
-    "layout (location = 1) in vec2 fsTexels;\n"
+    "layout (location = 0) in vec2 fsTexels;\n"
 
-    "uniform sampler2D shadowDepthMap;\n"
+    "uniform sampler2D debugTexture;\n"
 
     "layout (location = 0) out vec4 FragColor;\n"
 
-    "float near = 0.1f;\n"
-    "float far = 1000.f;\n"
-
-    "float linearizeDepth(float depth) {\n"
-    "    float z = (depth * 2.f) - 1.f;\n"
-    "    return (2.f * near * far) / (far + near - z * (far - near));\n"
-    "};\n"
-
     "void main() {\n"
-
-    // "    float depthValue = linearizeDepth(gl_FragCoord.z) / far;\n"
-    // "    FragColor = vec4(vec3(depthValue), 1.f);\n"
-    "    float depthValue = texture(shadowDepthMap, fsTexels).r;\n"
-    // "    FragColor = vec4(vec3(linearizeDepth(depthValue) / far), 1.f);\n"
+    "    float depthValue = texture(debugTexture, fsTexels).r;\n"
     "    FragColor = vec4(vec3(depthValue), 1.f);\n"
 
     "}\n\0";
@@ -79,4 +64,36 @@ const int initDebugShader(void) {
 
     return shaderProgram;
 }
+const void displayTexture(const int textureIndex) {
+
+    glUseProgram(debugShaderProgram);
+
+    glViewport(0, 0, main_wa.width, main_wa.height);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glUniform1i(0, textureIndex);
+
+    vec8f quad[4] = {
+        { 1.f, -1.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f },
+        { -1.f, -1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f },
+        { 1.f, 1.f, 0.f, 1.f, 1.f, 0.f, 0.f, 0.f },
+        { -1.f, 1.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f }
+    };
+
+    for (int i = 0; i < 4; i++) {
+
+        glBufferData(GL_ARRAY_BUFFER, 4 * 32, quad, GL_STATIC_DRAW);
+
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    }
+
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        fprintf(stderr, "< %d >  ", err);
+        perror("OpenGL ERROR: ");
+    }
+
+    glXSwapBuffers(displ, mainwin);
+}
+
 

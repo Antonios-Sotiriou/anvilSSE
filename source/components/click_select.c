@@ -1,23 +1,23 @@
 #include "../../headers/components/click_select.h"
 
-const int clickSelect(const vec4f cs) {
-    float w = 1 / cs[3];
-    vec4f wsc = {
-        ((cs[0] / (point_attrib->width >> 1)) - 1.0) * w,
-        ((cs[1] / (point_attrib->height >> 1)) - 1.0) * w,
-        (1.f / cs[2]) * w,
-        w
-    };
+// const int clickSelect(const vec4f cs) {
+//     float w = 1 / cs[3];
+//     vec4f wsc = {
+//         ((cs[0] / (point_attrib->width >> 1)) - 1.0) * w,
+//         ((cs[1] / (point_attrib->height >> 1)) - 1.0) * w,
+//         (1.f / cs[2]) * w,
+//         w
+//     };
 
-    wsc = vecxm(wsc, reperspMatrix);
-    wsc[3] = 1.f;
-    wsc = vecxm(wsc, *point_mat);
+//     wsc = vecxm(wsc, reperspMatrix);
+//     wsc[3] = 1.f;
+//     wsc = vecxm(wsc, *point_mat);
 
-    const int id = clickvsBbox(&Gitana, &scene, wsc);
+//     const int id = pointVsBbox(&Gitana, &scene, wsc);
 
-    return id;
-}
-const int clickvsBbox(TerrainInfo *ti, Scene *s, vec4f wsc) {
+//     return id;
+// }
+const int pointVsBbox(TerrainInfo *ti, Scene *s, vec4f wsc) {
     const int quadIndex = getTerrainQuadIndex(&s->m[Terrain_1], wsc);
 
     if (quadIndex < 0) {

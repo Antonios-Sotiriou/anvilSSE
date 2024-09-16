@@ -30,11 +30,11 @@ void *graphicsPipeline(void *args) {
             Mat4x4 mfQ = MatfromQuat(cache_0.Q, pos);
             sclMatrix = mxm(mfQ, scaleMatrix(cache_0.scale));
             trMatrix = translationMatrix(cache_0.cd.v[P][0], cache_0.cd.v[P][1], cache_0.cd.v[P][2]);
-            cache_0.modelMx = mxm(sclMatrix, trMatrix);
+            cache_0.modelMatrix = mxm(sclMatrix, trMatrix);
 
-            Mat4x4 vecsMat = mxm(cache_0.modelMx, worldMatrix);
+            Mat4x4 vecsMat = mxm(cache_0.modelMatrix, worldMatrix);
 
-            cache_0.f = compinedFaceNormals(cache_0.f, cache_0.f_indexes, vecsMat, cache_0.modelMx);
+            cache_0.f = compinedFaceNormals(cache_0.f, cache_0.f_indexes, vecsMat, cache_0.modelMatrix);
 
             /* Clipping against near Plane in View Space. */
             vec4f plane_near_p = { 0.0f, 0.0f, NPlane },

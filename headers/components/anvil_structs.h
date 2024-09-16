@@ -114,7 +114,7 @@ typedef struct {
     Material material;
     DimensionsLimits dm;
     Bbox bbox;
-    Mat4x4 modelMx;
+    Mat4x4 modelMatrix;
     Coordinates cd;
     vec4f mvdir, velocity;
     Quat Q, r;
