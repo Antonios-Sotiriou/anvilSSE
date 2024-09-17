@@ -55,7 +55,6 @@ int ENABLE_GDB_BREAKPOINT = 0;
 #include "headers/components/terrain_functions.h"
 #include "headers/components/collision_detection.h"
 #include "headers/components/camera.h"
-#include "headers/components/click_select.h"
 
 enum { Win_Close, Win_Name, Atom_Type, Atom_Last};
 
@@ -79,7 +78,7 @@ GLXContext              glc;
 Colormap                cmap;
 XVisualInfo             *vinfo;
 GLint                   att[]   = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
-GLint VBO, testTexture[4], shadowDepthMap, shadowMapFBO, clickSelectColorMap, clickSelectDepthMap, clickSelectMapFBO;
+GLint VBO, testTexture[4], shadowDepthMap, shadowMapFBO, clickSelectColorMap, clickSelectDepthMap, clickSelectStencilMap, clickSelectMapFBO;
 
 /* Project Global Variables. */
 int PROJECTIONVIEW        = 0;
@@ -151,7 +150,6 @@ const static void mousemotion(XEvent *event);
 
 /* Representation functions */
 const int frustumCulling(vec4f v[], const int v_indexes, const Mat4x4 wm);
-const static void project(void);
 
 /* Xlib relative functions and event dispatcher. */
 const static void initMainWindow(void);
@@ -181,7 +179,6 @@ static void (*handler[LASTEvent]) (XEvent *event) = {
     [KeyRelease] = keyrelease,
     [MotionNotify] = mousemotion,
 };
-const void clickSelect();
 
 const static void clientmessage(XEvent *event) {
     printf("Received client message event\n");
@@ -259,7 +256,7 @@ const static void buttonpress(XEvent *event) {
     // printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
     click[0] = event->xbutton.x;
     click[1] = event->xbutton.y;
-    clickSelect();
+    // mesh_id = clickSelect();
     // printf("camera Position   :");
     // logDm(scene.m[6].dm);
 }
@@ -460,7 +457,23 @@ const void clickSelect() {
 
     glViewport(0, 0, WIDTH, HEIGHT);
     glBindFramebuffer(GL_FRAMEBUFFER, clickSelectMapFBO);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glStencilFunc(GL_ALWAYS, 1, 0XFF);
+    glStencilMask(0xFF);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    if (EYEPOINT)
+        eye = &scene.m[7];
+    else
+        eye = &scene.m[6];
+
+    lookAtMatrix = lookat(eye->cd.v[P], eye->cd.v[U], eye->cd.v[V], eye->cd.v[N]);
+    viewMatrix = inverse_mat(lookAtMatrix);
+
+    if (!PROJECTIONVIEW) {
+        worldMatrix = mxm(viewMatrix, perspMatrix);
+    } else {
+        worldMatrix = mxm(viewMatrix, orthoMatrix);
+    }
 
     GLfloat vpMatrix[16], mMatrix[16];
     memcpy(&vpMatrix, &worldMatrix, 64);
@@ -491,49 +504,9 @@ const void clickSelect() {
 
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        fprintf(stderr, "< %d >  ", err);
+        fprintf(stderr, "clickSelect < %d >  ", err);
         perror("OpenGL ERROR: ");
     }
-
-    // if ( getClick ) {
-    //     float pixel[4] = { 0 };
-    //     glReadPixels(click[0], HEIGHT - click[1], 1, 1, GL_RGBA, GL_FLOAT, &pixel);
-    //     getClick = 0;
-
-    //     vec4f r = { pixel[0], pixel[1], pixel[2], pixel[3] };
-    //     printf("Fragment shader: \n");
-    //     logVec4f(r);
-    //     mesh_id = pixel[0];
-    // }
-
-    float pixel[4] = { 0 };
-    glReadPixels(click[0], HEIGHT - click[1], 1, 1, GL_RGBA, GL_FLOAT, &pixel);
-    getClick = 0;
-
-    vec4f r = { pixel[0], pixel[1], pixel[2], pixel[3] };
-    printf("Fragment shader: \n");
-    logVec4f(r);
-
-    printf("NDC Space: \n");
-    float w = 1 / pixel[3];
-    r[0] = (r[0] / 500.f) - 1;
-    r[1] = (r[1] / 500.f) - 1;
-    r[2] = (r[2] / ((ZFAR - ZNEAR) / 2.f)) - 1;
-    logVec4f(r);
-
-    printf("Homogeneous Space: \n");
-    r *= w;
-    r[3] = w;
-    logVec4f(r);    
-
-    printf("view Space: \n");
-    setvecxm(&r, reperspMatrix);
-    logVec4f(r);
-
-    printf("World Space: \n");
-    r[3] = 1.f;
-    setvecxm(&r, lookAtMatrix);
-    logVec4f(r);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -574,7 +547,7 @@ const static void shadowCast() {
 
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        fprintf(stderr, "< %d >  ", err);
+        fprintf(stderr, "shadowCast < %d >  ", err);
         perror("OpenGL ERROR: ");
     }
 
@@ -650,7 +623,7 @@ const static void project(void) {
 
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        fprintf(stderr, "< %d >  ", err);
+        fprintf(stderr, "project < %d >  ", err);
         perror("OpenGL ERROR: ");
     }
 
@@ -696,6 +669,9 @@ const static void setupGL(void) {
     glFrontFace(GL_CW);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
+
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     // glEnable(GL_MULTISAMPLE);
     glClearColor(0.00, 0.00, 0.00, 1.00);
 
@@ -766,7 +742,7 @@ const void createTextures(void) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    /* Crete a depth texture to use is for clickSelect.*/
+    /* Create a depth texture to use is for clickSelect.*/
     glGenTextures(1, &clickSelectDepthMap);
     printf("clickSelectDepthMap: %d\n", clickSelectDepthMap);
     glActiveTexture(GL_TEXTURE6);
@@ -777,10 +753,22 @@ const void createTextures(void) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+    /* Create a stencil texture to experiment with it.*/
+    glGenTextures(1, &clickSelectStencilMap);
+    printf("clickSelectStencilMap: %d\n", clickSelectStencilMap);
+    glActiveTexture(GL_TEXTURE7);
+    glBindTexture(GL_TEXTURE_2D, clickSelectStencilMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_STENCIL_INDEX8, WIDTH, HEIGHT, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, NULL);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
     /* Attach the generated 2D Texture to our Shadow Map framebuffer's depth buffer */
     glBindFramebuffer(GL_FRAMEBUFFER, clickSelectMapFBO);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, clickSelectColorMap, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, clickSelectDepthMap, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, clickSelectStencilMap, 0);
     if ( glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE )
         perror("Incomplete clickSelectMapFBO ");
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -949,9 +937,9 @@ const static int board(void) {
         // printf("Apply Physics  : %f\n", end(start_time));
         // clock_t start_time = start();
         // shadowCast();
-        // clickSelect();
-        // displayTexture(6);
-        project();
+        clickSelect();
+        displayTexture(7);
+        // project();
         // printf("Project     : %f\n", end(start_time));;
 
         while ( XPending(displ) ) {

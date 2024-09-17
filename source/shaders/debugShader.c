@@ -64,6 +64,7 @@ const int initDebugShader(void) {
 
     return shaderProgram;
 }
+/* Displays texture with given texture index on full screen. */
 const void displayTexture(const int textureIndex) {
 
     glUseProgram(debugShaderProgram);
@@ -89,7 +90,7 @@ const void displayTexture(const int textureIndex) {
 
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        fprintf(stderr, "< %d >  ", err);
+        fprintf(stderr, "displayTexture < %d >  ", err);
         perror("OpenGL ERROR: ");
     }
 

@@ -38,7 +38,6 @@ all:
 		$(DIRECTORY)components/exec_time.c\
 		$(DIRECTORY)components/test_shapes.c\
 		$(DIRECTORY)components/logging.c\
-		$(DIRECTORY)components/click_select.c\
 		$(LINKS)\
 	    -o $(OBJ)\
 
