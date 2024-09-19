@@ -79,6 +79,7 @@ Colormap                cmap;
 XVisualInfo             *vinfo;
 GLint                   att[]   = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
 GLint VBO, testTexture[4], shadowDepthMap, shadowMapFBO, clickSelectColorMap, clickSelectDepthMap, clickSelectStencilMap, clickSelectMapFBO;
+GLenum drawBuffers[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 
 /* Project Global Variables. */
 int PROJECTIONVIEW        = 0;
@@ -256,6 +257,7 @@ const static void buttonpress(XEvent *event) {
     // printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
     click[0] = event->xbutton.x;
     click[1] = event->xbutton.y;
+    getClick = 1;
     // mesh_id = clickSelect();
     // printf("camera Position   :");
     // logDm(scene.m[6].dm);
@@ -459,6 +461,7 @@ const void clickSelect() {
     glBindFramebuffer(GL_FRAMEBUFFER, clickSelectMapFBO);
     glStencilFunc(GL_ALWAYS, 1, 0XFF);
     glStencilMask(0xFF);
+    glDrawBuffers(2, drawBuffers);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     if (EYEPOINT)
@@ -494,7 +497,7 @@ const void clickSelect() {
             memcpy(&mMatrix, &scene.m[i].modelMatrix, 64);
 
             glUniformMatrix4fv(1, 1, GL_FALSE, mMatrix);
-            // glUniform1i(2, scene.m[i].id);
+            glUniform1i(2, scene.m[i].id);
 
             glBufferData(GL_ARRAY_BUFFER, scene.m[i].vba_indexes * 32, scene.m[i].vba, GL_STATIC_DRAW);
 
@@ -506,6 +509,16 @@ const void clickSelect() {
     while ((err = glGetError()) != GL_NO_ERROR) {
         fprintf(stderr, "clickSelect < %d >  ", err);
         perror("OpenGL ERROR: ");
+    }
+
+    if ( getClick ) {
+        int data;
+        glReadBuffer(GL_COLOR_ATTACHMENT1);
+        glReadPixels(click[0], main_wa.height - click[1], 1, 1, GL_RED_INTEGER, GL_INT, &data);
+
+        printf("mesh_id: %d\n", data);
+        getClick = 0;
+        mesh_id = data;
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -758,17 +771,18 @@ const void createTextures(void) {
     printf("clickSelectStencilMap: %d\n", clickSelectStencilMap);
     glActiveTexture(GL_TEXTURE7);
     glBindTexture(GL_TEXTURE_2D, clickSelectStencilMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_STENCIL_INDEX8, WIDTH, HEIGHT, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, NULL);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, WIDTH, HEIGHT, 0, GL_RED_INTEGER, GL_INT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_STENCIL_TEXTURE_MODE, GL_STENCIL_INDEX8);
 
     /* Attach the generated 2D Texture to our Shadow Map framebuffer's depth buffer */
     glBindFramebuffer(GL_FRAMEBUFFER, clickSelectMapFBO);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, clickSelectColorMap, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, clickSelectDepthMap, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, clickSelectStencilMap, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, clickSelectStencilMap, 0);
     if ( glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE )
         perror("Incomplete clickSelectMapFBO ");
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -938,7 +952,7 @@ const static int board(void) {
         // clock_t start_time = start();
         // shadowCast();
         clickSelect();
-        displayTexture(7);
+        displayTexture(6);
         // project();
         // printf("Project     : %f\n", end(start_time));;
 

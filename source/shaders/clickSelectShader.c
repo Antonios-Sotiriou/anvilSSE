@@ -5,21 +5,22 @@ const static char *vertexShaderSource = "#version 450 core\n"
 
     "uniform mat4 vpMatrix;\n"
     "uniform mat4 mMatrix;\n"
-    // "uniform int mesh_id;\n"
+    "uniform int mesh_id;\n"
 
     "layout (location = 0) out vec4 fsPos;\n"
-    // "layout (location = 1) out int id;\n"
+    "layout (location = 1) out int id;\n"
 
     "void main() {\n"
-    // "    id = mesh_id;\n"
+    "    id = mesh_id;\n"
     "    fsPos = mMatrix * vec4(vsPos, 1.f);\n"
     "    gl_Position = vpMatrix * fsPos;\n"
     "}\n\0";
 const static char *fragmentShaderSource = "#version 450 core\n"
     "layout (location = 0) in vec4 fsPos;\n"
-    // "layout (location = 1) flat in int id;\n"
+    "layout (location = 1) flat in int id;\n"
 
     "layout (location = 0) out vec4 FragColor;\n"
+    "layout (location = 1) out int mesh_id;\n"
 
     "float near = 0.1f;\n"
     "float far = 100.f;\n"
@@ -35,6 +36,7 @@ const static char *fragmentShaderSource = "#version 450 core\n"
     "    float depth = linearizeDepth(gl_FragCoord.z) / far;\n"
     // "    FragColor = vec4(depth, depth, depth, 1.f);\n"
     "    gl_FragDepth = depth;\n"
+    "    mesh_id = id;\n"
     "}\n\0";
 
 const int initClickSelectShader(void) {

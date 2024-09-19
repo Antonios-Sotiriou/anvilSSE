@@ -20,9 +20,8 @@ const static char *debugFragmentShaderSource = "#version 450 core\n"
     "layout (location = 0) out vec4 FragColor;\n"
 
     "void main() {\n"
-    "    float depthValue = texture(debugTexture, fsTexels).r;\n"
-    "    FragColor = vec4(vec3(depthValue), 1.f);\n"
-
+    "    float value = texture(debugTexture, fsTexels).r;\n"
+    "    FragColor = vec4(vec3(value), 1.f);\n"
     "}\n\0";
 
 const int initDebugShader(void) {
