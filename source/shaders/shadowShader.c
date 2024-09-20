@@ -11,11 +11,11 @@ const static char *shadowVertexShaderSource = "#version 450 core\n"
     "void main() {\n"
 
     "    gl_Position = (lightSpaceMatrix * modelMatrix) * vec4(vsPos, 1.f);\n"
-    "    fsPos = gl_Position;\n"
+    // "    fsPos = gl_Position;\n"
 
     "}\n\0";
 const static char *shadowFragmentShaderSource = "#version 450 core\n"
-    "layout (location = 0) in vec4 fsPos;\n"
+    // "layout (location = 0) in vec4 fsPos;\n"
 
     "layout (location = 0) out vec4 FragColor;\n"
 
@@ -29,7 +29,7 @@ const static char *shadowFragmentShaderSource = "#version 450 core\n"
     "void main() {\n"
 
     // "    gl_FragDepth = linearizeDepth(gl_FragCoord.z) / far;\n"
-    "    gl_FragDepth = gl_FragCoord.z;\n"
+    // "    gl_FragDepth = gl_FragCoord.z;\n"
 
     "}\n\0";
 

@@ -78,7 +78,7 @@ GLXContext              glc;
 Colormap                cmap;
 XVisualInfo             *vinfo;
 GLint                   att[]   = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
-GLint VBO, testTexture[4], shadowDepthMap, shadowMapFBO, clickSelectColorMap, clickSelectDepthMap, clickSelectStencilMap, clickSelectMapFBO;
+GLint VBO, testTexture[4], shadowDepthMap, shadowMapFBO, mainColorMap, mainDepthMap, mainInfoMap, mainFBO;
 GLenum drawBuffers[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 
 /* Project Global Variables. */
@@ -206,9 +206,9 @@ const static void clientmessage(XEvent *event) {
         glDeleteBuffers(1, &VBO);
         glDeleteBuffers(1, &shadowDepthMap);
         glDeleteBuffers(1, &shadowMapFBO);
-        glDeleteBuffers(1, &clickSelectColorMap);
-        glDeleteBuffers(1, &clickSelectDepthMap);
-        glDeleteBuffers(1, &clickSelectMapFBO);
+        glDeleteBuffers(1, &mainColorMap);
+        glDeleteBuffers(1, &mainDepthMap);
+        glDeleteBuffers(1, &mainFBO);
 
         glDeleteProgram(mainShaderProgram);
         glDeleteProgram(shadowShaderProgram);
@@ -458,7 +458,7 @@ const void clickSelect() {
     glUseProgram(clickSelectShaderProgram);
 
     glViewport(0, 0, WIDTH, HEIGHT);
-    glBindFramebuffer(GL_FRAMEBUFFER, clickSelectMapFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, mainFBO);
     glStencilFunc(GL_ALWAYS, 1, 0XFF);
     glStencilMask(0xFF);
     glDrawBuffers(2, drawBuffers);
@@ -477,6 +477,13 @@ const void clickSelect() {
     } else {
         worldMatrix = mxm(viewMatrix, orthoMatrix);
     }
+
+    if (!DEBUG)
+        glPolygonMode(GL_FRONT, GL_FILL);
+    else if (DEBUG == 1)
+        glPolygonMode(GL_FRONT, GL_LINE);
+    else
+        glPolygonMode(GL_FRONT, GL_POINT);
 
     GLfloat vpMatrix[16], mMatrix[16];
     memcpy(&vpMatrix, &worldMatrix, 64);
@@ -538,7 +545,7 @@ const static void shadowCast() {
     GLfloat vpMatrix[16], modelMatrix[16];
     memcpy(&vpMatrix, &lightMatrix, 64);
 
-    glUniformMatrix4fv(transformLocG, 1, GL_FALSE, vpMatrix);
+    glUniformMatrix4fv(0, 1, GL_FALSE, vpMatrix);
 
     for (int i = 0; i < scene.m_indexes; i++) {
 
@@ -551,7 +558,7 @@ const static void shadowCast() {
         scene.m[i].modelMatrix = mxm(sclMatrix, trMatrix);
         memcpy(&modelMatrix, &scene.m[i].modelMatrix, 64);
 
-        glUniformMatrix4fv(transformLocH, 1, GL_FALSE, modelMatrix);
+        glUniformMatrix4fv(1, 1, GL_FALSE, modelMatrix);
 
         glBufferData(GL_ARRAY_BUFFER, scene.m[i].vba_indexes * 32, scene.m[i].vba, GL_STATIC_DRAW);
 
@@ -572,7 +579,9 @@ const static void project(void) {
     glUseProgram(mainShaderProgram);
 
     glViewport(0, 0, WIDTH, HEIGHT);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBindFramebuffer(GL_FRAMEBUFFER, mainFBO);
+    glDrawBuffers(2, drawBuffers);
+    glClear(GL_DEPTH_BUFFER_BIT);
 
     if (EYEPOINT)
         eye = &scene.m[7];
@@ -594,11 +603,11 @@ const static void project(void) {
     memcpy(&lightPos, &scene.m[7].cd.v[P], 12);
     memcpy(&cameraPos, &scene.m[6].cd.v[P], 12);
 
-    glUniformMatrix4fv(transformLocA, 1, GL_FALSE, vpMatrix);
-    glUniformMatrix4fv(transformLocB, 1, GL_FALSE, lightSpaceMatrix);
-    glUniform3fv(transformLocD, 1, lightPos);
-    glUniform3fv(transformLocE, 1, cameraPos);
-    glUniform1i(transformLocF, 4);
+    glUniformMatrix4fv(0, 1, GL_FALSE, vpMatrix);
+    glUniformMatrix4fv(1, 1, GL_FALSE, lightSpaceMatrix);
+    glUniform3fv(4, 1, lightPos);
+    glUniform3fv(5, 1, cameraPos);
+    glUniform1i(6, 4);
 
     if (!DEBUG)
         glPolygonMode(GL_FRONT, GL_FILL);
@@ -624,9 +633,10 @@ const static void project(void) {
             scene.m[i].modelMatrix = mxm(sclMatrix, trMatrix);
             memcpy(&modelMatrix, &scene.m[i].modelMatrix, 64);
 
-            glUniformMatrix4fv(transformLocC, 1, GL_FALSE, modelMatrix);
+            glUniformMatrix4fv(2, 1, GL_FALSE, modelMatrix);
 
             glUniform1i(glGetUniformLocation(mainShaderProgram,  "v_index"), scene.m[i].tex_index);
+            glUniform1i(3, scene.m[i].id);
 
             glBufferData(GL_ARRAY_BUFFER, scene.m[i].vba_indexes * 32, scene.m[i].vba, GL_STATIC_DRAW);
 
@@ -640,7 +650,18 @@ const static void project(void) {
         perror("OpenGL ERROR: ");
     }
 
-    glXSwapBuffers(displ, mainwin);
+    if ( getClick ) {
+        int data;
+        glReadBuffer(GL_COLOR_ATTACHMENT1);
+        glReadPixels(click[0], main_wa.height - click[1], 1, 1, GL_RED_INTEGER, GL_INT, &data);
+
+        printf("mesh_id: %d\n", data);
+        getClick = 0;
+        mesh_id = data;
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // glXSwapBuffers(displ, mainwin);
     // displayPoint(scene.m[1].cd.v[P], worldMatrix, 0xff00a7); //0028ff
     // displayMeshKinetics(&scene.m[1], worldMatrix); //0028ff
     displayBboxFaces(&scene.m[mesh_id], worldMatrix); //0028ff
@@ -710,7 +731,7 @@ const void createBuffers(void) {
 
     /* Generate a framebuffer object to save the depth values for the shadow Map. */
     glGenFramebuffers(1, &shadowMapFBO);
-    glGenFramebuffers(1, &clickSelectMapFBO);
+    glGenFramebuffers(1, &mainFBO);
 }
 const void createTextures(void) {
     /* Main Textures. */
@@ -745,46 +766,46 @@ const void createTextures(void) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     /* Create a 2D Texture to use it for clickSelect aka. (pick objects on mouse click). */
-    glGenTextures(1, &clickSelectColorMap);
-    printf("clickSelectColorMap: %d\n", clickSelectColorMap);
+    glGenTextures(1, &mainColorMap);
+    printf("mainColorMap: %d\n", mainColorMap);
     glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_2D, clickSelectColorMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+    glBindTexture(GL_TEXTURE_2D, mainColorMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    /* Create a depth texture to use is for clickSelect.*/
-    glGenTextures(1, &clickSelectDepthMap);
-    printf("clickSelectDepthMap: %d\n", clickSelectDepthMap);
+    /* Create a user specific framebuffer to use it for rendering instead of the default framebuffer.*/
+    glGenTextures(1, &mainDepthMap);
+    printf("mainDepthMap: %d\n", mainDepthMap);
     glActiveTexture(GL_TEXTURE6);
-    glBindTexture(GL_TEXTURE_2D, clickSelectDepthMap);
+    glBindTexture(GL_TEXTURE_2D, mainDepthMap);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, WIDTH, HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    /* Create a stencil texture to experiment with it.*/
-    glGenTextures(1, &clickSelectStencilMap);
-    printf("clickSelectStencilMap: %d\n", clickSelectStencilMap);
+    /* Create a INFO texture.*/
+    glGenTextures(1, &mainInfoMap);
+    printf("mainInfoMap: %d\n", mainInfoMap);
     glActiveTexture(GL_TEXTURE7);
-    glBindTexture(GL_TEXTURE_2D, clickSelectStencilMap);
+    glBindTexture(GL_TEXTURE_2D, mainInfoMap);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, WIDTH, HEIGHT, 0, GL_RED_INTEGER, GL_INT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     // glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_STENCIL_TEXTURE_MODE, GL_STENCIL_INDEX8);
 
     /* Attach the generated 2D Texture to our Shadow Map framebuffer's depth buffer */
-    glBindFramebuffer(GL_FRAMEBUFFER, clickSelectMapFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, clickSelectColorMap, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, clickSelectDepthMap, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, clickSelectStencilMap, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, mainFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mainColorMap, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, mainDepthMap, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, mainInfoMap, 0);
     if ( glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE )
-        perror("Incomplete clickSelectMapFBO ");
+        perror("Incomplete mainFBO ");
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 const int assignUniformLocations(void) {
@@ -950,10 +971,11 @@ const static int board(void) {
         applyPhysics(&scene);
         // printf("Apply Physics  : %f\n", end(start_time));
         // clock_t start_time = start();
-        // shadowCast();
-        clickSelect();
-        displayTexture(6);
-        // project();
+        shadowCast();
+        // clickSelect();
+        // displayTexture(6);
+        project();
+        displayTexture(5);
         // printf("Project     : %f\n", end(start_time));;
 
         while ( XPending(displ) ) {
@@ -1018,7 +1040,7 @@ const int main(int argc, char *argv[]) {
     debugShaderProgram = initDebugShader();
     clickSelectShaderProgram = initClickSelectShader();
     glUseProgram(mainShaderProgram);
-    assignUniformLocations();
+    // assignUniformLocations();
 
     InitTimeCounter();
 

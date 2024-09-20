@@ -8,6 +8,7 @@ const static char *vertexShaderSource = "#version 450 core\n"
     "uniform mat4 vpMatrix;\n"
     "uniform mat4 lightSpaceMatrix;\n"
     "uniform mat4 modelMatrix;\n"
+    "uniform int mesh_id;\n"
 
     "out VS_OUT {\n"
     "    vec4 fsPos;\n"
@@ -15,6 +16,7 @@ const static char *vertexShaderSource = "#version 450 core\n"
     "    vec2 fsTexels;\n"
     "    vec3 fsNormal;\n"
     "    vec4 fsPosLightSpace;\n"
+    "    int id;\n"
     "} vs_out;\n"
 
     "void main() {\n"
@@ -26,6 +28,7 @@ const static char *vertexShaderSource = "#version 450 core\n"
     "    vs_out.fsPosLightSpace = (lightSpaceMatrix * modelMatrix) * vec4(vsPos, 1.f);\n"
 
     "    gl_Position = vs_out.fsPos;\n"
+    "    vs_out.id = mesh_id;\n"
     "}\n\0";
 const static char *fragmentShaderSource = "#version 450 core\n"
     "in VS_OUT {\n"
@@ -34,6 +37,7 @@ const static char *fragmentShaderSource = "#version 450 core\n"
     "    vec2 fsTexels;\n"
     "    vec3 fsNormal;\n"
     "    vec4 fsPosLightSpace;\n"
+    "    flat int id;\n"
     "} fs_in;\n"
 
     "uniform vec3 lightPos;\n"
@@ -43,6 +47,14 @@ const static char *fragmentShaderSource = "#version 450 core\n"
     "uniform int v_index;\n"
 
     "layout (location = 0) out vec4 FragColor;\n"
+    "layout (location = 1) out int mesh_id;\n"
+
+    // "float near = 0.1f;\n"
+    // "float far = 100.f;\n"
+    // "float linearizeDepth(float depth) {\n"
+    // "    float z = (depth * 2.f) - 1.f;\n"
+    // "    return (2.f * near * far) / (far + near - z * (far - near));\n"
+    // "};\n"
 
     "float shadowCalculation(vec4 fsPosLightSpace) {\n"
         // Perform Perspective Divide.
@@ -99,6 +111,8 @@ const static char *fragmentShaderSource = "#version 450 core\n"
     "    vec3 result = ((ambient + (1.f - shadow)) * (diffuse + specular)) * texture(ourTexture[v_index], fs_in.fsTexels).bgr;\n"
 
     "    FragColor = vec4(result, 1.f);\n"
+    "    mesh_id = fs_in.id;\n"
+    // "    gl_FragDepth = linearizeDepth(gl_FragCoord.z) / far;\n"
     "}\n\0";
 
 const int initMainShader(void) {
