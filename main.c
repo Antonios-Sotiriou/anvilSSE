@@ -651,20 +651,20 @@ const static void project(void) {
     }
 
     if ( getClick ) {
-        int data;
+        int data[2];
         glReadBuffer(GL_COLOR_ATTACHMENT1);
-        glReadPixels(click[0], main_wa.height - click[1], 1, 1, GL_RED_INTEGER, GL_INT, &data);
+        glReadPixels(click[0], main_wa.height - click[1], 1, 1, GL_RG_INTEGER, GL_INT, &data);
 
-        printf("mesh_id: %d\n", data);
+        printf("mesh_info[0]: %d    mesh_info[1]: %d\n", data[0], data[1]);
         getClick = 0;
-        mesh_id = data;
+        mesh_id = data[0];
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // glXSwapBuffers(displ, mainwin);
     // displayPoint(scene.m[1].cd.v[P], worldMatrix, 0xff00a7); //0028ff
     // displayMeshKinetics(&scene.m[1], worldMatrix); //0028ff
-    displayBboxFaces(&scene.m[mesh_id], worldMatrix); //0028ff
+    // displayBboxFaces(&scene.m[mesh_id], worldMatrix); //0028ff
 }
 const static void initMainWindow(void) {
     int screen = XDefaultScreen(displ);
@@ -782,22 +782,13 @@ const void createTextures(void) {
     glActiveTexture(GL_TEXTURE6);
     glBindTexture(GL_TEXTURE_2D, mainDepthMap);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, WIDTH, HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     /* Create a INFO texture.*/
     glGenTextures(1, &mainInfoMap);
     printf("mainInfoMap: %d\n", mainInfoMap);
     glActiveTexture(GL_TEXTURE7);
     glBindTexture(GL_TEXTURE_2D, mainInfoMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, WIDTH, HEIGHT, 0, GL_RED_INTEGER, GL_INT, NULL);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    // glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_STENCIL_TEXTURE_MODE, GL_STENCIL_INDEX8);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32I, WIDTH, HEIGHT, 0, GL_RG_INTEGER, GL_INT, NULL);
 
     /* Attach the generated 2D Texture to our Shadow Map framebuffer's depth buffer */
     glBindFramebuffer(GL_FRAMEBUFFER, mainFBO);

@@ -47,7 +47,7 @@ const static char *fragmentShaderSource = "#version 450 core\n"
     "uniform int v_index;\n"
 
     "layout (location = 0) out vec4 FragColor;\n"
-    "layout (location = 1) out int mesh_id;\n"
+    "layout (location = 1) out ivec2 mesh_info;\n"
 
     // "float near = 0.1f;\n"
     // "float far = 100.f;\n"
@@ -111,7 +111,7 @@ const static char *fragmentShaderSource = "#version 450 core\n"
     "    vec3 result = ((ambient + (1.f - shadow)) * (diffuse + specular)) * texture(ourTexture[v_index], fs_in.fsTexels).bgr;\n"
 
     "    FragColor = vec4(result, 1.f);\n"
-    "    mesh_id = fs_in.id;\n"
+    "    mesh_info = ivec2(fs_in.id, gl_PrimitiveID);\n"
     // "    gl_FragDepth = linearizeDepth(gl_FragCoord.z) / far;\n"
     "}\n\0";
 
