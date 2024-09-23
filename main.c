@@ -115,8 +115,8 @@ const float movScalar = 1.f;
 const float moveForce = 0.2f;
 
 /* Variables usefull for mesh click select. */
-int getClick = 0; /* TO BE DELETED! */
-int mesh_id = 0;
+int getClick = 0;
+int mesh_id = 0, primitive_id = 0;
 vec4f click = { 0 };
 
 /* Global Matrices */
@@ -650,19 +650,22 @@ const static void project(void) {
         perror("OpenGL ERROR: ");
     }
 
+    int data[2];
     if ( getClick ) {
-        int data[2];
         glReadBuffer(GL_COLOR_ATTACHMENT1);
         glReadPixels(click[0], main_wa.height - click[1], 1, 1, GL_RG_INTEGER, GL_INT, &data);
 
         printf("mesh_info[0]: %d    mesh_info[1]: %d\n", data[0], data[1]);
         getClick = 0;
         mesh_id = data[0];
+        primitive_id = data[1];
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // glXSwapBuffers(displ, mainwin);
     // displayPoint(scene.m[1].cd.v[P], worldMatrix, 0xff00a7); //0028ff
+    face f = facexm(scene.m[mesh_id].f[primitive_id], scene.m[mesh_id].modelMatrix);
+    displayFace(&f, worldMatrix); //0028ff
     // displayMeshKinetics(&scene.m[1], worldMatrix); //0028ff
     // displayBboxFaces(&scene.m[mesh_id], worldMatrix); //0028ff
 }
@@ -951,6 +954,8 @@ const static int board(void) {
 
     createScene(&scene);     /*  Scene creation must happen after world objects initialization.    */
     initWorldObjects(&scene);
+
+    announceReadyState();
 
     float time_dif;
     while(RUNNING) {
