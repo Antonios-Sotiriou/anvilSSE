@@ -21,7 +21,7 @@ const void loadBboxVectors(Mesh *m, const char path[]) {
     snprintf(objfile, len, "%s.obj", path);
 
     m->bbox.v = loadvectors(objfile);
-    if (!m->bbox.v)
+    if ( !m->bbox.v )
         fprintf(stderr, "Could not reallocate Vectors array. load_obj() - get_vectors()\n");
     m->bbox.v_indexes = v_indexes;
 }
@@ -31,19 +31,19 @@ const void loadBboxFaces(Mesh *m, const char path[]) {
     snprintf(objfile, len, "%s.obj", path);
 
     vec4f *v = loadvectors(objfile);
-    if (!v)
+    if ( !v )
         fprintf(stderr, "Could not reallocate Vectors array. loadMesh() - get_vectors()\n");
 
     vec2f *t = loadtextors(objfile);
-    if (!t)
+    if ( !t )
         fprintf(stderr, "Could not create Vectors array. loadMesh() - get_textors()\n");
 
     vec4f *n = loadnormals(objfile);
-    if (!n)
+    if ( !n )
         fprintf(stderr, "Could not create Vectors array. loadMesh() - get_normals()\n");
 
     int *f = loadfaces(objfile);
-    if (!f)
+    if ( !f )
         fprintf(stderr, "Could not create Faces array. loadMesh() - get_faces()\n");
 
 
@@ -74,13 +74,13 @@ const void loadBboxFaces(Mesh *m, const char path[]) {
 static int *loadfaces(const char path[]) {
     size_t facesize = sizeof(int);
     FILE *fp = fopen(path, "r");
-    if (!fp) {
+    if ( !fp ) {
         fprintf(stderr, "Could not open file : %s.\n", path);
         return NULL;
     }
 
     int *f = malloc(facesize);
-    if (!f) {
+    if ( !f ) {
         fprintf(stderr, "Could not allocate memory for Face struct. loadMesh() -- malloc().\n");
         fclose(fp);
         return NULL;
@@ -90,14 +90,14 @@ static int *loadfaces(const char path[]) {
     int index = 0;
 
     char ch;
-    while (!feof(fp)) {
+    while ( !feof(fp) ) {
         if ( (ch = getc(fp)) == 'f' )
             if ( (ch = getc(fp)) == ' ' )
                 if (fscanf(fp, "%d/%d/%d %d/%d/%d %d/%d/%d",
                     &va, &vb, &vc, &vd, &ve, &vf, &vg, &vh, &vi ) == 9){
 
                     f = realloc(f, facesize * dynamic_inc);
-                    if (!f) {
+                    if ( !f ) {
                         fprintf(stderr, "Could not reallocate memory for Face struct array. loadMesh() -- realloc().\n");
                         fclose(fp);
                         free(f);
@@ -119,13 +119,13 @@ static int *loadfaces(const char path[]) {
 static vec4f *loadvectors(const char path[]) {
     size_t vecsize = sizeof(vec4f);
     FILE *fp = fopen(path, "r");
-    if (!fp) {
+    if ( !fp ) {
         fprintf(stderr, "Could not open file : %s.\n", path);
         return NULL;
     }
 
     vec4f *v = malloc(vecsize);
-    if (!v) {
+    if ( !v ) {
         fprintf(stderr, "Could not allocate memory for vec4f struct. get_vectors() -- calloc().\n");
         fclose(fp);
         return NULL;
@@ -135,13 +135,13 @@ static vec4f *loadvectors(const char path[]) {
     int index = 0;
 
     char ch;
-    while (!feof(fp)) {
+    while ( !feof(fp) ) {
         if ( (ch = getc(fp)) == 'v' )
             if ( (ch = getc(fp)) == ' ' )
                 if (fscanf(fp, "%f %f %f", &va, &vb, &vc) == 3) {
 
                     v = realloc(v, vecsize * dynamic_inc);
-                    if (!v) {
+                    if ( !v ) {
                         fprintf(stderr, "Could not reallocate memory for vec4f struct array. loadMesh() -- realloc().\n");
                         fclose(fp);
                         free(v);
@@ -163,13 +163,13 @@ static vec4f *loadvectors(const char path[]) {
 static vec2f *loadtextors(const char path[]) {
     size_t vecsize = sizeof(vec2f);
     FILE *fp = fopen(path, "r");
-    if (!fp) {
+    if ( !fp ) {
         fprintf(stderr, "Could not open file : %s.\n", path);
         return NULL;
     }
 
     vec2f *t = malloc(vecsize);
-    if (!t) {
+    if ( !t ) {
         fprintf(stderr, "Could not allocate memory for Textor struct. get_textors() -- calloc().\n");
         fclose(fp);
         return NULL;
@@ -179,14 +179,14 @@ static vec2f *loadtextors(const char path[]) {
     int index = 0;
 
     char ch;
-    while (!feof(fp)) {
+    while ( !feof(fp) ) {
         if ( (ch = getc(fp)) == 'v' )
             if ( (ch = getc(fp)) == 't' )
                 if ( (ch = getc(fp)) == ' ' )
                     if (fscanf(fp, "%f %f", &va, &vb) == 2) {
 
                         t = realloc(t, vecsize * dynamic_inc);
-                        if (!t) {
+                        if ( !t ) {
                             fprintf(stderr, "Could not reallocate memory for vec4f struct array. get_textors() -- realloc().\n");
                             fclose(fp);
                             free(t);
@@ -206,13 +206,13 @@ static vec2f *loadtextors(const char path[]) {
 static vec4f *loadnormals(const char path[]) {
     size_t vecsize = sizeof(vec4f);
     FILE *fp = fopen(path, "r");
-    if (!fp) {
+    if ( !fp ) {
         fprintf(stderr, "Could not open file : %s.\n", path);
         return NULL;
     }
 
     vec4f *n = malloc(vecsize);
-    if (!n) {
+    if ( !n ) {
         fprintf(stderr, "Could not allocate memory for Textor struct. get_normals() -- calloc().\n");
         fclose(fp);
         return NULL;
@@ -223,14 +223,14 @@ static vec4f *loadnormals(const char path[]) {
     int index = 0;
 
     char ch;
-    while (!feof(fp)) {
+    while ( !feof(fp) ) {
         if ( (ch = getc(fp)) == 'v' )
             if ( (ch = getc(fp)) == 'n' )
                 if ( (ch = getc(fp)) == ' ' )
                     if (fscanf(fp, "%f %f %f", &va, &vb, &vc) == 3) {
 
                         n = realloc(n, sizeof(vec4f) * dynamic_inc);
-                        if (!n) {
+                        if ( !n ) {
                             fprintf(stderr, "Could not reallocate memory for vec4f struct array. loadMesh() -- realloc().\n");
                             fclose(fp);
                             free(n);

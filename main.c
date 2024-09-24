@@ -14,9 +14,8 @@
 #include <GL/glx.h>     /* libglx-dev */
 #include <GL/glu.h>     /* libglu1-mesa-dev */
 
-int mainShaderProgram, shadowShaderProgram, debugShaderProgram, clickSelectShaderProgram;
-/* Locations of uniforms of the shaders. */
-GLint transformLocA, transformLocB, transformLocC, transformLocD, transformLocE, transformLocF, transformLocG, transformLocH, transformLocI, texLoc0, texLoc1, texLoc2, texLoc3;
+/* Shader Programms Glodal ids. */
+int mainShaderProgram, shadowShaderProgram, displayShaderProgram, clickSelectShaderProgram;
 
 /* Library to cooperate with Postgres Database. */
 #include <postgresql/libpq-fe.h>  /* libpq-dev */
@@ -42,7 +41,7 @@ int ENABLE_GDB_BREAKPOINT = 0;
 /* Project specific headers */
 #include "headers/shaders/mainShader.h"
 #include "headers/shaders/shadowShader.h"
-#include "headers/shaders/debugShader.h"
+#include "headers/shaders/displayShader.h"
 #include "headers/shaders/clickSelectShader.h"
 #include "headers/components/anvil_structs.h"
 #include "headers/components/quaternions.h"
@@ -157,11 +156,9 @@ const static void initMainWindow(void);
 const static void setupGL(void);
 const void createBuffers(void);
 const void createTextures(void);
-const int assignUniformLocations(void);
 const static void initGlobalGC(void);
 const static void initDependedVariables(void);
 const static void initAtoms(void);
-// const static void initLightModel(Mesh *m);
 const static void InitTimeCounter(void);
 const static void UpdateTimeCounter(void);
 const static void CalculateFPS(void);
@@ -196,7 +193,6 @@ const static void clientmessage(XEvent *event) {
         XFreeGC(displ, gc);
 
         // 4. Unbinding the Vertex and Buffer arrays.
-        XFree(vinfo);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glDisableVertexAttribArray(0);
@@ -204,18 +200,24 @@ const static void clientmessage(XEvent *event) {
         glDisableVertexAttribArray(2);
 
         glDeleteBuffers(1, &VBO);
-        glDeleteBuffers(1, &shadowDepthMap);
-        glDeleteBuffers(1, &shadowMapFBO);
-        glDeleteBuffers(1, &mainColorMap);
-        glDeleteBuffers(1, &mainDepthMap);
-        glDeleteBuffers(1, &mainFBO);
+
+        glDeleteTextures(4, testTexture);
+
+        glDeleteFramebuffers(1, &shadowMapFBO);
+        glDeleteTextures(1, &shadowDepthMap);
+
+        glDeleteFramebuffers(1, &mainFBO);
+        glDeleteTextures(1, &mainColorMap);
+        glDeleteTextures(1, &mainDepthMap);
+        glDeleteTextures(1, &mainInfoMap);
 
         glDeleteProgram(mainShaderProgram);
         glDeleteProgram(shadowShaderProgram);
-        glDeleteProgram(debugShaderProgram);
+        glDeleteProgram(displayShaderProgram);
         glDeleteProgram(clickSelectShaderProgram);
 
         glXMakeCurrent(displ, None, NULL);
+        XFree(vinfo);
         glXDestroyContext(displ, glc);
 
         XDestroyWindow(displ, mainwin);
@@ -241,7 +243,7 @@ const static void configurenotify(XEvent *event) {
         // printf("configurenotify Send event received\n");
         XGetWindowAttributes(displ, mainwin, &main_wa);
 
-        if (INIT) {
+        if ( INIT ) {
 
             initDependedVariables();
 
@@ -258,9 +260,6 @@ const static void buttonpress(XEvent *event) {
     click[0] = event->xbutton.x;
     click[1] = event->xbutton.y;
     getClick = 1;
-    // mesh_id = clickSelect();
-    // printf("camera Position   :");
-    // logDm(scene.m[6].dm);
 }
 const static void mousemotion(XEvent *event) {
     printf("MotionNotify event received\n");
@@ -411,7 +410,7 @@ const static void keypress(XEvent *event) {
                 EYEPOINT = 1;
             else
                 EYEPOINT = 0;
-            return;
+            break;
         case 118 :
             if (!PROJECTIONVIEW)               /* v */
                 PROJECTIONVIEW++;
@@ -419,13 +418,18 @@ const static void keypress(XEvent *event) {
                 PROJECTIONVIEW = 0;
             break;
     }
+
+    if ( EYEPOINT )
+        eye = &scene.m[7];
+    else
+        eye = &scene.m[6];
 }
 const static void keyrelease(XEvent *event) {
 
     KeySym keysym = XLookupKeysym(&event->xkey, 0);
 
     // printf("Key Released: %ld\n", keysym);
-    if (eye) {
+    if ( eye ) {
         eye->momentum = 0;
         eye->rot_angle = 0;
     }
@@ -452,83 +456,6 @@ const int frustumCulling(vec4f v[], const int v_indexes, const Mat4x4 wm) {
 
     free(vec_arr);
     return 1;
-}
-const void clickSelect() {
-
-    glUseProgram(clickSelectShaderProgram);
-
-    glViewport(0, 0, WIDTH, HEIGHT);
-    glBindFramebuffer(GL_FRAMEBUFFER, mainFBO);
-    glStencilFunc(GL_ALWAYS, 1, 0XFF);
-    glStencilMask(0xFF);
-    glDrawBuffers(2, drawBuffers);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    if (EYEPOINT)
-        eye = &scene.m[7];
-    else
-        eye = &scene.m[6];
-
-    lookAtMatrix = lookat(eye->cd.v[P], eye->cd.v[U], eye->cd.v[V], eye->cd.v[N]);
-    viewMatrix = inverse_mat(lookAtMatrix);
-
-    if (!PROJECTIONVIEW) {
-        worldMatrix = mxm(viewMatrix, perspMatrix);
-    } else {
-        worldMatrix = mxm(viewMatrix, orthoMatrix);
-    }
-
-    if (!DEBUG)
-        glPolygonMode(GL_FRONT, GL_FILL);
-    else if (DEBUG == 1)
-        glPolygonMode(GL_FRONT, GL_LINE);
-    else
-        glPolygonMode(GL_FRONT, GL_POINT);
-
-    GLfloat vpMatrix[16], mMatrix[16];
-    memcpy(&vpMatrix, &worldMatrix, 64);
-
-    glUniformMatrix4fv(0, 1, GL_FALSE, vpMatrix);
-
-    for (int i = 0; i < scene.m_indexes; i++) {
-
-        if ( frustumCulling(scene.m[i].bbox.v, scene.m[i].bbox.v_indexes, worldMatrix) ) {
-
-            Mat4x4 sclMatrix, trMatrix;
-
-            vec4f pos = { 0 };
-            Mat4x4 mfQ = MatfromQuat(scene.m[i].Q, pos);
-            sclMatrix = mxm(mfQ, scaleMatrix(scene.m[i].scale));
-            trMatrix = translationMatrix(scene.m[i].cd.v[P][0], scene.m[i].cd.v[P][1], scene.m[i].cd.v[P][2]);
-            scene.m[i].modelMatrix = mxm(sclMatrix, trMatrix);
-            memcpy(&mMatrix, &scene.m[i].modelMatrix, 64);
-
-            glUniformMatrix4fv(1, 1, GL_FALSE, mMatrix);
-            glUniform1i(2, scene.m[i].id);
-
-            glBufferData(GL_ARRAY_BUFFER, scene.m[i].vba_indexes * 32, scene.m[i].vba, GL_STATIC_DRAW);
-
-            glDrawArrays(GL_TRIANGLES, 0, scene.m[i].vba_indexes);
-        }
-    }
-
-    GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR) {
-        fprintf(stderr, "clickSelect < %d >  ", err);
-        perror("OpenGL ERROR: ");
-    }
-
-    if ( getClick ) {
-        int data;
-        glReadBuffer(GL_COLOR_ATTACHMENT1);
-        glReadPixels(click[0], main_wa.height - click[1], 1, 1, GL_RED_INTEGER, GL_INT, &data);
-
-        printf("mesh_id: %d\n", data);
-        getClick = 0;
-        mesh_id = data;
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 const static void shadowCast() {
 
@@ -572,7 +499,6 @@ const static void shadowCast() {
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // glXSwapBuffers(displ, mainwin);
 }
 const static void project(void) {
 
@@ -581,21 +507,11 @@ const static void project(void) {
     glViewport(0, 0, WIDTH, HEIGHT);
     glBindFramebuffer(GL_FRAMEBUFFER, mainFBO);
     glDrawBuffers(2, drawBuffers);
-    glClear(GL_DEPTH_BUFFER_BIT);
-
-    if (EYEPOINT)
-        eye = &scene.m[7];
-    else
-        eye = &scene.m[6];
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     lookAtMatrix = lookat(eye->cd.v[P], eye->cd.v[U], eye->cd.v[V], eye->cd.v[N]);
     viewMatrix = inverse_mat(lookAtMatrix);
-
-    if (!PROJECTIONVIEW) {
-        worldMatrix = mxm(viewMatrix, perspMatrix);
-    } else {
-        worldMatrix = mxm(viewMatrix, orthoMatrix);
-    }
+    worldMatrix = mxm(viewMatrix, perspMatrix);
 
     GLfloat vpMatrix[16], lightSpaceMatrix[16], modelMatrix[16], lightPos[3], cameraPos[3];
     memcpy(&vpMatrix, &worldMatrix, 64);
@@ -635,7 +551,7 @@ const static void project(void) {
 
             glUniformMatrix4fv(2, 1, GL_FALSE, modelMatrix);
 
-            glUniform1i(glGetUniformLocation(mainShaderProgram,  "v_index"), scene.m[i].tex_index);
+            glUniform1i(11, scene.m[i].tex_index);
             glUniform1i(3, scene.m[i].id);
 
             glBufferData(GL_ARRAY_BUFFER, scene.m[i].vba_indexes * 32, scene.m[i].vba, GL_STATIC_DRAW);
@@ -707,9 +623,6 @@ const static void setupGL(void) {
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
-    glEnable(GL_STENCIL_TEST);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-    // glEnable(GL_MULTISAMPLE);
     glClearColor(0.00, 0.00, 0.00, 1.00);
 
     /* Initialize Glew and check for Errors. */
@@ -718,7 +631,9 @@ const static void setupGL(void) {
         /* Problem: glewInit failed, something is seriously wrong. */
         fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
     }
-    fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+    fprintf(stdout, "Status: Using GLEW  : %s\n", glewGetString(GLEW_VERSION));
+    fprintf(stdout, "Status: GL VERSION  : %s\n", glGetString(GL_VERSION));
+    fprintf(stdout, "Status: GLSL VERSION: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 }
 const void createBuffers(void) {
     /* Main Vertex Buffer Object buffer initiallization. */
@@ -738,6 +653,12 @@ const void createBuffers(void) {
 }
 const void createTextures(void) {
     /* Main Textures. */
+    for (int i = GL_TEXTURE0; i <= GL_TEXTURE31; i++) {
+        printf("GL_TEXTURE%d : %d\n", i, GL_TEXTURE0 + i);
+    }
+    printf("GL_MAX_TEXTURE_IMAGE_UNITS: %d\n", GL_MAX_TEXTURE_IMAGE_UNITS);
+    printf("GL_MAX_TEXTURE_UNITS: %d\n", GL_MAX_TEXTURE_UNITS);
+
     glGenTextures(4, testTexture);
     printf("testTexture: %d, %d, %d, %d\n", testTexture[0], testTexture[1], testTexture[2], testTexture[3]);
 
@@ -801,34 +722,6 @@ const void createTextures(void) {
     if ( glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE )
         perror("Incomplete mainFBO ");
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-const int assignUniformLocations(void) {
-    if ( (transformLocA = glGetUniformLocation(mainShaderProgram, "vpMatrix")) != 0)
-        fprintf(stderr, "Could not locate uniform variable with name: vpMatrix. Error: %d\n", transformLocA);
-
-    if ( (transformLocB = glGetUniformLocation(mainShaderProgram, "lightSpaceMatrix")) != 1)
-        fprintf(stderr, "Could not locate uniform variable with name: lightSpaceMatrix. Error: %d\n", transformLocB);
-
-    if ( (transformLocC = glGetUniformLocation(mainShaderProgram, "modelMatrix")) != 2)
-        fprintf(stderr, "Could not locate uniform variable with name: modelMatrix. Error: %d\n", transformLocC);
-
-    if ( (transformLocD = glGetUniformLocation(mainShaderProgram, "lightPos")) != 3)
-        fprintf(stderr, "Could not locate uniform variable with name: lightPos. Error: %d\n", transformLocD);
-
-    if ( (transformLocE = glGetUniformLocation(mainShaderProgram, "cameraPos")) != 4)
-        fprintf(stderr, "Could not locate uniform variable with name: cameraPos. Error: %d\n", transformLocE);
-
-    if ( (transformLocF = glGetUniformLocation(mainShaderProgram, "shadowDepthMap")) != 5)
-        fprintf(stderr, "Could not locate uniform variable with name: shadowDepthMap. Error: %d\n", transformLocF);
-
-    if ( (transformLocG = glGetUniformLocation(shadowShaderProgram, "lightSpaceMatrix")) != 0)
-        fprintf(stderr, "Could not locate uniform variable with name: vpMatrix. Error: %d\n", transformLocG);
-
-    if ( (transformLocH = glGetUniformLocation(shadowShaderProgram, "modelMatrix")) != 1)
-        fprintf(stderr, "Could not locate uniform variable with name: modelMatrix. Error: %d\n", transformLocH);
-
-    // if ( (transformLocI = glGetUniformLocation(debugShaderProgram, "shadowDepthMap")) != 0)
-    //     fprintf(stderr, "Could not locate uniform variable with name: shadowDepthMap. Error: %d\n", transformLocI);
 }
 const static void initThreads(void) {
     /* Init thread_ids dynamically */
@@ -1033,10 +926,9 @@ const int main(int argc, char *argv[]) {
     createTextures();
     mainShaderProgram = initMainShader();
     shadowShaderProgram = initShadowShader();
-    debugShaderProgram = initDebugShader();
+    displayShaderProgram = initDisplayShader();
     clickSelectShaderProgram = initClickSelectShader();
     glUseProgram(mainShaderProgram);
-    // assignUniformLocations();
 
     InitTimeCounter();
 

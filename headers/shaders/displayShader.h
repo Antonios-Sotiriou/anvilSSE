@@ -1,5 +1,5 @@
-#ifndef _DEBUGSHADER_H
-#define _DEBUGSHADER_H 1
+#ifndef _DISPLAYSHADER_H
+#define _DISPLAYSHADER_H 1
 
 #ifndef STDIO_H
     #include <stdio.h>
@@ -23,15 +23,15 @@
 #endif
 
 /* Global variables. Defined in main.c. used by all shaders with small name changes. */
-extern int debugShaderProgram;
+extern int displayShaderProgram;
 extern GLint transformLocI;
 extern Display *displ;
 extern Window mainwin;
 extern XWindowAttributes main_wa;
 
-const int initDebugShader(void);
+const int initDisplayShader(void);
 const void displayTexture(const int textureIndex);
 
-#endif /* _DEBUGSHADER_H */
+#endif /* _DISPLAYSHADER_H */
 
 

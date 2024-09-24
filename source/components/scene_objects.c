@@ -19,9 +19,7 @@ const void initWorldObjects(Scene *s) {
     glGenerateMipmap(GL_TEXTURE_2D);
     free(s->m[0].material.texture);
 
-    if ( (texLoc0 = glGetUniformLocation(mainShaderProgram, "ourTexture[0]")) != 7 )
-        fprintf(stderr, "Could not locate uniform variable with name: ourTexture[0]. Error: %d\n", texLoc0);
-    glUniform1i(texLoc0, 0);
+    glUniform1i(7, 0);
 
     s->m[0].type = Terrain;
     s->m[0].id = 0;
@@ -57,9 +55,7 @@ const void initWorldObjects(Scene *s) {
     glGenerateMipmap(GL_TEXTURE_2D);
     free(s->m[1].material.texture);
 
-    if ( (texLoc1 = glGetUniformLocation(mainShaderProgram, "ourTexture[1]")) != 8 )
-        fprintf(stderr, "Could not locate uniform variable with name: ourTexture[1]. Error: %d\n", texLoc1);
-    glUniform1i(texLoc1, 1);
+    glUniform1i(8, 1);
 
     s->m[1].type = Player;
     s->m[1].id = 1;
@@ -99,9 +95,7 @@ const void initWorldObjects(Scene *s) {
     glGenerateMipmap(GL_TEXTURE_2D);
     free(s->m[2].material.texture);
 
-    if ( (texLoc2 = glGetUniformLocation(mainShaderProgram, "ourTexture[2]")) != 9 )
-        fprintf(stderr, "Could not locate uniform variable with name: ourTexture[2]. Error: %d\n", texLoc2);
-    glUniform1i(texLoc2, 2);
+    glUniform1i(9, 2);
 
     s->m[2].type = MovingObject;
     s->m[2].id = 2;
@@ -190,9 +184,7 @@ const void initWorldObjects(Scene *s) {
     glGenerateMipmap(GL_TEXTURE_2D);
     free(s->m[5].material.texture);
 
-    if ( (texLoc3 = glGetUniformLocation(mainShaderProgram, "ourTexture[3]")) != 10 )
-        fprintf(stderr, "Could not locate uniform variable with name: ourTexture[0]. Error: %d\n", texLoc3);
-    glUniform1i(texLoc3, 3);
+    glUniform1i(10, 3);
 
     s->m[5].type = Celestial;
     s->m[5].id = 5;
@@ -304,7 +296,7 @@ const void createScene(Scene *s) {
 /* Releases all Meshes that form a scene. */
 const void releaseScene(Scene *s) {
     for (int i = 0; i < s->m_indexes; i++) {
-        free(s->m[i].material.texture);
+        // free(s->m[i].material.texture);
         releaseMesh(&s->m[i]);
     }
     free(s->m);

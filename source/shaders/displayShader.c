@@ -1,6 +1,6 @@
-#include "../../headers/shaders/debugShader.h"
+#include "../../headers/shaders/displayShader.h"
 
-const static char *debugVertexShaderSource = "#version 450 core\n"
+const static char *displayVertexShaderSource = "#version 450 core\n"
     "layout (location = 0) in vec3 vsPos;\n"
     "layout (location = 1) in vec2 vsTexels;\n"
 
@@ -10,24 +10,23 @@ const static char *debugVertexShaderSource = "#version 450 core\n"
 
     "    gl_Position = vec4(vsPos, 1.f);\n"
     "    fsTexels = vsTexels;\n"
-
     "}\n\0";
-const static char *debugFragmentShaderSource = "#version 450 core\n"
+const static char *displayFragmentShaderSource = "#version 450 core\n"
     "layout (location = 0) in vec2 fsTexels;\n"
 
-    "uniform sampler2D debugTexture;\n"
+    "uniform sampler2D displayTexture;\n"
 
     "layout (location = 0) out vec4 FragColor;\n"
 
     "void main() {\n"
-    "    FragColor = vec4(texture(debugTexture, fsTexels).rgb, 1.f);\n"
+    "    FragColor = vec4(texture(displayTexture, fsTexels).rgb, 1.f);\n"
     "}\n\0";
 
-const int initDebugShader(void) {
+const int initDisplayShader(void) {
     int success, vertexShader, fragmentShader, shaderProgram;
     char infoLog[512];
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &debugVertexShaderSource, NULL);
+    glShaderSource(vertexShader, 1, &displayVertexShaderSource, NULL);
     glCompileShader(vertexShader);
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
     if(!success) {
@@ -36,7 +35,7 @@ const int initDebugShader(void) {
     }
 
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &debugFragmentShaderSource, NULL);
+    glShaderSource(fragmentShader, 1, &displayFragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if(!success) {
@@ -65,7 +64,7 @@ const int initDebugShader(void) {
 /* Displays texture with given texture index on full screen. */
 const void displayTexture(const int textureIndex) {
 
-    glUseProgram(debugShaderProgram);
+    glUseProgram(displayShaderProgram);
 
     glViewport(0, 0, main_wa.width, main_wa.height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

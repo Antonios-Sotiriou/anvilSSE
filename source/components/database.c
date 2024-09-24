@@ -2,7 +2,7 @@
 
 const int createMaterialDatabase(void) {
     FILE *fp = fopen("tables/materials.dat", "rb");
-    if (fp) {
+    if ( fp ) {
         fprintf(stderr, "tables/materials.dat... OK!\n");
         fclose(fp);
         return EXIT_SUCCESS;

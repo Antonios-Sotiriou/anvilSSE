@@ -20,7 +20,7 @@ all:
 		main.c\
 		$(DIRECTORY)shaders/mainShader.c\
 		$(DIRECTORY)shaders/shadowShader.c\
-		$(DIRECTORY)shaders/debugShader.c\
+		$(DIRECTORY)shaders/displayShader.c\
 		$(DIRECTORY)shaders/clickSelectShader.c\
 		$(DIRECTORY)components/matrices.c\
 		$(DIRECTORY)components/quaternions.c\

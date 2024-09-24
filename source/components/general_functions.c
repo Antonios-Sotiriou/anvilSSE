@@ -78,11 +78,11 @@ const void loadMaterial(Material *mtr, const char name[]) {
     FILE *fp;
     fp = fopen("tables/materials.dat", "rb");
 
-    if (!fp){
+    if ( !fp ) {
         fprintf(stderr, "Could not open material files < tables/%s >! loadMaterial() -- fopen().\n", name);
         return;
     } else {
-        while (!feof(fp)) {
+        while ( !feof(fp) ) {
 
             fread(mtr, sizeof(Material), 1, fp);
 
@@ -113,7 +113,7 @@ const void loadtexture(Mesh *m, const unsigned int lvl) {
     FILE *fp;
     fp = fopen(texpath, "rb");
 
-    if (!fp){
+    if ( !fp ) {
         fprintf(stderr, "Could not open file < %s >! loadtexture() -- fopen().\n", texpath);
         return;
     } else {

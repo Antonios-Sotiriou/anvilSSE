@@ -40,7 +40,6 @@
 
 /* Defined in main.c */
 extern int mainShaderProgram;
-extern GLint texLoc0, texLoc1, texLoc2, texLoc3;
 extern GLint testTexture[4];
 extern TerrainInfo Gitana;
 
