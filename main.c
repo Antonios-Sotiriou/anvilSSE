@@ -83,7 +83,7 @@ GLenum drawBuffers[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 /* Project Global Variables. */
 int PROJECTIONVIEW        = 0;
 static int PROJECTBUFFER  = 1;
-static int EYEPOINT       = 0;
+static int EYEPOINT       = 6;
 static float FOV          = 45.0f;
 static float ZNEAR        = -10.f;
 static float ZFAR         = -__INT32_MAX__;
@@ -104,9 +104,6 @@ int STA = 820;
 int STB = 3200;
 int STC = 12800;
 int STD = 51200;
-
-/* Point of view. */
-Mesh *eye;
 
 vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
@@ -130,7 +127,7 @@ TerrainInfo Gitana;
 static int INIT = 0;
 static int RUNNING = 1;
 vec4i half_screen = { 0, 0, 1, 1 }; // This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
-int DEBUG = 0;
+int DEBUG = 0, UPDATE = 1;
 
 /* Display usefull measurements. */
 float			        TimeCounter = 0, LastFrameTimeCounter = 0, DeltaTime = 0, prevTime = 0.0, FPS = 0;
@@ -406,10 +403,10 @@ const static void keypress(XEvent *event) {
             }
             break;
         case 108 :                                    /* l */
-            if (EYEPOINT == 0)
-                EYEPOINT = 1;
+            if (EYEPOINT == 7)
+                EYEPOINT = 6;
             else
-                EYEPOINT = 0;
+                EYEPOINT = 7;
             break;
         case 118 :
             if (!PROJECTIONVIEW)               /* v */
@@ -419,20 +416,16 @@ const static void keypress(XEvent *event) {
             break;
     }
 
-    if ( EYEPOINT )
-        eye = &scene.m[7];
-    else
-        eye = &scene.m[6];
+    UPDATE = 1;
 }
 const static void keyrelease(XEvent *event) {
 
     KeySym keysym = XLookupKeysym(&event->xkey, 0);
 
     // printf("Key Released: %ld\n", keysym);
-    if ( eye ) {
-        eye->momentum = 0;
-        eye->rot_angle = 0;
-    }
+    scene.m[EYEPOINT].momentum = 0;
+    scene.m[EYEPOINT].rot_angle = 0;
+
     if ( keysym == 99 )
         scene.m[mesh_id].rot_angle = 0;
 }
@@ -509,28 +502,34 @@ const static void project(void) {
     glDrawBuffers(2, drawBuffers);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-    lookAtMatrix = lookat(eye->cd.v[P], eye->cd.v[U], eye->cd.v[V], eye->cd.v[N]);
-    viewMatrix = inverse_mat(lookAtMatrix);
-    worldMatrix = mxm(viewMatrix, perspMatrix);
+    // GLfloat modelMatrix[16];
+    // if ( UPDATE ) {
 
-    GLfloat vpMatrix[16], lightSpaceMatrix[16], modelMatrix[16], lightPos[3], cameraPos[3];
-    memcpy(&vpMatrix, &worldMatrix, 64);
-    memcpy(&lightSpaceMatrix, &lightMatrix, 64);
-    memcpy(&lightPos, &scene.m[7].cd.v[P], 12);
-    memcpy(&cameraPos, &scene.m[6].cd.v[P], 12);
+        lookAtMatrix = lookat(scene.m[EYEPOINT].cd.v[P], scene.m[EYEPOINT].cd.v[U], scene.m[EYEPOINT].cd.v[V], scene.m[EYEPOINT].cd.v[N]);
+        viewMatrix = inverse_mat(lookAtMatrix);
+        worldMatrix = mxm(viewMatrix, perspMatrix);
 
-    glUniformMatrix4fv(0, 1, GL_FALSE, vpMatrix);
-    glUniformMatrix4fv(1, 1, GL_FALSE, lightSpaceMatrix);
-    glUniform3fv(4, 1, lightPos);
-    glUniform3fv(5, 1, cameraPos);
-    glUniform1i(6, 4);
+        GLfloat vpMatrix[16], lightSpaceMatrix[16], modelMatrix[16], lightPos[3], cameraPos[3];
+        memcpy(&vpMatrix, &worldMatrix, 64);
+        memcpy(&lightSpaceMatrix, &lightMatrix, 64);
+        memcpy(&lightPos, &scene.m[7].cd.v[P], 12);
+        memcpy(&cameraPos, &scene.m[6].cd.v[P], 12);
 
-    if (!DEBUG)
-        glPolygonMode(GL_FRONT, GL_FILL);
-    else if (DEBUG == 1)
-        glPolygonMode(GL_FRONT, GL_LINE);
-    else
-        glPolygonMode(GL_FRONT, GL_POINT);
+        glUniformMatrix4fv(0, 1, GL_FALSE, vpMatrix);
+        glUniformMatrix4fv(1, 1, GL_FALSE, lightSpaceMatrix);
+        glUniform3fv(4, 1, lightPos);
+        glUniform3fv(5, 1, cameraPos);
+        glUniform1i(6, 4);
+
+        if (!DEBUG)
+            glPolygonMode(GL_FRONT, GL_FILL);
+        else if (DEBUG == 1)
+            glPolygonMode(GL_FRONT, GL_LINE);
+        else
+            glPolygonMode(GL_FRONT, GL_POINT);
+
+        UPDATE = 0;
+    // }
 
     for (int i = 0; i < scene.m_indexes; i++) {
 
@@ -848,7 +847,7 @@ const static int board(void) {
     createScene(&scene);     /*  Scene creation must happen after world objects initialization.    */
     initWorldObjects(&scene);
 
-    announceReadyState();
+    // announceReadyState();
 
     float time_dif;
     while(RUNNING) {

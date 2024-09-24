@@ -1,4 +1,4 @@
-#include "../../headers/clipping.h"
+#include "../../headers/cpuHfiles/clipping.h"
 
 /* Normal Grafik Pipeline clipping algorythm. */
 const Mesh clipp(Mesh *m, vec4f plane_p, vec4f plane_n) {

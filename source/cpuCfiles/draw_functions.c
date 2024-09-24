@@ -1,4 +1,4 @@
-#include "../../headers/draw_functions.h"
+#include "../../headers/cpuHfiles/draw_functions.h"
 
 /* Global masks. Probably must be moved to a global variables file. */
 const vec4i edgemask = { 1, 2, 0, 3 };

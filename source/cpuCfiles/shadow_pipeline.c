@@ -1,4 +1,4 @@
-#include "../../headers/shadow_pipeline.h"
+#include "../../headers/cpuHfiles/shadow_pipeline.h"
 
 const static Mesh bfculling(const Mesh c, const int len);
 const static float shadowWinding(const face f);
@@ -17,19 +17,19 @@ vec4f *worldSpaceFrustum(const float np, const float fp) {
     vec4f *va = malloc(128);
     const float fovRadius = (1.f / tanf(45.f * 0.5f / 180.0f * 3.14159f));
 
-    const vec4f nearcenter = (eye->cd.v[P] + eye->cd.v[N]) * np;
-    const vec4f farcenter = (eye->cd.v[P] + eye->cd.v[N]) * fp;
+    const vec4f nearcenter = (scene.m[EYEPOINT].cd.v[P] + scene.m[EYEPOINT].cd.v[N]) * np;
+    const vec4f farcenter = (scene.m[EYEPOINT].cd.v[P] + scene.m[EYEPOINT].cd.v[N]) * fp;
 
     const float nearHeight = tan(fovRadius) * np;
     const float farHeight = tan(fovRadius) * fp;
     const float nearWidth = nearHeight * ASPECTRATIO;
     const float farWidth = farHeight * ASPECTRATIO;
 
-    const vec4f yxnh = eye->cd.v[V] * nearHeight;
-    const vec4f yxnw = eye->cd.v[U] * nearWidth;
+    const vec4f yxnh = scene.m[EYEPOINT].cd.v[V] * nearHeight;
+    const vec4f yxnw = scene.m[EYEPOINT].cd.v[U] * nearWidth;
 
-    const vec4f yxfh = eye->cd.v[V] * farHeight;
-    const vec4f yxfw = eye->cd.v[U] * farWidth;
+    const vec4f yxfh = scene.m[EYEPOINT].cd.v[V] * farHeight;
+    const vec4f yxfw = scene.m[EYEPOINT].cd.v[U] * farWidth;
 
     va[2] = nearcenter + yxnh + yxnw;
     va[3] = nearcenter - yxnh + yxnw;
@@ -55,10 +55,10 @@ const void createCascadeShadowMatrices(void) {
         worldSpaceFrustum(NPlane, 8000),
     };
     Mat4x4 lm[NUM_OF_CASCADES] = {
-        lookat(eye->cd.v[P] + ((eye->cd.v[N] * (float)SMA)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N]),
-        lookat(eye->cd.v[P] + ((eye->cd.v[N] * (float)SMB)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N]),
-        lookat(eye->cd.v[P] + ((eye->cd.v[N] * (float)SMC)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N]),
-        lookat(eye->cd.v[P] + ((eye->cd.v[N] * (float)SMD)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N])
+        lookat(scene.m[EYEPOINT].cd.v[P] + ((scene.m[EYEPOINT].cd.v[N] * (float)SMA)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N]),
+        lookat(scene.m[EYEPOINT].cd.v[P] + ((scene.m[EYEPOINT].cd.v[N] * (float)SMB)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N]),
+        lookat(scene.m[EYEPOINT].cd.v[P] + ((scene.m[EYEPOINT].cd.v[N] * (float)SMC)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N]),
+        lookat(scene.m[EYEPOINT].cd.v[P] + ((scene.m[EYEPOINT].cd.v[N] * (float)SMD)), scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N])
     };
 
     for (int i = 0; i < NUM_OF_CASCADES; i++) {

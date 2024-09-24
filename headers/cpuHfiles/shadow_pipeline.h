@@ -27,7 +27,7 @@
 
 /* Defined in main.c. */
 extern vec4i half_screen;
-extern int PROJECTIONVIEW;
+extern int PROJECTIONVIEW, EYEPOINT;
 extern unsigned int SMA;
 extern unsigned int SMB;
 extern unsigned int SMC;
@@ -38,10 +38,9 @@ extern unsigned int STC;
 extern unsigned int STD;
 extern float FPlane, NPlane, ASPECTRATIO;
 extern XWindowAttributes main_wa;
+extern Scene scene;
 extern Mat4x4 ortholightMat[4], viewMat;
 extern float *shadow_buffer[4], shadow_bias;
-
-extern Mesh *eye;
 
 /* For investigating shadow maps. Defined in main.c */
 extern unsigned int SMA, SMB, SMC, STA, STB ,STC;

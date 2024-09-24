@@ -1,4 +1,4 @@
-#include "../../headers/graphics_pipeline.h"
+#include "../../headers/cpuHfiles/graphics_pipeline.h"
 
 // const static int frustumCulling(vec4f v[], const int v_indexes);
 const static void ppdiv(Mesh *m, const int len);
