@@ -43,8 +43,7 @@ const static char *fragmentShaderSource = "#version 450 core\n"
     "uniform vec3 lightPos;\n"
     "uniform vec3 cameraPos;\n"
     "uniform sampler2D shadowDepthMap;\n"
-    "uniform sampler2D ourTexture[4];\n"
-    "uniform int v_index;\n"
+    "uniform sampler2D tex_index;\n"
 
     "layout (location = 0) out vec4 FragColor;\n"
     "layout (location = 1) out ivec2 mesh_info;\n"
@@ -108,7 +107,7 @@ const static char *fragmentShaderSource = "#version 450 core\n"
     "    vec3 specular = specularStr * spec * vec3(1.f, 1.f, 1.f);\n"
 
     "    float shadow = shadowCalculation(fs_in.fsPosLightSpace);\n"
-    "    vec3 result = ((ambient + (1.f - shadow)) * (diffuse + specular)) * texture(ourTexture[v_index], fs_in.fsTexels).bgr;\n"
+    "    vec3 result = ((ambient + (1.f - shadow)) * (diffuse + specular)) * texture(tex_index, fs_in.fsTexels).bgr;\n"
 
     "    FragColor = vec4(result, 1.f);\n"
     "    mesh_info = ivec2(fs_in.id, gl_PrimitiveID);\n"

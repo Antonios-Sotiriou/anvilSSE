@@ -80,9 +80,16 @@ GLint                   att[]   = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFF
 GLint VBO, testTexture[4], shadowDepthMap, shadowMapFBO, mainColorMap, mainDepthMap, mainInfoMap, mainFBO;
 GLenum drawBuffers[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 
+
+// typedef enum { mainInfoMap } TextureUnit;
+#define TEXTURE_0    GL_TEXTURE0
+typedef struct {
+    int id, index, name;
+} TextureUnit;
+
 /* Project Global Variables. */
 int PROJECTIONVIEW        = 0;
-static int PROJECTBUFFER  = 1;
+static int PROJECTBUFFER  = 5;
 static int EYEPOINT       = 6;
 static float FOV          = 45.0f;
 static float ZNEAR        = -10.f;
@@ -257,6 +264,17 @@ const static void buttonpress(XEvent *event) {
     click[0] = event->xbutton.x;
     click[1] = event->xbutton.y;
     getClick = 1;
+
+    // int data[2];
+    // glBindFramebuffer(GL_FRAMEBUFFER, mainFBO);
+    // glReadBuffer(GL_COLOR_ATTACHMENT1);
+    // glReadPixels(click[0], main_wa.height - click[1], 1, 1, GL_RG_INTEGER, GL_INT, &data);
+
+    // printf("mesh_info[0]: %d    mesh_info[1]: %d\n", data[0], data[1]);
+    // getClick = 0;
+    // mesh_id = data[0];
+    // primitive_id = data[1];
+
 }
 const static void mousemotion(XEvent *event) {
     printf("MotionNotify event received\n");
@@ -381,16 +399,11 @@ const static void keypress(XEvent *event) {
             printf("AmbientStrength: %f\n", AmbientStrength);
             break;
         case 112 :
-            if (PROJECTBUFFER == 6)
+            if (PROJECTBUFFER == 7)
                 PROJECTBUFFER = 0;
-            PROJECTBUFFER++;
-            if (PROJECTBUFFER == 1) {
-                fprintf(stderr, "Projecting Pixels -- PROJECTBUFFER: %d\n", PROJECTBUFFER);
-            } else if (PROJECTBUFFER == 2) {
-                fprintf(stderr, "Projecting Depth buffer -- PROJECTBUFFER: %d\n", PROJECTBUFFER);
-            } else if (PROJECTBUFFER == 3) {
-                fprintf(stderr, "Projecting Shadow buffer -- PROJECTBUFFER: %d\n", PROJECTBUFFER);
-            }
+            else
+                PROJECTBUFFER++;
+            fprintf(stderr, "TextureUnit: %d\n", PROJECTBUFFER);
             break;
         case 65507 :
             if (DEBUG == 2)
@@ -500,7 +513,7 @@ const static void project(void) {
     glViewport(0, 0, WIDTH, HEIGHT);
     glBindFramebuffer(GL_FRAMEBUFFER, mainFBO);
     glDrawBuffers(2, drawBuffers);
-    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+    glClear(GL_DEPTH_BUFFER_BIT);
 
     // GLfloat modelMatrix[16];
     // if ( UPDATE ) {
@@ -528,7 +541,7 @@ const static void project(void) {
         else
             glPolygonMode(GL_FRONT, GL_POINT);
 
-        UPDATE = 0;
+        // UPDATE = 0;
     // }
 
     for (int i = 0; i < scene.m_indexes; i++) {
@@ -550,7 +563,7 @@ const static void project(void) {
 
             glUniformMatrix4fv(2, 1, GL_FALSE, modelMatrix);
 
-            glUniform1i(11, scene.m[i].tex_index);
+            glUniform1i(7, scene.m[i].tex_index);
             glUniform1i(3, scene.m[i].id);
 
             glBufferData(GL_ARRAY_BUFFER, scene.m[i].vba_indexes * 32, scene.m[i].vba, GL_STATIC_DRAW);
@@ -560,7 +573,7 @@ const static void project(void) {
     }
 
     GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR) {
+    while ( (err = glGetError()) != GL_NO_ERROR ) {
         fprintf(stderr, "project < %d >  ", err);
         perror("OpenGL ERROR: ");
     }
@@ -577,7 +590,6 @@ const static void project(void) {
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // glXSwapBuffers(displ, mainwin);
     // displayPoint(scene.m[1].cd.v[P], worldMatrix, 0xff00a7); //0028ff
     face f = facexm(scene.m[mesh_id].f[primitive_id], scene.m[mesh_id].modelMatrix);
     displayFace(&f, worldMatrix); //0028ff
@@ -652,19 +664,18 @@ const void createBuffers(void) {
 }
 const void createTextures(void) {
     /* Main Textures. */
-    for (int i = GL_TEXTURE0; i <= GL_TEXTURE31; i++) {
-        printf("GL_TEXTURE%d : %d\n", i, GL_TEXTURE0 + i);
+    int tex_num = 0;
+    for (int i = GL_TEXTURE0; i <= GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS - 1; i++) {
+        printf("GL_TEXTURE%d : %d\n", tex_num, i);
+        tex_num++;
     }
+    printf("tex_num : %d\n", tex_num);
+    printf("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: %d\n", GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS);
     printf("GL_MAX_TEXTURE_IMAGE_UNITS: %d\n", GL_MAX_TEXTURE_IMAGE_UNITS);
     printf("GL_MAX_TEXTURE_UNITS: %d\n", GL_MAX_TEXTURE_UNITS);
 
     glGenTextures(4, testTexture);
     printf("testTexture: %d, %d, %d, %d\n", testTexture[0], testTexture[1], testTexture[2], testTexture[3]);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     /* Create a 2D Texture to use it as the depth buffer for the Shadow Map. */
     const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
@@ -674,8 +685,6 @@ const void createTextures(void) {
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, shadowDepthMap);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -694,8 +703,6 @@ const void createTextures(void) {
     glActiveTexture(GL_TEXTURE5);
     glBindTexture(GL_TEXTURE_2D, mainColorMap);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -705,6 +712,8 @@ const void createTextures(void) {
     glActiveTexture(GL_TEXTURE6);
     glBindTexture(GL_TEXTURE_2D, mainDepthMap);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, WIDTH, HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     /* Create a INFO texture.*/
     glGenTextures(1, &mainInfoMap);
@@ -806,9 +815,6 @@ const static void displayInfo(void) {
 
     sprintf(info_string, "Date Time    : %s ", asctime(info));
     XDrawString(displ ,mainwin ,gc, 5, 72, info_string, strlen(info_string));
-
-    // sprintf(info_string, "Camera x: %f,    y: %f,    z: %f\0", camera[0][0], camera[0][1], camera[0][2]);
-    // XDrawString(displ ,mainwin ,gc, 5, 60, info_string, strlen(info_string));
 }
 /* Signal handler to clean memory before exit, after receiving a given signal. */
 const static void sigsegv_handler(const int sig) {
@@ -863,7 +869,7 @@ const static int board(void) {
         // clickSelect();
         // displayTexture(6);
         project();
-        displayTexture(5);
+        displayTexture(PROJECTBUFFER);
         // printf("Project     : %f\n", end(start_time));;
 
         while ( XPending(displ) ) {
@@ -906,12 +912,6 @@ const int main(int argc, char *argv[]) {
         }
     }
 
-    // if (!XInitThreads()) {
-    //     fprintf(stderr, "Warning: board() -- XInitThreads()\n");
-    //     return EXIT_FAILURE;
-    // }
-    // XLockDisplay(displ);
-
     displ = XOpenDisplay(NULL);
     if (displ == NULL) {
         fprintf(stderr, "Warning: board() -- XOpenDisplay()\n");
@@ -927,7 +927,6 @@ const int main(int argc, char *argv[]) {
     shadowShaderProgram = initShadowShader();
     displayShaderProgram = initDisplayShader();
     clickSelectShaderProgram = initClickSelectShader();
-    glUseProgram(mainShaderProgram);
 
     InitTimeCounter();
 

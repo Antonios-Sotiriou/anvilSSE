@@ -19,8 +19,6 @@ const void initWorldObjects(Scene *s) {
     glGenerateMipmap(GL_TEXTURE_2D);
     free(s->m[0].material.texture);
 
-    glUniform1i(7, 0);
-
     s->m[0].type = Terrain;
     s->m[0].id = 0;
     s->m[0].tex_index = 0;
@@ -54,8 +52,6 @@ const void initWorldObjects(Scene *s) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s->m[1].material.texture_width, s->m[1].material.texture_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, s->m[1].material.texture);
     glGenerateMipmap(GL_TEXTURE_2D);
     free(s->m[1].material.texture);
-
-    glUniform1i(8, 1);
 
     s->m[1].type = Player;
     s->m[1].id = 1;
@@ -94,8 +90,6 @@ const void initWorldObjects(Scene *s) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s->m[2].material.texture_width, s->m[2].material.texture_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, s->m[2].material.texture);
     glGenerateMipmap(GL_TEXTURE_2D);
     free(s->m[2].material.texture);
-
-    glUniform1i(9, 2);
 
     s->m[2].type = MovingObject;
     s->m[2].id = 2;
@@ -183,8 +177,6 @@ const void initWorldObjects(Scene *s) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s->m[5].material.texture_width, s->m[5].material.texture_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, s->m[5].material.texture);
     glGenerateMipmap(GL_TEXTURE_2D);
     free(s->m[5].material.texture);
-
-    glUniform1i(10, 3);
 
     s->m[5].type = Celestial;
     s->m[5].id = 5;
