@@ -78,12 +78,8 @@ const void displayTexture(const int textureIndex) {
         { -1.f, 1.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f }
     };
 
-    for (int i = 0; i < 4; i++) {
-
-        glBufferData(GL_ARRAY_BUFFER, 4 * 32, quad, GL_STATIC_DRAW);
-
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    }
+    glBufferData(GL_ARRAY_BUFFER, 4 * 32, quad, GL_STATIC_DRAW);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
