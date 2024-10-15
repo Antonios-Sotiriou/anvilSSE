@@ -167,7 +167,7 @@ const void setvecxm(vec4f *v, const Mat4x4 m) {
 }
 /* Multiplies a faces vectors with the given Matrix and returns a new face with only the vectors translated and modified, leaving the original unmodified. */
 const face facexm(const face f, const Mat4x4 m) {
-    face r = { 0 };
+    face r;
     r.v[0] = __builtin_shuffle(f.v[0], xmask) * m.m[0] + __builtin_shuffle(f.v[0], ymask) * m.m[1] + __builtin_shuffle(f.v[0], zmask) * m.m[2] + __builtin_shuffle(f.v[0], wmask) * m.m[3];
     r.v[1] = __builtin_shuffle(f.v[1], xmask) * m.m[0] + __builtin_shuffle(f.v[1], ymask) * m.m[1] + __builtin_shuffle(f.v[1], zmask) * m.m[2] + __builtin_shuffle(f.v[1], wmask) * m.m[3];
     r.v[2] = __builtin_shuffle(f.v[2], xmask) * m.m[0] + __builtin_shuffle(f.v[2], ymask) * m.m[1] + __builtin_shuffle(f.v[2], zmask) * m.m[2] + __builtin_shuffle(f.v[2], wmask) * m.m[3];
@@ -175,7 +175,7 @@ const face facexm(const face f, const Mat4x4 m) {
 }
 /* The Camera Matrix or as used to called the View Matrix.Returns a new 4x4 Matrix. */
 const Mat4x4 lookat(const vec4f P, const vec4f U, const vec4f V, const vec4f N) {
-    Mat4x4 m = { 0 };
+    Mat4x4 m;
     m.m[0][0] = U[0];    m.m[0][1] = U[1];    m.m[0][2] = U[2];    m.m[0][3] = 0.0;
     m.m[1][0] = V[0];    m.m[1][1] = V[1];    m.m[1][2] = V[2];    m.m[1][3] = 0.0;
     m.m[2][0] = N[0];    m.m[2][1] = N[1];    m.m[2][2] = N[2];    m.m[2][3] = 0.0;
@@ -184,7 +184,7 @@ const Mat4x4 lookat(const vec4f P, const vec4f U, const vec4f V, const vec4f N) 
 }
 /* The Camera Matrix or as used to called the View Matrix.Returns a new 4x4 Matrix. */
 const Mat4x4 pointat(const vec4f P, const vec4f T, const vec4f Up) {
-    Mat4x4 m = { 0 };
+    Mat4x4 m;
     vec4f N = norm_vec(P - T);
     vec4f U = norm_vec(cross_product(Up, N));
     vec4f V = cross_product(N, U);
@@ -197,17 +197,17 @@ const Mat4x4 pointat(const vec4f P, const vec4f T, const vec4f Up) {
 }
 /* Inverts the given Matrix m returning a new 4x4 Matrix. */
 const Mat4x4 inverse_mat(const Mat4x4 m) {
-    Mat4x4 rm = { 0 };
+    Mat4x4 rm;
     rm.m[0][0] =   m.m[0][0];    rm.m[0][1] = m.m[1][0];    rm.m[0][2] = m.m[2][0];    rm.m[0][3] = 0.0;
     rm.m[1][0] =   m.m[0][1];    rm.m[1][1] = m.m[1][1];    rm.m[1][2] = m.m[2][1];    rm.m[1][3] = 0.0;
     rm.m[2][0] =   m.m[0][2];    rm.m[2][1] = m.m[1][2];    rm.m[2][2] = m.m[2][2];    rm.m[2][3] = 0.0;
-    rm.m[3] = -(__builtin_shuffle(m.m[3], xmask) * rm.m[0] + __builtin_shuffle(m.m[3], ymask) * rm.m[1] + __builtin_shuffle(m.m[3], zmask) * rm.m[2] + __builtin_shuffle(m.m[3], wmask) * rm.m[3]);
+    rm.m[3] = -(__builtin_shuffle(m.m[3], xmask) * rm.m[0] + __builtin_shuffle(m.m[3], ymask) * rm.m[1] + __builtin_shuffle(m.m[3], zmask) * rm.m[2]);
     rm.m[3][3] = 1.0;
     return rm;
 }
 /* Inverts the given Matrix m returning a new 4x4 Matrix. */
 const Mat4x4 transpose_mat(const Mat4x4 m) {
-    Mat4x4 rm = { 0 };
+    Mat4x4 rm;
     rm.m[0][0] =   m.m[0][0];    rm.m[0][1] = m.m[1][0];    rm.m[0][2] = m.m[2][0];    rm.m[0][3] = m.m[3][0];
     rm.m[1][0] =   m.m[0][1];    rm.m[1][1] = m.m[1][1];    rm.m[1][2] = m.m[2][1];    rm.m[1][3] = m.m[3][1];
     rm.m[2][0] =   m.m[0][2];    rm.m[2][1] = m.m[1][2];    rm.m[2][2] = m.m[2][2];    rm.m[2][3] = m.m[3][2];
@@ -216,7 +216,7 @@ const Mat4x4 transpose_mat(const Mat4x4 m) {
 }
 /* Multiplies two given Matrices m1, m2.Returns a new 4x4 Matrix. */
 const Mat4x4 mxm(const Mat4x4 m1, const Mat4x4 m2) {
-    Mat4x4 r = { 0 };
+    Mat4x4 r;
     for (int i = 0; i < 4; i++)
         r.m[i] = __builtin_shuffle(m1.m[i], xmask) * m2.m[0] + __builtin_shuffle(m1.m[i], ymask) * m2.m[1] + __builtin_shuffle(m1.m[i], zmask) * m2.m[2] + __builtin_shuffle(m1.m[i], wmask) * m2.m[3];
     return r;
