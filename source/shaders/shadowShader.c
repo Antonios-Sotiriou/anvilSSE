@@ -70,5 +70,48 @@ const int initShadowShader(void) {
 
     return shaderProgram;
 }
+const void shadowCast(void) {
+
+    glUseProgram(shadowShaderProgram);
+
+    glViewport(0, 0, 1024, 1024);
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    lookAtMatrix = lookat(scene.m[7].cd.v[P], scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N]);
+    viewMatrix = inverse_mat(lookAtMatrix);
+    lightMatrix = mxm(viewMatrix, orthoMatrix);
+
+    GLfloat vpMatrix[16], modelMatrix[16];
+    memcpy(&vpMatrix, &lightMatrix, 64);
+
+    glUniformMatrix4fv(0, 1, GL_FALSE, vpMatrix);
+
+    for (int i = 0; i < scene.m_indexes; i++) {
+
+        Mat4x4 sclMatrix, trMatrix;
+
+        vec4f pos = { 0 };
+        Mat4x4 mfQ = MatfromQuat(scene.m[i].Q, pos);
+        sclMatrix = mxm(mfQ, scaleMatrix(scene.m[i].scale));
+        trMatrix = translationMatrix(scene.m[i].cd.v[P][0], scene.m[i].cd.v[P][1], scene.m[i].cd.v[P][2]);
+        scene.m[i].modelMatrix = mxm(sclMatrix, trMatrix);
+        memcpy(&modelMatrix, &scene.m[i].modelMatrix, 64);
+
+        glUniformMatrix4fv(1, 1, GL_FALSE, modelMatrix);
+
+        glBufferData(GL_ARRAY_BUFFER, scene.m[i].vba_indexes * 32, scene.m[i].vba, GL_STATIC_DRAW);
+
+        glDrawArrays(GL_TRIANGLES, 0, scene.m[i].vba_indexes);
+    }
+
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        fprintf(stderr, "shadowCast < %d >  ", err);
+        perror("OpenGL ERROR: ");
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 
 

@@ -90,7 +90,7 @@ typedef struct {
 /* Project Global Variables. */
 int PROJECTIONVIEW        = 0;
 static int PROJECTBUFFER  = 5;
-static int EYEPOINT       = 6;
+int EYEPOINT              = 6;
 static float FOV          = 45.0f;
 static float ZNEAR        = -10.f;
 static float ZFAR         = -__INT32_MAX__;
@@ -118,7 +118,6 @@ const float movScalar = 1.f;
 const float moveForce = 0.2f;
 
 /* Variables usefull for mesh click select. */
-int getClick = 0;
 int mesh_id = 0, primitive_id = 0;
 vec4f click = { 0 };
 
@@ -263,18 +262,16 @@ const static void buttonpress(XEvent *event) {
     // printf("Y: %f\n", ((event->xbutton.y - (HEIGHT / 2.00)) / (HEIGHT / 2.00)));
     click[0] = event->xbutton.x;
     click[1] = event->xbutton.y;
-    getClick = 1;
 
-    // int data[2];
-    // glBindFramebuffer(GL_FRAMEBUFFER, mainFBO);
-    // glReadBuffer(GL_COLOR_ATTACHMENT1);
-    // glReadPixels(click[0], main_wa.height - click[1], 1, 1, GL_RG_INTEGER, GL_INT, &data);
+    int data[2];
+    glBindFramebuffer(GL_FRAMEBUFFER, mainFBO);
+    glReadBuffer(GL_COLOR_ATTACHMENT1);
+    glReadPixels(click[0], main_wa.height - click[1], 1, 1, GL_RG_INTEGER, GL_INT, &data);
 
-    // printf("mesh_info[0]: %d    mesh_info[1]: %d\n", data[0], data[1]);
-    // getClick = 0;
-    // mesh_id = data[0];
-    // primitive_id = data[1];
-
+    printf("mesh_info[0]: %d    mesh_info[1]: %d\n", data[0], data[1]);
+    mesh_id = data[0];
+    primitive_id = data[1];
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 const static void mousemotion(XEvent *event) {
     printf("MotionNotify event received\n");
@@ -441,160 +438,6 @@ const static void keyrelease(XEvent *event) {
 
     if ( keysym == 99 )
         scene.m[mesh_id].rot_angle = 0;
-}
-/* Cull Mesh to view frustum. viewProj: (1 for Prespective and 0 for orthographic Projection). Thats for the perspective divide usefull.viewMatrix the matrix of the point of view. */
-const int frustumCulling(vec4f v[], const int v_indexes, const Mat4x4 wm) {
-    vec4f *vec_arr = vecsarrayxm(v, v_indexes, wm);
-
-    for (int j = 0; j < v_indexes; j++) {
-        vec_arr[j] /= vec_arr[j][3];
-    }
-
-    DimensionsLimits dm = getDimensionsLimits(vec_arr, v_indexes);
-
-    if ( ((dm.min[2] > 1.f) || (dm.max[2] < -1.f)) ||
-            ((dm.min[1] > 1.f) || (dm.max[1] < -1.f)) ||
-            ((dm.min[0] > 1.f) || (dm.max[0] < -1.f)) ) {
-
-        free(vec_arr);
-        return 0;
-    }
-
-    free(vec_arr);
-    return 1;
-}
-const static void shadowCast() {
-
-    glUseProgram(shadowShaderProgram);
-
-    glViewport(0, 0, 1024, 1024);
-    glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
-    glClear(GL_DEPTH_BUFFER_BIT);
-
-    lookAtMatrix = lookat(scene.m[7].cd.v[P], scene.m[7].cd.v[U], scene.m[7].cd.v[V], scene.m[7].cd.v[N]);
-    viewMatrix = inverse_mat(lookAtMatrix);
-    lightMatrix = mxm(viewMatrix, orthoMatrix);
-
-    GLfloat vpMatrix[16], modelMatrix[16];
-    memcpy(&vpMatrix, &lightMatrix, 64);
-
-    glUniformMatrix4fv(0, 1, GL_FALSE, vpMatrix);
-
-    for (int i = 0; i < scene.m_indexes; i++) {
-
-        Mat4x4 sclMatrix, trMatrix;
-
-        vec4f pos = { 0 };
-        Mat4x4 mfQ = MatfromQuat(scene.m[i].Q, pos);
-        sclMatrix = mxm(mfQ, scaleMatrix(scene.m[i].scale));
-        trMatrix = translationMatrix(scene.m[i].cd.v[P][0], scene.m[i].cd.v[P][1], scene.m[i].cd.v[P][2]);
-        scene.m[i].modelMatrix = mxm(sclMatrix, trMatrix);
-        memcpy(&modelMatrix, &scene.m[i].modelMatrix, 64);
-
-        glUniformMatrix4fv(1, 1, GL_FALSE, modelMatrix);
-
-        glBufferData(GL_ARRAY_BUFFER, scene.m[i].vba_indexes * 32, scene.m[i].vba, GL_STATIC_DRAW);
-
-        glDrawArrays(GL_TRIANGLES, 0, scene.m[i].vba_indexes);
-    }
-
-    GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR) {
-        fprintf(stderr, "shadowCast < %d >  ", err);
-        perror("OpenGL ERROR: ");
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-const static void project(void) {
-
-    glUseProgram(mainShaderProgram);
-
-    glViewport(0, 0, WIDTH, HEIGHT);
-    glBindFramebuffer(GL_FRAMEBUFFER, mainFBO);
-    glDrawBuffers(2, drawBuffers);
-    glClear(GL_DEPTH_BUFFER_BIT);
-
-    // GLfloat modelMatrix[16];
-    // if ( UPDATE ) {
-
-        lookAtMatrix = lookat(scene.m[EYEPOINT].cd.v[P], scene.m[EYEPOINT].cd.v[U], scene.m[EYEPOINT].cd.v[V], scene.m[EYEPOINT].cd.v[N]);
-        viewMatrix = inverse_mat(lookAtMatrix);
-        worldMatrix = mxm(viewMatrix, perspMatrix);
-
-        GLfloat vpMatrix[16], lightSpaceMatrix[16], modelMatrix[16], lightPos[3], cameraPos[3];
-        memcpy(&vpMatrix, &worldMatrix, 64);
-        memcpy(&lightSpaceMatrix, &lightMatrix, 64);
-        memcpy(&lightPos, &scene.m[7].cd.v[P], 12);
-        memcpy(&cameraPos, &scene.m[6].cd.v[P], 12);
-
-        glUniformMatrix4fv(0, 1, GL_FALSE, vpMatrix);
-        glUniformMatrix4fv(1, 1, GL_FALSE, lightSpaceMatrix);
-        glUniform3fv(4, 1, lightPos);
-        glUniform3fv(5, 1, cameraPos);
-        glUniform1i(6, 4);
-
-        if (!DEBUG)
-            glPolygonMode(GL_FRONT, GL_FILL);
-        else if (DEBUG == 1)
-            glPolygonMode(GL_FRONT, GL_LINE);
-        else
-            glPolygonMode(GL_FRONT, GL_POINT);
-
-        // UPDATE = 0;
-    // }
-
-    for (int i = 0; i < scene.m_indexes; i++) {
-
-        const int distance = len_vec(scene.m[i].cd.v[P] - scene.m[6].cd.v[P]);
-        adoptdetailMesh(&scene.m[i], distance);
-        // adoptdetailTexture(&scene.m[i], distance);
-
-        if ( frustumCulling(scene.m[i].bbox.v, scene.m[i].bbox.v_indexes, worldMatrix) ) {
-
-            Mat4x4 sclMatrix, trMatrix;
-
-            vec4f pos = { 0 };
-            Mat4x4 mfQ = MatfromQuat(scene.m[i].Q, pos);
-            sclMatrix = mxm(mfQ, scaleMatrix(scene.m[i].scale));
-            trMatrix = translationMatrix(scene.m[i].cd.v[P][0], scene.m[i].cd.v[P][1], scene.m[i].cd.v[P][2]);
-            scene.m[i].modelMatrix = mxm(sclMatrix, trMatrix);
-            memcpy(&modelMatrix, &scene.m[i].modelMatrix, 64);
-
-            glUniformMatrix4fv(2, 1, GL_FALSE, modelMatrix);
-
-            glUniform1i(7, scene.m[i].tex_index);
-            glUniform1i(3, scene.m[i].id);
-
-            glBufferData(GL_ARRAY_BUFFER, scene.m[i].vba_indexes * 32, scene.m[i].vba, GL_STATIC_DRAW);
-
-            glDrawArrays(GL_TRIANGLES, 0, scene.m[i].vba_indexes);
-        }
-    }
-
-    GLenum err;
-    while ( (err = glGetError()) != GL_NO_ERROR ) {
-        fprintf(stderr, "project < %d >  ", err);
-        perror("OpenGL ERROR: ");
-    }
-
-    int data[2];
-    if ( getClick ) {
-        glReadBuffer(GL_COLOR_ATTACHMENT1);
-        glReadPixels(click[0], main_wa.height - click[1], 1, 1, GL_RG_INTEGER, GL_INT, &data);
-
-        printf("mesh_info[0]: %d    mesh_info[1]: %d\n", data[0], data[1]);
-        getClick = 0;
-        mesh_id = data[0];
-        primitive_id = data[1];
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // displayPoint(scene.m[1].cd.v[P], worldMatrix, 0xff00a7); //0028ff
-    face f = facexm(scene.m[mesh_id].f[primitive_id], scene.m[mesh_id].modelMatrix);
-    displayFace(&f, worldMatrix); //0028ff
-    // displayMeshKinetics(&scene.m[1], worldMatrix); //0028ff
-    // displayBboxFaces(&scene.m[mesh_id], worldMatrix); //0028ff
 }
 const static void initMainWindow(void) {
     int screen = XDefaultScreen(displ);

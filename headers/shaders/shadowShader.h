@@ -18,7 +18,22 @@
     #include <GL/glu.h>     /* libglu1-mesa-dev */
 #endif
 
+#ifndef _ANVIL_STRUCTS_H
+    #include "../components/anvil_structs.h"
+#endif
+
+#ifndef _MATRICES_H
+    #include "../components/matrices.h"
+#endif
+
+/* Global variables. Defined in main.c. used by all shaders with small name changes. */
+extern int shadowShaderProgram;
+extern GLint shadowMapFBO;
+extern Mat4x4 lookAtMatrix, viewMatrix, lightMatrix, orthoMatrix;
+extern Scene scene; 
+
 const int initShadowShader(void);
+const void shadowCast(void);
 
 #endif /* _SHADOWSHADER_H */
 
