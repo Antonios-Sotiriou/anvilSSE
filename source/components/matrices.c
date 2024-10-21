@@ -114,8 +114,9 @@ vec4f *vecsarrayxm(vec4f vecs[], const int len, const Mat4x4 m) {
 }
 /* Multiplies a vec4f array with the given Matrix and returns a new array. Frees the original array resources. */
 const void setvecsarrayxm(vec4f vecs[], const int len, const Mat4x4 m) {
+    vec4f r;
     for (int i = 0; i < len; i++) {
-        vec4f r = vecs[i];
+        r = vecs[i];
         vecs[i] = __builtin_shuffle(r, xmask) * m.m[0] + __builtin_shuffle(r, ymask) * m.m[1] + __builtin_shuffle(r, zmask) * m.m[2] + __builtin_shuffle(r, wmask) * m.m[3];
     }
 }
@@ -132,8 +133,9 @@ face *facesarrayxm(face fs[], const int len, const Mat4x4 m) {
 }
 /* Multiplies a face array with the given Matrix and returns a new array. Frees the original array resources. */
 const void setfacesarrayxm(face fs[], const int len, const Mat4x4 m) {
+    face r;
     for (int i = 0; i < len; i++) {
-        face r = fs[i];
+        r = fs[i];
         fs[i].v[0] = __builtin_shuffle(r.v[0], xmask) * m.m[0] + __builtin_shuffle(r.v[0], ymask) * m.m[1] + __builtin_shuffle(r.v[0], zmask) * m.m[2] + __builtin_shuffle(r.v[0], wmask) * m.m[3];
         fs[i].v[1] = __builtin_shuffle(r.v[1], xmask) * m.m[0] + __builtin_shuffle(r.v[1], ymask) * m.m[1] + __builtin_shuffle(r.v[1], zmask) * m.m[2] + __builtin_shuffle(r.v[1], wmask) * m.m[3];
         fs[i].v[2] = __builtin_shuffle(r.v[2], xmask) * m.m[0] + __builtin_shuffle(r.v[2], ymask) * m.m[1] + __builtin_shuffle(r.v[2], zmask) * m.m[2] + __builtin_shuffle(r.v[2], wmask) * m.m[3];

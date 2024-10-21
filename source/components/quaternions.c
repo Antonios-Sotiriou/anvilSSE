@@ -43,25 +43,24 @@ float magnitudeQuat(const Quat q) {
 }
 
 Quat rotationQuat(const float angle, const vec4f axis) {
-    float radius = angle * (3.14159 / 180.0);
-    float c = sinf(radius / 2.00);
+    float radius = (angle * (3.14159 / 180.0)) * 0.5;
+    float c = sinf(radius);
     Quat res = {
-        .w = cosf(radius / 2.00),
+        .w = cosf(radius),
         .v = axis * c
     };
     return res;
 }
 
 Quat eulertoQuat(const float roll, const float yaw, const float pitch) {
-    float cr, sr, cy, sy, cp, sp, cpcy, spsy;
-    cr = cosf(roll / 2.00);
-    sr = sinf(roll / 2.00);
-    cy = cosf(yaw / 2.00);
-    sy = sinf(yaw / 2.00);
-    cp = cosf(pitch / 2.00);
-    sp = sinf(pitch / 2.00);
-    cpcy = cp * cy;
-    spsy = sp * sy;
+    const float cr = cosf(roll / 2.00);
+    const float sr = sinf(roll / 2.00);
+    const float cy = cosf(yaw / 2.00);
+    const float sy = sinf(yaw / 2.00);
+    const float cp = cosf(pitch / 2.00);
+    const float sp = sinf(pitch / 2.00);
+    const float cpcy = cp * cy;
+    const float spsy = sp * sy;
 
     Quat res = {
         .w = cr * cpcy + sr * spsy,
