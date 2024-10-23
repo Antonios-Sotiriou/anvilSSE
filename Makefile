@@ -22,6 +22,7 @@ all:
 		$(DIRECTORY)shaders/shadowShader.c\
 		$(DIRECTORY)shaders/displayShader.c\
 		$(DIRECTORY)shaders/clickSelectShader.c\
+		$(DIRECTORY)components/opengl_config.c\
 		$(DIRECTORY)components/matrices.c\
 		$(DIRECTORY)components/quaternions.c\
 		$(DIRECTORY)components/kinetics.c\

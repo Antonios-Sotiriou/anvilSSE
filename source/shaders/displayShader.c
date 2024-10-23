@@ -81,11 +81,11 @@ const void displayTexture(const int textureIndex) {
     glBufferData(GL_ARRAY_BUFFER, 4 * 32, quad, GL_STATIC_DRAW);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR) {
-        fprintf(stderr, "displayTexture < %d >  ", err);
-        perror("OpenGL ERROR: ");
-    }
+    // GLenum err;
+    // while ((err = glGetError()) != GL_NO_ERROR) {
+    //     fprintf(stderr, "displayTexture < %d >  ", err);
+    //     perror("OpenGL ERROR: ");
+    // }
 
     glXSwapBuffers(displ, mainwin);
 }

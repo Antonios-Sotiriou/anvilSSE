@@ -105,11 +105,11 @@ const void shadowCast(void) {
         glDrawArrays(GL_TRIANGLES, 0, scene.m[i].vba_indexes);
     }
 
-    GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR) {
-        fprintf(stderr, "shadowCast < %d >  ", err);
-        perror("OpenGL ERROR: ");
-    }
+    // GLenum err;
+    // while ((err = glGetError()) != GL_NO_ERROR) {
+    //     fprintf(stderr, "shadowCast < %d >  ", err);
+    //     perror("OpenGL ERROR: ");
+    // }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

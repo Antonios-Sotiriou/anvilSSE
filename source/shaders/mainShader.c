@@ -236,11 +236,11 @@ const void project(void) {
         }
     }
 
-    GLenum err;
-    while ( (err = glGetError()) != GL_NO_ERROR ) {
-        fprintf(stderr, "project < %d >  ", err);
-        perror("OpenGL ERROR: ");
-    }
+    // GLenum err;
+    // while ( (err = glGetError()) != GL_NO_ERROR ) {
+    //     fprintf(stderr, "project < %d >  ", err);
+    //     perror("OpenGL ERROR: ");
+    // }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // displayPoint(scene.m[1].cd.v[P], worldMatrix, 0xff00a7); //0028ff
     face f = facexm(scene.m[mesh_id].f[primitive_id], scene.m[mesh_id].modelMatrix);
