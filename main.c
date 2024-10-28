@@ -384,8 +384,10 @@ const static void keypress(XEvent *event) {
         case 114 :    /* r */
             break;
         case 99 :                                                        /* c */
-            if ( mesh_id > 0 )
-                rotateMesh(&scene.m[mesh_id], 10, 0.0f, 1.0f, 0.0f);
+            if ( mesh_id > 0 ) {
+                rotateMesh(&scene.m[mesh_id], 10, 0.f, 1.f, 0.0f);
+                rotateMesh(&scene.m[mesh_id], 10, 1.f, 0.f, 0.0f);
+            }
             break;
         case 43 : AmbientStrength += 0.01;                                    /* + */
             printf("AmbientStrength: %f\n", AmbientStrength);
