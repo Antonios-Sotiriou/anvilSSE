@@ -14,14 +14,16 @@
 #endif
 
 /* Defined in main.c */
+extern int COLLISION, COLLIDINGFACE, COLLIDINGMESH;
 extern float DeltaTime;
 extern const float movScalar;
 extern vec4f gravity_epicenter;
+extern Scene scene;
 
 const void terrainCollision(Mesh *terrain, Mesh *obj);
 const void terrainHeightDifference(Mesh *terrain, Mesh *obj);
 const int aabbCollision(TerrainInfo *ti, Scene *s, Mesh *obj);
-const int obbCollision(Mesh *active, Mesh *pasive);
+const int obbCollision(Mesh *m);
 const int rotationCollision(TerrainInfo *ti, Scene *s, Mesh *obj);
 const void sortCollisions(TerrainInfo *ti, Scene *s, Mesh *obj);
 

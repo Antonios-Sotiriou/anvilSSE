@@ -1,7 +1,6 @@
 #include "../../headers/components/physics.h"
 
 /* Defined in main.c. */
-extern TerrainInfo Gitana;
 extern vec4f gravity_epicenter;
 
 const void applyPhysics(Scene *s) {
@@ -24,15 +23,17 @@ const void applyPhysics(Scene *s) {
             if ( s->m[i].type == Player )
                 terrainHeightDifference(&s->m[Terrain_1], &s->m[i]);
 
-            int collide = 1;
-            while (collide) {
-                sortCollisions(&Gitana, s, &s->m[i]);
+            // int collide = 1;
+            // while (collide) {
+            //     sortCollisions(&scene.t, s, &s->m[i]);
 
-                collide = aabbCollision(&Gitana, s, &s->m[i]);
-            }
+            //     collide = aabbCollision(&scene.t, s, &s->m[i]);
+            // }
 
+            // obbCollision(&s->m[6]);
+            obbCollision(&s->m[1]);
             if ( s->m[i].rot_angle ) {
-                rotationCollision(&Gitana, s, &s->m[i]);
+                rotationCollision(&scene.t, s, &s->m[i]);
             }
 
             trans = translationMatrix(s->m[i].velocity[0], s->m[i].velocity[1], s->m[i].velocity[2]);

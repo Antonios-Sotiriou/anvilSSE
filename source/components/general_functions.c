@@ -337,6 +337,30 @@ const void displayFace(face *f, const Mat4x4 vm) {
     XDrawLine(displ, mainwin, gc, r.v[1][0], r.v[1][1], r.v[2][0], r.v[2][1]);
     XDrawLine(displ, mainwin, gc, r.v[2][0], r.v[2][1], r.v[0][0], r.v[0][1]);
 }
+/* Displays given face on screen given the view Matrix. */
+const void displayFilledFace(face *f, const Mat4x4 vm) {
+    Mat4x4 tm = mxm(viewMatrix, perspectiveMatrix(45.f, -1.f, 10.f, __INT32_MAX__));
+    face r = facexm(*f, tm);
+
+    for (int j = 0; j < 3; j++) {
+        /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
+        float z = r.v[j][3];
+
+        if (r.v[j][3] > 0) {
+            r.v[j] /= r.v[j][3];
+            r.v[j][2] = z;
+        }
+
+        r.v[j] = (1.f + r.v[j]) * __builtin_convertvector(half_screen, vec4f);
+    }
+
+    XPoint v[3] = {
+        {r.v[0][0], r.v[0][1]},
+        {r.v[1][0], r.v[1][1]},
+        {r.v[2][0], r.v[2][1]}
+    };
+    XFillPolygon(displ, mainwin, gc, v, 3, Convex, CoordModeOrigin);
+}
 /* Displays given Bounding Box on screen given the view Matrix. Bounding box must be in World Space. */
 const void displayBbox(Mesh *m, const Mat4x4 vm) {
     Mat4x4 tm = mxm(viewMatrix, perspectiveMatrix(45.f, -1.f, 10.f, __INT32_MAX__));

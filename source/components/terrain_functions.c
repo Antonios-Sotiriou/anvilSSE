@@ -32,12 +32,12 @@ const void createTerrain(Mesh *m, const char path[], TerrainInfo *tf) {
     fclose(fp);
 
     /* Populate the gloabal TerrainInfo struct with infos. */
-    tf->vecWidth = bmp.info.Width;
-    tf->vecHeight = bmp.info.Height;
-    tf->quadCols = tf->vecWidth - 1;
-    tf->quadRows = tf->vecHeight - 1;
-    tf->quadsArea = tf->quadRows * tf->quadCols;
-    tf->quads = calloc(tf->quadsArea, sizeof(Quad));
+    scene.t.vecWidth = bmp.info.Width;
+    scene.t.vecHeight = bmp.info.Height;
+    scene.t.quadCols = tf->vecWidth - 1;
+    scene.t.quadRows = tf->vecHeight - 1;
+    scene.t.quadsArea = tf->quadRows * tf->quadCols;
+    scene.t.quads = calloc(tf->quadsArea, sizeof(Quad));
 
     /* Quads. */
     const int quad_vcols = bmp.info.Width - 1;
@@ -222,7 +222,7 @@ const void initMeshQuadInfo(Mesh *t, Mesh *m) {
 const TerrainPointInfo getTerrainPointData(Mesh *t, vec4f coords, Mesh *m) {
     TerrainPointInfo tp = { 0 };
     const float t_scale = t->scale * 2.f;
-    float quad_len = t_scale / Gitana.vecWidth;
+    float quad_len = t_scale / scene.t.vecWidth;
     const int t_limit = t_scale - quad_len;
 
     vec4f t_coords = coords - (t->cd.v[P] - (t->scale));
@@ -232,8 +232,8 @@ const TerrainPointInfo getTerrainPointData(Mesh *t, vec4f coords, Mesh *m) {
     } 
 
     /* Function to get t quads indexes. */
-    vec4i pos = __builtin_convertvector((t_coords / t_scale) * (float)Gitana.vecWidth, vec4i);
-    const int quad_index = (pos[2] * Gitana.quadRows) + pos[0];
+    vec4i pos = __builtin_convertvector((t_coords / t_scale) * (float)scene.t.vecWidth, vec4i);
+    const int quad_index = (pos[2] * scene.t.quadRows) + pos[0];
 
     /* Every quad has two faces incrementally. Every face constists of 9 indexes for vectors, normals, textors.
         So to get the right index we multiply faces with 9, because indexes are stored raw until now. */
@@ -281,7 +281,7 @@ const TerrainPointInfo getTerrainPointData(Mesh *t, vec4f coords, Mesh *m) {
 /* Retrieves Terrain *t Quad index at given coords. */
 const int getTerrainQuadIndex(Mesh *t, vec4f coords) {
     const float t_scale = t->scale * 2.f;
-    float quad_len = t_scale / Gitana.vecWidth;
+    float quad_len = t_scale / scene.t.vecWidth;
     const int t_limit = t_scale - quad_len;
 
     vec4f t_coords = coords - (t->cd.v[P] - (t->scale));
@@ -291,8 +291,8 @@ const int getTerrainQuadIndex(Mesh *t, vec4f coords) {
     } 
 
     /* Function to get t quads indexes. */
-    vec4i pos = __builtin_convertvector((t_coords / t_scale) * (float)Gitana.vecWidth, vec4i);
-    const int quad_index = (pos[2] * Gitana.quadRows) + pos[0];
+    vec4i pos = __builtin_convertvector((t_coords / t_scale) * (float)scene.t.vecWidth, vec4i);
+    const int quad_index = (pos[2] * scene.t.quadRows) + pos[0];
 
     return quad_index;
 }
@@ -305,24 +305,24 @@ const void addMeshToQuad(Mesh *m) {
         return;
     }
 
-    if ( !Gitana.quads[quad_index].members ) {
+    if ( !scene.t.quads[quad_index].members ) {
         /* Quad had not previous members in it so we must allocate memory for the new member. */
-        Gitana.quads[quad_index].members = calloc(1, 8);
-        Gitana.quads[quad_index].members_indexes = 1;
-        Gitana.quads[quad_index].members[0] = m;
+        scene.t.quads[quad_index].members = calloc(1, 4);
+        scene.t.quads[quad_index].members_indexes = 1;
+        scene.t.quads[quad_index].members[0] = m->id;
         return;
     }
 
-    for (int i = 0; i < Gitana.quads[quad_index].members_indexes; i++) {
-        if ( Gitana.quads[quad_index].members[i]->id == m->id )
+    for (int i = 0; i < scene.t.quads[quad_index].members_indexes; i++) {
+        if ( scene.t.quads[quad_index].members[i] == m->id )
             /* Mesh is already a member of the Quad. */
             return;
     }
 
     /* Increase the size of Quad members pointer to add the new member.Increment the necessery values also. */
-    Gitana.quads[quad_index].members = realloc(Gitana.quads[quad_index].members, (Gitana.quads[quad_index].members_indexes + 1) * 8);
-    Gitana.quads[quad_index].members[Gitana.quads[quad_index].members_indexes] = m;
-    Gitana.quads[quad_index].members_indexes += 1;
+    scene.t.quads[quad_index].members = realloc(scene.t.quads[quad_index].members, (scene.t.quads[quad_index].members_indexes + 1) * 4);
+    scene.t.quads[quad_index].members[scene.t.quads[quad_index].members_indexes] = m->id;
+    scene.t.quads[quad_index].members_indexes += 1;
 }
 /* Removes a mesh id from the TerrainInfo global Quad memmbers array. */
 const void removeMeshFromQuad(Mesh *m) {
@@ -332,20 +332,20 @@ const void removeMeshFromQuad(Mesh *m) {
         /* Mesh is out of terrain if its quadIndex is less than Zero. */
         return;
     }
-    const int num_of_indexes = Gitana.quads[quad_index].members_indexes - 1;
+    const int num_of_indexes = scene.t.quads[quad_index].members_indexes - 1;
 
-    Mesh **new_array = calloc(num_of_indexes, 8);
+    int *new_array = calloc(num_of_indexes, 4);
 
     int inc = 0;
-    for (int i = 0; i < Gitana.quads[quad_index].members_indexes; i++) {
-        if ( Gitana.quads[quad_index].members[i]->id != m->id ) {
-            new_array[inc] = Gitana.quads[quad_index].members[i];
+    for (int i = 0; i < scene.t.quads[quad_index].members_indexes; i++) {
+        if ( scene.t.quads[quad_index].members[i] != m->id ) {
+            new_array[inc] = scene.t.quads[quad_index].members[i];
             inc++;
         }
     }
-    free(Gitana.quads[quad_index].members);
-    Gitana.quads[quad_index].members = realloc(new_array, (num_of_indexes * 8));
-    Gitana.quads[quad_index].members_indexes = num_of_indexes;
+    free(scene.t.quads[quad_index].members);
+    scene.t.quads[quad_index].members = realloc(new_array, (num_of_indexes * 4));
+    scene.t.quads[quad_index].members_indexes = num_of_indexes;
 }
 
 

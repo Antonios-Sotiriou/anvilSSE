@@ -31,7 +31,7 @@
 #endif
 
 /* Global variables. Defined in main.c. used by all shaders with small name changes. */
-extern int mainShaderProgram, DEBUG, EYEPOINT, mesh_id, primitive_id;
+extern int mainShaderProgram, DEBUG, DISPLAYBBOX, EYEPOINT, mesh_id, primitive_id, COLLISION, COLLIDINGFACE, COLLIDINGMESH;
 extern GLint mainFBO;
 extern Mat4x4 lookAtMatrix, viewMatrix, lightMatrix, perspMatrix, worldMatrix;
 extern Scene scene;

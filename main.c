@@ -102,6 +102,9 @@ float SpecularStrength    = 0.5f;
 float DiffuseStrength     = 0.5f;
 float shadow_bias         = 0.0f;//0.003105;//0.002138;//0.000487f;
 int DISPLAYBBOX           = 0;
+int COLLISION             = 0;
+int COLLIDINGFACE         = 0;
+int COLLIDINGMESH         = 0;
 /* For investigating shadow map usefull global variables. */
 int INCORDEC = -1;
 int SMA = 0;
@@ -115,7 +118,7 @@ int STD = 51200;
 
 vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
-const float movScalar = 1.f;
+const float movScalar = 0.1f;
 const float moveForce = 0.2f;
 
 /* Variables usefull for mesh click select. */
@@ -127,8 +130,6 @@ Mat4x4 perspMatrix, lookAtMatrix, viewMatrix, reperspMatrix, orthoMatrix, worldM
 
 /* Anvil global Objects Meshes and Scene. */
 Scene scene = { 0 };
-/* Terrain info struct is populated with data when terrain is created(createTerrain()). */
-TerrainInfo Gitana;
 
 /* X11 and mainwindow Global variables. */
 static int INIT = 0;
@@ -183,11 +184,11 @@ const static void clientmessage(XEvent *event) {
     printf("Received client message event\n");
     if (event->xclient.data.l[0] == wmatom[Win_Close]) {
 
-        for (int i = 0; i < Gitana.quadsArea; i++) {
-            if (Gitana.quads[i].members)
-                free(Gitana.quads[i].members);
+        for (int i = 0; i < scene.t.quadsArea; i++) {
+            if (scene.t.quads[i].members)
+                free(scene.t.quads[i].members);
         }
-        free(Gitana.quads);
+        free(scene.t.quads);
 
         releaseScene(&scene);
 

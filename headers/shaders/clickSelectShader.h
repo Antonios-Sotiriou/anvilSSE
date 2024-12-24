@@ -37,7 +37,6 @@ extern Display *displ;
 extern Window mainwin;
 extern XWindowAttributes main_wa;
 extern Mat4x4 worldMatrix, reperspMatrix, lookAtMatrix;
-extern TerrainInfo Gitana;
 extern Scene scene;
 extern vec4f click;
 

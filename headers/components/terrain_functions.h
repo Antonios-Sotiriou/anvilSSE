@@ -18,7 +18,7 @@
 #endif
 
 /* Defined in main.c. */
-extern TerrainInfo Gitana;
+extern Scene scene;
 
 const void createTerrain(Mesh *c, const char path[], TerrainInfo *tf);
 const void initMeshQuadInfo(Mesh *t, Mesh *m);

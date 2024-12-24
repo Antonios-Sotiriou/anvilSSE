@@ -139,7 +139,7 @@ const void logTerrainQuad(const TerrainInfo ti, const int quad_index) {
     }
     printf("members ids: ");
     for (int i = 0; i < ti.quads[quad_index].members_indexes; i++) {
-        printf("%d, ", ti.quads[quad_index].members[i]->id);
+        printf("%d, ", ti.quads[quad_index].members[i]);
     }
     printf("\n");
 }

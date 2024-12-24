@@ -187,7 +187,7 @@ const Mat4x4 lookat(const vec4f P, const vec4f U, const vec4f V, const vec4f N) 
 /* The Camera Matrix or as used to called the View Matrix.Returns a new 4x4 Matrix. */
 const Mat4x4 pointat(const vec4f P, const vec4f T, const vec4f Up) {
     Mat4x4 m;
-    vec4f N = norm_vec(P - T);
+    vec4f N = norm_vec(T - P);
     vec4f U = norm_vec(cross_product(Up, N));
     vec4f V = cross_product(N, U);
 

@@ -14,7 +14,7 @@
 #endif
 
 /* Defined in main.c. */
-extern TerrainInfo Gitana;
+extern TerrainInfo scene.t;
 extern Scene scene;
 extern XWindowAttributes *point_attrib;
 extern Mat4x4 reperspMatrix, *point_mat;

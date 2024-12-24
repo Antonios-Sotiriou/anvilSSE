@@ -7,7 +7,7 @@ const void initWorldObjects(Scene *s) {
     // createGrid(&s->m[0], 10, 10);
 
     memcpy(s->m[0].name, "terrain0", sizeof("terrain0"));
-    createTerrain(&s->m[0], "terrains/terrain0/hm_10x10.bmp", &Gitana);
+    createTerrain(&s->m[0], "terrains/terrain0/hm_10x10.bmp", &scene.t);
     loadMaterial(&s->m[0].material, "stones");
     loadtexture(&s->m[0], 1);
     loadBboxVectors(&s->m[0], "terrains/terrain0/bbox_terrain0");
@@ -63,6 +63,9 @@ const void initWorldObjects(Scene *s) {
     s->m[1].cd.v[P][1] = 300.f;
     s->m[1].cd.v[P][2] = 100.f;
     s->m[1].cd.v[P][3] = 1.f;
+    s->m[1].cd.v[U][0] = 1.f;
+    s->m[1].cd.v[V][1] = 1.f;
+    s->m[1].cd.v[N][2] = 1.f;
 
     s->m[1].cull = 1;
     s->m[1].lodlevels = 0;

@@ -1,5 +1,99 @@
 #include "../../headers/components/collision_detection.h"
 
+/* Return signed shortest distance from point to plane, plane normal must be normalised. */
+const float dist(vec4f plane_p, vec4f plane_n, vec4f v) {
+    vec4f r = plane_n * v;
+    return ( (r[0] + r[1] + r[2]) - dot_product(plane_n, plane_p) );
+}
+const vec4f plane_intersect(vec4f plane_p, vec4f plane_n, vec4f line_start, vec4f line_end, float *t) {
+    float plane_d = -dot_product(plane_n, plane_p);
+    float ad = dot_product(line_start, plane_n);
+    float bd = dot_product(line_end, plane_n);
+    *t = ((-plane_d - ad) / (bd - ad));
+    vec4f line_ste = line_end - line_start;
+    vec4f line_ti = line_ste * (*t);
+
+    return line_start + line_ti;
+}
+const float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf) {
+    int inside_points[3];     int inside_count = 0;
+    int outside_points[3];    int outside_count = 0;
+
+    // Get signed distance of each point in triangle to plane.
+    float d0 = dist(plane_p, plane_n, in_f.v[0]);
+    float d1 = dist(plane_p, plane_n, in_f.v[1]);
+    float d2 = dist(plane_p, plane_n, in_f.v[2]);
+
+    if (d0 >= 0) {
+        inside_points[inside_count] = 0;
+        inside_count++;
+    } else {
+        outside_points[outside_count] = 0;
+        outside_count++;
+    }
+    if (d1 >= 0) {
+        inside_points[inside_count] = 1;
+        inside_count++;
+    } else {
+        outside_points[outside_count] = 1;
+        outside_count++;
+    }
+    if (d2 >= 0) {
+        inside_points[inside_count] = 2;
+        inside_count++;
+    } else {
+        outside_points[outside_count] = 2;
+        outside_count++;
+    }
+
+    float t;
+    if (inside_count == 0) {
+        return -1.f; /* face is outside and must be ignored. */
+    } else if (inside_count == 3) {
+        return 3.f; /* face is inside and it needs no clipping. */
+    } else if (inside_count == 1 && outside_count == 2) {
+
+        // if ( inside_points[0] != 1 )
+        //     swap(&outside_points[0], &outside_points[1], 4);
+
+        vec4f r = plane_intersect(plane_p, plane_n, in_f.v[inside_points[0]], in_f.v[outside_points[1]], &t);
+        // vec4f r2 = plane_intersect(plane_p, plane_n, in_f.v[inside_points[0]], in_f.v[outside_points[0]], &t);
+        
+        // displayPoint(r, worldMatrix, 0xff00a7);
+        float e1 = (r[0] - pf.v[0][0]) * (pf.v[1][1] - pf.v[0][1]) - (r[1] - pf.v[0][1]) * (pf.v[1][0] - pf.v[0][0]);
+        float e2 = (r[0] - pf.v[1][0]) * (pf.v[2][1] - pf.v[1][1]) - (r[1] - pf.v[1][1]) * (pf.v[2][0] - pf.v[1][0]);
+        float e3 = (r[0] - pf.v[2][0]) * (pf.v[0][1] - pf.v[2][1]) - (r[1] - pf.v[2][1]) * (pf.v[0][0] - pf.v[2][0]);
+        
+        if (e1 >= 0 && e2 >= 0 && e3 >= 0) {
+            displayPoint(r, worldMatrix, 0xff00a7);
+            return t; /* A new face is created. */
+        } else if (e1 <= 0 && e2 <= 0 && e3 <= 0) {
+            displayPoint(r, worldMatrix, 0xff00a7);
+            return t; /* Two new faces are created. */
+        }
+    } else if (inside_count == 2 && outside_count == 1) {
+        // if ( outside_points[0] != 1 )
+        //     swap(&inside_points[0], &inside_points[1], 4);
+
+        vec4f r = plane_intersect(plane_p, plane_n, in_f.v[inside_points[0]], in_f.v[outside_points[0]], &t);
+        
+        // displayPoint(r, worldMatrix, 0xff00a7);
+        float e1 = (r[0] - pf.v[0][0]) * (pf.v[1][1] - pf.v[0][1]) - (r[1] - pf.v[0][1]) * (pf.v[1][0] - pf.v[0][0]);
+        float e2 = (r[0] - pf.v[1][0]) * (pf.v[2][1] - pf.v[1][1]) - (r[1] - pf.v[1][1]) * (pf.v[2][0] - pf.v[1][0]);
+        float e3 = (r[0] - pf.v[2][0]) * (pf.v[0][1] - pf.v[2][1]) - (r[1] - pf.v[2][1]) * (pf.v[0][0] - pf.v[2][0]);
+        
+        if (e1 >= 0 && e2 >= 0 && e3 >= 0) {
+            displayPoint(r, worldMatrix, 0xff00a7);
+            return t; /* Two new faces are created. */
+        } else if (e1 <= 0 && e2 <= 0 && e3 <= 0) {
+            displayPoint(r, worldMatrix, 0xff00a7);
+            return t; /* Two new faces are created. */
+        }
+    }
+    return -1.f;
+}
+
+
 const void terrainCollision(Mesh *terrain, Mesh *obj) {
     TerrainPointInfo tp = getTerrainPointData(terrain, obj->cd.v[P], obj);
     float height_diff = tp.pos[1] - (obj->cd.v[P][1] - obj->scale);
@@ -14,7 +108,6 @@ const void terrainCollision(Mesh *terrain, Mesh *obj) {
         setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, tm);
         setfacesarrayxm(obj->bbox.f, obj->bbox.f_indexes, tm);
     }
-    // printf("terrain_height now : %f\n", height_diff);
 }
 const void terrainHeightDifference(Mesh *terrain, Mesh *obj) {
     vec4f next_pos = obj->cd.v[P] + obj->velocity + (obj->mvdir * obj->scale);
@@ -45,9 +138,10 @@ const int aabbCollision(TerrainInfo *ti, Scene *s, Mesh *obj) {
 
     for (int i = 0; i < num_of_members; i++) {
 
-        cache = ti->quads[obj->quadIndex].members[i];
+        int pk = ti->quads[obj->quadIndex].members[i];
+        cache = &scene.m[pk];
 
-        if ( cache->id != obj->id ) {
+        if ( pk != obj->id ) {
 
             cache->dm = getDimensionsLimits(cache->bbox.v, cache->bbox.v_indexes);
 
@@ -158,16 +252,57 @@ const int aabbCollision(TerrainInfo *ti, Scene *s, Mesh *obj) {
     }
     return 0;
 }
-const int obbCollision(Mesh *active, Mesh *pasive) {
-    for (int i = 0; i < active->bbox.v_indexes; i++) {
-        for (int j = 0; j < pasive->bbox.f_indexes; j++) {
-            vec4f cp = triangle_cp(pasive->bbox.f[j]);
-            float dot = dot_product(norm_vec(cp), norm_vec(active->bbox.v[i]));
-            printf("dot: %f\n", dot);
-            // if ( fabsf(dot) == 0)
-                displayPoint(active->bbox.v[i], worldMatrix, 0x0eff00);
+const int obbCollision(Mesh *m) {
+    const int pks_num = scene.t.quads[m->quadIndex].members_indexes;
+
+    for (int i = 0; i < pks_num; i++) {
+        int pk = scene.t.quads[m->quadIndex].members[i];
+        if (pk != m->id && pk != 6) {
+
+            for (int j = 0; j < scene.m[pk].bbox.f_indexes; j++) {
+
+                vec4f plane_n = norm_vec(triangle_cp(scene.m[pk].bbox.f[j]));
+                vec4f plane_p = scene.m[pk].cd.v[0] + (plane_n * scene.m[pk].scale);
+
+                for (int d = 0; d < m->bbox.f_indexes; d++) {
+
+                    float d0 = dist(plane_p, plane_n, (m->cd.v[0] + m->velocity));
+                    if (d0 > 0) {
+                        displayFilledFace(&scene.m[pk].bbox.f[j], worldMatrix);
+                        const float t = clippface(scene.m[pk].cd.v[0] + (plane_n * scene.m[pk].scale), plane_n, m->bbox.f[d], scene.m[pk].bbox.f[j]);
+
+                        if (t == 0) {
+                            printf("Sliding...\n");
+                            float dot =  dot_product(plane_n, m->mvdir);
+                            m->mvdir = m->mvdir - (dot * plane_n);
+                        } else if (t > 0 && t <= 1) {
+                            printf("Collision...\n");
+                            m->velocity *= t;
+                            Mat4x4 trans = translationMatrix(m->velocity[0], m->velocity[1], m->velocity[2]);
+                            setvecsarrayxm(m->cd.v, 4, trans);
+                            setvecsarrayxm(m->bbox.v, m->bbox.v_indexes, trans);
+                            setfacesarrayxm(m->bbox.f, m->bbox.f_indexes, trans);
+
+                            float dot =  dot_product(plane_n, m->mvdir);
+                            m->mvdir = m->mvdir - (dot * plane_n);
+                            m->velocity = (m->mvdir * m->momentum);
+
+                        }
+                    }
+
+                    // vec4f line_start = m->bbox.v[d];
+                    // vec4f line_end = m->bbox.v[d] + m->velocity;
+                    // float plane_d = -dot_product(plane_n, plane_p);
+                    // float ad = dot_product(line_start, plane_n);
+                    // float bd = dot_product(line_end, plane_n);
+                    // float t = ((-plane_d - ad) / (bd - ad));
+
+                    // if (t >= 0 && t <= 1) {
+                    // }
+                }
+            }
         }
-    } 
+    }
     return 0;
 }
 const int rotationCollision(TerrainInfo *ti, Scene *s, Mesh *obj) {
@@ -190,9 +325,10 @@ const int rotationCollision(TerrainInfo *ti, Scene *s, Mesh *obj) {
 
     for (int i = 0; i < num_of_members; i++) {
 
-        cache = ti->quads[obj->quadIndex].members[i];
+        int pk = ti->quads[obj->quadIndex].members[i];
+        cache = &scene.m[pk];
 
-        if ( cache->id != obj->id ) {
+        if ( pk != obj->id ) {
 
             cache->dm = getDimensionsLimits(cache->bbox.v, cache->bbox.v_indexes);
 
@@ -268,10 +404,11 @@ const void sortCollisions(TerrainInfo *ti, Scene *s, Mesh *obj) {
 
     for (int i = 0; i < num_of_members; i++) {
 
-        cache_1 = ti->quads[obj->quadIndex].members[i];
+        int pk = ti->quads[obj->quadIndex].members[i];
+        cache_1 = &scene.m[pk];
         cache_1->collision_t = 1000000.f;
 
-        if ( cache_1->id != obj->id ) {
+        if ( pk != obj->id ) {
             cache_1->dm = getDimensionsLimits(cache_1->bbox.v, cache_1->bbox.v_indexes);
 
             vec4i min = __builtin_convertvector((cache_1->dm.min - (obj->cd.v[P] - obj->dm.min)) + 0.5, vec4i);
@@ -319,9 +456,11 @@ const void sortCollisions(TerrainInfo *ti, Scene *s, Mesh *obj) {
     }
     Mesh *cache_2;
     for (int i = 0; i < num_of_members; i++) {
-        cache_1 = ti->quads[obj->quadIndex].members[i];
+        int pk1 = ti->quads[obj->quadIndex].members[i];
+        cache_1 = &scene.m[pk1];
         for (int j = 0; j < num_of_members; j++) {
-            cache_2 = ti->quads[obj->quadIndex].members[j];
+            int pk2 = ti->quads[obj->quadIndex].members[j];
+            cache_2 = &scene.m[pk2];
             if ( cache_1->id != obj->id ) {
                 if ( cache_1->collision_t < cache_2->collision_t ) {
                     swap(&ti->quads[obj->quadIndex].members[i], &ti->quads[obj->quadIndex].members[j], 4);

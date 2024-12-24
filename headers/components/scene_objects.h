@@ -41,7 +41,6 @@
 /* Defined in main.c */
 extern int mainShaderProgram;
 extern GLint testTexture[4];
-extern TerrainInfo Gitana;
 
 const void initWorldObjects(Scene *s);
 const void createScene(Scene *s);

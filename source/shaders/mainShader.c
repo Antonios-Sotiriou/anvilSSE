@@ -243,10 +243,15 @@ const void project(void) {
     // }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // displayPoint(scene.m[1].cd.v[P], worldMatrix, 0xff00a7); //0028ff
-    face f = facexm(scene.m[mesh_id].f[primitive_id], scene.m[mesh_id].modelMatrix);
-    displayFace(&f, worldMatrix); //0028ff
-    // displayMeshKinetics(&scene.m[1], worldMatrix); //0028ff
-    // displayBboxFaces(&scene.m[mesh_id], worldMatrix); //0028ff
+    if (COLLISION) {
+        face f = facexm(scene.m[COLLIDINGMESH].f[COLLIDINGFACE], scene.m[COLLIDINGMESH].modelMatrix);
+        // displayFace(&f, worldMatrix); //0028ff
+        displayFilledFace(&f, worldMatrix);
+    }
+    if (DISPLAYBBOX) {
+        displayMeshKinetics(&scene.m[mesh_id], worldMatrix); //0028ff
+        displayBboxFaces(&scene.m[mesh_id], worldMatrix); //0028ff
+    }
 }
 
 

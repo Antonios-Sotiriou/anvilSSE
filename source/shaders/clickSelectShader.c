@@ -142,7 +142,7 @@ const int initClickSelectShader(void) {
 //     wsc[3] = 1.f;
 //     wsc = vecxm(wsc, lookAtMatrix);
 
-//     const int id = pointVsBbox(&Gitana, &scene, wsc);
+//     const int id = pointVsBbox(&scene.t, &scene, wsc);
 
 //     return id;
 // }

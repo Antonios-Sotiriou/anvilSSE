@@ -13,7 +13,7 @@ const int clickSelect(const vec4f cs) {
     wsc[3] = 1.f;
     wsc = vecxm(wsc, *point_mat);
 
-    const int id = pointVsBbox(&Gitana, &scene, wsc);
+    const int id = pointVsBbox(&scene.t, &scene, wsc);
 
     return id;
 }

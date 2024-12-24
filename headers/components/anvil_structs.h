@@ -138,14 +138,8 @@ typedef struct {
     collision_t;                                    /* Collison time, usefull to sort the collisions. */
 } Mesh;
 
-/* Scene structs which teams all the meshes into an objects array. */
 typedef struct {
-    Mesh *m;
-    int m_indexes;
-} Scene;
-
-typedef struct {
-    Mesh **members;
+    int *members;
     unsigned int members_indexes;
 } Quad;
 
@@ -159,6 +153,13 @@ typedef struct {
     Quad *quads;    /* This pointer to pointer holds the ids of the meshes that belong to each quad index. */
     int vecWidth, vecHeight, quadsArea, quadRows, quadCols;
 } TerrainInfo;
+
+/* Scene structs which teams all the meshes into an objects array. */
+typedef struct {
+    Mesh *m;
+    int m_indexes;
+    TerrainInfo t;
+} Scene;
 
 /* Structs wiche help us to save and pass arround usefull Tile informations for Parallel rendering. */
 typedef struct {
