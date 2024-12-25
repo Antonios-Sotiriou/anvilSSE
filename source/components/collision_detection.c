@@ -254,7 +254,7 @@ const int aabbCollision(TerrainInfo *ti, Scene *s, Mesh *obj) {
 }
 const int obbCollision(Mesh *m) {
     const int pks_num = scene.t.quads[m->quadIndex].members_indexes;
-
+    printf("\x1b[H\x1b[J");
     for (int i = 0; i < pks_num; i++) {
         int pk = scene.t.quads[m->quadIndex].members[i];
         if (pk != m->id && pk != 6) {
@@ -267,14 +267,19 @@ const int obbCollision(Mesh *m) {
                 for (int d = 0; d < m->bbox.f_indexes; d++) {
 
                     float d0 = dist(plane_p, plane_n, (m->cd.v[0] + m->velocity));
-                    if (d0 > 0) {
+                    if (d0 > 0 && dot_product(m->velocity, plane_n) < 0) {
+
                         displayFilledFace(&scene.m[pk].bbox.f[j], worldMatrix);
                         const float t = clippface(scene.m[pk].cd.v[0] + (plane_n * scene.m[pk].scale), plane_n, m->bbox.f[d], scene.m[pk].bbox.f[j]);
+                        // printf("dot: %f\n", (m->velocity, plane_n));
+                        // logVec4f(plane_n);
 
                         if (t == 0) {
                             printf("Sliding...\n");
                             float dot =  dot_product(plane_n, m->mvdir);
                             m->mvdir = m->mvdir - (dot * plane_n);
+                            m->velocity = (m->mvdir * m->momentum);
+                            return 0;
                         } else if (t > 0 && t <= 1) {
                             printf("Collision...\n");
                             m->velocity *= t;
@@ -286,7 +291,7 @@ const int obbCollision(Mesh *m) {
                             float dot =  dot_product(plane_n, m->mvdir);
                             m->mvdir = m->mvdir - (dot * plane_n);
                             m->velocity = (m->mvdir * m->momentum);
-
+                            return 0;
                         }
                     }
 
