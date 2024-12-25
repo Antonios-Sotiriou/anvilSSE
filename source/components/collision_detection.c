@@ -15,79 +15,30 @@ const vec4f plane_intersect(vec4f plane_p, vec4f plane_n, vec4f line_start, vec4
 
     return line_start + line_ti;
 }
-const float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf) {
-    int inside_points[3];     int inside_count = 0;
-    int outside_points[3];    int outside_count = 0;
+const float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f velocity) {
+    float d0, d1, t;
+    vec4f line_start, line_end;
 
-    // Get signed distance of each point in triangle to plane.
-    float d0 = dist(plane_p, plane_n, in_f.v[0]);
-    float d1 = dist(plane_p, plane_n, in_f.v[1]);
-    float d2 = dist(plane_p, plane_n, in_f.v[2]);
+    for (int i = 0; i < 3; i++) {
+        line_start = in_f.v[i];
+        line_end = in_f.v[i] + velocity;
+        d0 = dist(plane_p, plane_n, line_start);
+        d1 = dist(plane_p, plane_n, line_end);
 
-    if (d0 >= 0) {
-        inside_points[inside_count] = 0;
-        inside_count++;
-    } else {
-        outside_points[outside_count] = 0;
-        outside_count++;
-    }
-    if (d1 >= 0) {
-        inside_points[inside_count] = 1;
-        inside_count++;
-    } else {
-        outside_points[outside_count] = 1;
-        outside_count++;
-    }
-    if (d2 >= 0) {
-        inside_points[inside_count] = 2;
-        inside_count++;
-    } else {
-        outside_points[outside_count] = 2;
-        outside_count++;
-    }
+        if (d1 < 0 && d0 >= 0) {
 
-    float t;
-    if (inside_count == 0) {
-        return -1.f; /* face is outside and must be ignored. */
-    } else if (inside_count == 3) {
-        return 3.f; /* face is inside and it needs no clipping. */
-    } else if (inside_count == 1 && outside_count == 2) {
+            vec4f r = plane_intersect(plane_p, plane_n, line_start, line_end, &t);
+            float e1 = (r[0] - pf.v[0][0]) * (pf.v[1][1] - pf.v[0][1]) - (r[1] - pf.v[0][1]) * (pf.v[1][0] - pf.v[0][0]);
+            float e2 = (r[0] - pf.v[1][0]) * (pf.v[2][1] - pf.v[1][1]) - (r[1] - pf.v[1][1]) * (pf.v[2][0] - pf.v[1][0]);
+            float e3 = (r[0] - pf.v[2][0]) * (pf.v[0][1] - pf.v[2][1]) - (r[1] - pf.v[2][1]) * (pf.v[0][0] - pf.v[2][0]);
 
-        // if ( inside_points[0] != 1 )
-        //     swap(&outside_points[0], &outside_points[1], 4);
-
-        vec4f r = plane_intersect(plane_p, plane_n, in_f.v[inside_points[0]], in_f.v[outside_points[1]], &t);
-        // vec4f r2 = plane_intersect(plane_p, plane_n, in_f.v[inside_points[0]], in_f.v[outside_points[0]], &t);
-        
-        // displayPoint(r, worldMatrix, 0xff00a7);
-        float e1 = (r[0] - pf.v[0][0]) * (pf.v[1][1] - pf.v[0][1]) - (r[1] - pf.v[0][1]) * (pf.v[1][0] - pf.v[0][0]);
-        float e2 = (r[0] - pf.v[1][0]) * (pf.v[2][1] - pf.v[1][1]) - (r[1] - pf.v[1][1]) * (pf.v[2][0] - pf.v[1][0]);
-        float e3 = (r[0] - pf.v[2][0]) * (pf.v[0][1] - pf.v[2][1]) - (r[1] - pf.v[2][1]) * (pf.v[0][0] - pf.v[2][0]);
-        
-        if (e1 >= 0 && e2 >= 0 && e3 >= 0) {
-            displayPoint(r, worldMatrix, 0xff00a7);
-            return t; /* A new face is created. */
-        } else if (e1 <= 0 && e2 <= 0 && e3 <= 0) {
-            displayPoint(r, worldMatrix, 0xff00a7);
-            return t; /* Two new faces are created. */
-        }
-    } else if (inside_count == 2 && outside_count == 1) {
-        // if ( outside_points[0] != 1 )
-        //     swap(&inside_points[0], &inside_points[1], 4);
-
-        vec4f r = plane_intersect(plane_p, plane_n, in_f.v[inside_points[0]], in_f.v[outside_points[0]], &t);
-        
-        // displayPoint(r, worldMatrix, 0xff00a7);
-        float e1 = (r[0] - pf.v[0][0]) * (pf.v[1][1] - pf.v[0][1]) - (r[1] - pf.v[0][1]) * (pf.v[1][0] - pf.v[0][0]);
-        float e2 = (r[0] - pf.v[1][0]) * (pf.v[2][1] - pf.v[1][1]) - (r[1] - pf.v[1][1]) * (pf.v[2][0] - pf.v[1][0]);
-        float e3 = (r[0] - pf.v[2][0]) * (pf.v[0][1] - pf.v[2][1]) - (r[1] - pf.v[2][1]) * (pf.v[0][0] - pf.v[2][0]);
-        
-        if (e1 >= 0 && e2 >= 0 && e3 >= 0) {
-            displayPoint(r, worldMatrix, 0xff00a7);
-            return t; /* Two new faces are created. */
-        } else if (e1 <= 0 && e2 <= 0 && e3 <= 0) {
-            displayPoint(r, worldMatrix, 0xff00a7);
-            return t; /* Two new faces are created. */
+            if (e1 >= 0 && e2 >= 0 && e3 >= 0) {
+                // displayPoint(r, worldMatrix, 0xff00a7);
+                return t; /* A new face is created. */
+            } else if (e1 <= 0 && e2 <= 0 && e3 <= 0) {
+                // displayPoint(r, worldMatrix, 0xff00a7);
+                return t; /* Two new faces are created. */
+            }
         }
     }
     return -1.f;
@@ -252,9 +203,37 @@ const int aabbCollision(TerrainInfo *ti, Scene *s, Mesh *obj) {
     }
     return 0;
 }
+const int velocityCollideTest(Mesh *m) {
+    Mat4x4 tm = translationMatrix(m->velocity[0], m->velocity[1], m->velocity[2]);
+    const int pks_num = scene.t.quads[m->quadIndex].members_indexes;
+
+    for (int i = 0; i < pks_num; i++) {
+        int pk = scene.t.quads[m->quadIndex].members[i];
+        if (pk != m->id && pk != 6) {
+            float min_a = __INT32_MAX__, max_a = -__INT32_MAX__, min_b = __INT32_MAX__, max_b = -__INT32_MAX__, temp;
+
+            for (int j = 0; j < m->bbox.v_indexes; j++) {
+                min_a = (temp = dot_product(m->velocity, vecxm(m->bbox.v[j], tm))) < min_a ? temp : min_a;
+                max_a = temp > max_a ? temp : max_a;
+            }
+
+            for (int k = 0; k < scene.m[pk].bbox.v_indexes; k++) {
+                min_b = (temp = dot_product(m->velocity, scene.m[pk].bbox.v[k])) < min_b ? temp : min_b;
+                max_b = temp > max_b ? temp : max_b;
+            }
+
+            if ( (min_a > max_b) || (max_a < min_b) ) {
+                return 0;
+            }
+        }
+    }
+    m->velocity -= m->velocity;
+    return 1;
+}
 const int obbCollision(Mesh *m) {
     const int pks_num = scene.t.quads[m->quadIndex].members_indexes;
     printf("\x1b[H\x1b[J");
+    // printf("Collision possible\n");
     for (int i = 0; i < pks_num; i++) {
         int pk = scene.t.quads[m->quadIndex].members[i];
         if (pk != m->id && pk != 6) {
@@ -270,10 +249,9 @@ const int obbCollision(Mesh *m) {
                     if (d0 > 0 && dot_product(m->velocity, plane_n) < 0) {
 
                         displayFilledFace(&scene.m[pk].bbox.f[j], worldMatrix);
-                        const float t = clippface(scene.m[pk].cd.v[0] + (plane_n * scene.m[pk].scale), plane_n, m->bbox.f[d], scene.m[pk].bbox.f[j]);
-                        // printf("dot: %f\n", (m->velocity, plane_n));
-                        // logVec4f(plane_n);
-
+                        // const float t = clippface(scene.m[pk].cd.v[0] + (plane_n * scene.m[pk].scale), plane_n, m->bbox.f[d], scene.m[pk].bbox.f[j]);
+                        const float t = clippface(scene.m[pk].cd.v[0] + (plane_n * scene.m[pk].scale), plane_n, m->bbox.f[d], scene.m[pk].bbox.f[j], m->velocity);
+                        printf("t...: %f\n", t);
                         if (t == 0) {
                             printf("Sliding...\n");
                             float dot =  dot_product(plane_n, m->mvdir);
@@ -294,16 +272,6 @@ const int obbCollision(Mesh *m) {
                             return 0;
                         }
                     }
-
-                    // vec4f line_start = m->bbox.v[d];
-                    // vec4f line_end = m->bbox.v[d] + m->velocity;
-                    // float plane_d = -dot_product(plane_n, plane_p);
-                    // float ad = dot_product(line_start, plane_n);
-                    // float bd = dot_product(line_end, plane_n);
-                    // float t = ((-plane_d - ad) / (bd - ad));
-
-                    // if (t >= 0 && t <= 1) {
-                    // }
                 }
             }
         }

@@ -23,6 +23,7 @@ extern Scene scene;
 const void terrainCollision(Mesh *terrain, Mesh *obj);
 const void terrainHeightDifference(Mesh *terrain, Mesh *obj);
 const int aabbCollision(TerrainInfo *ti, Scene *s, Mesh *obj);
+const int velocityCollideTest(Mesh *m);
 const int obbCollision(Mesh *m);
 const int rotationCollision(TerrainInfo *ti, Scene *s, Mesh *obj);
 const void sortCollisions(TerrainInfo *ti, Scene *s, Mesh *obj);
