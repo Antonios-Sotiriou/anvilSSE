@@ -18,7 +18,7 @@ const void applyPhysics(Scene *s) {
                 g_accelaration = (98.1f * (s->m[i].falling_time * 2));
             }
 
-            s->m[i].velocity = (gravity_epicenter * g_accelaration) + (s->m[i].mvdir * s->m[i].momentum);
+            s->m[i].velocity = (gravity_epicenter * g_accelaration) + (s->m[i].velocity);
 
             if ( s->m[i].type == Player )
                 terrainHeightDifference(&s->m[Terrain_1], &s->m[i]);

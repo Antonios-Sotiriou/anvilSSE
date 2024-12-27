@@ -33,12 +33,15 @@ const float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f ve
             float e3 = (r[0] - pf.v[2][0]) * (pf.v[0][1] - pf.v[2][1]) - (r[1] - pf.v[2][1]) * (pf.v[0][0] - pf.v[2][0]);
 
             if (e1 >= 0 && e2 >= 0 && e3 >= 0) {
-                // displayPoint(r, worldMatrix, 0xff00a7);
+                displayPoint(r, worldMatrix, 0xff00a7);
+                displayFilledFace(&in_f, worldMatrix);
                 return t; /* A new face is created. */
             } else if (e1 <= 0 && e2 <= 0 && e3 <= 0) {
-                // displayPoint(r, worldMatrix, 0xff00a7);
+                displayPoint(r, worldMatrix, 0xff00a7);
+                displayFilledFace(&in_f, worldMatrix);
                 return t; /* Two new faces are created. */
             }
+            return -1.f;
         }
     }
     return -1.f;
@@ -232,7 +235,7 @@ const int velocityCollideTest(Mesh *m) {
 }
 const int obbCollision(Mesh *m) {
     const int pks_num = scene.t.quads[m->quadIndex].members_indexes;
-    printf("\x1b[H\x1b[J");
+    // printf("\x1b[H\x1b[J");
     // printf("Collision possible\n");
     for (int i = 0; i < pks_num; i++) {
         int pk = scene.t.quads[m->quadIndex].members[i];
@@ -248,27 +251,30 @@ const int obbCollision(Mesh *m) {
                     float d0 = dist(plane_p, plane_n, (m->cd.v[0] + m->velocity));
                     if (d0 > 0 && dot_product(m->velocity, plane_n) < 0) {
 
-                        displayFilledFace(&scene.m[pk].bbox.f[j], worldMatrix);
-                        // const float t = clippface(scene.m[pk].cd.v[0] + (plane_n * scene.m[pk].scale), plane_n, m->bbox.f[d], scene.m[pk].bbox.f[j]);
-                        const float t = clippface(scene.m[pk].cd.v[0] + (plane_n * scene.m[pk].scale), plane_n, m->bbox.f[d], scene.m[pk].bbox.f[j], m->velocity);
-                        printf("t...: %f\n", t);
+                        vec4f anti_plane_n = norm_vec(triangle_cp(m->bbox.f[d]));
+                        vec4f anti_plane_p = m->cd.v[0] + (anti_plane_n * m->scale);
+                        // displayFilledFace(&scene.m[pk].bbox.f[j], worldMatrix);
+                        // const float t = clippface(plane_p, plane_n, m->bbox.f[d], scene.m[pk].bbox.f[j]);
+                        // const float t = clippface(plane_p, plane_n, m->bbox.f[d], scene.m[pk].bbox.f[j], m->velocity);
+                        const float t = clippface(anti_plane_p, anti_plane_n, scene.m[pk].bbox.f[j], m->bbox.f[d], m->velocity * -1);
+                        // printf("t...: %f\n", t);
                         if (t == 0) {
                             printf("Sliding...\n");
-                            float dot =  dot_product(plane_n, m->mvdir);
-                            m->mvdir = m->mvdir - (dot * plane_n);
+                            float dot =  dot_product(anti_plane_n, m->mvdir);
+                            m->mvdir = m->mvdir - (dot * anti_plane_n);
                             m->velocity = (m->mvdir * m->momentum);
                             return 0;
                         } else if (t > 0 && t <= 1) {
                             printf("Collision...\n");
-                            m->velocity *= t;
-                            Mat4x4 trans = translationMatrix(m->velocity[0], m->velocity[1], m->velocity[2]);
-                            setvecsarrayxm(m->cd.v, 4, trans);
-                            setvecsarrayxm(m->bbox.v, m->bbox.v_indexes, trans);
-                            setfacesarrayxm(m->bbox.f, m->bbox.f_indexes, trans);
+                            m->velocity *= -1;
+                            // Mat4x4 trans = translationMatrix(m->velocity[0], m->velocity[1], m->velocity[2]);
+                            // setvecsarrayxm(m->cd.v, 4, trans);
+                            // setvecsarrayxm(m->bbox.v, m->bbox.v_indexes, trans);
+                            // setfacesarrayxm(m->bbox.f, m->bbox.f_indexes, trans);
 
-                            float dot =  dot_product(plane_n, m->mvdir);
-                            m->mvdir = m->mvdir - (dot * plane_n);
-                            m->velocity = (m->mvdir * m->momentum);
+                            // float dot =  dot_product(anti_plane_n, m->mvdir);
+                            // m->mvdir = m->mvdir - (dot * anti_plane_n);
+                            // m->velocity = (m->mvdir * m->momentum);
                             return 0;
                         }
                     }

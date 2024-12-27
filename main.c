@@ -118,7 +118,7 @@ int STD = 51200;
 
 vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
-const float movScalar = 0.1f;
+const float movScalar = 5.0f;
 const float moveForce = 0.2f;
 
 /* Variables usefull for mesh click select. */
@@ -339,41 +339,36 @@ const static void keypress(XEvent *event) {
             // vec4f mva = norm_vec(camera[N] - camera[U]);
             vec4f mva = { -1.f, 0.f, 0.f };
             scene.m[1].mvdir = mva;
-            scene.m[1].momentum = movScalar * scene.m[1].mass;
+            scene.m[1].velocity = mva * movScalar;
             scene.m[1].roll = 1;
             break;
         case 65432 : //sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
             // vec4f mvb = -norm_vec(camera[N] - camera[U]);
             // vec4f mvb = norm_vec(scene.m[Camera_1].cd.v[U] + scene.m[Camera_1].cd.v[V]);
             vec4f mvb = { 1.f, 0.f, 0.f };
-            scene.m[1].mvdir = mvb;
-            scene.m[1].momentum = movScalar * scene.m[1].mass;
+            scene.m[1].velocity = mvb * movScalar;
             scene.m[1].roll = 1;
             break;
         case 65434 : //sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
             scene.m[1].grounded = 0;
             vec4f mvc = { 0.f, 1.f, 0.f };
-            scene.m[1].mvdir = mvc;
-            scene.m[1].momentum = 0.981 * scene.m[1].mass;
+            scene.m[1].velocity = mvc * (movScalar + 0.981f * scene.m[1].mass);
             scene.m[1].falling_time = 0.f;
             break;
         case 65435 : //sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
             vec4f mvd = { 0.f, -1.f, 0.f };
-            scene.m[1].mvdir = mvd;
-            scene.m[1].momentum = movScalar * scene.m[1].mass;
+            scene.m[1].velocity = mvd  * (movScalar + 0.981f * scene.m[1].mass);
             break;
         case 65431 : //sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
             // vec4f mve = norm_vec(scene.m[Camera_1].cd.v[U] + scene.m[Camera_1].cd.v[N]);
             vec4f mve = { 0.f, 0.f, 1.f };
-            scene.m[1].mvdir = mve;
-            scene.m[1].momentum = movScalar * scene.m[1].mass;
+            scene.m[1].velocity = mve * movScalar;
             scene.m[1].roll = 1;
             break;
         case 65433 : //sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
             // vec4f mvf = -norm_vec(scene.m[Camera_1].cd.v[U] + scene.m[Camera_1].cd.v[N]);
             vec4f mvf = { 0.f, 0.f, -1.f };
-            scene.m[1].mvdir = mvf;
-            scene.m[1].momentum = movScalar * scene.m[1].mass;
+            scene.m[1].velocity = mvf * movScalar;
             scene.m[1].roll = 1;
             break;
         case 120 : rotateGlobalX(&scene.m[1], 1);                     /* x */
@@ -434,7 +429,7 @@ const static void keyrelease(XEvent *event) {
     KeySym keysym = XLookupKeysym(&event->xkey, 0);
 
     // printf("Key Released: %ld\n", keysym);
-    scene.m[EYEPOINT].momentum = 0;
+    scene.m[EYEPOINT].velocity -= scene.m[EYEPOINT].velocity;
     scene.m[EYEPOINT].rot_angle = 0;
 
     if ( keysym == 99 )
