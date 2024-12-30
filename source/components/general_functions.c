@@ -297,7 +297,30 @@ const void displayPoint(const vec4f p, const Mat4x4 vm, const int color) {
 const void displayMeshKinetics(Mesh *m, const Mat4x4 vm) {
     Mat4x4 tm = mxm(viewMatrix, perspectiveMatrix(45.f, -1.f, 10.f, __INT32_MAX__));
     vec4f temp_start = m->cd.v[0];
-    vec4f temp_end = m->cd.v[0] + (m->mvdir * m->scale);
+    vec4f temp_end = m->cd.v[0] + (m->velocity * m->scale);
+
+    setvecxm(&temp_start, tm);
+    setvecxm(&temp_end, tm);
+
+    if (temp_start[3] > 0)
+        temp_start /= temp_start[3];
+    if (temp_end[3] > 0)
+        temp_end /= temp_end[3];
+
+    temp_start[0] = (1 + temp_start[0]) * half_screen[0];
+    temp_start[1] = (1 + temp_start[1]) * half_screen[1];
+
+    temp_end[0] = (1 + temp_end[0]) * half_screen[0];
+    temp_end[1] = (1 + temp_end[1]) * half_screen[1];
+
+    XFillArc(displ, mainwin, gc, temp_start[0] - 2, temp_start[1] - 2, 4, 4, 0, 360 * 64);
+    XDrawLine(displ, mainwin, gc, temp_start[0], temp_start[1], temp_end[0], temp_end[1]);
+}
+/* Displays given Meshe's pivot point and moving direction on screen given the view Matrix. */
+const void drawLine(vec4f start, vec4f end, const Mat4x4 vm) {
+    Mat4x4 tm = mxm(viewMatrix, perspectiveMatrix(45.f, -1.f, 10.f, __INT32_MAX__));
+    vec4f temp_start = start;
+    vec4f temp_end = end;
 
     setvecxm(&temp_start, tm);
     setvecxm(&temp_end, tm);

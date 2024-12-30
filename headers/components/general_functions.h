@@ -51,6 +51,7 @@ const void enworldBbox(Mesh *m);
 const void checkVisibles(Scene *s, Mesh *m, const int viewProj);
 const void displayPoint(const vec4f p, const Mat4x4 vm, const int color);
 const void displayMeshKinetics(Mesh *m, const Mat4x4 vm);
+const void drawLine(vec4f start, vec4f end, const Mat4x4 vm);
 const void displayFace(face *f, const Mat4x4 vm);
 const void displayFilledFace(face *f, const Mat4x4 vm);
 const void displayBbox(Mesh *m, const Mat4x4 vm);

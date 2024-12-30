@@ -21,9 +21,11 @@ const float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f ve
 
     for (int i = 0; i < 3; i++) {
         line_start = in_f.v[i];
-        line_end = in_f.v[i] + velocity;
+        line_end = in_f.v[i] + velocity * 100.f;
         d0 = dist(plane_p, plane_n, line_start);
         d1 = dist(plane_p, plane_n, line_end);
+
+        drawLine(line_start, line_end, worldMatrix);
 
         if (d1 < 0 && d0 >= 0) {
 
@@ -34,14 +36,15 @@ const float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f ve
 
             if (e1 >= 0 && e2 >= 0 && e3 >= 0) {
                 displayPoint(r, worldMatrix, 0xff00a7);
-                displayFilledFace(&in_f, worldMatrix);
+                displayFilledFace(&pf, worldMatrix);
+                printf("FRONT e1: %f    e2: %f    e3: %f\n", e1, e2, e3);
                 return t; /* A new face is created. */
             } else if (e1 <= 0 && e2 <= 0 && e3 <= 0) {
                 displayPoint(r, worldMatrix, 0xff00a7);
-                displayFilledFace(&in_f, worldMatrix);
+                displayFilledFace(&pf, worldMatrix);
+                printf("BACK  e1: %f    e2: %f    e3: %f\n", e1, e2, e3);
                 return t; /* Two new faces are created. */
             }
-            return -1.f;
         }
     }
     return -1.f;
@@ -236,7 +239,7 @@ const int velocityCollideTest(Mesh *m) {
 const int obbCollision(Mesh *m) {
     const int pks_num = scene.t.quads[m->quadIndex].members_indexes;
     // printf("\x1b[H\x1b[J");
-    // printf("Collision possible\n");
+
     for (int i = 0; i < pks_num; i++) {
         int pk = scene.t.quads[m->quadIndex].members[i];
         if (pk != m->id && pk != 6) {
@@ -259,22 +262,20 @@ const int obbCollision(Mesh *m) {
                         const float t = clippface(anti_plane_p, anti_plane_n, scene.m[pk].bbox.f[j], m->bbox.f[d], m->velocity * -1);
                         // printf("t...: %f\n", t);
                         if (t == 0) {
-                            printf("Sliding...\n");
-                            float dot =  dot_product(anti_plane_n, m->mvdir);
-                            m->mvdir = m->mvdir - (dot * anti_plane_n);
-                            m->velocity = (m->mvdir * m->momentum);
+                            printf("Sliding...: %f\n", t);
+                            float dot =  dot_product(plane_n, m->velocity);
+                            m->velocity = m->velocity - (dot * plane_n);
                             return 0;
                         } else if (t > 0 && t <= 1) {
-                            printf("Collision...\n");
+                            printf("Collision: %f\n", t);
                             m->velocity *= -1;
                             // Mat4x4 trans = translationMatrix(m->velocity[0], m->velocity[1], m->velocity[2]);
                             // setvecsarrayxm(m->cd.v, 4, trans);
                             // setvecsarrayxm(m->bbox.v, m->bbox.v_indexes, trans);
                             // setfacesarrayxm(m->bbox.f, m->bbox.f_indexes, trans);
 
-                            // float dot =  dot_product(anti_plane_n, m->mvdir);
-                            // m->mvdir = m->mvdir - (dot * anti_plane_n);
-                            // m->velocity = (m->mvdir * m->momentum);
+                            // float dot =  dot_product(plane_n, m->velocity);
+                            // m->velocity = m->velocity - (dot * plane_n);
                             return 0;
                         }
                     }
