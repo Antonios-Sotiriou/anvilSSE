@@ -273,7 +273,7 @@ const TerrainPointInfo getTerrainPointData(Mesh *t, vec4f coords, Mesh *m) {
     vec4f za = (((t_coords[0] - xs) * zmz) - ((t_coords[2] - zs) * xmx)) / area;
 
     tp.pos = za[0] * f.v[2] + za[1] * f.v[0] + za[2] * f.v[1];
-    tp.normal = triangle_cp(f);
+    tp.normal = norm_vec(triangle_cp(f));
     tp.quad_index = quad_index;
 
     return tp;

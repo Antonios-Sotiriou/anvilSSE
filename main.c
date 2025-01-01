@@ -352,7 +352,7 @@ const static void keypress(XEvent *event) {
         case 65434 : //sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
             scene.m[1].grounded = 0;
             vec4f mvc = { 0.f, 1.f, 0.f };
-            scene.m[1].velocity = mvc * (movScalar + 0.981f * scene.m[1].mass);
+            scene.m[1].velocity = mvc * (movScalar * scene.m[1].mass);
             scene.m[1].falling_time = 0.f;
             break;
         case 65435 : //sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */

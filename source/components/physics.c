@@ -5,20 +5,19 @@ extern vec4f gravity_epicenter;
 
 const void applyPhysics(Scene *s) {
     Mat4x4 trans;
-
     for (int i = 0; i < s->m_indexes; i++) {
 
         if ( (s->m[i].type != Terrain) && (s->m[i].type != Celestial) ) {
 
             initMeshQuadInfo(&s->m[Terrain_1], &s->m[i]);
 
-            float g_accelaration = 0.f;
-            if ( !s->m[i].grounded ) {
+            /* Apply Gravitational force. */
+            if (!s->m[i].grounded) {
+                float g_accelaration = 0.f;
                 s->m[i].falling_time += DeltaTime;
                 g_accelaration = (9.81f * (s->m[i].falling_time * s->m[i].falling_time));
+                s->m[i].velocity = (gravity_epicenter * g_accelaration) + (s->m[i].velocity);
             }
-
-            s->m[i].velocity = (gravity_epicenter * g_accelaration) + (s->m[i].velocity);
 
             if ( s->m[i].type == Player )
                 terrainHeightDifference(&s->m[Terrain_1], &s->m[i]);
@@ -45,7 +44,7 @@ const void applyPhysics(Scene *s) {
             setvecsarrayxm(s->m[i].bbox.v, s->m[i].bbox.v_indexes, trans);
             setfacesarrayxm(s->m[i].bbox.f, s->m[i].bbox.f_indexes, trans);
 
-            if ( s->m[i].type != Celestial || !s->m[i].grounded )
+            if ( s->m[i].type != Celestial )
                 terrainCollision(&s->m[Terrain_1], &s->m[i]);
         }
     }

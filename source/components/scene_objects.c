@@ -34,6 +34,7 @@ const void initWorldObjects(Scene *s) {
     s->m[0].lodlevels = 0;
     // s->m[0].material.reflect = 1;
     s->m[0].mass = 0;
+    s->m[0].fr_coef = 1.f;
     s->m[0].Q = unitQuat();
     // enWorldMesh(&s->m[0]);     /* Terrain must be in world Space to check for collisions. */
     enworldBbox(&s->m[0]);
@@ -70,7 +71,7 @@ const void initWorldObjects(Scene *s) {
     s->m[1].cull = 1;
     s->m[1].lodlevels = 0;
     // s->m[1].visible = 1;
-    s->m[1].weight = 82 * 9.81;
+    s->m[1].weight = 82;
     s->m[1].mass = s->m[1].weight / 9.81;
     s->m[1].fr_coef = 0.5;
     // s->m[1].grounded = 1;
@@ -226,7 +227,7 @@ const void initWorldObjects(Scene *s) {
     s->m[6].cull = 1;
     s->m[6].lodlevels = 0;
     // s->m[6].visible = 1;
-    s->m[6].weight = 82 * 9.81;
+    s->m[6].weight = 82;
     s->m[6].mass = s->m[6].weight / 9.81;
     s->m[6].fr_coef = 0.5;
     // s->m[6].material.reflect = 1;

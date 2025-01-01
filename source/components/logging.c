@@ -61,6 +61,7 @@ const void logMesh(const Mesh m) {
     printf("meshlod:       %d\n", m.currentlod);
     printf("scale:         %f\n", m.scale);
     printf("visible:       %d\n", m.visible);
+    printf("grounded:      %d\n", m.grounded);
     printf("quadIndex:     %d\n", m.quadIndex);
     printf("bboxv_indexes: %d\n", m.bbox.v_indexes);
     logMaterial(m.material);

@@ -19,8 +19,8 @@ const float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f ve
     float d0, d1, t;
     vec4f line_start, line_end;
 
-    printf("in_f ------------\n");
-    logFace(in_f, 1, 0, 0);
+    // printf("in_f ------------\n");
+    // logFace(in_f, 1, 0, 0);
 
     for (int i = 0; i < 3; i++) {
         line_start = in_f.v[i];
@@ -29,7 +29,6 @@ const float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f ve
         d1 = dist(plane_p, plane_n, line_end);
 
         drawLine(line_start, line_end, worldMatrix);
-        face f = pf;
 
         if (d1 < 0 && d0 >= 0) {
 
@@ -37,7 +36,7 @@ const float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f ve
             float e1 = dot_product(plane_n, cross_product(pf.v[1] - pf.v[0], pf.v[1] - r));
             float e2 = dot_product(plane_n, cross_product(pf.v[2] - pf.v[1], pf.v[2] - r));
             float e3 = dot_product(plane_n, cross_product(pf.v[0] - pf.v[2], pf.v[0] - r));
-            // printf("e1: %f    e2: %f    e3: %f\n", e1, e2, e3);
+
             if (e1 < 0 && e2 < 0 && e3 < 0) {
                 displayPoint(r, worldMatrix, 0xff00a7);
                 return t;
@@ -61,6 +60,9 @@ const void terrainCollision(Mesh *terrain, Mesh *obj) {
         setvecsarrayxm(obj->cd.v, 4, tm);
         setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, tm);
         setfacesarrayxm(obj->bbox.f, obj->bbox.f_indexes, tm);
+
+        float dot =  dot_product(tp.normal, obj->velocity);
+        obj->velocity = (obj->velocity - (dot * tp.normal)) * terrain->fr_coef;
     }
 }
 const void terrainHeightDifference(Mesh *terrain, Mesh *obj) {
