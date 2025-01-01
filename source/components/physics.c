@@ -15,7 +15,7 @@ const void applyPhysics(Scene *s) {
             float g_accelaration = 0.f;
             if ( !s->m[i].grounded ) {
                 s->m[i].falling_time += DeltaTime;
-                g_accelaration = (98.1f * (s->m[i].falling_time * 2));
+                g_accelaration = (9.81f * (s->m[i].falling_time * s->m[i].falling_time));
             }
 
             s->m[i].velocity = (gravity_epicenter * g_accelaration) + (s->m[i].velocity);

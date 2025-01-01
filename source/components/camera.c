@@ -42,11 +42,11 @@ const void move_right(Mesh *m, const float force) {
 }
 /* Moves camera position Up. */
 const void move_up(Mesh *m, const float force) {
-    m->velocity = -m->cd.v[V] * (force * m->mass);
+    m->velocity = m->cd.v[V] * (force * m->mass);
 }
 /* Moves camera position Down. */
 const void move_down(Mesh *m, const float force) {
-    m->velocity = m->cd.v[V] * (force * m->mass);
+    m->velocity = -m->cd.v[V] * (force * m->mass);
 }
 
 

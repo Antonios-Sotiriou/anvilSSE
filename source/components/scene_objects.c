@@ -75,7 +75,8 @@ const void initWorldObjects(Scene *s) {
     s->m[1].fr_coef = 0.5;
     // s->m[1].grounded = 1;
     // s->m[1].material.reflect = 1;
-    s->m[1].Q = unitQuat();
+    // s->m[1].Q = unitQuat();
+    s->m[1].Q = rotationQuat(10, (vec4f){ 0.f, 1.f, 0.f });
     // enWorldMesh(&s->m[1]);
     enworldBbox(&s->m[1]);
 
@@ -111,6 +112,7 @@ const void initWorldObjects(Scene *s) {
     s->m[2].mass = 0.5;
     s->m[2].fr_coef = 0.5;
     // s->m[2].grounded = 1;
+    // s->m[2].Q = unitQuat();
     s->m[2].Q = rotationQuat(45, (vec4f){ 0.f, 1.f, 0.f });
     // enWorldMesh(&s->m[2]);
     enworldBbox(&s->m[2]);

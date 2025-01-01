@@ -19,6 +19,9 @@ const float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f ve
     float d0, d1, t;
     vec4f line_start, line_end;
 
+    printf("in_f ------------\n");
+    logFace(in_f, 1, 0, 0);
+
     for (int i = 0; i < 3; i++) {
         line_start = in_f.v[i];
         line_end = in_f.v[i] + velocity * 100.f;
@@ -26,24 +29,18 @@ const float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f ve
         d1 = dist(plane_p, plane_n, line_end);
 
         drawLine(line_start, line_end, worldMatrix);
+        face f = pf;
 
         if (d1 < 0 && d0 >= 0) {
 
             vec4f r = plane_intersect(plane_p, plane_n, line_start, line_end, &t);
-            float e1 = (r[0] - pf.v[0][0]) * (pf.v[1][1] - pf.v[0][1]) - (r[1] - pf.v[0][1]) * (pf.v[1][0] - pf.v[0][0]);
-            float e2 = (r[0] - pf.v[1][0]) * (pf.v[2][1] - pf.v[1][1]) - (r[1] - pf.v[1][1]) * (pf.v[2][0] - pf.v[1][0]);
-            float e3 = (r[0] - pf.v[2][0]) * (pf.v[0][1] - pf.v[2][1]) - (r[1] - pf.v[2][1]) * (pf.v[0][0] - pf.v[2][0]);
-
-            if (e1 >= 0 && e2 >= 0 && e3 >= 0) {
+            float e1 = dot_product(plane_n, cross_product(pf.v[1] - pf.v[0], pf.v[1] - r));
+            float e2 = dot_product(plane_n, cross_product(pf.v[2] - pf.v[1], pf.v[2] - r));
+            float e3 = dot_product(plane_n, cross_product(pf.v[0] - pf.v[2], pf.v[0] - r));
+            // printf("e1: %f    e2: %f    e3: %f\n", e1, e2, e3);
+            if (e1 < 0 && e2 < 0 && e3 < 0) {
                 displayPoint(r, worldMatrix, 0xff00a7);
-                displayFilledFace(&pf, worldMatrix);
-                printf("FRONT e1: %f    e2: %f    e3: %f\n", e1, e2, e3);
-                return t; /* A new face is created. */
-            } else if (e1 <= 0 && e2 <= 0 && e3 <= 0) {
-                displayPoint(r, worldMatrix, 0xff00a7);
-                displayFilledFace(&pf, worldMatrix);
-                printf("BACK  e1: %f    e2: %f    e3: %f\n", e1, e2, e3);
-                return t; /* Two new faces are created. */
+                return t;
             }
         }
     }

@@ -3,7 +3,22 @@ float e1 = (P.x - V0.x) * (V1.y - V0.y) - (P.y - V0.y) * (V1.x - V0.x);
 float e2 = (P.x - V1.x) * (V2.y - V1.y) - (P.y - V1.y) * (V2.x - V1.x);
 float e3 = (P.x - V2.x) * (V0.y - V2.y) - (P.y - V2.y) * (V0.x - V2.x);
 
+        if (d1 < 0 && d0 >= 0) {
 
+            vec4f r = plane_intersect(plane_p, plane_n, line_start, line_end, &t);
+            float e1 = dot_product(plane_n, cross_product(pf.v[1] - pf.v[0], pf.v[1] - r));
+            float e2 = dot_product(plane_n, cross_product(pf.v[2] - pf.v[1], pf.v[2] - r));
+            float e3 = dot_product(plane_n, cross_product(pf.v[0] - pf.v[2], pf.v[0] - r));
+            printf("e1: %f    e2: %f    e3: %f\n", e1, e2, e3);
+            if (e1 < 0 && e2 < 0 && e3 < 0) {
+                displayPoint(r, worldMatrix, 0xff00a7);
+                // displayFilledFace(&pf, worldMatrix);
+                // printf("FRONT e1: %f    e2: %f    e3: %f\n", e1, e2, e3);
+                return t; /* A new face is created. */
+            }
+        }
+
+        
 /* Check if starting and ending possition of  a vector with velocity collides with the triangle */
 const float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f velocity) {
     float d0, d1, t;
@@ -11,22 +26,30 @@ const float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f ve
 
     for (int i = 0; i < 3; i++) {
         line_start = in_f.v[i];
-        line_end = in_f.v[i] + velocity;
+        line_end = in_f.v[i] + velocity * 100.f;
         d0 = dist(plane_p, plane_n, line_start);
         d1 = dist(plane_p, plane_n, line_end);
 
-        if (d1 < 0 && d0 >= 0) {
-            printf("d0: %f    d1: %f\n", d0, d1);
-            vec4f r = plane_intersect(plane_p, plane_n, line_start, line_end, &t);
-            float e1 = (r[0] - pf.v[0][0]) * (pf.v[1][1] - pf.v[0][1]) - (r[1] - pf.v[0][1]) * (pf.v[1][0] - pf.v[0][0]);
-            float e2 = (r[0] - pf.v[1][0]) * (pf.v[2][1] - pf.v[1][1]) - (r[1] - pf.v[1][1]) * (pf.v[2][0] - pf.v[1][0]);
-            float e3 = (r[0] - pf.v[2][0]) * (pf.v[0][1] - pf.v[2][1]) - (r[1] - pf.v[2][1]) * (pf.v[0][0] - pf.v[2][0]);
+        drawLine(line_start, line_end, worldMatrix);
+        face f = pf;
 
+        if (d1 < 0 && d0 >= 0) {
+
+            vec4f r = plane_intersect(plane_p, plane_n, line_start, line_end, &t);
+            float e1 = (r[0] - f.v[0][0]) * (f.v[1][1] - f.v[0][1]) - (r[1] - f.v[0][1]) * (f.v[1][0] - f.v[0][0]);
+            float e2 = (r[0] - f.v[1][0]) * (f.v[2][1] - f.v[1][1]) - (r[1] - f.v[1][1]) * (f.v[2][0] - f.v[1][0]);
+            float e3 = (r[0] - f.v[2][0]) * (f.v[0][1] - f.v[2][1]) - (r[1] - f.v[2][1]) * (f.v[0][0] - f.v[2][0]);
+
+            printf("e1: %f    e2: %f    e3: %f\n", e1, e2, e3);
             if (e1 >= 0 && e2 >= 0 && e3 >= 0) {
                 displayPoint(r, worldMatrix, 0xff00a7);
+                displayFilledFace(&pf, worldMatrix);
+                // printf("FRONT e1: %f    e2: %f    e3: %f\n", e1, e2, e3);
                 return t; /* A new face is created. */
             } else if (e1 <= 0 && e2 <= 0 && e3 <= 0) {
                 displayPoint(r, worldMatrix, 0xff00a7);
+                displayFilledFace(&pf, worldMatrix);
+                // printf("BACK  e1: %f    e2: %f    e3: %f\n", e1, e2, e3);
                 return t; /* Two new faces are created. */
             }
         }
