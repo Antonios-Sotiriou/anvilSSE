@@ -118,8 +118,9 @@ int STD = 51200;
 
 vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
-const float movScalar = 5.0f;
-const float moveForce = 0.2f;
+float movScalar = 10.f;
+const float moveForce = 10.f;
+vec4f point = { 1500.000000, -0.000055, 1700.000000, 1.000000 };
 
 /* Variables usefull for mesh click select. */
 int mesh_id = 0, primitive_id = 0;
@@ -271,6 +272,12 @@ const static void buttonpress(XEvent *event) {
     mesh_id = data[0];
     primitive_id = data[1];
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    vec4f normal = { -1.f, 0.f, 0.f, 0.f};
+    // point = { 1500.000000, -0.000055, 1700.000000, 1.000000 };
+    vec4f edge1 = (vec4f){ 1500.000000, 0.000000, 1500.000000, 1.000000 } - (vec4f){ 1500.000000, 1000.000000, 2500.000000, 1.000000 };
+    vec4f edge2 = (vec4f){ 1500.000000, 0.000000, 1500.000000, 1.000000 } - point;
+    printf("E: %f\n", dot_product(normal, cross_product(edge1, edge2)));  
 }
 const static void mousemotion(XEvent *event) {
     printf("MotionNotify event received\n");
@@ -329,11 +336,11 @@ const static void keypress(XEvent *event) {
         case 65453 :shadow_bias -= 0.001;             /* - */
             printf("shadow_bias: %f\n", shadow_bias);
             break;
-        case 65450 : SpecularStrength += 0.01f;             /* * */
-            printf("SpecularStrength: %f\n", SpecularStrength);
+        case 65450 : point[1] += 0.0001f;             /* * */
+            logVec4f(point);
             break;
-        case 65455 : SpecularStrength -= 0.01f;             /* / */
-            printf("SpecularStrength: %f\n", SpecularStrength);
+        case 65455 : point[1] -= 0.0001f;             /* / */
+            logVec4f(point);
             break;
         case 65430 : //sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
             // vec4f mva = norm_vec(camera[N] - camera[U]);
@@ -361,7 +368,7 @@ const static void keypress(XEvent *event) {
             break;
         case 65431 : //sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
             // vec4f mve = norm_vec(scene.m[Camera_1].cd.v[U] + scene.m[Camera_1].cd.v[N]);
-            vec4f mve = { 0.f, 0.f, 1.f };
+            vec4f mve = { 0.5f, 0.f, 0.5f };
             scene.m[1].velocity = mve * movScalar;
             scene.m[1].roll = 1;
             break;
@@ -385,11 +392,11 @@ const static void keypress(XEvent *event) {
                 rotateMesh(&scene.m[mesh_id], 10, 1.f, 0.f, 0.0f);
             }
             break;
-        case 43 : AmbientStrength += 0.01;                                    /* + */
-            printf("AmbientStrength: %f\n", AmbientStrength);
+        case 43 : movScalar += 500;                                    /* + */
+            printf("movScalar: %f\n", movScalar);
             break;
-        case 45 : AmbientStrength -= 0.01;                                   /* - */
-            printf("AmbientStrength: %f\n", AmbientStrength);
+        case 45 : movScalar -= 500;                                   /* - */
+            printf("movScalar: %f\n", movScalar);
             break;
         case 112 :
             if (PROJECTBUFFER == 7)
@@ -431,6 +438,8 @@ const static void keyrelease(XEvent *event) {
     // printf("Key Released: %ld\n", keysym);
     scene.m[EYEPOINT].velocity -= scene.m[EYEPOINT].velocity;
     scene.m[EYEPOINT].rot_angle = 0;
+
+    scene.m[1].velocity -= scene.m[1].velocity;
 
     if ( keysym == 99 )
         scene.m[mesh_id].rot_angle = 0;

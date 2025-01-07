@@ -16,7 +16,7 @@
 /* Defined in main.c */
 extern int COLLISION, COLLIDINGFACE, COLLIDINGMESH;
 extern float DeltaTime;
-extern const float movScalar;
+extern float movScalar;
 extern vec4f gravity_epicenter;
 extern Scene scene;
 
