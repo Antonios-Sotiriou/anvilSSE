@@ -31,7 +31,8 @@ const float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f ve
 
         d0 = dist(plane_p, plane_n, line_start[i]);
         d1 = dist(plane_p, plane_n, line_end[i]);
-
+        if (dot1 == 0)
+        return -1;
         // drawLine(line_start[i], line_end[i], worldMatrix);
         if (dot1 == -1.f) {
             // printf("dot1 == -1\n");
@@ -298,7 +299,7 @@ const int obbCollision(Mesh *m) {
 
                 for (int d = 0; d < m->bbox.f_indexes; d++) {
 
-                    float d0 = dist(plane_p, plane_n, (m->cd.v[0]));
+                    float d0 = dist(plane_p, plane_n, m->cd.v[0]);
                     if (d0 >= 0 && dot_product(m->velocity, plane_n) < 0) {
 
                         vec4f anti_plane_n = norm_vec(triangle_cp(m->bbox.f[d]));
