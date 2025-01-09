@@ -374,7 +374,7 @@ const static void keypress(XEvent *event) {
             break;
         case 65433 : //sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
             // vec4f mvf = -norm_vec(scene.m[Camera_1].cd.v[U] + scene.m[Camera_1].cd.v[N]);
-            vec4f mvf = { 0.f, 0.f, -1.f };
+            vec4f mvf = { -0.5f, 0.f, -0.5f };
             scene.m[1].velocity = mvf * movScalar;
             scene.m[1].roll = 1;
             break;

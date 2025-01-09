@@ -533,3 +533,34 @@ const int obbCollision(Mesh *m) {
     return 0;
 }
 
+
+
+    // Mat4x4 trans = translationMatrix(velocity[0], velocity[1], velocity[2]);
+    // face f = facexm(in_f, trans);
+
+    float dot, temp;
+    vec4f vm, vs;
+    float min_m = __INT_MAX__, max_m = -__INT_MAX__, min_s = __INT_MAX__, max_s = -__INT_MAX__;
+    for (int i = 0; i < 3; i++) {
+        dot = dot_product(plane_n, pf.v[i]);
+        if (dot < min_m) {
+            vm = pf.v[i];
+            min_m = dot;
+        }
+        max_m = dot > max_m ? dot : max_m;
+
+        dot = dot_product(plane_n, f.v[i]);
+        if (dot < min_s) {
+            vs = in_f.v[i];
+            min_s = dot;
+        }
+        max_s = dot > max_s ? dot : max_s;
+    }
+
+    if ( (min_m >= max_s) || (max_m <= min_s) ) {
+        return t;
+    }
+    drawLine(vm, vs, worldMatrix);
+    displayFace(&in_f, worldMatrix);
+    displayFace(&pf, worldMatrix);
+    return 0;
