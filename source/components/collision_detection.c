@@ -127,8 +127,8 @@ float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f velocity
         pf.v[2] - pf.v[0]
     };
     if (dot1 != 0) {
-        // displayFace(&in_f, worldMatrix);
-        // displayFace(&pf, worldMatrix);
+        displayFace(&in_f, worldMatrix);
+        displayFace(&pf, worldMatrix);
         // drawLine(pf.v[1], pf.v[2], worldMatrix);
         // drawLine(in_f.v[0], in_f.v[1], worldMatrix);
     
@@ -143,7 +143,7 @@ float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f velocity
                 e2 = dot_product(plane_n, cross_product(edges[1], pf.v[1] - temp_p));
                 e3 = dot_product(plane_n, cross_product(edges[2], pf.v[2] - temp_p));
 
-                if (e1 >= 0 && e2 >= 0 && e3 >= 0) {
+                if (e1 > 0 && e2 > 0 && e3 > 0) {
                     // vec4f temp_p = plane_intersect(in_f.v[0], moving_n, r + -velocity, r, &temp);
                     if (temp < t) {
                         t = temp;
@@ -184,7 +184,7 @@ float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f velocity
 
                     // drawLine(temp_v, test1, worldMatrix);
                     // displayPoint(test1, worldMatrix, 0xff00a7);
-                    printf("test %d: %f\n", i, test);
+                    // printf("test %d: %f\n", i, test);
 
                     if (temp < t) {
                         t = temp;
@@ -195,7 +195,7 @@ float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f velocity
                         // drawLine(r, r + -velocity * 100, worldMatrix);
                     }
                 }
-                printf("\n");
+                // printf("\n");
             }
         }
     }
@@ -385,30 +385,32 @@ const int obbCollision(Mesh *m) {
         int pk = scene.t.quads[m->quadIndex].members[i];
         if (pk != m->id && pk != 6) {
 
-            // for (int j = 0; j < scene.m[pk].bbox.f_indexes; j++) {
-                plane_n = norm_vec(triangle_cp(scene.m[pk].bbox.f[6]));
+            for (int j = 0; j < scene.m[pk].bbox.f_indexes; j++) {
+                plane_n = norm_vec(triangle_cp(scene.m[pk].bbox.f[j]));
                 plane_p = scene.m[pk].cd.v[0] + (plane_n * scene.m[pk].scale);
 
-                // for (int d = 0; d < m->bbox.f_indexes; d++) {
+                for (int d = 0; d < m->bbox.f_indexes; d++) {
 
                     float d0 = dist(plane_p, plane_n, m->cd.v[0]);
                     if (d0 >= 0) {
-                        // if (dot_product(m->velocity, plane_n) < 0) {
-                            // displayFilledFace(&scene.m[pk].bbox.f[6], worldMatrix);
+                        if (dot_product(m->velocity, plane_n) < 0) {
+                            // displayFilledFace(&scene.m[pk].bbox.f[j], worldMatrix);
+                            // displayFace(&scene.m[pk].bbox.f[j], worldMatrix);
 
-                            vec4f anti_plane_n = norm_vec(triangle_cp(m->bbox.f[2]));
+                            vec4f anti_plane_n = norm_vec(triangle_cp(m->bbox.f[d]));
                             vec4f anti_plane_p = m->cd.v[0] + (anti_plane_n * m->scale);
                             
                             float temp;
-                            // if (dot_product(m->velocity, anti_plane_n) > 0) {
-                                // displayFilledFace(&m->bbox.f[2], worldMatrix);
+                            if (dot_product(m->velocity, anti_plane_n) > 0) {
+                                // displayFilledFace(&m->bbox.f[d], worldMatrix);
+                                // displayFace(&m->bbox.f[d], worldMatrix);
 
-                                t = clippface(plane_p, plane_n, m->bbox.f[2], scene.m[pk].bbox.f[6], m->velocity);
+                                t = clippface(plane_p, plane_n, m->bbox.f[d], scene.m[pk].bbox.f[j], m->velocity);
                                 // printf("t: %f\n", t);
-                                // if (t > 0 && t < 0.00009f)
+                                // if (t > 0 && t < 0.0009f)
                                 //     t = 0.f;
                                 if (t == 0.f) {
-                                    // printf("Sliding...: %f\n", t);
+                                    printf("Sliding...: %f\n", t);
 
                                     float dot =  dot_product(plane_n, m->velocity);
                                     m->velocity = m->velocity - (dot * plane_n);
@@ -423,7 +425,7 @@ const int obbCollision(Mesh *m) {
 
                                     return 1;
                                 } else if (t > 0.f && t <= 1.f) {
-                                    // printf("Collision: %f\n", t);
+                                    printf("Collision: %f\n", t);
 
                                     // displayFilledFace(&col_fm, worldMatrix);
                                     // displayFilledFace(&col_fs, worldMatrix);
@@ -439,22 +441,12 @@ const int obbCollision(Mesh *m) {
                                     float dot =  dot_product(plane_n, m->velocity);
                                     m->velocity = m->velocity - (dot * plane_n);
                                     return 1;
-                                } //else if ( t < 0 && t >= -1) {
-                                //     m->velocity *= 1 - t;
-                                //     Mat4x4 trans = translationMatrix(-m->velocity[0], -m->velocity[1], -m->velocity[2]);
-                                //     setvecsarrayxm(m->cd.v, 4, trans);
-                                //     setvecsarrayxm(m->bbox.v, m->bbox.v_indexes, trans);
-                                //     setfacesarrayxm(m->bbox.f, m->bbox.f_indexes, trans);
-
-                                //     float dot =  dot_product(plane_n, m->velocity);
-                                //     m->velocity = m->velocity - (dot * plane_n);
-                                //     return 1; 
-                                // }
-                            // }
-                        // }
+                                }
+                            }
+                        }
                     }
-                // }
-            // }
+                }
+            }
         }
     }
     return 0;
