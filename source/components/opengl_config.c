@@ -41,16 +41,6 @@ const void createBuffers(void) {
 }
 const void createTextures(void) {
     /* Main Textures. */
-    int tex_num = 0;
-    for (int i = GL_TEXTURE0; i <= GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS - 1; i++) {
-        printf("GL_TEXTURE%d : %d\n", tex_num, i);
-        tex_num++;
-    }
-    printf("tex_num : %d\n", tex_num);
-    printf("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: %d\n", GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS);
-    printf("GL_MAX_TEXTURE_IMAGE_UNITS: %d\n", GL_MAX_TEXTURE_IMAGE_UNITS);
-    printf("GL_MAX_TEXTURE_UNITS: %d\n", GL_MAX_TEXTURE_UNITS);
-
     glGenTextures(4, testTexture);
     printf("testTexture: %d, %d, %d, %d\n", testTexture[0], testTexture[1], testTexture[2], testTexture[3]);
 

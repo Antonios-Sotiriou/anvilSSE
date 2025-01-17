@@ -2,6 +2,16 @@
 
 const static vec4i mask1 = { 1, 2, 0, 3 }, mask2 = { 2, 0, 1, 3 };
 
+/* floors a vector. */
+const vec4f floor_vec4f(const vec4f v) {
+    vec4f r = __builtin_convertvector(__builtin_convertvector(v, vec4i), vec4f);
+    return r;
+}
+/* round a vector. */
+const vec4f round_vec4f(const vec4f v) {
+    vec4f r = __builtin_convertvector(__builtin_convertvector(v + 0.5, vec4i), vec4f);
+    return r;
+}
 /* Computes the length of a vector with the use of Pythagorean Theorem. */
 const float len_vec(const vec4f v) {
     return sqrtf(dot_product(v, v));

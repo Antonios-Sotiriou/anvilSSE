@@ -1,5 +1,4 @@
 #include "../../headers/components/collision_detection.h"
-float e1, e2, e3;
 vec4f r, n;
 /* Return signed shortest distance from point to plane, plane normal must be normalised. */
 const float dist(vec4f plane_p, vec4f plane_n, vec4f v) {
@@ -16,192 +15,148 @@ const vec4f plane_intersect(vec4f plane_p, vec4f plane_n, vec4f line_start, vec4
 
     return line_start + line_ti;
 }
-float clippface(vec4f plane_p, vec4f plane_n, face in_f, face pf, vec4f velocity) {
-    float d0, d1, t = 1000, test;
+float clippface(face sf, face mf, vec4f velocity, vec4f spivot, vec4f mpivot) {
+    float d0, d1, t = __INT_MAX__;
+    vec4f stable_n = norm_vec(triangle_cp(sf));
+    vec4f moving_n = norm_vec(triangle_cp(mf));
+    float dot1 = dot_product(stable_n, moving_n);
 
-    Mat4x4 trans = translationMatrix(velocity[0], velocity[1], velocity[2]);
-    face f = facexm(in_f, trans);
+    displayFace(&mf, worldMatrix);
+    displayFace(&sf, worldMatrix);
 
-    vec4f line_start[3] = { f.v[0], f.v[1], f.v[2] };
-    vec4f line_end[3] = { f.v[1], f.v[2], f.v[0] };
-
-    vec4f moving_n = norm_vec(triangle_cp(in_f));
-    float dot1 = dot_product(plane_n, moving_n);
-
-    // vec4f cp[4];
-    // cp[0] = norm_vec(velocity);
-    // cp[1] = norm_vec(cross_product(pf.v[1] - pf.v[0], pf.v[1] * (plane_n * 10.f)));
-    // cp[2] = norm_vec(cross_product(pf.v[2] - pf.v[1], pf.v[2] * (plane_n * 10.f)));
-    // cp[3] = norm_vec(cross_product(pf.v[0] - pf.v[2], pf.v[0] * (plane_n * 10.f)));
-
-    // if (dot1 == 0) {
-    //     printf("Zero dot\n");
-    //     float dot, temp = __INT_MAX__;
-    //     float min_m, max_m, min_s, max_s;
-    //     for (int x = 0; x < 4; x++) {
-    //         min_m = __INT_MAX__, max_m = -__INT_MAX__, min_s = __INT_MAX__, max_s = -__INT_MAX__;
-    //         for (int i = 0; i < 3; i++) {
-    //             min_m = (dot = dot_product(cp[x], pf.v[i])) < min_m ? dot : min_m;
-    //             max_m = dot > max_m ? dot : max_m;
-
-    //             min_s = (dot = dot_product(cp[x], f.v[i])) < min_s ? dot : min_s;
-    //             max_s = dot > max_s ? dot : max_s;
-    //         }
-
-    //         if ( (min_m >= max_s) || (max_m <= min_s) ) {
-    //             return -1;
-    //         }
-    //     }
-    //     float a0 = dist(plane_p, plane_n, in_f.v[0]);
-    //     float a1 = dist(plane_p, plane_n, in_f.v[1]);
-    //     float a2 = dist(plane_p, plane_n, in_f.v[2]);
-    //     int index = 0;
-    //     if (a0 < a1 && a0 < a2) {
-    //         index = 0;
-    //     } else if (a1 < a0 && a1 < a2) {
-    //         index = 1;
-    //     } else if (a2 < a0 && a2 < a1) {
-    //         index = 2;
-    //     }
-    //     r = plane_intersect(plane_p, plane_n, in_f.v[index], in_f.v[index] + velocity, &t);
-    //     // displayPoint(in_f.v[index], worldMatrix, 0xff00a7);
-    //     drawLine(in_f.v[index], in_f.v[index] + (velocity * 100.f), worldMatrix);
-    //     displayFace(&in_f, worldMatrix);
-    //     return t;
-    // }
-
-    // if (dot1 == -1.f) {
-    //     // printf("Dot is -1\n");
-    //     float dot;
-    //     float min_m, max_m, min_s, max_s;
-    //     for (int x = 0; x < 3; x++) {
-    //         min_m = __INT_MAX__, max_m = -__INT_MAX__, min_s = __INT_MAX__, max_s = -__INT_MAX__;
-    //         for (int i = 0; i < 3; i++) {
-    //             min_m = (dot = dot_product(cp[x], pf.v[i])) < min_m ? dot : min_m;
-    //             max_m = dot > max_m ? dot : max_m;
-
-    //             min_s = (dot = dot_product(cp[x], f.v[i])) < min_s ? dot : min_s;
-    //             max_s = dot > max_s ? dot : max_s;
-    //         }
-
-    //         if ( (min_m >= max_s) || (max_m <= min_s) ) {
-    //             return t;
-    //         }
-
-    //     }
-
-    //     r = plane_intersect(plane_p, plane_n, in_f.v[0], in_f.v[0] + velocity, &t);
-    //     drawLine(r, r + (velocity * 100.f), worldMatrix);
-    //     // displayPoint(r, worldMatrix, 0xff00a7);
-    //     return t;
-    // }
-
-    // printf("pf.v[1]  : %d %d    pf.v[2]  : %d %d\n", (int)pf.v[1][0], (int)pf.v[1][1], (int)pf.v[2][0], (int)pf.v[2][1]);
-    // printf("in_f.v[1]: %d %d    in_f.v[2]: %d %d\n", (int)in_f.v[1][0], (int)in_f.v[1][1], (int)in_f.v[2][0], (int)in_f.v[2][1]);
-
-    // vec4f cp1 = cross_product(pf.v[2] - pf.v[1], in_f.v[0] - pf.v[2]);
-    // vec4f cp2 = cross_product(pf.v[2] - pf.v[1], in_f.v[1] - pf.v[2]);
-
-    // vec4f cp1 = norm_vec(cross_product(in_f.v[1] - in_f.v[0], in_f.v[1] - pf.v[1]));
-    // vec4f cp2 = norm_vec(cross_product(in_f.v[1] - in_f.v[0], in_f.v[1] - pf.v[2]));
-    // logVec4f(cp1);
-    // logVec4f(cp2);
-    // vec4f cp1 = cross_product(pf.v[1], pf.v[2]);
-    // vec4f cp2 = cross_product(in_f.v[1], in_f.v[0]);
-    // vec4f cp3 = cross_product(cp1, cp2);
-    // cp3 /= 1;
-    // cp3[1] /= cp3[2];
-    // drawLine(pf.v[2], pf.v[2] + (cp1 * 100.f), worldMatrix);
-    // drawLine(in_f.v[1], in_f.v[1] + (cp2 * 100.f), worldMatrix);
-
-    // float x = dot_product(cp1, cross_product(pf.v[1] - pf.v[2], pf.v[2] - in_f.v[0][0]));
-    // float y = dot_product(cp1, cross_product(pf.v[1] - pf.v[2], pf.v[2] - in_f.v[1][0]));
-    // printf("x : %f    Y : %f\n", x, y);
-    // drawLine(pf.v[1], pf.v[1] + (norm_vec(cp1) * 100.f), worldMatrix);
-    // drawLine(cp3, cp3 + (velocity * 100.f), worldMatrix);
-    // drawLine(cp1, cp2, worldMatrix);
-
-    vec4f edges[3] = {
-        pf.v[0] - pf.v[1],
-        pf.v[1] - pf.v[2],
-        pf.v[2] - pf.v[0]
+    // ############################################## VECTORS COLLIDE ##########################################################
+    vec4f s_edges[3] = {
+        sf.v[0] - sf.v[1],
+        sf.v[1] - sf.v[2],
+        sf.v[2] - sf.v[0]
     };
-    if (dot1 != 0) {
-        displayFace(&in_f, worldMatrix);
-        displayFace(&pf, worldMatrix);
-        // drawLine(pf.v[1], pf.v[2], worldMatrix);
-        // drawLine(in_f.v[0], in_f.v[1], worldMatrix);
-    
-        int vec_col = 0;
+    vec4f m_edges[3] = {
+        mf.v[0] - mf.v[1],
+        mf.v[1] - mf.v[2],
+        mf.v[2] - mf.v[0]
+    };
+    int m_collide = 0;
+    for (int i = 0; i < 3; i++) {
+        d0 = dist(sf.v[0], stable_n, mf.v[i]);
+        d1 = dist(sf.v[0], stable_n, mf.v[i] + velocity);
+        float temp;
+        if (d1 <= 0 && d0 >= 0) {
+            // drawLine(mf.v[i], mf.v[i] + (velocity * 1000), worldMatrix);
+
+            vec4f temp_p = plane_intersect(sf.v[0], stable_n, mf.v[i], mf.v[i] + velocity, &temp);
+            if ( dot_product(stable_n, cross_product(s_edges[0], sf.v[0] - temp_p)) <= 0 ) continue;
+            if ( dot_product(stable_n, cross_product(s_edges[1], sf.v[1] - temp_p)) <= 0 ) continue;
+            if ( dot_product(stable_n, cross_product(s_edges[2], sf.v[2] - temp_p)) <= 0 ) continue;
+
+            if ( temp < t && (temp >= 0 && temp <= 1) ) {
+                t = temp;
+                r = temp_p;
+                n = stable_n;
+                drawLine(temp_p, temp_p + (velocity * 1000), worldMatrix);
+                displayPoint(temp_p, worldMatrix, 0xff0000);
+                m_collide++;
+            }
+        }
+    }
+    int s_collide = 0;
+    if (!m_collide) {
         for (int i = 0; i < 3; i++) {
-            d0 = dist(plane_p, plane_n, in_f.v[i]);
-            d1 = dist(plane_p, plane_n, in_f.v[i] + velocity);
+            d0 = dist(mf.v[0], moving_n, sf.v[i]);
+            d1 = dist(mf.v[0], moving_n, sf.v[i] - velocity);
             float temp;
             if (d1 <= 0 && d0 >= 0) {
-                vec4f temp_p = plane_intersect(plane_p, plane_n, in_f.v[i], in_f.v[i] + velocity, &temp);
-                e1 = dot_product(plane_n, cross_product(edges[0], pf.v[0] - temp_p));
-                e2 = dot_product(plane_n, cross_product(edges[1], pf.v[1] - temp_p));
-                e3 = dot_product(plane_n, cross_product(edges[2], pf.v[2] - temp_p));
+                // drawLine(sf.v[i], sf.v[i] - (velocity * 1000), worldMatrix);
 
-                if (e1 > 0 && e2 > 0 && e3 > 0) {
-                    // vec4f temp_p = plane_intersect(in_f.v[0], moving_n, r + -velocity, r, &temp);
-                    if (temp < t) {
-                        t = temp;
-                        // displayPoint(r, worldMatrix, 0x00ff28);
-                        // displayPoint(temp_p, worldMatrix, 0xff00a7);
-                        r = temp_p;
-                        drawLine(temp_p, temp_p + -velocity * 100.f, worldMatrix);
-                        vec_col++;
-                    }
+                vec4f temp_p = plane_intersect(mf.v[0], moving_n, sf.v[i], sf.v[i] - velocity, &temp);
+                if ( dot_product(moving_n, cross_product(m_edges[0], mf.v[0] - temp_p)) <= 0 ) continue;
+                if ( dot_product(moving_n, cross_product(m_edges[1], mf.v[1] - temp_p)) <= 0 ) continue;
+                if ( dot_product(moving_n, cross_product(m_edges[2], mf.v[2] - temp_p)) <= 0 ) continue;
+
+                if ( temp < t && (temp >= 0 && temp <= 1) ) {
+                    t = temp;
+                    r = temp_p;
+                    n = moving_n;
+                    drawLine(temp_p, temp_p - (velocity * 1000), worldMatrix);
+                    displayPoint(temp_p, worldMatrix, 0x00ff00);
+                    s_collide++;
                 }
             }
         }
-        if (vec_col)
-            return t;
     }
-    for (int x = 0; x < 3; x++) {
-        d0 = dist(plane_p, plane_n, line_end[x]);
-        d1 = dist(plane_p, plane_n, line_start[x]);
-        if (d1 != d0 && (d1 <= 0 && d0 >= 0)) {
-            r = plane_intersect(plane_p, plane_n, line_end[x], line_start[x], &test);
-            e1 = dot_product(plane_n, cross_product(edges[0], pf.v[0] - r));
-            e2 = dot_product(plane_n, cross_product(edges[1], pf.v[1] - r));
-            e3 = dot_product(plane_n, cross_product(edges[2], pf.v[2] - r));
-            // displayPoint(r, worldMatrix, 0xff00a7);
+    if (m_collide || s_collide) {
+        printf("Vector collision\n");
+        return t;
+    }
+    // ############################################## VECTORS COLLIDE ##########################################################
+    float dot, depth = __INT_MAX__;
+    float min_m, max_m, min_s, max_s;
+    vec4f norms[11] = {
+        stable_n,
+        moving_n,
+        cross_product(m_edges[0], norm_vec(s_edges[0])),
+        cross_product(m_edges[0], norm_vec(s_edges[1])),
+        cross_product(m_edges[0], norm_vec(s_edges[2])),
+        cross_product(m_edges[1], norm_vec(s_edges[0])),
+        cross_product(m_edges[1], norm_vec(s_edges[1])),
+        cross_product(m_edges[1], norm_vec(s_edges[2])),
+        cross_product(m_edges[2], norm_vec(s_edges[0])),
+        cross_product(m_edges[2], norm_vec(s_edges[1])),
+        cross_product(m_edges[2], norm_vec(s_edges[2])),
+    };
+    vec4f temp_min_s, temp_min_m, temp_max_s, temp_max_m, temp_vm, temp_vs, temp_n;
 
-            float temp;
-            if (e1 >= 0 && e2 >= 0 && e3 >= 0) {
-                
-                vec4f normal, temp_v;
-                for (int i = 0; i < 3; i++) {
-                    normal = norm_vec(cross_product(edges[i], pf.v[i] * (plane_n * 10.f)));
+    for (int x = 0; x < 11; x++) {
+        min_m = __INT_MAX__, max_m = -__INT_MAX__, min_s = __INT_MAX__, max_s = -__INT_MAX__;
+        if ((norms[x][0] + norms[x][1] + norms[x][2]) == 0)
+            continue;
+        for (int i = 0; i < 3; i++) {
+            if ( (dot = dot_product(norms[x], mf.v[i])) < min_m ) {
+                min_m = dot;
+                temp_min_m = mf.v[i];
+            }
+            if (dot > max_m) {
+                max_m = dot;
+                temp_max_m = mf.v[i];
+            }
 
-                    // drawLine(pf.v[i], pf.v[i] + (normal * 100), worldMatrix);
-                    drawLine(r, r + (-normal * 100), worldMatrix);
+            if ( (dot = dot_product(norms[x], sf.v[i])) < min_s ) {
+                min_s = dot;
+                temp_min_s = sf.v[i];
+            }
+            if (dot > max_s) {
+                max_s = dot;
+                temp_max_s = sf.v[i];
+            }
+        }
 
-                    temp_v = plane_intersect(pf.v[i], normal, r, r + (-normal * 10000.f), &test);
-                    vec4f test1 = plane_intersect(in_f.v[i], moving_n, temp_v, temp_v + (-velocity), &temp);
+        if ( (min_m >= max_s) || (max_m <= min_s) ) {
+            return -1;
+        }
 
-                    // drawLine(temp_v, test1, worldMatrix);
-                    // displayPoint(test1, worldMatrix, 0xff00a7);
-                    // printf("test %d: %f\n", i, test);
+        float da = max_s - min_m;
+        float db = max_m - min_s;
+        float axis_depth = da < db ? da : db;
+        if (axis_depth < depth) {
+            depth = axis_depth;
 
-                    if (temp < t) {
-                        t = temp;
-                        drawLine(test1, temp_v + (moving_n * 1000.f), worldMatrix);
-                        // displayPoint(r, worldMatrix, 0x00ff28);
-                        // displayPoint(temp_p, worldMatrix, 0xff00a7);
-                        // r = temp_v;
-                        // drawLine(r, r + -velocity * 100, worldMatrix);
-                    }
-                }
-                // printf("\n");
+            if (min_m >= max_s || (min_m < max_s && min_m > min_s)) {
+                temp_vm = temp_min_m;
+                temp_vs = temp_max_s;
+                temp_n = norms[x];
+                // printf("min_m: %f    min_s: %f ---- max_m: %f    max_s: %f\n", min_m, min_s, max_m, max_s);
+            } else if (max_m <= min_s || (max_m > min_s && max_m < max_s)) {
+                temp_vm = temp_max_m;
+                temp_vs = temp_min_s;
+                temp_n = -norms[x];
             }
         }
     }
-    if (t != 1000)
-        printf("t: %f\n", t);
-    return t;
+
+    // if (dot_product(temp_n, velocity) <= 0)
+    //     return -1;
+
+    printf("Edge collision\n");
+    return 1000;
 }
 
 
@@ -384,37 +339,39 @@ const int obbCollision(Mesh *m) {
     for (int i = 0; i < pks_num; i++) {
         int pk = scene.t.quads[m->quadIndex].members[i];
         if (pk != m->id && pk != 6) {
-
-            for (int j = 0; j < scene.m[pk].bbox.f_indexes; j++) {
-                plane_n = norm_vec(triangle_cp(scene.m[pk].bbox.f[j]));
+            // logFace(scene.m[pk].bbox.f[6], 1, 0, 0);
+            // printf("\n");
+            // logFace(m->bbox.f[2], 1, 0, 0);
+            // for (int j = 0; j < scene.m[pk].bbox.f_indexes; j++) {
+                plane_n = norm_vec(triangle_cp(scene.m[pk].bbox.f[6]));
                 plane_p = scene.m[pk].cd.v[0] + (plane_n * scene.m[pk].scale);
 
-                for (int d = 0; d < m->bbox.f_indexes; d++) {
+                // for (int d = 0; d < m->bbox.f_indexes; d++) {
 
                     float d0 = dist(plane_p, plane_n, m->cd.v[0]);
-                    if (d0 >= 0) {
-                        if (dot_product(m->velocity, plane_n) < 0) {
-                            // displayFilledFace(&scene.m[pk].bbox.f[j], worldMatrix);
-                            // displayFace(&scene.m[pk].bbox.f[j], worldMatrix);
+                    // if (d0 >= 0) {
+                        // if (dot_product(m->velocity, plane_n) < 0) {
+                            // displayFilledFace(&scene.m[pk].bbox.f[6], worldMatrix);
+                            // displayFace(&scene.m[pk].bbox.f[6], worldMatrix);
 
-                            vec4f anti_plane_n = norm_vec(triangle_cp(m->bbox.f[d]));
+                            vec4f anti_plane_n = norm_vec(triangle_cp(m->bbox.f[2]));
                             vec4f anti_plane_p = m->cd.v[0] + (anti_plane_n * m->scale);
                             
                             float temp;
-                            if (dot_product(m->velocity, anti_plane_n) > 0) {
-                                // displayFilledFace(&m->bbox.f[d], worldMatrix);
-                                // displayFace(&m->bbox.f[d], worldMatrix);
+                            // if (dot_product(m->velocity, anti_plane_n) > 0) {
+                                // displayFilledFace(&m->bbox.f[2], worldMatrix);
+                                // displayFace(&m->bbox.f[2], worldMatrix);
 
-                                t = clippface(plane_p, plane_n, m->bbox.f[d], scene.m[pk].bbox.f[j], m->velocity);
+                                t = clippface(scene.m[pk].bbox.f[6], m->bbox.f[2], m->velocity, scene.m[pk].cd.v[0], m->cd.v[0]);
                                 // printf("t: %f\n", t);
                                 // if (t > 0 && t < 0.0009f)
                                 //     t = 0.f;
                                 if (t == 0.f) {
                                     printf("Sliding...: %f\n", t);
 
-                                    float dot =  dot_product(plane_n, m->velocity);
-                                    m->velocity = m->velocity - (dot * plane_n);
-                                    if (plane_n[1] == 1)
+                                    float dot =  dot_product(n, m->velocity);
+                                    m->velocity = m->velocity - (dot * n);
+                                    if (n[1] == 1)
                                         m->falling_time = 0;
                                     // m->velocity = (gravity_epicenter * (9.81f * (m->falling_time * m->falling_time))) + (m->velocity);
 
@@ -438,15 +395,15 @@ const int obbCollision(Mesh *m) {
                                     setvecsarrayxm(m->bbox.v, m->bbox.v_indexes, trans);
                                     setfacesarrayxm(m->bbox.f, m->bbox.f_indexes, trans);
 
-                                    float dot =  dot_product(plane_n, m->velocity);
-                                    m->velocity = m->velocity - (dot * plane_n);
+                                    float dot =  dot_product(n, m->velocity);
+                                    m->velocity = m->velocity - (dot * n);
                                     return 1;
                                 }
-                            }
-                        }
-                    }
-                }
-            }
+                            // }
+                        // }
+                    // }
+                // }
+            // }
         }
     }
     return 0;
