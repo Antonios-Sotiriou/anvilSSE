@@ -88,75 +88,46 @@ float clippface(face sf, face mf, vec4f velocity, vec4f spivot, vec4f mpivot) {
         return t;
     }
     // ############################################## VECTORS COLLIDE ##########################################################
-    float dot, depth = __INT_MAX__;
-    float min_m, max_m, min_s, max_s;
-    vec4f norms[11] = {
-        stable_n,
-        moving_n,
-        cross_product(m_edges[0], norm_vec(s_edges[0])),
-        cross_product(m_edges[0], norm_vec(s_edges[1])),
-        cross_product(m_edges[0], norm_vec(s_edges[2])),
-        cross_product(m_edges[1], norm_vec(s_edges[0])),
-        cross_product(m_edges[1], norm_vec(s_edges[1])),
-        cross_product(m_edges[1], norm_vec(s_edges[2])),
-        cross_product(m_edges[2], norm_vec(s_edges[0])),
-        cross_product(m_edges[2], norm_vec(s_edges[1])),
-        cross_product(m_edges[2], norm_vec(s_edges[2])),
-    };
-    vec4f temp_min_s, temp_min_m, temp_max_s, temp_max_m, temp_vm, temp_vs, temp_n;
+    Mat4x4 trans = translationMatrix(velocity[0], velocity[1], velocity[2]);
+    face f = facexm(mf, trans);
+    vec4f line_start[3] = { f.v[0], f.v[1], f.v[2] };
+    vec4f line_end[3] = { f.v[1], f.v[2], f.v[0] };
 
-    for (int x = 0; x < 11; x++) {
-        min_m = __INT_MAX__, max_m = -__INT_MAX__, min_s = __INT_MAX__, max_s = -__INT_MAX__;
-        if ((norms[x][0] + norms[x][1] + norms[x][2]) == 0)
-            continue;
-        for (int i = 0; i < 3; i++) {
-            if ( (dot = dot_product(norms[x], mf.v[i])) < min_m ) {
-                min_m = dot;
-                temp_min_m = mf.v[i];
-            }
-            if (dot > max_m) {
-                max_m = dot;
-                temp_max_m = mf.v[i];
-            }
+    float test;
+    for (int x = 0; x < 3; x++) {
+        d0 = dist(sf.v[0], stable_n, line_end[x]);
+        d1 = dist(sf.v[0], stable_n, line_start[x]);
 
-            if ( (dot = dot_product(norms[x], sf.v[i])) < min_s ) {
-                min_s = dot;
-                temp_min_s = sf.v[i];
-            }
-            if (dot > max_s) {
-                max_s = dot;
-                temp_max_s = sf.v[i];
-            }
-        }
+        if (d1 != d0 && (d1 <= 0 && d0 >= 0)) {
+            r = plane_intersect(sf.v[0], stable_n, line_end[x], line_start[x], &test);
+            if ( dot_product(stable_n, cross_product(s_edges[0], sf.v[0] - r)) <= 0 ) continue;
+            if ( dot_product(stable_n, cross_product(s_edges[1], sf.v[1] - r)) <= 0 ) continue;
+            if ( dot_product(stable_n, cross_product(s_edges[2], sf.v[2] - r)) <= 0 ) continue;
 
-        if ( (min_m >= max_s) || (max_m <= min_s) ) {
-            return -1;
-        }
+            float temp;
+                
+            vec4f normal, temp_v;
+            for (int i = 0; i < 3; i++) {
+                normal = norm_vec(cross_product(s_edges[i], sf.v[i] * (stable_n * 10.f)));
 
-        float da = max_s - min_m;
-        float db = max_m - min_s;
-        float axis_depth = da < db ? da : db;
-        if (axis_depth < depth) {
-            depth = axis_depth;
+                drawLine(r, r + (-normal * 100), worldMatrix);
 
-            if (min_m >= max_s || (min_m < max_s && min_m > min_s)) {
-                temp_vm = temp_min_m;
-                temp_vs = temp_max_s;
-                temp_n = norms[x];
-                // printf("min_m: %f    min_s: %f ---- max_m: %f    max_s: %f\n", min_m, min_s, max_m, max_s);
-            } else if (max_m <= min_s || (max_m > min_s && max_m < max_s)) {
-                temp_vm = temp_max_m;
-                temp_vs = temp_min_s;
-                temp_n = -norms[x];
+                temp_v = plane_intersect(sf.v[i], normal, r, r + (-normal * 10000.f), &test);
+                vec4f test1 = plane_intersect(mf.v[i], moving_n, temp_v, temp_v + (-velocity), &temp);
+
+                if (temp < t) {
+                    t = temp;
+                    n = moving_n;
+                    drawLine(test1, temp_v + (moving_n * 1000.f), worldMatrix);
+                    displayFace(&mf, worldMatrix);
+                    displayFace(&sf, worldMatrix);
+                    printf("edge collision\n");
+
+                }
             }
         }
     }
-
-    // if (dot_product(temp_n, velocity) <= 0)
-    //     return -1;
-
-    printf("Edge collision\n");
-    return 1000;
+    return t;
 }
 
 
