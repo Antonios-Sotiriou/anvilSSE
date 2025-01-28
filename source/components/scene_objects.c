@@ -60,9 +60,9 @@ const void initWorldObjects(Scene *s) {
 
     s->m[1].scale = 100.f;
 
-    s->m[1].cd.v[P][0] = 800.f;
+    s->m[1].cd.v[P][0] = 1200.f;
     s->m[1].cd.v[P][1] = 300.f;
-    s->m[1].cd.v[P][2] = 100.f;
+    s->m[1].cd.v[P][2] = 1200.f;
     s->m[1].cd.v[P][3] = 1.f;
     s->m[1].cd.v[U][0] = 1.f;
     s->m[1].cd.v[V][1] = 1.f;
