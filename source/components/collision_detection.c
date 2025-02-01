@@ -125,12 +125,13 @@ float clippface(face sf, face mf, vec4f velocity, vec4f spivot, vec4f mpivot, ve
                 // displayPoint(r, worldMatrix, 0x00ff28);
                 // drawLine(r, r + -velocity * 1000, worldMatrix);
 
-                vec4f test1 = plane_intersect(mf.v[x], moving_n, r, r + (-velocity), &temp);
+                vec4f test1 = plane_intersect(mf.v[x], moving_n, r, r - velocity, &temp);
 
                 if ( dot_product(moving_n, cross_product(m1_edges[0], mf.v[0] - test1)) <= 0 ) continue;
                 if ( dot_product(moving_n, cross_product(m1_edges[1], mf.v[1] - test1)) <= 0 ) continue;
                 if ( dot_product(moving_n, cross_product(m1_edges[2], mf.v[2] - test1)) <= 0 ) continue;
-                drawLine(r, r + -velocity * 1000, worldMatrix);
+                // drawLine(r, r - velocity * 1000, worldMatrix);
+                drawLine(r, test1, worldMatrix);
 
                 // displayPoint(test1, worldMatrix, 0x00ff28);
                 // drawLine(test1, test1 + velocity * 1000, worldMatrix);
@@ -154,7 +155,7 @@ float clippface(face sf, face mf, vec4f velocity, vec4f spivot, vec4f mpivot, ve
                         // drawLine(r, temp_v, worldMatrix);
                         // displayPoint(test1, worldMatrix, 0x00ff28);
                         // displayPoint(temp_v, worldMatrix, 0xff00a7);
-                        // printf("%d edge collision: %f\n", y, t);
+                        printf("%d edge collision: %f\n", y, t);
                     }
                 // }
             // }
