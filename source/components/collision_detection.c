@@ -6,14 +6,21 @@ const float dist(vec4f plane_p, vec4f plane_n, vec4f v) {
     return ( (r[0] + r[1] + r[2]) - dot_product(plane_n, plane_p) );
 }
 const vec4f plane_intersect(vec4f plane_p, vec4f plane_n, vec4f line_start, vec4f line_end, float *t) {
-    float plane_d = -dot_product(plane_n, plane_p);
-    float ad = dot_product(line_start, plane_n);
-    float bd = dot_product(line_end, plane_n);
-    *t = ((-plane_d - ad) / (bd - ad));
-    vec4f line_ste = line_end - line_start;
-    vec4f line_ti = line_ste * (*t);
 
-    return line_start + line_ti;
+    vec4f u = line_end - line_start;
+    float dot = dot_product(plane_n, u);
+    vec4f w = line_start - plane_p;
+    *t = -dot_product(plane_n, w) / dot;
+    u *= *t;
+    return line_start + u;
+    // float plane_d = -dot_product(plane_n, plane_p);
+    // float ad = dot_product(line_start, plane_n);
+    // float bd = dot_product(line_end, plane_n);
+    // *t = ((-plane_d - ad) / (bd - ad));
+    // vec4f line_ste = line_end - line_start;
+    // vec4f line_ti = line_ste * (*t);
+
+    // return line_start + line_ti;
 }
 float clippface(face sf, face mf, vec4f velocity, vec4f spivot, vec4f mpivot, vec4f *n) {
     float d0, d1, t = __INT_MAX__;
@@ -137,16 +144,17 @@ float clippface(face sf, face mf, vec4f velocity, vec4f spivot, vec4f mpivot, ve
                 vec4f r = plane_intersect(mf.v[0], normal, line_start[2], line_end[2], &test);
                 // printf("test %d: %f\n", y, test);
                 displayPoint(r, worldMatrix, 0x00ff28);
+                printf("test: %f\n", test);
                 // drawLine(r, r + -velocity * 1000, worldMatrix);
 
                 vec4f test1 = plane_intersect(mf.v[0], moving_n, r, r - velocity, &temp);
-                float e1, e2, e3, e4;
-                e1 = dot_product(moving_n, cross_product(m1_edges[0], mf.v[0] - r));
+                // float e1, e2, e3, e4;
+                // e1 = dot_product(moving_n, cross_product(m1_edges[0], mf.v[0] - r));
                 // e2 = dot_product(moving_n, cross_product(m1_edges[1], mf.v[2] - r));
                 // e3 = dot_product(moving_n, cross_product(m1_edges[2], mf.v[2] - r));
                 // e4 = dot_product(moving_n, cross_product(m1_edges[3], mf.v[0] - r));
                 // drawLine(r, r - velocity * 1000, worldMatrix);
-                printf("e1: %f\n", e1);
+                // printf("e1: %f\n", e1);
                 // printf("e1: %f    e2: %f    e3: %f    e4: %f\n", e1, e2, e3, e4);
 
                 // if ( (e1) <= 0)
