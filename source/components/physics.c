@@ -29,10 +29,10 @@ const void applyPhysics(Scene *s) {
             //     collide = aabbCollision(&scene.t, s, &s->m[i]);
             // }
 
-            // if (velocityCollideTest(&s->m[1])) {
+            if ( s->m[i].type == Player ) {
                 // obbCollision(&s->m[6]);
                 obbCollision(&s->m[1]);
-            // }
+            }
 
             if ( s->m[i].rot_angle ) {
                 rotationCollision(&scene.t, s, &s->m[i]);
