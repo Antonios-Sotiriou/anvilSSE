@@ -11,13 +11,16 @@ const vec4f plane_intersect(vec4f plane_p, vec4f plane_n, vec4f line_start, vec4
     float dot = dot_product(plane_n, u);
     vec4f w = line_start - plane_p;
     *t = -dot_product(plane_n, w) / dot;
-    u *= *t;
-    return line_start + u;
+    if (fabs(*t) <= 0.000062)
+        *t = 0.f;
+    return line_start + (u * *t);
 
     // float plane_d = -dot_product(plane_n, plane_p);
     // float ad = dot_product(line_start, plane_n);
     // float bd = dot_product(line_end, plane_n);
     // *t = ((-plane_d - ad) / (bd - ad));
+    // if (fabs(*t) <= 0.000062)
+    //     *t = 0.f;
     // vec4f line_ste = line_end - line_start;
     // vec4f line_ti = line_ste * (*t);
     // return line_start + line_ti;
@@ -106,12 +109,12 @@ float clippface(face sf, face mf, vec4f velocity, vec4f spivot, vec4f mpivot, ve
     //     return t;
     // }
     // ############################################## VECTORS COLLIDE ##########################################################
-    // sf.v[0] = floor_vec4f(sf.v[0]);
-    // sf.v[1] = floor_vec4f(sf.v[1]);
-    // sf.v[2] = floor_vec4f(sf.v[2]);
-    // mf.v[0] = floor_vec4f(mf.v[0]);
-    // mf.v[1] = floor_vec4f(mf.v[1]);
-    // mf.v[2] = floor_vec4f(mf.v[2]);
+    sf.v[0] = round_vec4f(sf.v[0]);
+    sf.v[1] = round_vec4f(sf.v[1]);
+    sf.v[2] = round_vec4f(sf.v[2]);
+    mf.v[0] = round_vec4f(mf.v[0]);
+    mf.v[1] = round_vec4f(mf.v[1]);
+    mf.v[2] = round_vec4f(mf.v[2]);
 
     vec4f line_start[3] = { sf.v[1], sf.v[2], sf.v[0] };
     vec4f line_end[3] = { sf.v[0], sf.v[1], sf.v[2] };
@@ -171,6 +174,7 @@ float clippface(face sf, face mf, vec4f velocity, vec4f spivot, vec4f mpivot, ve
                 // printf("e1: %f\n", e1);
                 // printf("e1: %f    e2: %f    e3: %f    e4: %f\n", e1, e2, e3, e4);
                 printf("temp: %f\n", temp);
+                // printf("temp: %f\n", fabs(temp) <= 0.000062 ? 1.f : 0.f);
                 // if ( (e1) <= 0)
                 //     drawLine(r, test1, worldMatrix);
 
