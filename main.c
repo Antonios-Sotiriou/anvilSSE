@@ -118,7 +118,7 @@ int STD = 51200;
 
 vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
-float movScalar = 2.f;
+float movScalar = 10.f;
 const float moveForce = 10.f;
 vec4f point = { 1500.000000, -0.000055, 1700.000000, 1.000000 };
 
