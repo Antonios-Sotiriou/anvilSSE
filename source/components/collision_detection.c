@@ -27,11 +27,6 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     mf->v[1] = round_vec4f(mf->v[1]);
     mf->v[2] = round_vec4f(mf->v[2]);
 
-    // displayFace(&mf, worldMatrix);
-    // displayFace(&sf, worldMatrix);
-    drawLine(sf->v[1], sf->v[2], worldMatrix);
-    drawLine(mf->v[0], mf->v[1], worldMatrix);
-
     // ############################################## VECTORS COLLIDE ##########################################################
     // vec4f s_edges[3] = {
     //     sf->v[1] - sf->v[0],
@@ -97,9 +92,14 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     vec4f line_end[3] = { sf->v[0], sf->v[1], sf->v[2] };
 
     int ind = 1;
+    displayFace(mf, worldMatrix);
+    displayFace(sf, worldMatrix);
+    // drawLine(sf->v[1], sf->v[2], worldMatrix);
+    // drawLine(mf->v[0], mf->v[1], worldMatrix);
+
     float temp, test;
-    // for (int x = 0; x < 3; x++) {
-        vec4f normal = norm_vec(cross_product(m_edges[0], mf->v[0] * velocity));
+    for (int x = 0; x < 3; x++) {
+        vec4f normal = norm_vec(cross_product(m_edges[x], mf->v[x] * velocity));
         // drawLine(mf->v[x] , mf->v[x] + (normal * 1000), worldMatrix);
 
         /* Just to draw the edges with velocity #################################################### */
@@ -113,31 +113,34 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
         // ind++;
         /* Just to draw the edges with velocity #################################################### */
 
-        // for (int y = 0; y < 3; y++) {
+        for (int y = 0; y < 3; y++) {
 
-                vec4f r = plane_intersect(mf->v[0], normal, line_start[1], line_end[1], &test);
-                // if (test >= 0 && test <= 1) {
+                vec4f r = plane_intersect(mf->v[x], normal, line_start[y], line_end[y], &test);
+                if (test >= 0 && test <= 1) {
 
                     // displayPoint(r, worldMatrix, 0x00ff28);
-                    vec4f test1 = plane_intersect(mf->v[0], moving_n, r, r - velocity, &temp);
-                    float e1, e2, e3;
+                    vec4f test1 = plane_intersect(mf->v[x], moving_n, r, r - velocity, &temp);
+
                     // if ( dot_product(moving_n, cross_product(m_edges[0], mf->v[0] - test1)) > 0 ) continue;
                     // if ( dot_product(moving_n, cross_product(m_edges[1], mf->v[1] - test1)) > 0 ) continue;
                     // if ( dot_product(moving_n, cross_product(m_edges[2], mf->v[2] - test1)) > 0 ) continue;
 
-                    // printf("e1: %f    e2: %f    e3: %f\n", e1, e2, e3);
-                    t = temp;
+                    // printf("e1: %f\n", dot_product(moving_n, cross_product(m_edges[0], mf->v[0] - test1)));
+                    if (temp < t && (temp >= 0 && temp <= 1)) {
+                        t = temp;
+                    }
 
-                    drawLine(test1, test1 + velocity * 100, worldMatrix);
-                    // displayPoint(test1, worldMatrix, 0x00ff28);
+                    // drawLine(test1, test1 + velocity * 100, worldMatrix);
+                    displayPoint(test1, worldMatrix, 0x00ff28);
+                    displayPoint(r, worldMatrix, 0xff0000);
                     // displayFace(&mf, worldMatrix);
                     // displayFace(&sf, worldMatrix);
                     // logFace(mf, 1, 0, 0); 
                     // logFace(sf, 1, 0, 0);
                     // logVec4f(test1);
-                // }
-        // }
-    // }
+                }
+        }
+    }
     return t;
 }
 
