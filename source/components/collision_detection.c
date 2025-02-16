@@ -11,8 +11,8 @@ const vec4f plane_intersect(vec4f plane_p, vec4f plane_n, vec4f line_start, vec4
     float dot = dot_product(plane_n, u);
     vec4f w = line_start - plane_p;
     *t = -dot_product(plane_n, w) / dot;
-    // if (fabs(*t) <= 0.000062)
-    //     *t = 0.f;
+    if (fabs(*t) <= 0.0001)
+        *t = 0.f;
     return line_start + (u * *t);
 }
 float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
@@ -20,7 +20,7 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     vec4f stable_n = norm_vec(triangle_cp(*sf));
     vec4f moving_n = norm_vec(triangle_cp(*mf));
 
-    // printf("\x1b[H\x1b[J");
+    printf("\x1b[H\x1b[J");
     // printf("Before rounding\n");
     // logFace(*sf, 1, 0, 0);
     // printf("\n");
@@ -121,30 +121,38 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
         for (int y = 0; y < 3; y++) {
                 vec4f r = plane_intersect(moving_f.v[x], normal, line_start[y], line_end[y], &test);
                 // printf("test 1: %f\n", test);
-                if (test >= 0 && test <= 1) {
 
+                if (test >= 0 && test <= 1) {
                     vec4f normal2 = norm_vec(cross_product(s_edges[y], stable_f.v[y] * velocity));
                     vec4f r2 = plane_intersect(stable_f.v[y], normal2, moving_f.v[x], moving_f.v[ind], &test);
                     // printf("test 2: %f\n", test);
-                    if (test >= 0 && test <= 1) {
 
+                    if (test >= 0 && test <= 1) {
                         vec4f test1 = plane_intersect(stable_f.v[y], stable_n, r2, r2 + velocity, &temp);
-                        // printf("temp: %f\n", temp);
+                        printf("temp  : %f\n", temp);
 
                         if (temp < t && (temp >= 0 && temp <= 1)) {
                             t = temp;
-                            drawLine(line_start[1], line_end[1], worldMatrix);
-                            drawLine(moving_f.v[x], moving_f.v[ind], worldMatrix);
+                            // drawLine(line_start[y], line_end[y], worldMatrix);
+                            // drawLine(moving_f.v[x], moving_f.v[ind], worldMatrix);
 
-                            drawLine(r2, test1, worldMatrix);
-                            displayPoint(test1, worldMatrix, 0x00ff28);
-                            displayPoint(r2, worldMatrix, 0xff0000);
+                            // // drawLine(r2, test1, worldMatrix);
+                            // displayPoint(test1, worldMatrix, 0x00ff28);
+                            // displayPoint(r2, worldMatrix, 0xff0000);
                         }
+                        if (x == 2 && y == 1) {
+                            drawLine(r2, test1, worldMatrix);
+                            drawLine(line_start[y], line_end[y], worldMatrix);
+                            drawLine(moving_f.v[0], moving_f.v[2], worldMatrix);
+                            logVec4f(line_start[y]);
+                            logVec4f(line_end[y]);
+                            printf("\n");
+                            logVec4f(moving_f.v[0]);
+                            logVec4f(moving_f.v[x]);
 
-                        // drawLine(mf->v[1], mf->v[1] + velocity * 100, worldMatrix);
-                        // drawLine(r2, test1, worldMatrix);
-                        // displayPoint(test1, worldMatrix, 0x00ff28);
-                        // displayPoint(r2, worldMatrix, 0xff0000);
+                            printf("\n");
+                            logVec4f(test1);
+                        }
                     }
                 }
         }
@@ -314,43 +322,44 @@ const int obbCollision(Mesh *m) {
     //     int pk = scene.t.quads[m->quadIndex].members[i];
     //     if (pk != m->id && pk != 6) {
 
-            for (int x = 0; x < m->bbox.f_indexes; x++) {
-                plane_n = norm_vec(triangle_cp(m->bbox.f[x]));
+            // for (int x = 0; x < m->bbox.f_indexes; x++) {
+                plane_n = norm_vec(triangle_cp(m->bbox.f[2]));
                 /* Draw the face normals */
                 // drawLine(m->cd.v[0], m->cd.v[0] + (plane_n * 1000), worldMatrix);
                 if (dot_product(m->velocity, plane_n) > 0) {
-                    // displayFace(&m->bbox.f[x], worldMatrix);
+                    // displayFace(&m->bbox.f[2], worldMatrix);
 
-                    for (int y = 0; y < scene.m[2].bbox.f_indexes; y++) {
-                        // displayFace(&scene.m[2].bbox.f[y], worldMatrix);
-                        plane_n = norm_vec(triangle_cp(scene.m[2].bbox.f[y]));
+                    // for (int y = 0; y < scene.m[2].bbox.f_indexes; y++) {
+                        // displayFace(&scene.m[2].bbox.f[1], worldMatrix);
+                        plane_n = norm_vec(triangle_cp(scene.m[2].bbox.f[1]));
                         /* Draw the face normals */
                         // drawLine(scene.m[2].cd.v[0], scene.m[2].cd.v[0] + (plane_n * 1000), worldMatrix);
-                        float d0 = dist(scene.m[2].bbox.f[y].v[0], plane_n, m->cd.v[0]);
+                        float d0 = dist(scene.m[2].bbox.f[1].v[0], plane_n, m->cd.v[0]);
                         if (d0 >= 0) {
                             if (dot_product(m->velocity, plane_n) < 0) {
-                                // displayFace(&scene.m[2].bbox.f[y], worldMatrix);
+                                // displayFace(&scene.m[2].bbox.f[1], worldMatrix);
 
                                 n = plane_n;
-                                float temp = sweptDoubleTri(&scene.m[2].bbox.f[y], &m->bbox.f[x], m->velocity, &n);
+                                float temp = sweptDoubleTri(&scene.m[2].bbox.f[1], &m->bbox.f[2], m->velocity, &n);
 
                                 if (temp < t) {
                                     t = temp;
                                 }
                             }
                         }
-                    }
+                    // }
                 }
-            }
+            // }
             // if (fabsf(t) < 0.0009f) {
             //     t = 0;
             //     printf("WInzig t value: %f\n", t);
             // }
-            if (t < __INT_MAX__)
-                printf("t: %f\n", t);
+            // if (t < __INT_MAX__)
+            //     printf("t: %f\n", t);
             // drawLine(m->cd.v[0], m->cd.v[0] + (m->velocity * 1000), worldMatrix);
+            // printf("t: %f\n", t);
             if (t == 0.f) {
-                // printf("Sliding...: %f\n", t);
+                printf("Sliding...: %f\n", t);
                 float dot =  dot_product(n, m->velocity);
                 m->velocity = m->velocity - (dot * n);
                 if (n[1] == 1)
@@ -358,7 +367,7 @@ const int obbCollision(Mesh *m) {
 
                 return 1;
             } else if (t > 0.f && t <= 1.f) {
-                // printf("Collision: %f\n", t);
+                printf("Collision: %f\n", t);
                 m->velocity *= t;
                 Mat4x4 trans = translationMatrix(m->velocity[0], m->velocity[1], m->velocity[2]);
                 setvecsarrayxm(m->cd.v, 4, trans);

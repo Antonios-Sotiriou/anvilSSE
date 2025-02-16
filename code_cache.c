@@ -259,3 +259,17 @@ float clippface(face sf, face mf, vec4f velocity, vec4f spivot, vec4f mpivot) {
 }
 
 
+                // if (isinf(test)) {
+                //     printf("inf\n");
+                //     drawLine(line_start[y], line_end[y], worldMatrix);
+                //     drawLine(moving_f.v[x], moving_f.v[ind], worldMatrix);
+                //     continue;
+                // }
+                // if (isnan(test)) {
+                //     printf("nan\n");
+                //     drawLine(line_start[y], line_end[y], worldMatrix);
+                //     drawLine(moving_f.v[x], moving_f.v[ind], worldMatrix);
+                //     continue;
+                // }
+
+
