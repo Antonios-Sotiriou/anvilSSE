@@ -20,7 +20,7 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     vec4f stable_n = norm_vec(triangle_cp(*sf));
     vec4f moving_n = norm_vec(triangle_cp(*mf));
 
-    printf("\x1b[H\x1b[J");
+    // printf("\x1b[H\x1b[J");
     // printf("Before rounding\n");
     // logFace(*sf, 1, 0, 0);
     // printf("\n");
@@ -126,8 +126,14 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
                     vec4f test1 = plane_intersect(moving_f.v[x], moving_n, r, r - velocity, &temp);
 
                     if (temp < t && (temp >= 0 && temp <= 1)) {
-                        // displayPoint(test1, worldMatrix, 0x0000ff);
-                        t = temp;
+                        float dot = fabsf(dot_product(moving_n, stable_n));
+                        if ( dot >= 0.0009) {
+                            displayPoint(test1, worldMatrix, 0xff0000);
+                            displayFace(&moving_f, worldMatrix);
+                            displayFace(&stable_f, worldMatrix);
+                            t = temp;
+                        }
+                        // printf("dot: %f\n", dot_product(moving_n, stable_n));
                     }
 
                     // drawLine(line_start[y], line_end[y], worldMatrix);
@@ -308,7 +314,7 @@ const int obbCollision(Mesh *m) {
                 /* Draw the face normals */
                 // drawLine(m->cd.v[0], m->cd.v[0] + (plane_n * 1000), worldMatrix);
                 if (dot_product(m->velocity, plane_n) > 0) {
-                    displayFace(&m->bbox.f[x], worldMatrix);
+                    // displayFace(&m->bbox.f[x], worldMatrix);
 
                     for (int y = 0; y < scene.m[2].bbox.f_indexes; y++) {
                         plane_n = norm_vec(triangle_cp(scene.m[2].bbox.f[y]));
@@ -317,20 +323,20 @@ const int obbCollision(Mesh *m) {
                         float d0 = dist(scene.m[2].bbox.f[y].v[0], plane_n, m->cd.v[0]);
                         if (d0 >= 0) {
                             if (dot_product(m->velocity, plane_n) < 0) {
-                                displayFace(&scene.m[2].bbox.f[y], worldMatrix);
+                                // displayFace(&scene.m[2].bbox.f[y], worldMatrix);
 
-                                n = plane_n;
                                 float temp = sweptDoubleTri(&scene.m[2].bbox.f[y], &m->bbox.f[x], m->velocity, &n);
 
                                 if (temp < t) {
                                     t = temp;
+                                    n = plane_n;
                                 }
                             }
                         }
                     }
                 }
             }
-            displayPoint(m->cd.v[0] + m->velocity * 100, worldMatrix, 0xff0000);
+
             drawLine(m->cd.v[0], m->cd.v[0] + (n * 1000), worldMatrix);
             if (t == 0.f) {
                 printf("Sliding...: %f\n", t);
