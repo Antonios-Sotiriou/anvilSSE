@@ -272,4 +272,19 @@ float clippface(face sf, face mf, vec4f velocity, vec4f spivot, vec4f mpivot) {
                 //     continue;
                 // }
 
+        vec4f normal = norm_vec(cross_product(m_edges[x], moving_f.v[x] * velocity));
+        vec4f plane_p = plane_intersect(stable_f.v[x], stable_n, moving_f.v[x] + velocity, moving_f.v[ind_out] + velocity, &test);
+        if (test >= 0 && test <= 1) {
+            displayPoint(plane_p, worldMatrix, 0xff0000);
+            float dist1 = dist(stable_f.v[x], stable_n, moving_f.v[x] + velocity);
+            float dist2 = dist(stable_f.v[x], stable_n, moving_f.v[ind_out] + velocity);
+            vec4f nearest_v;
+            if (dist1 > dist2) {
+                plane_p = plane_intersect(stable_f.v[x], stable_n, moving_f.v[ind_out], moving_f.v[ind_out] + velocity, &test);
+                nearest_v = moving_f.v[ind_out];
+            } else {
+                plane_p = plane_intersect(stable_f.v[x], stable_n, moving_f.v[x], moving_f.v[x] + velocity, &test);
+                nearest_v = moving_f.v[x];
+            }
+
 
