@@ -80,7 +80,7 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     // for (int i = 0; i < 3; i++) {
     //     float temp;
 
-    //     vec4f temp_p = plane_intersect(mf->v[0], moving_n, sf->v[i], sf->v[i] - velocity, &temp);
+    //     vec4f temp_p = plane_intersect(mf->v[0], moving_n, sf->v[i], sf->v[i] + (velocity * -1.f), &temp);
     //     if ( dot_product(moving_n, cross_product(m_edges[0], mf->v[0] - temp_p)) > 0 ) continue;
     //     if ( dot_product(moving_n, cross_product(m_edges[1], mf->v[1] - temp_p)) > 0 ) continue;
     //     if ( dot_product(moving_n, cross_product(m_edges[2], mf->v[2] - temp_p)) > 0 ) continue;
@@ -99,7 +99,8 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     // ############################################## VECTORS COLLIDE ##########################################################
 
     displayFace(&stable_f, worldMatrix);
-    displayFace(&moving_f, worldMatrix);
+    // displayFace(&moving_f, worldMatrix);
+    printf("\x1b[H\x1b[J");
 
     int ind_out = 1, ind_in = 1;
     float temp, test;
@@ -116,42 +117,22 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
 
             vec4f r = plane_intersect(moving_f.v[x], normal, stable_f.v[y], stable_f.v[ind_in], &test);
             if (test >= 0 && test <= 1) {
+
                 vec4f normal2 = norm_vec(cross_product(s_edges[y], stable_f.v[y] + velocity));
                 vec4f r2 = plane_intersect(r, normal2, moving_f.v[x], moving_f.v[ind_out], &test);
-
                 if (test >= 0 && test <= 1) {
-                    vec4f r3 = plane_intersect(r, stable_n, r2, r2 + velocity, &test);
 
-                    // displayPoint(r2, worldMatrix, 0x00ff00);
-                    displayPoint(r, worldMatrix, 0xff0000);
-                    drawLine(r2, r3, worldMatrix);
-                    if (test >= 0 && test <= 1) {
-                        // displayPoint(r3, worldMatrix, 0x00ff00);
-                        // drawLine(moving_f.v[x], moving_f.v[ind_out], worldMatrix);
+                    r2 = plane_intersect(r2, moving_n, r, r + (velocity * -1.f), &test);
+                    drawLine(r2, r, worldMatrix);
+                    if (test < t && (test >= 0 && test <= 1)) {
 
-                        if (test < t) {
-                            float dot = fabsf(dot_product(moving_n, stable_n));
-                            if ( dot >= 0.0009) {
-                                t = test;
-                            }
+                        float dot = fabsf(dot_product(moving_n, stable_n));
+                        if ( dot >= 0.0009) {
+                            t = test;
+                            drawLine(moving_f.v[x], moving_f.v[ind_out], worldMatrix);
+                            logVec4f(r);
+                            logVec4f(r2);
                         }
-                        printf("\x1b[H\x1b[J");
-                        printf("t value: %f\n", t);
-                        logFace(stable_f, 1, 0, 0);
-                        printf("----------------------------------------------------------------------------\n");
-                        logFace(moving_f, 1, 0, 0);
-                        logVec4f(r);
-                        logVec4f(r2);
-                        logVec4f(r3);
-                    } else if (test >= -1 && test < 0) {
-                        printf("\x1b[H\x1b[J");
-                        printf("t value: %f\n", t);
-                        logFace(stable_f, 1, 0, 0);
-                        printf("----------------------------------------------------------------------------\n");
-                        logFace(moving_f, 1, 0, 0);
-                        logVec4f(r);
-                        logVec4f(r2);
-                        logVec4f(r3);
                     }
                 }
             }
@@ -161,8 +142,6 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     }
     return t;
 }
-
-
 const void terrainCollision(Mesh *terrain, Mesh *obj) {
     TerrainPointInfo tp = getTerrainPointData(terrain, obj->cd.v[P], obj);
     float height_diff = tp.pos[1] - (obj->cd.v[P][1] - obj->scale);
@@ -346,7 +325,7 @@ const int obbCollision(Mesh *m) {
                 }
             // }
 
-            drawLine(m->cd.v[0], m->cd.v[0] + (n * 1000), worldMatrix);
+            // drawLine(m->cd.v[0], m->cd.v[0] + (n * 1000), worldMatrix);
             if (t == 0.f) {
                 printf("Sliding...: %f\n", t);
                 float dot =  dot_product(n, m->velocity);

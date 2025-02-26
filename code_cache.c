@@ -288,3 +288,83 @@ float clippface(face sf, face mf, vec4f velocity, vec4f spivot, vec4f mpivot) {
             }
 
 
+
+
+/* LATEST APPROACH WHICH SEEMS PROMISING */
+    displayFace(&stable_f, worldMatrix);
+    // displayFace(&moving_f, worldMatrix);
+
+    int ind_out = 1, ind_in = 1;
+    float temp, test;
+
+    for (int x = 0; x < 3; x++) {
+        if (ind_out > 2)
+            ind_out = 0;
+
+        vec4f normal = norm_vec(cross_product(m_edges[x], moving_f.v[x] + velocity));
+
+        for (int y = 0; y < 3; y++) {
+            if (ind_in > 2)
+                ind_in = 0;
+
+            vec4f r = plane_intersect(moving_f.v[x], normal, stable_f.v[y], stable_f.v[ind_in], &test);
+            if (test >= 0 && test <= 1) {
+
+                vec4f r2 = plane_intersect(moving_f.v[x], moving_n, r, r + (velocity * -1.f), &test);
+                if (test < t && (test >= 0 && test <= 1)) {
+                    drawLine(r2, r, worldMatrix);
+
+                    float dot = fabsf(dot_product(moving_n, stable_n));
+                    if ( dot >= 0.0009) {
+                        t = test;
+                        drawLine(moving_f.v[x], moving_f.v[ind_out], worldMatrix);
+                    }
+                }
+            }
+            ind_in++;
+        }
+        ind_out++;
+    }
+
+
+/* LATEST APPROACH WHICH SEEMS PROMISING 2 */
+    int ind_out = 1, ind_in = 1;
+    float temp, test;
+
+    for (int x = 0; x < 3; x++) {
+        if (ind_out > 2)
+            ind_out = 0;
+
+        vec4f normal = norm_vec(cross_product(m_edges[x], moving_f.v[x] + velocity));
+
+        for (int y = 0; y < 3; y++) {
+            if (ind_in > 2)
+                ind_in = 0;
+
+            vec4f r = plane_intersect(moving_f.v[x], normal, stable_f.v[y], stable_f.v[ind_in], &test);
+            if (test >= 0 && test <= 1) {
+
+                vec4f normal2 = norm_vec(cross_product(s_edges[y], stable_f.v[y] + velocity));
+                vec4f r2 = plane_intersect(r, normal2, moving_f.v[x], moving_f.v[ind_out], &test);
+                if (test >= 0 && test <= 1) {
+
+                    r2 = plane_intersect(r2, moving_n, r, r + (velocity * -1.f), &test);
+                    drawLine(r2, r, worldMatrix);
+                    if (test < t && (test >= 0 && test <= 1)) {
+
+                        float dot = fabsf(dot_product(moving_n, stable_n));
+                        if ( dot >= 0.0009) {
+                            t = test;
+                            drawLine(moving_f.v[x], moving_f.v[ind_out], worldMatrix);
+                            logVec4f(r);
+                            logVec4f(r2);
+                        }
+                    }
+                }
+            }
+            ind_in++;
+        }
+        ind_out++;
+    }
+
+
