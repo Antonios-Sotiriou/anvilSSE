@@ -73,6 +73,11 @@ const  MeshOria getMeshOria(vec4f va[], const int len) {
     }
     return mo;
 }
+void roundMesh(Mesh *m) {
+    for (int i = 0; i < m->bbox.f_indexes; i++)
+        for (int x = 0; x < 3; x++)
+            m->bbox.f[i].v[x] = round_vec4f(m->bbox.f[i].v[x]);
+}
 /* Loads the appropriate Material with given name and importand Material infos. */
 const void loadMaterial(Material *mtr, const char name[]) {
     FILE *fp;

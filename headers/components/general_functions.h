@@ -43,6 +43,7 @@ const void swap(void *a, void *b, unsigned long size);
 const float radians(const float value);
 const DimensionsLimits getDimensionsLimits(vec4f va[], const int len);
 const  MeshOria getMeshOria(vec4f va[], const int len);
+void roundMesh(Mesh *m);
 const void loadMaterial(Material *mtr, const char name[]);
 const void loadtexture(Mesh *m, const unsigned int lvl);
 const void adoptdetailMesh(Mesh *m, const int dist);
