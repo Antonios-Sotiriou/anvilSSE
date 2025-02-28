@@ -440,6 +440,31 @@ const void displayBboxFaces(Mesh *m, const Mat4x4 vm) {
 
     free(vec_arr);
 }
+/* Displays given Bounding Box on screen given the view Matrix. Bounding box must be in World Space. */
+const void displayfacedm(face f, const Mat4x4 vm) {
+    Mat4x4 tm = mxm(viewMatrix, perspectiveMatrix(45.f, -1.f, 10.f, __INT32_MAX__));
+    f = facexm(f, tm);
+
+    for (int j = 0; j < 3; j++) {
+        /* We save Clipp space z for frustum culling because Near and far planes are defined in this Space. */
+        float z = f.v[j][2];
+
+        if (f.v[j][3] > 0) {
+            f.v[j] /= f.v[j][3];
+            f.v[j][2] = z;
+        }
+    }
+
+    DimensionsLimits dm = getDimensionsLimits(f.v, 3);
+
+    dm.min[0] = ((1 + dm.min[0]) * half_screen[0]);
+    dm.min[1] = ((1 + dm.min[1]) * half_screen[1]);
+
+    dm.max[0] = ((1 + dm.max[0]) * half_screen[0]);
+    dm.max[1] = ((1 + dm.max[1]) * half_screen[1]);
+
+    XDrawRectangle(displ, mainwin, gc, dm.min[0], dm.min[1], dm.max[0] - dm.min[0], dm.max[1] - dm.min[1]);
+}
 /* Initializing Mesh a from Mesh b. */
 const void initMesh(Mesh *a, const Mesh *b) {
     *a = *b;

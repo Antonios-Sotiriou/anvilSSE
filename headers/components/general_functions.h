@@ -57,6 +57,7 @@ const void displayFace(face *f, const Mat4x4 vm);
 const void displayFilledFace(face *f, const Mat4x4 vm);
 const void displayBbox(Mesh *m, const Mat4x4 vm);
 const void displayBboxFaces(Mesh *m, const Mat4x4 vm);
+const void displayfacedm(face f, const Mat4x4 vm);
 const void initMesh(Mesh *a, const Mesh *b);
 const void releaseMesh(Mesh *m);
 
