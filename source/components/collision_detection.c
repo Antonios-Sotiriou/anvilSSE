@@ -58,9 +58,6 @@ float sweptTribbox(face sf, face mf, vec4f velocity) {
     }
 
     vec4f p = min_m + ((max_m - min_m) * 0.5f);
-    displayPoint(p, worldMatrix, 0x0000ff);
-    logVec4f(p);
-
     vec4f min = round_vec4f(min_s - (p - min_m));
     vec4f max = round_vec4f(max_s - (p - max_m));
 
@@ -91,26 +88,76 @@ float sweptTribbox(face sf, face mf, vec4f velocity) {
         return -1;
 
     if ( ((t_near >= 0.f) && (t_near <= 1.f)) ) {
-        printf("\x1b[H\x1b[J");
         printf("COLLISION  ######################### : %f\n", t_near);
         return t_near;
     }
-
-    logFace(sf, 1, 0, 0);
-    printf("\n");
-    logFace(mf, 1, 0, 0); 
-    logVec4f(tnear);
-    logVec4f(tfar);
     displayfacedm(sf, worldMatrix);
     displayfacedm(mf, worldMatrix);
+}
+float sweptTriangleVectors(face sf, face mf, vec4f velocity) {
+    float t = __INT_MAX__;
+    vec4f stable_n = norm_vec(triangle_cp(sf));
+    vec4f moving_n = norm_vec(triangle_cp(mf));
+
+    sf.v[0] = round_vec4f(sf.v[0]);
+    sf.v[1] = round_vec4f(sf.v[1]);
+    sf.v[2] = round_vec4f(sf.v[2]);
+    mf.v[0] = round_vec4f(mf.v[0]);
+    mf.v[1] = round_vec4f(mf.v[1]);
+    mf.v[2] = round_vec4f(mf.v[2]);
+    vec4f s_edges[3] = {
+        sf.v[1] - sf.v[0],
+        sf.v[2] - sf.v[1],
+        sf.v[0] - sf.v[2]
+    };
+    vec4f m_edges[3] = {
+        mf.v[1] - mf.v[0],
+        mf.v[2] - mf.v[1],
+        mf.v[0] - mf.v[2]
+    };
+    float temp, m_collide, s_collide;
+    for (int i = 0; i < 3; i++) {
+        vec4f temp_m = plane_intersect(sf.v[0], stable_n, mf.v[i], mf.v[i] + velocity, &temp);
+        if ( dot_product(stable_n, cross_product(s_edges[0], sf.v[0] - temp_m)) > 0 ) continue;
+        if ( dot_product(stable_n, cross_product(s_edges[1], sf.v[1] - temp_m)) > 0 ) continue;
+        if ( dot_product(stable_n, cross_product(s_edges[2], sf.v[2] - temp_m)) > 0 ) continue;
+
+        if ( temp < t && (temp >= 0 && temp <= 1) ) {
+            t = temp;
+            drawLine(temp_m, temp_m + (velocity * 1000), worldMatrix);
+            displayPoint(temp_m, worldMatrix, 0xff0000);
+            m_collide++;
+            printf("Vector M collision\n");
+        }
+
+        vec4f temp_s = plane_intersect(mf.v[0], moving_n, sf.v[i], sf.v[i] + (velocity * -1.f), &temp);
+        if ( dot_product(moving_n, cross_product(m_edges[0], mf.v[0] - temp_s)) > 0 ) continue;
+        if ( dot_product(moving_n, cross_product(m_edges[1], mf.v[1] - temp_s)) > 0 ) continue;
+        if ( dot_product(moving_n, cross_product(m_edges[2], mf.v[2] - temp_s)) > 0 ) continue;
+
+        if ( temp < t && (temp >= 0 && temp <= 1) ) {
+            t = temp;
+            drawLine(temp_s, temp_s + (velocity * -1000), worldMatrix);
+            displayPoint(temp_s, worldMatrix, 0x00ff00);
+            s_collide++;
+            printf("Vector S collision\n");
+        }
+    }
+
+    if (s_collide || m_collide) {
+        return t;
+    }
 }
 float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     float t = __INT_MAX__;
     vec4f stable_n = norm_vec(triangle_cp(*sf));
     vec4f moving_n = norm_vec(triangle_cp(*mf));
 
-    float cbb = sweptTribbox(*sf, *mf, velocity);
-    return cbb;
+    // float cbb = sweptTribbox(*sf, *mf, velocity);
+    // return cbb;
+
+    // float cv = sweptTriangleVectors(*sf, *mf, velocity);
+    // return cv;
 
     // printf("\x1b[H\x1b[J");
     // printf("Before rounding\n");
@@ -120,65 +167,31 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
 
     face stable_f, moving_f;
 
-    // stable_f.v[0] = sf->v[0];
-    // stable_f.v[1] = sf->v[1];
-    // stable_f.v[2] = sf->v[2];
-    // moving_f.v[0] = mf->v[0];
-    // moving_f.v[1] = mf->v[1];
-    // moving_f.v[2] = mf->v[2];
-    stable_f.v[0] = round_vec4f(sf->v[0]);
-    stable_f.v[1] = round_vec4f(sf->v[1]);
-    stable_f.v[2] = round_vec4f(sf->v[2]);
-    moving_f.v[0] = round_vec4f(mf->v[0]);
-    moving_f.v[1] = round_vec4f(mf->v[1]);
-    moving_f.v[2] = round_vec4f(mf->v[2]);
+    stable_f.v[0] = sf->v[0];
+    stable_f.v[1] = sf->v[1];
+    stable_f.v[2] = sf->v[2];
+    moving_f.v[0] = mf->v[0];
+    moving_f.v[1] = mf->v[1];
+    moving_f.v[2] = mf->v[2];
+    // stable_f.v[0] = round_vec4f(sf->v[0]);
+    // stable_f.v[1] = round_vec4f(sf->v[1]);
+    // stable_f.v[2] = round_vec4f(sf->v[2]);
+    // moving_f.v[0] = round_vec4f(mf->v[0]);
+    // moving_f.v[1] = round_vec4f(mf->v[1]);
+    // moving_f.v[2] = round_vec4f(mf->v[2]);
 
-    // ############################################## VECTORS COLLIDE ##########################################################
     vec4f s_edges[3] = {
-        stable_f.v[1] - stable_f.v[0],
-        stable_f.v[2] - stable_f.v[1],
-        stable_f.v[0] - stable_f.v[2]
+        sf->v[1] - sf->v[0],
+        sf->v[2] - sf->v[1],
+        sf->v[0] - sf->v[2]
     };
     vec4f m_edges[3] = {
-        moving_f.v[1] - moving_f.v[0],
-        moving_f.v[2] - moving_f.v[1],
-        moving_f.v[0] - moving_f.v[2]
+        mf->v[1] - mf->v[0],
+        mf->v[2] - mf->v[1],
+        mf->v[0] - mf->v[2]
     };
-    // float temp, m_collide, s_collide;
-    // for (int i = 0; i < 3; i++) {
-    //     vec4f temp_m = plane_intersect(stable_f.v[0], stable_n, moving_f.v[i], moving_f.v[i] + velocity, &temp);
-    //     if ( dot_product(stable_n, cross_product(s_edges[0], stable_f.v[0] - temp_m)) > 0 ) continue;
-    //     if ( dot_product(stable_n, cross_product(s_edges[1], stable_f.v[1] - temp_m)) > 0 ) continue;
-    //     if ( dot_product(stable_n, cross_product(s_edges[2], stable_f.v[2] - temp_m)) > 0 ) continue;
 
-    //     if ( temp < t && (temp >= 0 && temp <= 1) ) {
-    //         t = temp;
-    //         drawLine(temp_m, temp_m + (velocity * 1000), worldMatrix);
-    //         displayPoint(temp_m, worldMatrix, 0xff0000);
-    //         m_collide++;
-    //         printf("Vector M collision\n");
-    //     }
-
-    //     vec4f temp_s = plane_intersect(moving_f.v[0], moving_n, stable_f.v[i], stable_f.v[i] + (velocity * -1.f), &temp);
-    //     if ( dot_product(moving_n, cross_product(m_edges[0], moving_f.v[0] - temp_s)) > 0 ) continue;
-    //     if ( dot_product(moving_n, cross_product(m_edges[1], moving_f.v[1] - temp_s)) > 0 ) continue;
-    //     if ( dot_product(moving_n, cross_product(m_edges[2], moving_f.v[2] - temp_s)) > 0 ) continue;
-
-    //     if ( temp < t && (temp >= 0 && temp <= 1) ) {
-    //         t = temp;
-    //         drawLine(temp_s, temp_s + (velocity * -1000), worldMatrix);
-    //         displayPoint(temp_s, worldMatrix, 0x00ff00);
-    //         s_collide++;
-    //         printf("Vector S collision\n");
-    //     }
-    // }
-
-    // if (s_collide || m_collide) {
-    //     return t;
-    // }
-    // ############################################## VECTORS COLLIDE ##########################################################
-
-    // displayFace(&stable_f, worldMatrix);
+    displayFace(&stable_f, worldMatrix);
     // displayFace(&moving_f, worldMatrix);
     printf("\x1b[H\x1b[J");
 
@@ -195,36 +208,30 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
             if (ind_in > 2)
                 ind_in = 0;
 
-            vec4f r = plane_intersect(moving_f.v[x], normal, stable_f.v[y], stable_f.v[ind_in], &test);
-            // drawLine(r, r + (velocity * -100), worldMatrix);
+            vec4f r = round_vec4f(plane_intersect(moving_f.v[x], normal, stable_f.v[y], stable_f.v[ind_in], &test));
             if (test >= 0 && test <= 1) {
+
                 vec4f normal2 = norm_vec(cross_product(s_edges[y], stable_f.v[y] + velocity));
                 vec4f r2 = plane_intersect(r, normal2, moving_f.v[x], moving_f.v[ind_out], &test);
-                // drawLine(r2, r2 + (velocity * -100), worldMatrix);
                 if (test >= 0 && test <= 1) {
 
-                    r2 = plane_intersect(r2, moving_n, r, r + (velocity * -1.f), &test);
-                    // printf("e1: %f\n", dot_product(moving_n, cross_product(m_edges[0], moving_f.v[0] - r2)));
-                    // printf("e2: %f\n", dot_product(moving_n, cross_product(m_edges[1], moving_f.v[1] - r2)));
-                    // printf("e3: %f\n\n", dot_product(moving_n, cross_product(m_edges[2], moving_f.v[2] - r2)));
-
-                    // drawLine(r2, r2 + (velocity * -100), worldMatrix);
+                    r2 = plane_intersect(moving_f.v[x], moving_n, r, r + (velocity * -1.f), &test);
                     drawLine(r2, r, worldMatrix);
-                    vec4f vt = (r - r2) / velocity;
-                    if (test < t && (test >= 0 && test <= 1)) {
+                    vec4f vt = round_vec4f(r - r2) / velocity;
 
+                    if (test < t && (test >= 0 && test <= 1)) {
                         float dot = fabsf(dot_product(moving_n, stable_n));
-                        if ( dot >= 0.0009) {
+                        if (dot >= 0.0009) {
                             t = test;
                             drawLine(moving_f.v[x], moving_f.v[ind_out], worldMatrix);
                             printf("Edges  collision\n");
+                            logFace(stable_f, 1, 0, 0);
+                            printf("\n");
+                            logFace(moving_f, 1, 0, 0);
+                            // logVec4f(r);
+                            // logVec4f(r2);
+                            logVec4f(vt);
                         }
-                        logFace(stable_f, 1, 0, 0);
-                        printf("\n");
-                        logFace(moving_f, 1, 0, 0);
-                        logVec4f(r);
-                        logVec4f(r2);
-                        logVec4f(vt);
                     }
                 }
             }
@@ -409,7 +416,7 @@ const int obbCollision(Mesh *m) {
 
                                 if (temp < t) {
                                     t = temp;
-                                    n = (vec4f){0.f, 0.f, -1.f, 0.f};
+                                    n = norm_vec(m->velocity * -1);
                                 }
                             }
                         }
