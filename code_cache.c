@@ -368,3 +368,14 @@ float clippface(face sf, face mf, vec4f velocity, vec4f spivot, vec4f mpivot) {
     }
 
 
+
+
+    memcpy(&m->vbo[index],  &obj.v[vpad], 12);
+    i++;
+    tpad = obj.f[i] * 2;
+    memcpy(&m->vbo[index + 3],  &obj.t[tpad], 8);
+    i++;
+    vpad = obj.f[i] * 3;
+    memcpy(&m->vbo[index + 5],  &obj.n[vpad], 12);
+    index += 8;
+

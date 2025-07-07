@@ -206,13 +206,14 @@ const void initWorldObjects(Scene *s) {
 
     /* ######################################################################################################## */
     memcpy(s->m[6].name, "cube_flat", sizeof("cube_flat"));
-    loadMaterial(&s->m[6].material, "gold");
+    // loadMaterial(&s->m[6].material, "gold");
     loadMesh(&s->m[6], s->m[6].name, 0);
     loadBboxVectors(&s->m[6], "meshes/cube_flat/cube_flat");
     loadBboxFaces(&s->m[6], "meshes/cube_flat/lod0");
 
     s->m[6].type = Camera;
     s->m[6].id = 6;
+    s->m[6].tex_index = 2;
 
     s->m[6].scale = 100.f;
     

@@ -243,6 +243,52 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
 }
 const void terrainCollision(Mesh *terrain, Mesh *obj) {
     TerrainPointInfo tp = getTerrainPointData(terrain, obj->cd.v[P], obj);
+
+    if (obj->id == 1) {
+
+        obj->dm = getDimensionsLimits(obj->bbox.v, obj->bbox.v_indexes);
+
+        vec4f min = { obj->cd.v[0][0], obj->dm.min[1], obj->cd.v[0][2], 1.f };
+        vec4f t_near = (min - tp.pos) / obj->velocity;
+        vec4f max = obj->velocity + min;
+
+        if (t_near[1] > 0 && t_near[1] <= 1) {
+            obj->velocity *= t_near[1];
+
+            Mat4x4 tm = translationMatrix(obj->velocity[0], obj->velocity[1], obj->velocity[2]);
+
+            setvecsarrayxm(obj->cd.v, 4, tm);
+            setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, tm);
+            setfacesarrayxm(obj->bbox.f, obj->bbox.f_indexes, tm);
+
+            obj->grounded = 1;
+            obj->falling_time = 0;
+
+            float dot =  dot_product(tp.normal, obj->velocity);
+            obj->velocity = (obj->velocity - (dot * tp.normal)) * terrain->fr_coef;
+            printf("Terrain Collision\n");
+        } else if (t_near[1] < 0) {
+            printf("Terrain Penetration\n");
+        }
+
+        drawLine(min, max, viewMatrix);
+        drawLine(min, min + (tp.normal * 100.f), viewMatrix);
+        displayPoint(obj->velocity * t_near[1], viewMatrix, 0x00ff00);
+        displayBbox(obj, viewMatrix);
+
+        float dot = dot_product(min, tp.normal);
+        if (dot < 0)
+            printf("Below Surface\n");
+        else
+            printf("Above Surface\n");
+        // logVec4f(t_near);
+        // logVec4f(obj->dm.max);
+        // logVec4f(obj->bbox.v[0]);
+        return;
+    } 
+
+
+
     float height_diff = tp.pos[1] - (obj->cd.v[P][1] - obj->scale);
     if ( height_diff >= 0 ) {
         obj->grounded = 1;

@@ -4,7 +4,7 @@
 extern vec4f gravity_epicenter;
 
 const void applyPhysics(Scene *s) {
-    Mat4x4 trans;
+    Mat4x4 trans_mat;
     for (int i = 0; i < s->m_indexes; i++) {
 
         if ( (s->m[i].type != Terrain) && (s->m[i].type != Celestial) ) {
@@ -18,8 +18,8 @@ const void applyPhysics(Scene *s) {
                 s->m[i].velocity = (gravity_epicenter * g_accelaration) + (s->m[i].velocity);
             }
 
-            if ( s->m[i].type == Player )
-                terrainHeightDifference(&s->m[Terrain_1], &s->m[i]);
+            // if ( s->m[i].type == Player )
+            //     terrainHeightDifference(&s->m[Terrain_1], &s->m[i]);
 
             // int collide = 1;
             // while (collide) {
@@ -37,14 +37,13 @@ const void applyPhysics(Scene *s) {
                 rotationCollision(&scene.t, s, &s->m[i]);
             }
 
-            trans = translationMatrix(s->m[i].velocity[0], s->m[i].velocity[1], s->m[i].velocity[2]);
+            terrainCollision(&s->m[Terrain_1], &s->m[i]);
 
-            setvecsarrayxm(s->m[i].cd.v, 4, trans);
-            setvecsarrayxm(s->m[i].bbox.v, s->m[i].bbox.v_indexes, trans);
-            setfacesarrayxm(s->m[i].bbox.f, s->m[i].bbox.f_indexes, trans);
+            trans_mat = translationMatrix(s->m[i].velocity[0], s->m[i].velocity[1], s->m[i].velocity[2]);
 
-            if ( s->m[i].type != Celestial )
-                terrainCollision(&s->m[Terrain_1], &s->m[i]);
+            setvecsarrayxm(s->m[i].cd.v, 4, trans_mat);
+            setvecsarrayxm(s->m[i].bbox.v, s->m[i].bbox.v_indexes, trans_mat);
+            setfacesarrayxm(s->m[i].bbox.f, s->m[i].bbox.f_indexes, trans_mat);
         }
     }
 }

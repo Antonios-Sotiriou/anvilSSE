@@ -118,8 +118,9 @@ int STD = 51200;
 
 vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
-float movScalar = 10.f;
+float movScalar = 100.f;
 const float moveForce = 10.f;
+const float lookAngle = 1.f;
 vec4f point = { 1500.000000, -0.000055, 1700.000000, 1.000000 };
 
 /* Variables usefull for mesh click select. */
@@ -136,7 +137,7 @@ Scene scene = { 0 };
 static int INIT = 0;
 static int RUNNING = 1;
 vec4i half_screen = { 0, 0, 1, 1 }; // This variable is initialized in configurenotify function.Its Helping us decrease the number of divisions.
-int DEBUG = 0, UPDATE = 1;
+int DEBUG = 0;
 
 /* Display usefull measurements. */
 float			        TimeCounter = 0, LastFrameTimeCounter = 0, DeltaTime = 0, prevTime = 0.0, FPS = 0;
@@ -303,13 +304,13 @@ const static void keypress(XEvent *event) {
         case 56 : STC += INCORDEC; break;
         case 55 : STD += INCORDEC; break;
         case 98 : DISPLAYBBOX = DISPLAYBBOX == 0 ? 1 : 0; break;  /* b */
-        case 97 : look_left(&scene.m[6], 0.3);             /* a */
+        case 97 : look_left(&scene.m[6], lookAngle);             /* a */
             break;
-        case 100 : look_right(&scene.m[6], 0.3);           /* d */
+        case 100 : look_right(&scene.m[6], lookAngle);           /* d */
             break;
-        case 113 : look_up(&scene.m[6], 0.3);              /* q */
+        case 113 : look_up(&scene.m[6], lookAngle);              /* q */
             break;
-        case 101 : look_down(&scene.m[6], 0.3);            /* e */
+        case 101 : look_down(&scene.m[6], lookAngle);            /* e */
             break;
         case 119 : move_forward(&scene.m[6], moveForce);         /* w */
             break;
@@ -428,8 +429,6 @@ const static void keypress(XEvent *event) {
                 PROJECTIONVIEW = 0;
             break;
     }
-
-    UPDATE = 1;
 }
 const static void keyrelease(XEvent *event) {
 

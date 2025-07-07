@@ -166,8 +166,8 @@ const static int frustumCulling(vec4f v[], const int v_indexes, const Mat4x4 wm)
     DimensionsLimits dm = getDimensionsLimits(vec_arr, v_indexes);
 
     if ( ((dm.min[2] > 1.f) || (dm.max[2] < -1.f)) ||
-            ((dm.min[1] > 1.f) || (dm.max[1] < -1.f)) ||
-            ((dm.min[0] > 1.f) || (dm.max[0] < -1.f)) ) {
+         ((dm.min[1] > 1.f) || (dm.max[1] < -1.f)) ||
+         ((dm.min[0] > 1.f) || (dm.max[0] < -1.f)) ) {
 
         free(vec_arr);
         return 0;

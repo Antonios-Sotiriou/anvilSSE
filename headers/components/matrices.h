@@ -18,6 +18,7 @@
 #endif
 
 /* 3D graphics Matrices and computations. */
+const Mat4x4 identityMatrix(void);
 const Mat4x4 scaleMatrix(const float scale);
 const Mat4x4 translationMatrix(const float x, const float y, const float z);
 const Mat4x4 rotateXMatrix(const float angle);

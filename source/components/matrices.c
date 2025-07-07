@@ -7,6 +7,15 @@ const static vec4i zmask = { 2, 2, 2, 2 };
 const static vec4i wmask = { 3, 3, 3, 3 };
 
 /* Scale Matrix. */
+const Mat4x4 identityMatrix(void) {
+    Mat4x4 m = { 0 };
+    m.m[0][0] = 1.0;
+    m.m[1][1] = 1.0;
+    m.m[2][2] = 1.0;
+    m.m[3][3] = 1.0;
+    return m;
+}
+/* Scale Matrix. */
 const Mat4x4 scaleMatrix(const float scale) {
     Mat4x4 m = { 0 };
     m.m[0][0] = scale;
