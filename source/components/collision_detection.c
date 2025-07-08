@@ -249,7 +249,7 @@ const void terrainCollision(Mesh *terrain, Mesh *obj) {
         obj->dm = getDimensionsLimits(obj->bbox.v, obj->bbox.v_indexes);
 
         vec4f min = { obj->cd.v[0][0], obj->dm.min[1], obj->cd.v[0][2], 1.f };
-        vec4f t_near = (min - tp.pos) / obj->velocity;
+        vec4f t_near = (tp.pos - min) / obj->velocity;
         vec4f max = obj->velocity + min;
 
         if (t_near[1] > 0 && t_near[1] <= 1) {
@@ -266,9 +266,15 @@ const void terrainCollision(Mesh *terrain, Mesh *obj) {
 
             float dot =  dot_product(tp.normal, obj->velocity);
             obj->velocity = (obj->velocity - (dot * tp.normal)) * terrain->fr_coef;
-            printf("Terrain Collision\n");
+            // printf("Terrain Collision\n");
         } else if (t_near[1] < 0) {
-            printf("Terrain Penetration\n");
+            return;
+            // printf("Terrain Penetration\n");
+        } else if (t_near[1] == 0) {
+            obj->grounded = 1;
+            obj->falling_time = 0;
+            // float dot =  dot_product(tp.normal, obj->velocity);
+            // obj->velocity = (obj->velocity - (dot * tp.normal)) * terrain->fr_coef;
         }
 
         drawLine(min, max, viewMatrix);
@@ -276,12 +282,16 @@ const void terrainCollision(Mesh *terrain, Mesh *obj) {
         displayPoint(obj->velocity * t_near[1], viewMatrix, 0x00ff00);
         displayBbox(obj, viewMatrix);
 
-        float dot = dot_product(min, tp.normal);
-        if (dot < 0)
-            printf("Below Surface\n");
-        else
-            printf("Above Surface\n");
-        // logVec4f(t_near);
+        // float dot = dot_product(min, tp.normal);
+        // if (dot < 0)
+        //     printf("Below Surface\n");
+        // else
+        //     printf("Above Surface\n");
+
+        // printf("Grounded %d\n", obj->grounded);
+        // logMesh(*obj);
+
+        logVec4f(t_near);
         // logVec4f(obj->dm.max);
         // logVec4f(obj->bbox.v[0]);
         return;
