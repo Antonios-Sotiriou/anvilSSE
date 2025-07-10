@@ -271,14 +271,9 @@ const static void buttonpress(XEvent *event) {
 
     printf("mesh_info[0]: %d    mesh_info[1]: %d\n", data[0], data[1]);
     mesh_id = data[0];
+    scene.m[mesh_id].grounded = 0;
     primitive_id = data[1];
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    vec4f normal = { -1.f, 0.f, 0.f, 0.f};
-    // point = { 1500.000000, -0.000055, 1700.000000, 1.000000 };
-    vec4f edge1 = (vec4f){ 1500.000000, 0.000000, 1500.000000, 1.000000 } - (vec4f){ 1500.000000, 1000.000000, 2500.000000, 1.000000 };
-    vec4f edge2 = (vec4f){ 1500.000000, 0.000000, 1500.000000, 1.000000 } - point;
-    printf("E: %f\n", dot_product(normal, cross_product(edge1, edge2)));  
 }
 const static void mousemotion(XEvent *event) {
     printf("MotionNotify event received\n");

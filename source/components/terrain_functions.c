@@ -254,6 +254,15 @@ const TerrainPointInfo getTerrainPointData(Mesh *t, vec4f coords, Mesh *m) {
         f = t->f[Lowerface];
     }
 
+    /* Translate the face from object space to world space for the edge function to work and get the interpolated height value. */
+    Mat4x4 sclMatrix, trMatrix, enWorldMatrix;
+
+    sclMatrix = scaleMatrix(t->scale);
+    trMatrix = translationMatrix(t->cd.v[P][0], t->cd.v[P][1], t->cd.v[P][2]);
+    enWorldMatrix = mxm(sclMatrix, trMatrix);
+
+    f = facexm(f, enWorldMatrix);
+
     const vec4f xs = { f.v[0][0],  f.v[1][0], f.v[2][0], 0};
     const vec4f zs = { f.v[0][2],  f.v[1][2], f.v[2][2], 0};
 
