@@ -252,7 +252,7 @@ const void terrainCollision(Mesh *terrain, Mesh *obj) {
 
     if (obj->id == 1) {
 
-        vec4f diff = tp.pos - min;
+        vec4f diff = min - tp.pos;
 
         // float move_dir = dot_product(tp.normal, norm_vec(obj->velocity));
 
@@ -275,25 +275,31 @@ const void terrainCollision(Mesh *terrain, Mesh *obj) {
 
         // drawLine(min, max, viewMatrix);
         // drawLine(min, min + (tp.normal * 100.f), viewMatrix);
+        drawLine(obj->cd.v[0], obj->cd.v[0] + (tp.normal * 100.f), viewMatrix);
         drawLine(obj->cd.v[0], obj->cd.v[0] + obj->velocity, viewMatrix);
         displayBbox(obj, viewMatrix);
 
         if (obj->grounded) {
             obj->falling_time = 0;
 
-            // if (diff[1] > 0) {
+            // if (diff[1] <= 0) {
                 obj->velocity = (tp.pos - min);
+
+                // float dot =  dot_product(tp.normal, obj->velocity);
+                // obj->velocity = (obj->velocity - (dot * tp.normal)) * terrain->fr_coef;
             // } else if (diff[1] < 0) {
             //     obj->grounded = 0;
             // }
-            logVec4f(diff);
         }
 
-        // float dot = dot_product(min, tp.normal);
-        // if (dot < 0)
-        //     printf("Below Surface\n");
-        // else
-        //     printf("Above Surface\n");
+        float dot = dot_product(min, tp.normal);
+        if (dot < 0)
+            printf("Below Surface\n");
+        else
+            printf("Above Surface\n");
+
+        // float dot =  dot_product(tp.normal, obj->velocity);
+        // obj->velocity = (obj->velocity - (dot * tp.normal)) * terrain->fr_coef;
 
         // printf("Grounded %d\n", obj->grounded);
         // logMesh(*obj);
@@ -301,6 +307,7 @@ const void terrainCollision(Mesh *terrain, Mesh *obj) {
         // logVec4f(t_near);
         // logVec4f(obj->dm.max);
         // logVec4f(obj->bbox.v[0]);
+        // logVec4f(diff);
         return;
     } 
 

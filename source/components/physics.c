@@ -45,9 +45,9 @@ const void applyPhysics(Scene *s) {
             setvecsarrayxm(s->m[i].bbox.v, s->m[i].bbox.v_indexes, trans_mat);
             setfacesarrayxm(s->m[i].bbox.f, s->m[i].bbox.f_indexes, trans_mat);
 
-            if (s->m[i].id == 1) {
-                printf("Grounded %d\n", s->m[i].grounded);
-            }
+            // if (s->m[i].id == 1) {
+            //     printf("Grounded %d\n", s->m[i].grounded);
+            // }
         }
     }
 }
