@@ -323,7 +323,8 @@ const static void keypress(XEvent *event) {
             scene.m[6].grounded = 0;
             vec4f jump = { 0.f, 1.f, 0.f };
             scene.m[6].mvdir = jump;
-            scene.m[6].momentum = 0.981 * scene.m[6].mass;
+            scene.m[6].momentum = 9.81 * scene.m[6].mass;
+            scene.m[6].velocity = scene.m[6].mvdir * (movScalar * scene.m[6].momentum);
             scene.m[6].falling_time = 0.f;
             break;
         case 65451 :shadow_bias += 0.001;             /* + */

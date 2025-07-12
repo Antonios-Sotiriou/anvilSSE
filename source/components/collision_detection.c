@@ -283,38 +283,41 @@ const void terrainCollision(Mesh *terrain, Mesh *obj) {
             obj->falling_time = 0;
 
             // if (diff[1] <= 0) {
-                obj->velocity = (tp.pos - min);
+                // obj->velocity = (tp.pos - min);
 
-                // float dot =  dot_product(tp.normal, obj->velocity);
-                // obj->velocity = (obj->velocity - (dot * tp.normal)) * terrain->fr_coef;
+                float dot =  dot_product(tp.normal, obj->velocity);
+                obj->velocity = (obj->velocity - (dot * tp.normal)) * terrain->fr_coef;
             // } else if (diff[1] < 0) {
             //     obj->grounded = 0;
             // }
         }
 
-        float dot = dot_product(min, tp.normal);
-        if (dot < 0)
-            printf("Below Surface\n");
-        else
-            printf("Above Surface\n");
+        // float dot = dot_product(min, tp.normal);
+        // if (dot < 0)
+        //     printf("Below Surface\n");
+        // else
+        //     printf("Above Surface\n");
 
         // float dot =  dot_product(tp.normal, obj->velocity);
         // obj->velocity = (obj->velocity - (dot * tp.normal)) * terrain->fr_coef;
 
         // printf("Grounded %d\n", obj->grounded);
         // logMesh(*obj);
-
+        // printf("\x1b[H\x1b[J");
+        // logVec4f(min);
         // logVec4f(t_near);
-        // logVec4f(obj->dm.max);
+        // if (obj->velocity[0] != 0 || obj->velocity[1] != 0 || obj->velocity[2] != 0)
+        //     logVec4f(obj->velocity);
         // logVec4f(obj->bbox.v[0]);
         // logVec4f(diff);
+    //     printf("\n");
         return;
     } 
 
 
 
     float height_diff = tp.pos[1] - min[1];
-    if ( height_diff >= 0 ) {
+    if ( height_diff > 0 ) {
         obj->grounded = 1;
         obj->falling_time = 0;
     }
@@ -324,9 +327,11 @@ const void terrainCollision(Mesh *terrain, Mesh *obj) {
         setvecsarrayxm(obj->cd.v, 4, tm);
         setvecsarrayxm(obj->bbox.v, obj->bbox.v_indexes, tm);
         setfacesarrayxm(obj->bbox.f, obj->bbox.f_indexes, tm);
+        if (obj->type == Camera)
+            printf("height_diff: %f\n", height_diff);
 
-        // float dot =  dot_product(tp.normal, obj->velocity);
-        // obj->velocity = (obj->velocity - (dot * tp.normal)) * terrain->fr_coef;
+        float dot =  dot_product(tp.normal, obj->velocity);
+        obj->velocity = (obj->velocity - (dot * tp.normal)) * terrain->fr_coef;
     }
 }
 const void terrainHeightDifference(Mesh *terrain, Mesh *obj) {
