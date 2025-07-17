@@ -20,7 +20,7 @@ extern float movScalar;
 extern vec4f gravity_epicenter;
 extern Scene scene;
 
-const void terrainCollision(Mesh *terrain, Mesh *obj);
+const int terrainCollision(Mesh *terrain, Mesh *obj);
 const void terrainHeightDifference(Mesh *terrain, Mesh *obj);
 const int aabbCollision(TerrainInfo *ti, Scene *s, Mesh *obj);
 const int velocityCollideTest(Mesh *m);

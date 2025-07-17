@@ -218,7 +218,7 @@ const void initWorldObjects(Scene *s) {
     s->m[6].scale = 100.f;
     
     vec4f camera[4] = {
-        { 0.0f, 0.0f, 0.0f, 1.0f },
+        { 0.0f, 50.0f, 0.0f, 1.0f },
         { 1.0f, 0.0f, 0.0f, 0.0f },
         { 0.0f, 1.0f, 0.0f, 0.0f },
         { 0.0f, 0.0f, 1.0f, 0.0f }
@@ -249,7 +249,7 @@ const void initWorldObjects(Scene *s) {
     s->m[7].scale = 1.f;
     
     vec4f lightSource[4] = {
-        { 1500.f, 4000.0f, 1500.f, 1.f },
+        { 1500.f, 10000.0f, 1500.f, 1.f },
         { 1.f, 0.f, 0.f, 0.f },
         { 0.f, 0.f, 1.f, 0.f },
         { 0.f, -1.f, 0.f, 0.f }

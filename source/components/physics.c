@@ -13,9 +13,9 @@ const void applyPhysics(Scene *s) {
 
             /* Apply Gravitational force. */
             if (!s->m[i].grounded) {
-                s->m[i].falling_time += DeltaTime;
-                float g_accelaration = (0.981f * (s->m[i].falling_time));
+                float g_accelaration = (9.81f * (s->m[i].falling_time * s->m[i].falling_time));
                 s->m[i].velocity = (gravity_epicenter * g_accelaration) + (s->m[i].velocity);
+                s->m[i].falling_time += DeltaTime;
             }
 
             // if ( s->m[i].type == Player )
@@ -37,16 +37,12 @@ const void applyPhysics(Scene *s) {
                 rotationCollision(&scene.t, s, &s->m[i]);
             }
 
-            terrainCollision(&s->m[Terrain_1], &s->m[i]);
+            if (!terrainCollision(&s->m[Terrain_1], &s->m[i])) {
+                trans_mat = translationMatrix(s->m[i].velocity[0], s->m[i].velocity[1], s->m[i].velocity[2]);
 
-            trans_mat = translationMatrix(s->m[i].velocity[0], s->m[i].velocity[1], s->m[i].velocity[2]);
-
-            setvecsarrayxm(s->m[i].cd.v, 4, trans_mat);
-            setvecsarrayxm(s->m[i].bbox.v, s->m[i].bbox.v_indexes, trans_mat);
-            setfacesarrayxm(s->m[i].bbox.f, s->m[i].bbox.f_indexes, trans_mat);
-
-            if (s->m[i].id == 6) {
-                printf("Grounded %d\n", s->m[i].grounded);
+                setvecsarrayxm(s->m[i].cd.v, 4, trans_mat);
+                setvecsarrayxm(s->m[i].bbox.v, s->m[i].bbox.v_indexes, trans_mat);
+                setfacesarrayxm(s->m[i].bbox.f, s->m[i].bbox.f_indexes, trans_mat);
             }
         }
     }
