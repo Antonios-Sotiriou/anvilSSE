@@ -256,9 +256,6 @@ const int terrainCollision(Mesh *terrain, Mesh *obj) {
 
         // float move_dir = dot_product(tp.normal, norm_vec(obj->velocity));
 
-        printf("Terrain Collision!\n");
-        printf("grounded: %d\n", obj->grounded);
-
         if ((t_near[1] > 0 && t_near[1] <= 1) && !obj->grounded) {
 
             obj->velocity *= t_near[1];
@@ -275,13 +272,14 @@ const int terrainCollision(Mesh *terrain, Mesh *obj) {
             // obj->velocity = (tp.pos - min);
             float dot =  dot_product(tp.normal, obj->velocity);
             obj->velocity = (obj->velocity - (dot * tp.normal)) * terrain->fr_coef;
+            printf("Terrain Collision!\n");
             return 1;
         } else if (t_near[1] == 0) {
             obj->grounded = 1;
             obj->falling_time = 0;
             // float dot =  dot_product(tp.normal, obj->velocity);
             // obj->velocity = (obj->velocity - (dot * tp.normal)) * terrain->fr_coef;
-            // printf("Sliding...\n");
+            printf("Sliding...\n");
         } else {
             if (diff[1] < 0) {
                 obj->grounded = 1;
@@ -296,7 +294,7 @@ const int terrainCollision(Mesh *terrain, Mesh *obj) {
                 float dot =  dot_product(tp.normal, obj->velocity);
                 obj->velocity = (obj->velocity - (dot * tp.normal)) * terrain->fr_coef;
                 return 2;
-                // printf("Terrain Penetration!\n");
+                printf("Terrain Penetration!\n");
             }
             obj->grounded = 0;
         }
