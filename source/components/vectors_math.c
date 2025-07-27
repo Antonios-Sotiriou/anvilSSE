@@ -3,6 +3,11 @@
 const static vec4i mask1 = { 1, 2, 0, 3 }, mask2 = { 2, 0, 1, 3 };
 
 /* floors a vector. */
+const int checkZero_vec4f(const vec4f v) {
+    if ( (v[0] != 0) || (v[1] != 0) || (v[2] != 0) )
+        return 1;
+    return 0;
+}
 const vec4f floor_vec4f(const vec4f v) {
     vec4f r = __builtin_convertvector(__builtin_convertvector(v, vec4i), vec4f);
     return r;

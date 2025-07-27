@@ -37,6 +37,7 @@ const void applyPhysics(Scene *s) {
                 rotationCollision(&scene.t, s, &s->m[i]);
             }
 
+            // if (!simpleTerrainCollision(&s->m[Terrain_1], &s->m[i])) {
             if (!terrainCollision(&s->m[Terrain_1], &s->m[i])) {
                 trans_mat = translationMatrix(s->m[i].velocity[0], s->m[i].velocity[1], s->m[i].velocity[2]);
 
