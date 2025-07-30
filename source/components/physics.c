@@ -38,6 +38,7 @@ const void applyPhysics(Scene *s) {
             }
 
             // if (!simpleTerrainCollision(&s->m[Terrain_1], &s->m[i])) {
+            // if (s->m[i].type != Player)
             if (!terrainCollision(&s->m[Terrain_1], &s->m[i])) {
                 trans_mat = translationMatrix(s->m[i].velocity[0], s->m[i].velocity[1], s->m[i].velocity[2]);
 

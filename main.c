@@ -624,6 +624,8 @@ const static int board(void) {
         }
         time_dif = DeltaTime > 0.016666 ? 0 : (0.016666 - DeltaTime) * 100000;
         usleep(time_dif);
+
+        usleep(100000);
     }
     return EXIT_SUCCESS;
 }
