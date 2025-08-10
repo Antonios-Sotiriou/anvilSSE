@@ -12,11 +12,11 @@ const void applyPhysics(Scene *s) {
             initMeshQuadInfo(&s->m[Terrain_1], &s->m[i]);
 
             /* Apply Gravitational force. */
-            if (!s->m[i].grounded) {
-                float g_accelaration = (9.81f * (s->m[i].falling_time * s->m[i].falling_time));
-                s->m[i].velocity = (gravity_epicenter * g_accelaration) + (s->m[i].velocity);
-                s->m[i].falling_time += DeltaTime;
-            }
+            // if (!s->m[i].grounded) {
+            //     float g_accelaration = (9.81f * (s->m[i].falling_time * s->m[i].falling_time));
+            //     s->m[i].velocity = (gravity_epicenter * g_accelaration) + (s->m[i].velocity);
+            //     s->m[i].falling_time += DeltaTime;
+            // }
 
             // if ( s->m[i].type == Player )
             //     terrainHeightDifference(&s->m[Terrain_1], &s->m[i]);

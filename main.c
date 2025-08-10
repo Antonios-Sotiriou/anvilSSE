@@ -118,7 +118,7 @@ int STD = 51200;
 
 vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
-float movScalar = 100.f;
+float movScalar = 10.f;
 const float moveForce = 10.f;
 const float lookAngle = 1.f;
 vec4f point = { 1500.000000, -0.000055, 1700.000000, 1.000000 };
@@ -625,7 +625,7 @@ const static int board(void) {
         time_dif = DeltaTime > 0.016666 ? 0 : (0.016666 - DeltaTime) * 100000;
         usleep(time_dif);
 
-        usleep(100000);
+        // usleep(100000);
     }
     return EXIT_SUCCESS;
 }

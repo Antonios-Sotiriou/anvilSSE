@@ -159,11 +159,11 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     // float cv = sweptTriangleVectors(*sf, *mf, velocity);
     // return cv;
 
-    // printf("\x1b[H\x1b[J");
+    printf("\x1b[H\x1b[J");
     // printf("Before rounding\n");
-    // logFace(*sf, 1, 0, 0);
-    // printf("\n");
-    // logFace(*mf, 1, 0, 0); 
+    logFace(*sf, 1, 0, 0);
+    logFace(*mf, 1, 0, 0); 
+    printf("------------------------------------\n");
 
     // face stable_f, moving_f;
     // stable_f.v[0] = sf->v[0];
@@ -217,22 +217,22 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     if ( dot_product(normal, cross_product(mf->v[1] - mf->v[0], mf->v[0] - p)) > 0 ) {
         // printf("out of edge 1\n");
         // drawLine(mf->v[1], mf->v[0], worldMatrix);
-        // return -1;
+        return -1;
     }
     if ( dot_product(normal, cross_product(mf->v[0] - (mf->v[0] + velocity), (mf->v[0] + velocity) - p)) > 0 ) {
         // printf("out of edge 2\n");
         // drawLine(mf->v[0], mf->v[0] + velocity, worldMatrix);
-        // return -1;
+        return -1;
     }
     if ( dot_product(normal, cross_product((mf->v[0] + velocity) - (mf->v[1] + velocity), (mf->v[1] + velocity) - p)) > 0 ) {
         // printf("out of edge 3\n");
         // drawLine(mf->v[0] + velocity, mf->v[1] + velocity, worldMatrix);
-        // return -1;
+        return -1;
     }
     if ( dot_product(normal, cross_product((mf->v[1] + velocity) - mf->v[1], mf->v[1] - p)) > 0 ) {
         // printf("out of edge 4\n");
         // drawLine(mf->v[1] + velocity, mf->v[1], worldMatrix);
-        // return -1;
+        return -1;
     }
 
     displayPoint(p, worldMatrix, 0x00ff00);
@@ -240,7 +240,7 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     vec4f p2 = plane_intersect(mf->v[0], moving_n, p, p - velocity, &t);
     printf("p 2    ");
     logVec4f(p2);
-    // printf("t 2: %f\n", t);
+    printf("t 2: %f\n", t);
     displayPoint(p2, worldMatrix, 0xff0000);
 
     // vec4f tnear = (p - p2) / velocity;
@@ -250,6 +250,7 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     // for (int x = 0; x < 3; x++) {
 
     // }
+    *n = stable_n;
     return t;
 }
 const int terrainCollision(Mesh *terrain, Mesh *obj) {
@@ -462,9 +463,9 @@ const int obbCollision(Mesh *m) {
             // for (int x = 0; x < m->bbox.f_indexes; x++) {
                 plane_n = norm_vec(triangle_cp(m->bbox.f[2]));
                 // printf("\x1b[H\x1b[J");
-                // logFace(m->bbox.f[2], 1, 0, 0);
-                // printf("\n");
                 // logFace(scene.m[2].bbox.f[1], 1, 0, 0);
+                // logFace(m->bbox.f[2], 1, 0, 0);
+                // printf("------------------------------------\n");
                 if (dot_product(m->velocity, plane_n) > 0) {
 
                     // for (int y = 0; y < scene.m[2].bbox.f_indexes; y++) {
@@ -475,9 +476,9 @@ const int obbCollision(Mesh *m) {
 
                                 float temp = sweptDoubleTri(&scene.m[2].bbox.f[1], &m->bbox.f[2], m->velocity, &n);
 
-                                if (temp < t) {
+                                if (temp <= t) {
                                     t = temp;
-                                    n = norm_vec(m->velocity * -1);
+                                    // n = norm_vec(m->velocity * -1);
                                 }
                             }
                         }
@@ -488,7 +489,7 @@ const int obbCollision(Mesh *m) {
             // if (t < __INT_MAX__)
             //     printf("t: %f\n", t);
             if (t == 0.f) {
-                // printf("Sliding...: %f\n", t);
+                printf("Sliding...: %f\n", t);
                 float dot =  dot_product(n, m->velocity);
                 m->velocity = m->velocity - (dot * n);
                 if (n[1] == 1)
@@ -506,7 +507,8 @@ const int obbCollision(Mesh *m) {
                 m->velocity = m->velocity - (dot * n);
                 // getc(stdin);
                 return 1;
-            }
+            } else if (t < 0)
+                printf("MINUS: %f\n", t);
         // }
     // }
     return 0;
