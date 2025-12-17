@@ -118,7 +118,7 @@ int STD = 51200;
 
 vec4f gravity_epicenter = { 0.f, -1.f, 0.f };
 const float sunMov = 100.0f;
-float movScalar = 10.f;
+float movScalar = 1.f;
 const float moveForce = 10.f;
 const float lookAngle = 1.f;
 vec4f point = { 1500.000000, -0.000055, 1700.000000, 1.000000 };
@@ -382,6 +382,15 @@ const static void keypress(XEvent *event) {
         case 122 : rotateGlobalZ(&scene.m[1], 1);                     /* z */
             break;
         case 114 :    /* r */
+            Mat4x4 trans_mat = translationMatrix(-scene.m[1].cd.v[P][0], -scene.m[1].cd.v[P][1], -scene.m[1].cd.v[P][2]);
+            setvecsarrayxm(scene.m[1].cd.v, 4, trans_mat);
+            setvecsarrayxm(scene.m[1].bbox.v, scene.m[1].bbox.v_indexes, trans_mat);
+            setfacesarrayxm(scene.m[1].bbox.f, scene.m[1].bbox.f_indexes, trans_mat);
+
+            trans_mat = translationMatrix(1200.892822f, 0.f, 1850.000000f);
+            setvecsarrayxm(scene.m[1].cd.v, 4, trans_mat);
+            setvecsarrayxm(scene.m[1].bbox.v, scene.m[1].bbox.v_indexes, trans_mat);
+            setfacesarrayxm(scene.m[1].bbox.f, scene.m[1].bbox.f_indexes, trans_mat);
             break;
         case 99 :                                                        /* c */
             if ( mesh_id > 0 ) {
