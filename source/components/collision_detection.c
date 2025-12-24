@@ -216,25 +216,24 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
 
     vec4f cross = cross_product((mf->v[1] + velocity) - mf->v[1], mf->v[1] - p);
     drawLine(mf->v[0], mf->v[0] + norm_vec(cross) * 1000, worldMatrix);
-
-    float dot = 0;
-    if (dot = dot_product(normal, cross_product(mf->v[1] - mf->v[0], mf->v[0] - p)) > 0 ) {
-        printf("Dot Product 1: %f\n", dot);
-        return __INT_MAX__;
-    }
-    if (dot = dot_product(normal, cross_product(mf->v[0] - (mf->v[0] + velocity), (mf->v[0] + velocity) - p)) > 0 ) {
-        printf("Dot Product 2: %f\n", dot);
-        return __INT_MAX__;
-    }
-    if (dot = dot_product(normal, cross_product((mf->v[0] + velocity) - (mf->v[1] + velocity), (mf->v[1] + velocity) - p)) > 0 ) {
-        printf("Dot Product 3: %f\n", dot);
-        return __INT_MAX__;
-    }
-    if (dot = dot_product(normal, cross_product((mf->v[1] + velocity) - mf->v[1], mf->v[1] - p)) > 0 ) {
-        printf("Dot Product 4: %f\n", dot);
-        // getc(stdin);
-        if (t != 0)
+    if (t != 0) {
+        float dot = 0;
+        if (dot = dot_product(normal, cross_product(mf->v[1] - mf->v[0], mf->v[0] - p)) > 0 ) {
+            printf("Dot Product 1: %f\n", dot);
             return __INT_MAX__;
+        }
+        if (dot = dot_product(normal, cross_product(mf->v[0] - (mf->v[0] + velocity), (mf->v[0] + velocity) - p)) > 0 ) {
+            printf("Dot Product 2: %f\n", dot);
+            return __INT_MAX__;
+        }
+        if (dot = dot_product(normal, cross_product((mf->v[0] + velocity) - (mf->v[1] + velocity), (mf->v[1] + velocity) - p)) > 0 ) {
+            printf("Dot Product 3: %f\n", dot);
+            return __INT_MAX__;
+        }
+        if (dot = dot_product(normal, cross_product((mf->v[1] + velocity) - mf->v[1], mf->v[1] - p)) > 0 ) {
+            printf("Dot Product 4: %f\n", dot);
+            return __INT_MAX__;
+        }
     }
 
     // vec4f p2 = plane_intersect(mf->v[0], moving_n, p, p - velocity, &t);
