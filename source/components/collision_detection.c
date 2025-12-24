@@ -199,10 +199,12 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     if (t < 0 || t > 1) {
         return -1;
     }
-    drawLine(p, p + velocity * 1000, worldMatrix);
+
     printf("p 1    ");
     logVec4f(p);
     printf("t 1: %f\n", t);
+    displayPoint(p, worldMatrix, 0x00ff00);
+    drawLine(p, p + velocity * 1000, worldMatrix);
 
     if ( dot_product(normal, cross_product(mf->v[1] - mf->v[0], mf->v[0] - p)) > 0 ) {
         return -1;
@@ -217,19 +219,19 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
         return -1;
     }
 
-    displayPoint(p, worldMatrix, 0x00ff00);
-
     vec4f p2 = plane_intersect(mf->v[0], moving_n, p, p - velocity, &t);
     printf("p 2    ");
     logVec4f(p2);
     printf("t 2: %f\n", t);
+    displayPoint(p2, worldMatrix, 0xff0000);
+    drawLine(p2, p2 + velocity * 1000, worldMatrix);
 
     vec4f p3 = plane_intersect(adjust_precission(mf->v[0], 1), moving_n, adjust_precission(p, 1), adjust_precission(p - velocity, 1), &t);
     printf("p 3    ");
-    logVec4f(p2);
+    logVec4f(p3);
     printf("t 3: %f\n", t);
-
-    // displayPoint(p2, worldMatrix, 0xff0000);
+    displayPoint(p3, worldMatrix, 0xff0000);
+    drawLine(p3, p3 + velocity * 1000, worldMatrix);
 
     *n = stable_n;
     return t;
@@ -488,8 +490,9 @@ const int obbCollision(Mesh *m) {
                 m->velocity = m->velocity - (dot * n);
                 getc(stdin);
                 return 1;
-            } else if (t < 0) {
+            } else if (t < 1) {
                 printf("MINUS: %f\n", t);
+                return 0;
             }
         // }
     // }

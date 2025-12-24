@@ -398,10 +398,10 @@ const static void keypress(XEvent *event) {
                 rotateMesh(&scene.m[mesh_id], 10, 1.f, 0.f, 0.0f);
             }
             break;
-        case 43 : movScalar += 500;                                    /* + */
+        case 43 : movScalar += 10;                                    /* + */
             printf("movScalar: %f\n", movScalar);
             break;
-        case 45 : movScalar -= 500;                                   /* - */
+        case 45 : movScalar -= 10;                                   /* - */
             printf("movScalar: %f\n", movScalar);
             break;
         case 112 :
