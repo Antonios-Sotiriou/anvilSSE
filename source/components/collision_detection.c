@@ -178,7 +178,6 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     logFace(*mf, 1, 0, 0); 
     printf("------------------------------------\n");
 
-
     // displayFace(&stable_f, worldMatrix);
     // displayFace(&moving_f, worldMatrix);
     // printf("\x1b[H\x1b[J");
@@ -186,7 +185,7 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     // Stable object Edge
     drawLine(sf->v[2], sf->v[1], worldMatrix);
 
-    // Edges of te moving object
+    // Edges of the moving object
     drawLine(mf->v[1], mf->v[0], worldMatrix);
     drawLine(mf->v[0], mf->v[0] + velocity, worldMatrix);
     drawLine(mf->v[0] + velocity, mf->v[1] + velocity, worldMatrix);
@@ -197,8 +196,10 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
 
     vec4f p = plane_intersect(mf->v[0], normal, sf->v[2], sf->v[1], &t);
     if (t < 0 || t > 1) {
-        return -1;
+        return __INT_MAX__;
     }
+    // The triangle vertex closest to stable face plane.
+    // displayPoint(mf->v[1], worldMatrix, 0xff0000);
 
     printf("p 1    ");
     logVec4f(p);
@@ -206,32 +207,49 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     displayPoint(p, worldMatrix, 0x00ff00);
     drawLine(p, p + velocity * 1000, worldMatrix);
 
-    if ( dot_product(normal, cross_product(mf->v[1] - mf->v[0], mf->v[0] - p)) > 0 ) {
-        return -1;
-    }
-    if ( dot_product(normal, cross_product(mf->v[0] - (mf->v[0] + velocity), (mf->v[0] + velocity) - p)) > 0 ) {
-        return -1;
-    }
-    if ( dot_product(normal, cross_product((mf->v[0] + velocity) - (mf->v[1] + velocity), (mf->v[1] + velocity) - p)) > 0 ) {
-        return -1;
-    }
-    if ( dot_product(normal, cross_product((mf->v[1] + velocity) - mf->v[1], mf->v[1] - p)) > 0 ) {
-        return -1;
-    }
-
-    vec4f p2 = plane_intersect(mf->v[0], moving_n, p, p - velocity, &t);
-    printf("p 2    ");
-    logVec4f(p2);
-    printf("t 2: %f\n", t);
-    displayPoint(p2, worldMatrix, 0xff0000);
-    drawLine(p2, p2 + velocity * 1000, worldMatrix);
-
     vec4f p3 = plane_intersect(adjust_precission(mf->v[0], 1), moving_n, adjust_precission(p, 1), adjust_precission(p - velocity, 1), &t);
     printf("p 3    ");
     logVec4f(p3);
     printf("t 3: %f\n", t);
     displayPoint(p3, worldMatrix, 0xff0000);
-    drawLine(p3, p3 + velocity * 1000, worldMatrix);
+    // drawLine(p3, p3 + velocity * 1000, worldMatrix);
+
+    vec4f cross = cross_product((mf->v[1] + velocity) - mf->v[1], mf->v[1] - p);
+    drawLine(mf->v[0], mf->v[0] + norm_vec(cross) * 1000, worldMatrix);
+
+    float dot = 0;
+    if (dot = dot_product(normal, cross_product(mf->v[1] - mf->v[0], mf->v[0] - p)) > 0 ) {
+        printf("Dot Product 1: %f\n", dot);
+        return __INT_MAX__;
+    }
+    if (dot = dot_product(normal, cross_product(mf->v[0] - (mf->v[0] + velocity), (mf->v[0] + velocity) - p)) > 0 ) {
+        printf("Dot Product 2: %f\n", dot);
+        return __INT_MAX__;
+    }
+    if (dot = dot_product(normal, cross_product((mf->v[0] + velocity) - (mf->v[1] + velocity), (mf->v[1] + velocity) - p)) > 0 ) {
+        printf("Dot Product 3: %f\n", dot);
+        return __INT_MAX__;
+    }
+    if (dot = dot_product(normal, cross_product((mf->v[1] + velocity) - mf->v[1], mf->v[1] - p)) > 0 ) {
+        printf("Dot Product 4: %f\n", dot);
+        // getc(stdin);
+        if (t != 0)
+            return __INT_MAX__;
+    }
+
+    // vec4f p2 = plane_intersect(mf->v[0], moving_n, p, p - velocity, &t);
+    // printf("p 2    ");
+    // logVec4f(p2);
+    // printf("t 2: %f\n", t);
+    // displayPoint(p2, worldMatrix, 0xff0000);
+    // drawLine(p2, p2 + velocity * 1000, worldMatrix);
+
+    // vec4f p3 = plane_intersect(adjust_precission(mf->v[0], 1), moving_n, adjust_precission(p, 1), adjust_precission(p - velocity, 1), &t);
+    // printf("p 3    ");
+    // logVec4f(p3);
+    // printf("t 3: %f\n", t);
+    // displayPoint(p3, worldMatrix, 0xff0000);
+    // drawLine(p3, p3 + velocity * 1000, worldMatrix);
 
     *n = stable_n;
     return t;
@@ -490,9 +508,10 @@ const int obbCollision(Mesh *m) {
                 m->velocity = m->velocity - (dot * n);
                 getc(stdin);
                 return 1;
-            } else if (t < 1) {
+            } else if (t < 0.f) {
                 printf("MINUS: %f\n", t);
-                return 0;
+                getc(stdin);
+                return 1;
             }
         // }
     // }
