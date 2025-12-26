@@ -1,5 +1,37 @@
 #include "../../headers/components/collision_detection.h"
 
+float sweptEdgeVsEdge(face *sf, face *mf, vec4f velocity, vec4f *n) {
+    float t = __INT_MAX__;
+    vec4f stable_n = norm_vec(triangle_cp(*sf));
+    vec4f moving_n = norm_vec(triangle_cp(*mf));
+
+    vec4f normal = norm_vec(cross_product(mf->v[1] - mf->v[0], velocity));
+    vec4f p = plane_intersect(mf->v[0], normal, sf->v[2], sf->v[1], &t);
+    if (t < 0 || t > 1) {
+        return __INT_MAX__;
+    }
+
+    vec4f p3 = plane_intersect(adjust_precission(mf->v[0], 1), moving_n, adjust_precission(p, 1), adjust_precission(p - velocity, 1), &t);
+
+    if (t != 0) {
+        if (dot_product(normal, cross_product(mf->v[1] - mf->v[0], mf->v[0] - p)) > 0 ) {
+            return __INT_MAX__;
+        }
+        if (dot_product(normal, cross_product(mf->v[0] - (mf->v[0] + velocity), (mf->v[0] + velocity) - p)) > 0 ) {
+            return __INT_MAX__;
+        }
+        if (dot_product(normal, cross_product((mf->v[0] + velocity) - (mf->v[1] + velocity), (mf->v[1] + velocity) - p)) > 0 ) {
+            return __INT_MAX__;
+        }
+        if (dot_product(normal, cross_product((mf->v[1] + velocity) - mf->v[1], mf->v[1] - p)) > 0 ) {
+            return __INT_MAX__;
+        }
+    }
+
+    *n = stable_n;
+    return t;
+}
+
 /* Adjusts precision of the number to given decimal points. */
 vec4f adjust_precission(vec4f v, int prec_lvl) {
     if (prec_lvl <= 0) {
@@ -24,8 +56,8 @@ const vec4f plane_intersect(vec4f plane_p, vec4f plane_n, vec4f line_start, vec4
     float dot = dot_product(plane_n, u);
     vec4f w = line_start - plane_p;
     *t = -dot_product(plane_n, w) / dot;
-    // if (fabs(*t) <= 0.0001)
-    //     *t = 0.f;
+    if (fabs(*t) < 0.001)
+        *t = 0.f;
     return line_start + (u * *t);
 }
 float sweptTribbox(face sf, face mf, vec4f velocity) {
@@ -166,17 +198,17 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     vec4f stable_n = norm_vec(triangle_cp(*sf));
     vec4f moving_n = norm_vec(triangle_cp(*mf));
 
-    // float cbb = sweptTribbox(*sf, *mf, velocity);
-    // return cbb;
+    // t = sweptTribbox(*sf, *mf, velocity);
 
-    // float cv = sweptTriangleVectors(*sf, *mf, velocity);
-    // return cv;
+    // t = sweptTriangleVectors(*sf, *mf, velocity);
+
+    // t = sweptEdgeVsEdge(sf, mf, velocity, n);
 
     printf("\x1b[H\x1b[J");
     // printf("Before rounding\n");
-    logFace(*sf, 1, 0, 0);
-    logFace(*mf, 1, 0, 0); 
-    printf("------------------------------------\n");
+    // logFace(*sf, 1, 0, 0);
+    // logFace(*mf, 1, 0, 0); 
+    // printf("------------------------------------\n");
 
     // displayFace(&stable_f, worldMatrix);
     // displayFace(&moving_f, worldMatrix);
@@ -214,8 +246,6 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     displayPoint(p3, worldMatrix, 0xff0000);
     // drawLine(p3, p3 + velocity * 1000, worldMatrix);
 
-    vec4f cross = cross_product((mf->v[1] + velocity) - mf->v[1], mf->v[1] - p);
-    drawLine(mf->v[0], mf->v[0] + norm_vec(cross) * 1000, worldMatrix);
     if (t != 0) {
         float dot = 0;
         if (dot = dot_product(normal, cross_product(mf->v[1] - mf->v[0], mf->v[0] - p)) > 0 ) {
@@ -235,20 +265,6 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
             return __INT_MAX__;
         }
     }
-
-    // vec4f p2 = plane_intersect(mf->v[0], moving_n, p, p - velocity, &t);
-    // printf("p 2    ");
-    // logVec4f(p2);
-    // printf("t 2: %f\n", t);
-    // displayPoint(p2, worldMatrix, 0xff0000);
-    // drawLine(p2, p2 + velocity * 1000, worldMatrix);
-
-    // vec4f p3 = plane_intersect(adjust_precission(mf->v[0], 1), moving_n, adjust_precission(p, 1), adjust_precission(p - velocity, 1), &t);
-    // printf("p 3    ");
-    // logVec4f(p3);
-    // printf("t 3: %f\n", t);
-    // displayPoint(p3, worldMatrix, 0xff0000);
-    // drawLine(p3, p3 + velocity * 1000, worldMatrix);
 
     *n = stable_n;
     return t;
@@ -486,12 +502,16 @@ const int obbCollision(Mesh *m) {
                 }
             // }
 
-            // if (t < __INT_MAX__)
-            //     printf("t: %f\n", t);
             if (t == 0.f) {
                 printf("Sliding...: %f\n", t);
+
                 float dot =  dot_product(n, m->velocity);
                 m->velocity = m->velocity - (dot * n);
+
+                if (len_vec(m->velocity) < 0.001) {
+                    m->velocity -= m->velocity;
+                }
+
                 if (n[1] == 1)
                     m->falling_time = 0;
                 return 1;
