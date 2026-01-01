@@ -248,33 +248,6 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
         }
     }
     printf("final result: %f\n", t_cache);
-    // vec4f normal = norm_vec(cross_product(mf->v[1] - mf->v[0], velocity));
-    // vec4f p = plane_intersect(mf->v[0], normal, sf->v[2], sf->v[1], &t);
-    // if (t < 0 || t > 1) {
-    //     return __INT_MAX__;
-    // }
-
-    // vec4f p3 = plane_intersect(adjust_precission(mf->v[0], 1), moving_n, adjust_precission(p, 1), adjust_precission(p - velocity, 1), &t);
-    // if (t != 0) {
-    //     float dot = 0;
-    //     if (dot = dot_product(normal, cross_product(mf->v[1] - mf->v[0], mf->v[0] - p)) > 0 ) {
-    //         printf("Dot Product 1: %f\n", dot);
-    //         return __INT_MAX__;
-    //     }
-    //     if (dot = dot_product(normal, cross_product(mf->v[0] - (mf->v[0] + velocity), (mf->v[0] + velocity) - p)) > 0 ) {
-    //         printf("Dot Product 2: %f\n", dot);
-    //         return __INT_MAX__;
-    //     }
-    //     if (dot = dot_product(normal, cross_product((mf->v[0] + velocity) - (mf->v[1] + velocity), (mf->v[1] + velocity) - p)) > 0 ) {
-    //         printf("Dot Product 3: %f\n", dot);
-    //         return __INT_MAX__;
-    //     }
-    //     if (dot = dot_product(normal, cross_product((mf->v[1] + velocity) - mf->v[1], mf->v[1] - p)) > 0 ) {
-    //         printf("Dot Product 4: %f\n", dot);
-    //         return __INT_MAX__;
-    //     }
-    // }
-
     *n = stable_n;
     return t_cache;
 }
