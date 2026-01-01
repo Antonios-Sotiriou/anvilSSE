@@ -195,6 +195,7 @@ float sweptTriangleVectors(face sf, face mf, vec4f velocity) {
 }
 float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     float t = __INT_MAX__;
+    float t_cache = __INT_MAX__;
     vec4f stable_n = norm_vec(triangle_cp(*sf));
     vec4f moving_n = norm_vec(triangle_cp(*mf));
 
@@ -205,69 +206,77 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     // t = sweptEdgeVsEdge(sf, mf, velocity, n);
 
     printf("\x1b[H\x1b[J");
-    // printf("Before rounding\n");
-    // logFace(*sf, 1, 0, 0);
-    // logFace(*mf, 1, 0, 0); 
-    // printf("------------------------------------\n");
 
-    // displayFace(&stable_f, worldMatrix);
-    // displayFace(&moving_f, worldMatrix);
-    // printf("\x1b[H\x1b[J");
+    vec4f edge[3][2] = {
+        { mf->v[0], mf->v[1] },
+        { mf->v[1], mf->v[2] },
+        { mf->v[2], mf->v[0] }
+    }; 
 
-    // Stable object Edge
-    drawLine(sf->v[2], sf->v[1], worldMatrix);
+    for (int i = 0; i < 3; i++) {
+        vec4f edge_v = edge[i][1] - edge[i][0];
 
-    // Edges of the moving object
-    drawLine(mf->v[1], mf->v[0], worldMatrix);
-    drawLine(mf->v[0], mf->v[0] + velocity, worldMatrix);
-    drawLine(mf->v[0] + velocity, mf->v[1] + velocity, worldMatrix);
-    drawLine(mf->v[1] + velocity, mf->v[1], worldMatrix);
+        vec4f normal = norm_vec(cross_product(edge_v, velocity));
+        vec4f p = plane_intersect(mf->v[i], normal, sf->v[2], sf->v[1], &t);
+        if (t > 0 && t < 1) {
 
-    vec4f normal = norm_vec(cross_product(mf->v[1] - mf->v[0], velocity));
-    drawLine(mf->v[0], mf->v[0] + normal * 1000, worldMatrix);
+            vec4f p3 = plane_intersect(adjust_precission(mf->v[i], 1), moving_n, adjust_precission(p, 1), adjust_precission(p - velocity, 1), &t);
 
-    vec4f p = plane_intersect(mf->v[0], normal, sf->v[2], sf->v[1], &t);
-    if (t < 0 || t > 1) {
-        return __INT_MAX__;
-    }
-    // The triangle vertex closest to stable face plane.
-    // displayPoint(mf->v[1], worldMatrix, 0xff0000);
-
-    printf("p 1    ");
-    logVec4f(p);
-    printf("t 1: %f\n", t);
-    displayPoint(p, worldMatrix, 0x00ff00);
-    drawLine(p, p + velocity * 1000, worldMatrix);
-
-    vec4f p3 = plane_intersect(adjust_precission(mf->v[0], 1), moving_n, adjust_precission(p, 1), adjust_precission(p - velocity, 1), &t);
-    printf("p 3    ");
-    logVec4f(p3);
-    printf("t 3: %f\n", t);
-    displayPoint(p3, worldMatrix, 0xff0000);
-    // drawLine(p3, p3 + velocity * 1000, worldMatrix);
-
-    if (t != 0) {
-        float dot = 0;
-        if (dot = dot_product(normal, cross_product(mf->v[1] - mf->v[0], mf->v[0] - p)) > 0 ) {
-            printf("Dot Product 1: %f\n", dot);
-            return __INT_MAX__;
+            if (t != 0) {
+                float dot = 0;
+                if (dot = dot_product(normal, cross_product(edge_v, mf->v[0] - p)) > 0 ) {
+                    printf("Dot Product 1: %f    t: %f    edge: %d\n", dot, t, i);
+                    continue;
+                }
+                if (dot = dot_product(normal, cross_product(edge[i][0] - (edge[i][0] + velocity), (edge[i][0] + velocity) - p)) > 0 ) {
+                    printf("Dot Product 2: %f    t: %f    edge: %d\n", dot, t, i);
+                    continue;
+                }
+                if (dot = dot_product(normal, cross_product((edge[i][0] + velocity) - (edge[i][1] + velocity), (edge[i][1] + velocity) - p)) > 0 ) {
+                    printf("Dot Product 3: %f    t: %f    edge: %d\n", dot, t, i);
+                    continue;
+                }
+                if (dot = dot_product(normal, cross_product((edge[i][1] + velocity) - edge[i][1], edge[i][1] - p)) > 0 ) {
+                    printf("Dot Product 4: %f    t: %f    edge: %d\n", dot, t, i);
+                    continue;
+                }
+            }
         }
-        if (dot = dot_product(normal, cross_product(mf->v[0] - (mf->v[0] + velocity), (mf->v[0] + velocity) - p)) > 0 ) {
-            printf("Dot Product 2: %f\n", dot);
-            return __INT_MAX__;
-        }
-        if (dot = dot_product(normal, cross_product((mf->v[0] + velocity) - (mf->v[1] + velocity), (mf->v[1] + velocity) - p)) > 0 ) {
-            printf("Dot Product 3: %f\n", dot);
-            return __INT_MAX__;
-        }
-        if (dot = dot_product(normal, cross_product((mf->v[1] + velocity) - mf->v[1], mf->v[1] - p)) > 0 ) {
-            printf("Dot Product 4: %f\n", dot);
-            return __INT_MAX__;
+        printf("t: %f    edge: %d\n", t, i);
+        if (t < t_cache) {
+            t_cache = t;
         }
     }
+    printf("final result: %f\n", t_cache);
+    // vec4f normal = norm_vec(cross_product(mf->v[1] - mf->v[0], velocity));
+    // vec4f p = plane_intersect(mf->v[0], normal, sf->v[2], sf->v[1], &t);
+    // if (t < 0 || t > 1) {
+    //     return __INT_MAX__;
+    // }
+
+    // vec4f p3 = plane_intersect(adjust_precission(mf->v[0], 1), moving_n, adjust_precission(p, 1), adjust_precission(p - velocity, 1), &t);
+    // if (t != 0) {
+    //     float dot = 0;
+    //     if (dot = dot_product(normal, cross_product(mf->v[1] - mf->v[0], mf->v[0] - p)) > 0 ) {
+    //         printf("Dot Product 1: %f\n", dot);
+    //         return __INT_MAX__;
+    //     }
+    //     if (dot = dot_product(normal, cross_product(mf->v[0] - (mf->v[0] + velocity), (mf->v[0] + velocity) - p)) > 0 ) {
+    //         printf("Dot Product 2: %f\n", dot);
+    //         return __INT_MAX__;
+    //     }
+    //     if (dot = dot_product(normal, cross_product((mf->v[0] + velocity) - (mf->v[1] + velocity), (mf->v[1] + velocity) - p)) > 0 ) {
+    //         printf("Dot Product 3: %f\n", dot);
+    //         return __INT_MAX__;
+    //     }
+    //     if (dot = dot_product(normal, cross_product((mf->v[1] + velocity) - mf->v[1], mf->v[1] - p)) > 0 ) {
+    //         printf("Dot Product 4: %f\n", dot);
+    //         return __INT_MAX__;
+    //     }
+    // }
 
     *n = stable_n;
-    return t;
+    return t_cache;
 }
 const int terrainCollision(Mesh *terrain, Mesh *obj) {
     TerrainPointInfo tp = getTerrainPointData(terrain, (obj->cd.v[P] + obj->velocity), obj);
