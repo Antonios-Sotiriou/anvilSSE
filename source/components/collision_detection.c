@@ -218,32 +218,34 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
 
         vec4f normal = norm_vec(cross_product(edge_v, velocity));
         vec4f p = plane_intersect(mf->v[i], normal, sf->v[2], sf->v[1], &t);
-        printf("t: %f    edge: %d\n", t, i);
-        if (t > 0 && t <= 1) {
+
+        if (t >= 0 && t <= 1) {
 
             vec4f p3 = plane_intersect(adjust_precission(mf->v[i], 1), moving_n, adjust_precission(p, 1), adjust_precission(p - velocity, 1), &t);
 
-            if (t != 0) {
-                float dot = 0;
-                if (dot = dot_product(normal, cross_product(edge_v, mf->v[0] - p)) > 0 ) {
-                    printf("Dot Product 1: %f    t: %f    edge: %d\n", dot, t, i);
-                    continue;
+            if (t >= 0 && t <= 1) {
+                if (t != 0) {
+                    float dot = 0;
+                    if (dot = dot_product(normal, cross_product(edge_v, mf->v[0] - p)) > 0 ) {
+                        printf("Dot Product 1: %f    t: %f    edge: %d\n", dot, t, i);
+                        continue;
+                    }
+                    if (dot = dot_product(normal, cross_product(edge[i][0] - (edge[i][0] + velocity), (edge[i][0] + velocity) - p)) > 0 ) {
+                        printf("Dot Product 2: %f    t: %f    edge: %d\n", dot, t, i);
+                        continue;
+                    }
+                    if (dot = dot_product(normal, cross_product((edge[i][0] + velocity) - (edge[i][1] + velocity), (edge[i][1] + velocity) - p)) > 0 ) {
+                        printf("Dot Product 3: %f    t: %f    edge: %d\n", dot, t, i);
+                        continue;
+                    }
+                    if (dot = dot_product(normal, cross_product((edge[i][1] + velocity) - edge[i][1], edge[i][1] - p)) > 0 ) {
+                        printf("Dot Product 4: %f    t: %f    edge: %d\n", dot, t, i);
+                        continue;
+                    }
                 }
-                if (dot = dot_product(normal, cross_product(edge[i][0] - (edge[i][0] + velocity), (edge[i][0] + velocity) - p)) > 0 ) {
-                    printf("Dot Product 2: %f    t: %f    edge: %d\n", dot, t, i);
-                    continue;
+                if (t < t_cache) {
+                    t_cache = t;
                 }
-                if (dot = dot_product(normal, cross_product((edge[i][0] + velocity) - (edge[i][1] + velocity), (edge[i][1] + velocity) - p)) > 0 ) {
-                    printf("Dot Product 3: %f    t: %f    edge: %d\n", dot, t, i);
-                    continue;
-                }
-                if (dot = dot_product(normal, cross_product((edge[i][1] + velocity) - edge[i][1], edge[i][1] - p)) > 0 ) {
-                    printf("Dot Product 4: %f    t: %f    edge: %d\n", dot, t, i);
-                    continue;
-                }
-            }
-            if (t < t_cache) {
-                t_cache = t;
             }
         }
     }
