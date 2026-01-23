@@ -56,7 +56,7 @@ const vec4f plane_intersect(vec4f plane_p, vec4f plane_n, vec4f line_start, vec4
     float dot = dot_product(plane_n, u);
     vec4f w = line_start - plane_p;
     *t = -dot_product(plane_n, w) / dot;
-    if (fabs(*t) < 0.001)
+    if (fabs(*t) <= 0.01)
         *t = 0.f;
     return line_start + (u * *t);
 }
@@ -245,7 +245,10 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
                 }
                 if (t < t_cache) {
                     t_cache = t;
+                    logFace(*sf, 1, 0, 0);
+                    logFace(*mf, 1, 0, 0);
                 }
+                drawLine(p, p + (velocity * 1000), worldMatrix);
             }
         }
     }
@@ -453,7 +456,7 @@ const int obbCollision(Mesh *m) {
         return 0;
     }
     const int pks_num = scene.t.quads[m->quadIndex].members_indexes;
-    // printf("\x1b[H\x1b[J");
+    // printf("\x1b[H\x1b[J"); // ###################################### TO REMOVE
 
     float t = __INT_MAX__;
     vec4f plane_n, n;
@@ -462,19 +465,19 @@ const int obbCollision(Mesh *m) {
         int pk = scene.t.quads[m->quadIndex].members[i];
         if (pk != m->id && pk != 6) {
             if (len_vec(m->velocity) != 0)
-                printf("\x1b[H\x1b[J");
+                printf("\x1b[H\x1b[J"); // ###################################### TO REMOVE
             for (int x = 0; x < m->bbox.f_indexes; x++) {
                 plane_n = norm_vec(triangle_cp(m->bbox.f[x]));
 
                 if (dot_product(m->velocity, plane_n) > 0) {
-                    // displayFace(&m->bbox.f[x], worldMatrix);
+                    // displayFace(&m->bbox.f[x], worldMatrix); // ###################################### TO REMOVE
 
                     for (int y = 0; y < scene.m[pk].bbox.f_indexes; y++) {
                         plane_n = norm_vec(triangle_cp(scene.m[pk].bbox.f[y]));
                         float d0 = dist(scene.m[pk].bbox.f[y].v[0], plane_n, m->cd.v[0]);
                         if (d0 >= 0) {
                             if (dot_product(m->velocity, plane_n) < 0) {
-                                // displayFace(&scene.m[pk].bbox.f[y], worldMatrix);
+                                // displayFace(&scene.m[pk].bbox.f[y], worldMatrix); // ###################################### TO REMOVE
 
                                 float temp = sweptDoubleTri(&scene.m[pk].bbox.f[y], &m->bbox.f[x], m->velocity, &n);
 
@@ -500,6 +503,8 @@ const int obbCollision(Mesh *m) {
 
                 if (n[1] == 1)
                     m->falling_time = 0;
+
+                drawLine(m->cd.v[0], m->cd.v[0] + (n * 1000.f), viewMatrix);  // ###################################### TO REMOVE
                 return 1;
             } else if (t > 0.f && t <= 1.f) {
                 printf("Collision: %f\n", t);
@@ -511,11 +516,14 @@ const int obbCollision(Mesh *m) {
 
                 float dot =  dot_product(n, m->velocity);
                 m->velocity = m->velocity - (dot * n);
-                // getc(stdin);
+
+                drawLine(m->cd.v[0], m->cd.v[0] + (n * 1000.f), viewMatrix);  // ###################################### TO REMOVE
+                getc(stdin);
                 return 1;
             } else if (t < 0.f) {
                 printf("MINUS: %f\n", t);
-                getc(stdin);
+
+                drawLine(m->cd.v[0], m->cd.v[0] + (n * 1000.f), viewMatrix);  // ###################################### TO REMOVE
                 return 1;
             }
         }
