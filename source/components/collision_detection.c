@@ -245,13 +245,15 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
                 }
                 if (t < t_cache) {
                     t_cache = t;
-                    logFace(*sf, 1, 0, 0);
-                    logFace(*mf, 1, 0, 0);
+                    // logFace(*sf, 1, 0, 0);
+                    // logFace(*mf, 1, 0, 0);
+                    printf("colliding face id: %p\n", sf);
                 }
                 drawLine(p, p + (velocity * 1000), worldMatrix);
             }
         }
     }
+    // drawLine(sf->v[2], sf->v[1], worldMatrix);
     printf("final result: %f\n\n", t_cache);
     displayFace(sf, worldMatrix);
     displayFace(mf, worldMatrix);
