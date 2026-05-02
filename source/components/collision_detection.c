@@ -220,36 +220,35 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
         vec4f p = plane_intersect(mf->v[i], normal, sf->v[2], sf->v[1], &t);
 
         if (t >= 0 && t <= 1) {
-
-            vec4f p3 = plane_intersect(adjust_precission(mf->v[i], 1), moving_n, adjust_precission(p, 1), adjust_precission(p - velocity, 1), &t);
-
-            if (t >= 0 && t <= 1) {
-                if (t != 0) {
-                    float dot = 0;
-                    if (dot = dot_product(normal, cross_product(edge_v, mf->v[0] - p)) > 0 ) {
-                        printf("Dot Product 1: %f    t: %f    edge: %d\n", dot, t, i);
-                        continue;
-                    }
-                    if (dot = dot_product(normal, cross_product(edge[i][0] - (edge[i][0] + velocity), (edge[i][0] + velocity) - p)) > 0 ) {
-                        printf("Dot Product 2: %f    t: %f    edge: %d\n", dot, t, i);
-                        continue;
-                    }
-                    if (dot = dot_product(normal, cross_product((edge[i][0] + velocity) - (edge[i][1] + velocity), (edge[i][1] + velocity) - p)) > 0 ) {
-                        printf("Dot Product 3: %f    t: %f    edge: %d\n", dot, t, i);
-                        continue;
-                    }
-                    if (dot = dot_product(normal, cross_product((edge[i][1] + velocity) - edge[i][1], edge[i][1] - p)) > 0 ) {
-                        printf("Dot Product 4: %f    t: %f    edge: %d\n", dot, t, i);
-                        continue;
-                    }
+            if (t != 0) {
+                float dot = 0;
+                if (dot = dot_product(normal, cross_product(edge_v, mf->v[0] - p)) > 0 ) {
+                    printf("Dot Product 1: %f    t: %f    edge: %d\n", dot, t, i);
+                    continue;
                 }
-                if (t < t_cache) {
-                    t_cache = t;
-                    // logFace(*sf, 1, 0, 0);
-                    // logFace(*mf, 1, 0, 0);
-                    printf("colliding face id: %p\n", sf);
+                if (dot = dot_product(normal, cross_product(edge[i][0] - (edge[i][0] + velocity), (edge[i][0] + velocity) - p)) > 0 ) {
+                    printf("Dot Product 2: %f    t: %f    edge: %d\n", dot, t, i);
+                    continue;
                 }
-                drawLine(p, p + (velocity * 1000), worldMatrix);
+                if (dot = dot_product(normal, cross_product((edge[i][0] + velocity) - (edge[i][1] + velocity), (edge[i][1] + velocity) - p)) > 0 ) {
+                    printf("Dot Product 3: %f    t: %f    edge: %d\n", dot, t, i);
+                    continue;
+                }
+                if (dot = dot_product(normal, cross_product((edge[i][1] + velocity) - edge[i][1], edge[i][1] - p)) > 0 ) {
+                    printf("Dot Product 4: %f    t: %f    edge: %d\n", dot, t, i);
+                    continue;
+                }
+
+                vec4f p3 = plane_intersect(adjust_precission(mf->v[i], 1), moving_n, adjust_precission(p, 1), adjust_precission(p - velocity, 1), &t);
+                if (t >= 0 && t <= 1) {
+                    if (t < t_cache) {
+                        t_cache = t;
+                        // logFace(*sf, 1, 0, 0);
+                        // logFace(*mf, 1, 0, 0);
+                        printf("colliding face id: %p\n", sf);
+                    }
+                    drawLine(p, p + (velocity * 1000), worldMatrix);
+                }
             }
         }
     }
@@ -520,7 +519,7 @@ const int obbCollision(Mesh *m) {
                 m->velocity = m->velocity - (dot * n);
 
                 drawLine(m->cd.v[0], m->cd.v[0] + (n * 1000.f), viewMatrix);  // ###################################### TO REMOVE
-                getc(stdin);
+                // getc(stdin);
                 return 1;
             } else if (t < 0.f) {
                 printf("MINUS: %f\n", t);
