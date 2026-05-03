@@ -339,6 +339,7 @@ const static void keypress(XEvent *event) {
         case 65455 : point[1] -= 0.0001f;             /* / */
             logVec4f(point);
             break;
+        case 246 :
         case 65430 : //sunlight.pos[0] -= sunMov;                   /* Adjust Light Source */
             // vec4f mva = norm_vec(camera[N] - camera[U]);
             vec4f mva = { -1.f, 0.f, 0.f };
@@ -346,6 +347,7 @@ const static void keypress(XEvent *event) {
             scene.m[1].velocity = mva * movScalar;
             scene.m[1].roll = 1;
             break;
+        case 35 :
         case 65432 : //sunlight.pos[0] += sunMov;                   /* Adjust Light Source */
             // vec4f mvb = -norm_vec(camera[N] - camera[U]);
             // vec4f mvb = norm_vec(scene.m[Camera_1].cd.v[U] + scene.m[Camera_1].cd.v[V]);
@@ -353,22 +355,26 @@ const static void keypress(XEvent *event) {
             scene.m[1].velocity = mvb * movScalar;
             scene.m[1].roll = 1;
             break;
+        case 111 :
         case 65434 : //sunlight.pos[1] += sunMov;                   /* Adjust Light Source */
             scene.m[1].grounded = 0;
             vec4f mvc = { 0.f, 1.f, 0.f };
             scene.m[1].velocity = mvc * (movScalar * scene.m[1].mass);
             scene.m[1].falling_time = 0.f;
             break;
+        case 117 :
         case 65435 : //sunlight.pos[1] -= sunMov;                   /* Adjust Light Source */
             vec4f mvd = { 0.f, -1.f, 0.f };
             scene.m[1].velocity = mvd  * (movScalar + 0.981f * scene.m[1].mass);
             break;
+        case 252 :
         case 65431 : //sunlight.pos[2] += sunMov;                   /* Adjust Light Source */
             // vec4f mve = norm_vec(scene.m[Camera_1].cd.v[U] + scene.m[Camera_1].cd.v[N]);
             vec4f mve = { 0.5f, 0.f, 0.5f };
             scene.m[1].velocity = mve * movScalar;
             scene.m[1].roll = 1;
             break;
+        case 228 :
         case 65433 : //sunlight.pos[2] -= sunMov;                   /* Adjust Light Source */
             // vec4f mvf = -norm_vec(scene.m[Camera_1].cd.v[U] + scene.m[Camera_1].cd.v[N]);
             vec4f mvf = { -0.5f, 0.f, -0.5f };

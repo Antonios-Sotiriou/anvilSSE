@@ -11,7 +11,7 @@ float sweptEdgeVsEdge(face *sf, face *mf, vec4f velocity, vec4f *n) {
         return __INT_MAX__;
     }
 
-    vec4f p3 = plane_intersect(adjust_precission(mf->v[0], 1), moving_n, adjust_precission(p, 1), adjust_precission(p - velocity, 1), &t);
+    vec4f p3 = plane_intersect(adjustVec4f_precission(mf->v[0], 1), moving_n, adjustVec4f_precission(p, 1), adjustVec4f_precission(p - velocity, 1), &t);
 
     if (t != 0) {
         if (dot_product(normal, cross_product(mf->v[1] - mf->v[0], mf->v[0] - p)) > 0 ) {
@@ -32,8 +32,8 @@ float sweptEdgeVsEdge(face *sf, face *mf, vec4f velocity, vec4f *n) {
     return t;
 }
 
-/* Adjusts precision of the number to given decimal points. */
-vec4f adjust_precission(vec4f v, int prec_lvl) {
+/* Adjusts precision of the Vector to given decimal points. */
+vec4f adjustVec4f_precission(vec4f v, int prec_lvl) {
     if (prec_lvl <= 0) {
         printf("Precission lvl must be not NULL and not a negative number\n");
         return v;
@@ -43,6 +43,30 @@ vec4f adjust_precission(vec4f v, int prec_lvl) {
         lvl *= lvl;
     }
     return floor_vec4f(v * lvl);
+}
+
+/* Adjusts precision of the number to given decimal points. */
+int adjustNegativeFLoat_precission(float num, int prec_lvl) {
+    if (prec_lvl <= 0) {
+        printf("Precission lvl must be not NULL and not a negative number\n");
+        return num;
+    }
+    float lvl = 10.f;
+    for (int i = 0; i < prec_lvl; i++) {
+        lvl *= lvl;
+    }
+    return ceil(num * 1000);
+}
+int adjustPositiveFLoat_precission(float num, int prec_lvl) {
+    if (prec_lvl <= 0) {
+        printf("Precission lvl must be not NULL and not a negative number\n");
+        return num;
+    }
+    float lvl = 10.f;
+    for (int i = 0; i < prec_lvl; i++) {
+        lvl *= lvl;
+    }
+    return floor(num * 1000);
 }
 
 /* Return signed shortest distance from point to plane, plane normal must be normalised. */
@@ -211,7 +235,9 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
         { mf->v[0], mf->v[1] },
         { mf->v[1], mf->v[2] },
         { mf->v[2], mf->v[0] }
-    }; 
+    };
+
+    float btrg = 0;
 
     for (int i = 0; i < 3; i++) {
         vec4f edge_v = edge[i][1] - edge[i][0];
@@ -239,7 +265,7 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
                     continue;
                 }
 
-                vec4f p3 = plane_intersect(adjust_precission(mf->v[i], 1), moving_n, adjust_precission(p, 1), adjust_precission(p - velocity, 1), &t);
+                vec4f p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), adjustVec4f_precission(p - velocity, 1), &t);
                 if (t >= 0 && t <= 1) {
                     if (t < t_cache) {
                         t_cache = t;
@@ -247,13 +273,12 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
                         // logFace(*mf, 1, 0, 0);
                         printf("colliding face id: %p\n", sf);
                     }
-                    drawLine(p, p + (velocity * 1000), worldMatrix);
                 }
             }
         }
     }
     // drawLine(sf->v[2], sf->v[1], worldMatrix);
-    printf("final result: %f\n\n", t_cache);
+    // printf("final result: %f\n\n", t_cache);
     displayFace(sf, worldMatrix);
     displayFace(mf, worldMatrix);
     *n = stable_n;
@@ -476,8 +501,10 @@ const int obbCollision(Mesh *m) {
                     for (int y = 0; y < scene.m[pk].bbox.f_indexes; y++) {
                         plane_n = norm_vec(triangle_cp(scene.m[pk].bbox.f[y]));
                         float d0 = dist(scene.m[pk].bbox.f[y].v[0], plane_n, m->cd.v[0]);
+
                         if (d0 >= 0) {
-                            if (dot_product(m->velocity, plane_n) < 0) {
+                            float dot = dot_product(m->velocity, plane_n);
+                            if (adjustNegativeFLoat_precission(dot, 3) < 0) {
                                 // displayFace(&scene.m[pk].bbox.f[y], worldMatrix); // ###################################### TO REMOVE
 
                                 float temp = sweptDoubleTri(&scene.m[pk].bbox.f[y], &m->bbox.f[x], m->velocity, &n);

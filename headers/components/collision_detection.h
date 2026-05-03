@@ -21,7 +21,9 @@ extern vec4f gravity_epicenter;
 extern Scene scene;
 
 float sweptEdgeVsEdge(face *sf, face *mf, vec4f velocity, vec4f *n);
-vec4f adjust_precission(vec4f v, int prec_lvl);
+vec4f adjustVec4f_precission(vec4f v, int prec_lvl);
+int adjustNegativeFLoat_precission(float num, int prec_lvl);
+int adjustPositiveFLoat_precission(float num, int prec_lvl);
 const float dist(vec4f plane_p, vec4f plane_n, vec4f v);
 const vec4f plane_intersect(vec4f plane_p, vec4f plane_n, vec4f line_start, vec4f line_end, float *t);
 const int terrainCollision(Mesh *terrain, Mesh *obj);
