@@ -14,9 +14,11 @@
 #endif
 
 /* 3D graphics vec4f computation functions */
+vec4f abs_vec4f(const vec4f v);
 const int checkZero_vec4f(const vec4f v);
 const vec4f floor_vec4f(const vec4f v);
 const vec4f round_vec4f(const vec4f v);
+const vec4f ceil_vec4f(const vec4f v);
 const float len_vec(const vec4f v);
 const vec4f norm_vec(const vec4f v);
 const vec4f mul_vec(const vec4f v1, const float num);

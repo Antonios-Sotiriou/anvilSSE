@@ -45,6 +45,19 @@ vec4f adjustVec4f_precission(vec4f v, int prec_lvl) {
     return floor_vec4f(v * lvl);
 }
 
+/* ceil precision of the Vector to given decimal points. */
+vec4f ceilVec4f_precission(vec4f v, int prec_lvl) {
+    if (prec_lvl <= 0) {
+        printf("Precission lvl must be not NULL and not a negative number\n");
+        return v;
+    }
+    float lvl = 10.f;
+    for (int i = 0; i < prec_lvl; i++) {
+        lvl *= lvl;
+    }
+    return ceil_vec4f(v * lvl);
+}
+
 /* Adjusts precision of the number to given decimal points. */
 int adjustNegativeFLoat_precission(float num, int prec_lvl) {
     if (prec_lvl <= 0) {
@@ -237,7 +250,9 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
         { mf->v[2], mf->v[0] }
     };
 
-    float btrg = 0;
+    // logFace(*sf, 1, 0, 0);
+    // logFace(*mf, 1, 0, 0);
+    // printf("-----------------------------------------------------\n");
 
     for (int i = 0; i < 3; i++) {
         vec4f edge_v = edge[i][1] - edge[i][0];
@@ -249,34 +264,49 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
             if (t != 0) {
                 float dot = 0;
                 if (dot = dot_product(normal, cross_product(edge_v, mf->v[0] - p)) > 0 ) {
-                    printf("Dot Product 1: %f    t: %f    edge: %d\n", dot, t, i);
+                    // printf("Dot Product 1: %f    t: %f    edge: %d\n", dot, t, i);
                     continue;
                 }
                 if (dot = dot_product(normal, cross_product(edge[i][0] - (edge[i][0] + velocity), (edge[i][0] + velocity) - p)) > 0 ) {
-                    printf("Dot Product 2: %f    t: %f    edge: %d\n", dot, t, i);
+                    // printf("Dot Product 2: %f    t: %f    edge: %d\n", dot, t, i);
                     continue;
                 }
                 if (dot = dot_product(normal, cross_product((edge[i][0] + velocity) - (edge[i][1] + velocity), (edge[i][1] + velocity) - p)) > 0 ) {
-                    printf("Dot Product 3: %f    t: %f    edge: %d\n", dot, t, i);
+                    // printf("Dot Product 3: %f    t: %f    edge: %d\n", dot, t, i);
                     continue;
                 }
                 if (dot = dot_product(normal, cross_product((edge[i][1] + velocity) - edge[i][1], edge[i][1] - p)) > 0 ) {
-                    printf("Dot Product 4: %f    t: %f    edge: %d\n", dot, t, i);
+                    // printf("Dot Product 4: %f    t: %f    edge: %d\n", dot, t, i);
                     continue;
                 }
 
-                vec4f p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), adjustVec4f_precission(p - velocity, 1), &t);
+                vec4f p3 = { 0 };
+                // if (velocity[0] < 0 || velocity[1] < 0 || velocity[2] < 0) {
+                //     printf("Negative velocity\n");
+                //     p3 = plane_intersect(ceilVec4f_precission(mf->v[i], 1), moving_n, ceilVec4f_precission(p, 1), ceilVec4f_precission(p - velocity, 1), &t);
+                // } else {
+                //     p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), adjustVec4f_precission(p - velocity, 1), &t);
+                // }
+                p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), p - velocity, &t);
+                // p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), adjustVec4f_precission(p - velocity, 1), &t);
+
                 if (t >= 0 && t <= 1) {
                     if (t < t_cache) {
                         t_cache = t;
-                        // logFace(*sf, 1, 0, 0);
-                        // logFace(*mf, 1, 0, 0);
-                        printf("colliding face id: %p\n", sf);
                     }
                 }
+
+                // logVec4f(p3 - p);
+                // printf("dot_product: %f\n", dot_product(velocity, *n));
+                logVec4f(p);
+                logVec4f(p3);
             }
         }
     }
+
+    // logFace(*sf, 1, 0, 0);
+    // logFace(*mf, 1, 0, 0);
+    // printf("t: %f\n", t);
     // drawLine(sf->v[2], sf->v[1], worldMatrix);
     // printf("final result: %f\n\n", t_cache);
     displayFace(sf, worldMatrix);
@@ -546,7 +576,6 @@ const int obbCollision(Mesh *m) {
                 m->velocity = m->velocity - (dot * n);
 
                 drawLine(m->cd.v[0], m->cd.v[0] + (n * 1000.f), viewMatrix);  // ###################################### TO REMOVE
-                // getc(stdin);
                 return 1;
             } else if (t < 0.f) {
                 printf("MINUS: %f\n", t);

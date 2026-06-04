@@ -2,12 +2,16 @@
 
 const static vec4i mask1 = { 1, 2, 0, 3 }, mask2 = { 2, 0, 1, 3 };
 
-/* floors a vector. */
+
+vec4f abs_vec4f(const vec4f v) {
+    return (vec4f){ fabs(v[0]), fabs(v[1]), fabs(v[2]), fabs(v[3]) };
+}
 const int checkZero_vec4f(const vec4f v) {
     if ( (v[0] != 0) || (v[1] != 0) || (v[2] != 0) )
         return 1;
     return 0;
 }
+/* floors a vector. */
 const vec4f floor_vec4f(const vec4f v) {
     vec4f r = __builtin_convertvector(__builtin_convertvector(v, vec4i), vec4f);
     return r;
@@ -16,6 +20,10 @@ const vec4f floor_vec4f(const vec4f v) {
 const vec4f round_vec4f(const vec4f v) {
     vec4f r = __builtin_convertvector(__builtin_convertvector(v + 0.5, vec4i), vec4f);
     return r;
+}
+/* ceil a vector. */
+const vec4f ceil_vec4f(const vec4f v) {
+    return (vec4f){ ceilf(v[0]), ceilf(v[1]), ceilf(v[2]), ceilf(v[3]) };
 }
 /* Computes the length of a vector with the use of Pythagorean Theorem. */
 const float len_vec(const vec4f v) {
