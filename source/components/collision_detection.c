@@ -281,13 +281,13 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
                 }
 
                 vec4f p3 = { 0 };
-                // if (velocity[0] < 0 || velocity[1] < 0 || velocity[2] < 0) {
-                //     printf("Negative velocity\n");
-                //     p3 = plane_intersect(ceilVec4f_precission(mf->v[i], 1), moving_n, ceilVec4f_precission(p, 1), ceilVec4f_precission(p - velocity, 1), &t);
-                // } else {
-                //     p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), adjustVec4f_precission(p - velocity, 1), &t);
-                // }
-                p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), p - velocity, &t);
+                if (velocity[0] < 0 || velocity[1] < 0 || velocity[2] < 0) {
+                    printf("Negative velocity\n");
+                    p3 = plane_intersect(ceilVec4f_precission(mf->v[i], 1), moving_n, ceilVec4f_precission(p, 1), ceilVec4f_precission(p - velocity, 1), &t);
+                } else {
+                    p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), adjustVec4f_precission(p - velocity, 1), &t);
+                }
+                // p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), p - velocity, &t);
                 // p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), adjustVec4f_precission(p - velocity, 1), &t);
 
                 if (t >= 0 && t <= 1) {
@@ -299,7 +299,9 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
                 // logVec4f(p3 - p);
                 // printf("dot_product: %f\n", dot_product(velocity, *n));
                 logVec4f(p);
+                displayPoint(mf->v[i], worldMatrix, 0xe9280f);
                 logVec4f(p3);
+                logVec4f(mf->v[i]);
             }
         }
     }
@@ -521,7 +523,7 @@ const int obbCollision(Mesh *m) {
         int pk = scene.t.quads[m->quadIndex].members[i];
         if (pk != m->id && pk != 6) {
             if (len_vec(m->velocity) != 0)
-                printf("\x1b[H\x1b[J"); // ###################################### TO REMOVE
+                // printf("\x1b[H\x1b[J"); // ###################################### TO REMOVE
             for (int x = 0; x < m->bbox.f_indexes; x++) {
                 plane_n = norm_vec(triangle_cp(m->bbox.f[x]));
 
