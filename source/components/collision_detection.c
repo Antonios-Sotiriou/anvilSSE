@@ -250,58 +250,58 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
         { mf->v[2], mf->v[0] }
     };
 
-    // logFace(*sf, 1, 0, 0);
-    // logFace(*mf, 1, 0, 0);
-    // printf("-----------------------------------------------------\n");
-
     for (int i = 0; i < 3; i++) {
         vec4f edge_v = edge[i][1] - edge[i][0];
 
         vec4f normal = norm_vec(cross_product(edge_v, velocity));
-        vec4f p = plane_intersect(mf->v[i], normal, sf->v[2], sf->v[1], &t);
 
-        if (t >= 0 && t <= 1) {
-            if (t != 0) {
-                float dot = 0;
-                if (dot = dot_product(normal, cross_product(edge_v, mf->v[0] - p)) > 0 ) {
-                    // printf("Dot Product 1: %f    t: %f    edge: %d\n", dot, t, i);
-                    continue;
-                }
-                if (dot = dot_product(normal, cross_product(edge[i][0] - (edge[i][0] + velocity), (edge[i][0] + velocity) - p)) > 0 ) {
-                    // printf("Dot Product 2: %f    t: %f    edge: %d\n", dot, t, i);
-                    continue;
-                }
-                if (dot = dot_product(normal, cross_product((edge[i][0] + velocity) - (edge[i][1] + velocity), (edge[i][1] + velocity) - p)) > 0 ) {
-                    // printf("Dot Product 3: %f    t: %f    edge: %d\n", dot, t, i);
-                    continue;
-                }
-                if (dot = dot_product(normal, cross_product((edge[i][1] + velocity) - edge[i][1], edge[i][1] - p)) > 0 ) {
-                    // printf("Dot Product 4: %f    t: %f    edge: %d\n", dot, t, i);
-                    continue;
-                }
+        int sf_index = 2;
+        for (int y = 0; y < 3; y++) {
+            vec4f p = plane_intersect(mf->v[i], normal, sf->v[y], sf->v[sf_index], &t);
+            sf_index++;
+            if (sf_index > 2) {
+                sf_index = 0;
+            }
 
-                vec4f p3 = { 0 };
-                if (velocity[0] < 0 || velocity[1] < 0 || velocity[2] < 0) {
-                    printf("Negative velocity\n");
-                    p3 = plane_intersect(ceilVec4f_precission(mf->v[i], 1), moving_n, ceilVec4f_precission(p, 1), ceilVec4f_precission(p - velocity, 1), &t);
-                } else {
-                    p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), adjustVec4f_precission(p - velocity, 1), &t);
-                }
-                // p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), p - velocity, &t);
-                // p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), adjustVec4f_precission(p - velocity, 1), &t);
-
-                if (t >= 0 && t <= 1) {
-                    if (t < t_cache) {
-                        t_cache = t;
+            if (t >= 0 && t <= 1) {
+                if (t != 0) {
+                    float dot = 0;
+                    if (dot = dot_product(normal, cross_product(edge_v, mf->v[0] - p)) > 0 ) {
+                        // printf("Dot Product 1: %f    t: %f    edge: %d\n", dot, t, i);
+                        continue;
                     }
-                }
+                    if (dot = dot_product(normal, cross_product(edge[i][0] - (edge[i][0] + velocity), (edge[i][0] + velocity) - p)) > 0 ) {
+                        // printf("Dot Product 2: %f    t: %f    edge: %d\n", dot, t, i);
+                        continue;
+                    }
+                    if (dot = dot_product(normal, cross_product((edge[i][0] + velocity) - (edge[i][1] + velocity), (edge[i][1] + velocity) - p)) > 0 ) {
+                        // printf("Dot Product 3: %f    t: %f    edge: %d\n", dot, t, i);
+                        continue;
+                    }
+                    if (dot = dot_product(normal, cross_product((edge[i][1] + velocity) - edge[i][1], edge[i][1] - p)) > 0 ) {
+                        // printf("Dot Product 4: %f    t: %f    edge: %d\n", dot, t, i);
+                        continue;
+                    }
 
-                // logVec4f(p3 - p);
-                // printf("dot_product: %f\n", dot_product(velocity, *n));
-                logVec4f(p);
-                displayPoint(mf->v[i], worldMatrix, 0xe9280f);
-                logVec4f(p3);
-                logVec4f(mf->v[i]);
+                    vec4f p3 = { 0 };
+                    p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), p - velocity, &t); // Original Version
+                    // p3 = plane_intersect(mf->v[i], moving_n, p, p - velocity, &t); // Original Version
+                    // p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), adjustVec4f_precission(p - velocity, 1), &t);
+
+                    if (t >= 0 && t <= 1) {
+                        if (t < t_cache) {
+                            t_cache = t;
+                        }
+                    }
+
+                    displayFace(sf, worldMatrix);
+                    displayPoint(p3, worldMatrix, 0xe9280f);
+                    // logVec4f(mf->v[i]);
+                    // logVec4f(p);
+                    // logVec4f(p3);
+                    // printf("dot_product: %f\n", dot_product(velocity, *n));
+                    // drawLine(p, p3, worldMatrix);
+                }
             }
         }
     }
@@ -311,8 +311,8 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
     // printf("t: %f\n", t);
     // drawLine(sf->v[2], sf->v[1], worldMatrix);
     // printf("final result: %f\n\n", t_cache);
-    displayFace(sf, worldMatrix);
-    displayFace(mf, worldMatrix);
+    // displayFace(sf, worldMatrix);
+    // displayFace(mf, worldMatrix);
     *n = stable_n;
     return t_cache;
 }
@@ -522,28 +522,29 @@ const int obbCollision(Mesh *m) {
 
         int pk = scene.t.quads[m->quadIndex].members[i];
         if (pk != m->id && pk != 6) {
-            if (len_vec(m->velocity) != 0)
+            if (len_vec(m->velocity) != 0) {
                 // printf("\x1b[H\x1b[J"); // ###################################### TO REMOVE
-            for (int x = 0; x < m->bbox.f_indexes; x++) {
-                plane_n = norm_vec(triangle_cp(m->bbox.f[x]));
+                for (int x = 0; x < m->bbox.f_indexes; x++) {
+                    plane_n = norm_vec(triangle_cp(m->bbox.f[x]));
 
-                if (dot_product(m->velocity, plane_n) > 0) {
-                    // displayFace(&m->bbox.f[x], worldMatrix); // ###################################### TO REMOVE
+                    if (dot_product(m->velocity, plane_n) > 0) {
+                        // displayFace(&m->bbox.f[x], worldMatrix); // ###################################### TO REMOVE
 
-                    for (int y = 0; y < scene.m[pk].bbox.f_indexes; y++) {
-                        plane_n = norm_vec(triangle_cp(scene.m[pk].bbox.f[y]));
-                        float d0 = dist(scene.m[pk].bbox.f[y].v[0], plane_n, m->cd.v[0]);
+                        for (int y = 0; y < scene.m[pk].bbox.f_indexes; y++) {
+                            plane_n = norm_vec(triangle_cp(scene.m[pk].bbox.f[y]));
+                            float d0 = dist(scene.m[pk].bbox.f[y].v[0], plane_n, m->cd.v[0]);
 
-                        if (d0 >= 0) {
-                            float dot = dot_product(m->velocity, plane_n);
-                            if (adjustNegativeFLoat_precission(dot, 3) < 0) {
-                                // displayFace(&scene.m[pk].bbox.f[y], worldMatrix); // ###################################### TO REMOVE
+                            if (d0 >= 0) {
+                                float dot = dot_product(m->velocity, plane_n);
+                                if (adjustNegativeFLoat_precission(dot, 3) < 0) {
+                                    // displayFace(&scene.m[pk].bbox.f[y], worldMatrix); // ###################################### TO REMOVE
 
-                                float temp = sweptDoubleTri(&scene.m[pk].bbox.f[y], &m->bbox.f[x], m->velocity, &n);
+                                    float temp = sweptDoubleTri(&scene.m[pk].bbox.f[y], &m->bbox.f[x], m->velocity, &n);
 
-                                if (temp <= t && temp >= 0) {
-                                    t = temp;
-                                    // n = norm_vec(m->velocity * -1);
+                                    if (temp <= t && temp >= 0) {
+                                        t = temp;
+                                        // n = norm_vec(m->velocity * -1);
+                                    }
                                 }
                             }
                         }
@@ -564,7 +565,6 @@ const int obbCollision(Mesh *m) {
                 if (n[1] == 1)
                     m->falling_time = 0;
 
-                drawLine(m->cd.v[0], m->cd.v[0] + (n * 1000.f), viewMatrix);  // ###################################### TO REMOVE
                 return 1;
             } else if (t > 0.f && t <= 1.f) {
                 printf("Collision: %f\n", t);
@@ -577,16 +577,15 @@ const int obbCollision(Mesh *m) {
                 float dot =  dot_product(n, m->velocity);
                 m->velocity = m->velocity - (dot * n);
 
-                drawLine(m->cd.v[0], m->cd.v[0] + (n * 1000.f), viewMatrix);  // ###################################### TO REMOVE
                 return 1;
             } else if (t < 0.f) {
                 printf("MINUS: %f\n", t);
 
-                drawLine(m->cd.v[0], m->cd.v[0] + (n * 1000.f), viewMatrix);  // ###################################### TO REMOVE
                 return 1;
             }
         }
     }
+    drawLine(m->cd.v[0], m->cd.v[0] + (m->velocity * 100.f), viewMatrix);  // ###################################### TO REMOVE
     return 0;
 }
 const int rotationCollision(TerrainInfo *ti, Scene *s, Mesh *obj) {
