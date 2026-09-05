@@ -93,7 +93,7 @@ const vec4f plane_intersect(vec4f plane_p, vec4f plane_n, vec4f line_start, vec4
     float dot = dot_product(plane_n, u);
     vec4f w = line_start - plane_p;
     *t = -dot_product(plane_n, w) / dot;
-    if (fabs(*t) <= 0.01)
+    if (*t <= 0.001)
         *t = 0.f;
     return line_start + (u * *t);
 }
@@ -263,29 +263,24 @@ float sweptDoubleTri(face *sf, face *mf, vec4f velocity, vec4f *n) {
                 sf_index = 0;
             }
 
-            if (t >= 0 && t <= 1) {
+            if (t > 0 && t <= 1) {
                 if (t != 0) {
-                    float dot = 0;
-                    if (dot = dot_product(normal, cross_product(edge_v, mf->v[0] - p)) > 0 ) {
-                        // printf("Dot Product 1: %f    t: %f    edge: %d\n", dot, t, i);
+                    if (dot_product(normal, cross_product(edge_v, mf->v[0] - p)) > 0 ) {
                         continue;
                     }
-                    if (dot = dot_product(normal, cross_product(edge[i][0] - (edge[i][0] + velocity), (edge[i][0] + velocity) - p)) > 0 ) {
-                        // printf("Dot Product 2: %f    t: %f    edge: %d\n", dot, t, i);
+                    if (dot_product(normal, cross_product(edge[i][0] - (edge[i][0] + velocity), (edge[i][0] + velocity) - p)) > 0 ) {
                         continue;
                     }
-                    if (dot = dot_product(normal, cross_product((edge[i][0] + velocity) - (edge[i][1] + velocity), (edge[i][1] + velocity) - p)) > 0 ) {
-                        // printf("Dot Product 3: %f    t: %f    edge: %d\n", dot, t, i);
+                    if (dot_product(normal, cross_product((edge[i][0] + velocity) - (edge[i][1] + velocity), (edge[i][1] + velocity) - p)) > 0 ) {
                         continue;
                     }
-                    if (dot = dot_product(normal, cross_product((edge[i][1] + velocity) - edge[i][1], edge[i][1] - p)) > 0 ) {
-                        // printf("Dot Product 4: %f    t: %f    edge: %d\n", dot, t, i);
+                    if (dot_product(normal, cross_product((edge[i][1] + velocity) - edge[i][1], edge[i][1] - p)) > 0 ) {
                         continue;
                     }
 
                     vec4f p3 = { 0 };
-                    p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), p - velocity, &t); // Original Version
-                    // p3 = plane_intersect(mf->v[i], moving_n, p, p - velocity, &t); // Original Version
+                    // p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), p - velocity, &t);
+                    p3 = plane_intersect(mf->v[i], moving_n, p, p - velocity, &t); // Original Version
                     // p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), adjustVec4f_precission(p - velocity, 1), &t);
 
                     if (t >= 0 && t <= 1) {
@@ -539,7 +534,7 @@ const int obbCollision(Mesh *m) {
                                 if (adjustNegativeFLoat_precission(dot, 3) < 0) {
                                     // displayFace(&scene.m[pk].bbox.f[y], worldMatrix); // ###################################### TO REMOVE
 
-                                    float temp = sweptDoubleTri(&scene.m[pk].bbox.f[y], &m->bbox.f[x], m->velocity, &n);
+                                    float temp = sweptDoubleTri(&scene.m[pk].bbox.f[0], &m->bbox.f[x], m->velocity, &n);
 
                                     if (temp <= t && temp >= 0) {
                                         t = temp;
@@ -553,7 +548,7 @@ const int obbCollision(Mesh *m) {
             }
 
             if (t == 0.f) {
-                printf("Sliding..................................................: %f\n", t);
+                // printf("Sliding..................................................: %f\n", t);
 
                 float dot =  dot_product(n, m->velocity);
                 m->velocity = m->velocity - (dot * n);
