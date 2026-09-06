@@ -91,11 +91,14 @@ const vec4f plane_intersect(vec4f plane_p, vec4f plane_n, vec4f line_start, vec4
 
     vec4f u = line_end - line_start;
     float dot = dot_product(plane_n, u);
+    if (fabs(dot) < 1e-6f) {
+        *t = __INT_MAX__;
+        return line_start;
+    }
     vec4f w = line_start - plane_p;
     *t = -dot_product(plane_n, w) / dot;
-    if (*t <= 0.001)
-        *t = 0.f;
-    return line_start + (u * *t);
+
+    return line_start + (u * (*t));
 }
 float sweptTribbox(face sf, face mf, vec4f velocity) {
 
@@ -288,12 +291,16 @@ float sweptDoubleTri(face sf, face mf, vec4f velocity, vec4f *n) {
                     p3 = plane_intersect(mf.v[i], moving_n, p, p - velocity, &t); // Original Version
                     // p3 = plane_intersect(adjustVec4f_precission(mf->v[i], 1), moving_n, adjustVec4f_precission(p, 1), adjustVec4f_precission(p - velocity, 1), &t);
 
-                    if (t >= 0 && t <= 1) {
-                        if (t < t_cache) {
-                            t_cache = t;
 
-                            printf("point on face : %f    x: %f, y: %f, z: %f\n", t, p3[0], p3[1], p3[2]);
-                            printf("closest vector: %f    x: %f, y: %f, z: %f\n", t, mf.v[2][0], mf.v[2][1], mf.v[2][2]);
+                    float epsilon = 0.0001f;
+                    if (t >= -epsilon && t <= 1.f + epsilon) {
+
+                        float valid_t = (t < 0.f) ? 0.f : (t > 1.f) ? 1.f : t;
+                        if (valid_t < t_cache) {
+                            t_cache = valid_t;
+
+                            // printf("point on face : %f    x: %f, y: %f, z: %f\n", t, p3[0], p3[1], p3[2]);
+                            // printf("closest vector: %f    x: %f, y: %f, z: %f\n", t, mf.v[2][0], mf.v[2][1], mf.v[2][2]);
                         }
                     }
 
@@ -561,7 +568,7 @@ const int obbCollision(Mesh *m) {
                 return 1;
             } else if (t > 0.f && t <= 1.f) {
                 printf("Collision: %f\n", t);
-                m->velocity *= t;
+                m->velocity *= t * 0.98f;
                 Mat4x4 trans = translationMatrix(m->velocity[0], m->velocity[1], m->velocity[2]);
                 setvecsarrayxm(m->cd.v, 4, trans);
                 setvecsarrayxm(m->bbox.v, m->bbox.v_indexes, trans);
