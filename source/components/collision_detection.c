@@ -247,6 +247,7 @@ float sweptTriangleVectors(face sf, face mf, vec4f velocity) {
     }
 }
 float sweptDoubleTri(face sf, face mf, vec4f velocity, vec4f *n) {
+
     float t = __INT_MAX__;
     float t_cache = __INT_MAX__;
     vec4f stable_n = norm_vec(triangle_cp(sf));
